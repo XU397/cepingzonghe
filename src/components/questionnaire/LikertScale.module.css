@@ -1,0 +1,442 @@
+/* LikertScale 组件样式 - 卡通风格 */
+
+.likertScaleContainer {
+  margin-bottom: 30px;
+  padding: 0;
+}
+
+/* 表格模式容器 */
+.likertTableContainer {
+  margin-bottom: 30px;
+  padding: 0;
+}
+
+/* 表格样式 */
+.likertTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background: white;
+  margin-top: 20px;
+  table-layout: fixed; /* 使用固定表格布局，确保列宽按比例分配 */
+}
+
+.likertTable thead th {
+  background: linear-gradient(135deg, var(--cartoon-primary) 0%, #4babff 100%);
+  color: white;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95em;
+  border: none;
+  position: relative;
+}
+
+.likertTable thead th:first-child {
+  border-top-left-radius: 12px;
+}
+
+.likertTable thead th:last-child {
+  border-top-right-radius: 12px;
+}
+
+.questionColumn {
+  width: 35%; /* 第一列固定35%宽度 */
+  text-align: center !important;
+  background: linear-gradient(135deg, #6c7ae0 0%, #5a67d8 100%) !important;
+}
+
+.optionColumn {
+  /* 选项列自动平均分配剩余的65%空间 */
+  width: auto;
+  font-size: 0.9em !important;
+  line-height: 1.2;
+  text-align: center;
+  min-width: 70px; /* 减小最小宽度，确保在小屏幕上也能正常显示 */
+}
+
+.questionTableRow {
+  transition: all 0.2s ease;
+}
+
+.questionTableRow:nth-child(even) {
+  background-color: #f8fbff;
+}
+
+.questionTableRow:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+.questionTableRow:hover {
+  background-color: #e6f3ff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.questionCell {
+  padding: 0px 20px;
+  text-align: left;
+  font-size: 1em;
+  color: var(--cartoon-dark);
+  line-height: 1.4;
+  border-right: 2px solid #e6f3ff;
+  font-weight: 500;
+}
+
+.optionCell {
+  padding: 0px 8px;
+  text-align: center;
+  border-right: 1px solid #e6f3ff;
+  vertical-align: middle;
+}
+
+.optionCell:last-child {
+  border-right: none;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 8px;
+}
+
+.radioCustom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--cartoon-border);
+  border-radius: 50%;
+  background: white;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.radioCustom::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cartoon-primary);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.2s ease;
+}
+
+.radioInput:checked + .radioCustom {
+  border-color: var(--cartoon-primary);
+  background: var(--cartoon-light);
+  box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.2);
+}
+
+.radioInput:checked + .radioCustom::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.radioLabel:hover .radioCustom {
+  border-color: var(--cartoon-primary);
+  transform: scale(1.1);
+}
+
+/* 禁用状态 */
+.radioInput:disabled + .radioCustom {
+  border-color: #ddd;
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.radioInput:disabled:checked + .radioCustom::after {
+  background: #ccc;
+}
+
+.scaleTitle {
+  font-size: 1.4em;
+  color: var(--cartoon-dark);
+  margin-bottom: 20px;
+  text-align: center;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--cartoon-light) 0%, #e6f7ff 100%);
+  border-radius: 12px;
+  border-left: 5px solid var(--cartoon-primary);
+  box-shadow: 0 3px 8px rgba(89, 193, 255, 0.2);
+}
+
+.scaleDescription {
+  font-size: 1.05em;
+  color: #666;
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: 1.6;
+  padding: 15px 20px;
+  background-color: var(--cartoon-light);
+  border-radius: 10px;
+  border: 2px dashed var(--cartoon-border);
+}
+
+/* 原有卡片模式样式保持不变 */
+/* 问题行容器 */
+.questionRow {
+  margin-bottom: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border-radius: 15px;
+  border: 2px solid var(--cartoon-border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.questionRow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  border-color: var(--cartoon-primary);
+}
+
+/* 问题文本 */
+.questionText {
+  font-size: 1.1em;
+  color: var(--cartoon-dark);
+  margin-bottom: 15px;
+  line-height: 1.6;
+  font-weight: 500;
+  padding-left: 25px;
+  position: relative;
+}
+
+.questionText::before {
+  content: '💭';
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 1.2em;
+}
+
+/* 选项组容器 */
+.optionsGroup {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+  border-radius: 12px;
+  border: 1px solid #d1e7ff;
+}
+
+/* 选项标签 */
+.optionLabel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9em;
+  font-weight: 500;
+  color: #555;
+  text-align: center;
+  line-height: 1.3;
+  min-height: 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.optionLabel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(89, 193, 255, 0.1), transparent);
+  transition: 0.5s;
+}
+
+.optionLabel:hover::before {
+  left: 100%;
+}
+
+.optionLabel:hover {
+  border-color: var(--cartoon-primary);
+  background: linear-gradient(135deg, #e6f7ff 0%, #cce7ff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(89, 193, 255, 0.2);
+}
+
+/* 选中状态 */
+.optionLabel.selected {
+  border-color: var(--cartoon-primary);
+  background: linear-gradient(135deg, var(--cartoon-primary) 0%, #4babff 100%);
+  color: white;
+  font-weight: bold;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(89, 193, 255, 0.4);
+}
+
+.optionLabel.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 1.2em;
+  color: white;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* 禁用状态 */
+.optionLabel.disabledLabel {
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e9e9e9 100%);
+  border-color: #d0d0d0;
+  color: #999;
+  opacity: 0.7;
+}
+
+.optionLabel.disabledLabel:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #d0d0d0;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e9e9e9 100%);
+}
+
+.optionLabel.disabledLabel::before {
+  left: -100%;
+}
+
+/* 隐藏原生单选按钮 */
+.radioInput {
+  display: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .likertTable {
+    font-size: 0.85em;
+  }
+  
+  .questionColumn {
+    width: 40%; /* 在中等屏幕上稍微增加第一列宽度 */
+  }
+  
+  .questionCell {
+    padding: 8px 12px;
+    font-size: 0.9em;
+  }
+  
+  .optionCell {
+    padding: 8px 2px;
+    min-width: 60px;
+  }
+  
+  .radioCustom {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .radioCustom::after {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .optionColumn {
+    font-size: 0.75em !important;
+    min-width: 60px;
+  }
+  
+  .optionsGroup {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .optionLabel {
+    width: 100%;
+    min-height: 50px;
+    font-size: 0.95em;
+  }
+  
+  .questionText {
+    font-size: 1.05em;
+    padding-left: 30px;
+  }
+  
+  .questionRow {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .likertTable {
+    font-size: 0.75em;
+  }
+  
+  .questionColumn {
+    width: 45%; /* 在小屏幕上进一步增加第一列宽度 */
+  }
+  
+  .questionCell {
+    padding: 6px 8px;
+    font-size: 0.85em;
+  }
+  
+  .optionCell {
+    padding: 6px 1px;
+    min-width: 50px;
+  }
+  
+  .radioCustom {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .radioCustom::after {
+    width: 5px;
+    height: 5px;
+  }
+  
+  .optionColumn {
+    font-size: 0.7em !important;
+    min-width: 50px;
+  }
+  
+  .questionText {
+    font-size: 1em;
+    padding-left: 25px;
+  }
+  
+  .optionLabel {
+    padding: 10px 6px;
+    font-size: 0.9em;
+    min-height: 45px;
+  }
+  
+  .optionsGroup {
+    padding: 12px;
+  }
+  
+  .questionRow {
+    padding: 12px;
+  }
+}

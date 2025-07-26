@@ -1,0 +1,116 @@
+.stepNavigationContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px 10px;
+  background-color: var(--cartoon-light);
+  height: 100%;
+  box-sizing: border-box;
+  width: 100px;
+  border-right: 3px solid var(--cartoon-border);
+  position: relative;
+}
+
+.stepNavigationContainer::before {
+  content: '进度';
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  color: var(--cartoon-dark);
+  font-size: 14px;
+}
+
+.stepIndicator {
+  font-size: 1em;
+  font-weight: bold;
+  color: var(--cartoon-dark);
+  margin-bottom: 20px;
+  margin-top: 35px;
+  background-color: var(--cartoon-secondary);
+  padding: 10px 5px;
+  border-radius: 15px;
+  box-shadow: 0 3px 6px var(--cartoon-shadow);
+}
+
+.stepList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.stepList::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  bottom: 20px;
+  width: 4px;
+  background-color: var(--cartoon-border);
+  transform: translateX(-50%);
+  z-index: 0;
+  border-radius: 2px;
+}
+
+.stepItem {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #fff;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 8px;
+  border: 3px solid var(--cartoon-border);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 3px 8px var(--cartoon-shadow);
+}
+
+.stepItem.active {
+  background-color: var(--cartoon-primary);
+  color: white;
+  border-color: var(--cartoon-dark);
+  transform: scale(1.1);
+  box-shadow: 0 5px 15px rgba(89, 193, 255, 0.4);
+}
+
+.stepItem.completed {
+  background-color: var(--cartoon-green);
+  color: white;
+  border-color: #5cbb9f;
+}
+
+.stepItem.active::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 15px;
+  height: 15px;
+  background-color: var(--cartoon-accent);
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.stepItem:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px var(--cartoon-shadow);
+}
+
+/* This class was in the JSX, for styling the next step when current is 0 (e.g., 'Precautions' page) */
+/* We might not need a special style if the default inactive style is fine. */
+/* .stepItem.disabledNext { */
+  /* Styles for the first actual step when on a pre-task page, if needed */
+/* } */ 

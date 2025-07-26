@@ -1,0 +1,30 @@
+/* InteractiveSimulationEnvironment.module.css */
+.simulationEnvironmentContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+  background-color: #e6e6fa; /* 淡紫色背景，更广阔的区域 */
+  border-radius: 20px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.measuringCylindersArea {
+  display: flex;
+  justify-content: space-around; /* 量筒均匀分布 */
+  align-items: flex-end; /* 量筒底部对齐 */
+  flex-wrap: wrap; /* 允许换行，以防屏幕过窄 */
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.5); /* 半透明白色背景板 */
+  border-radius: 10px;
+}
+
+/* SimulationControls 组件的样式由其自己的CSS模块管理 */
+/* 但可以在这里调整其在环境中的布局，如果需要的话 */
+/* 例如，确保 SimulationControls 组件宽度适应容器 */
+.simulationEnvironmentContainer > :global(.controlsContainer) { /* 假设 controlsContainer 是 SimulationControls 的根类名 */
+  /* max-width: 500px; */ /* 如果需要特定宽度 */
+} 

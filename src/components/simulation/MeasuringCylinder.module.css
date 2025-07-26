@@ -1,0 +1,82 @@
+/* MeasuringCylinder.module.css */
+.measuringCylinderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border: 2px solid #a0a0a0;
+  border-radius: 15px;
+  background-color: #f0f8ff; /* 淡蓝色背景，卡通感 */
+  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+  font-family: 'Arial', sans-serif; /* 更换为卡通字体（如果项目有引入） */
+  width: 100px; /* 根据实际布局调整 */
+  margin: 5px;
+}
+
+.temperatureLabel {
+  font-size: 1em; /* 略微调大 */
+  font-weight: bold;
+  color: #ff6347; /* 鲜艳的番茄色 */
+  margin-bottom: 8px;
+  text-shadow: 1px 1px 1px #ccc;
+}
+
+.cylinderVisual {
+  width: 60px; /* 量筒宽度 */
+  height: 180px; /* 量筒高度，可根据maxVolume调整或做成比例 */
+  background-color: #e0ffff; /* 更淡的青色，玻璃感 */
+  border: 3px solid #708090; /* 石板灰色边框 */
+  border-radius: 10px 10px 5px 5px; /* 顶部圆角，底部略方 */
+  position: relative;
+  overflow: hidden; /* 隐藏超出部分的面团 */
+  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+.cylinderMarkings {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* 不阻挡面团的交互 */
+}
+
+.markingLine {
+  position: absolute;
+  left: 0;
+  width: 15%; /* 刻度线长度 */
+  height: 2px;
+  background-color: #4682b4; /* 钢蓝色刻度 */
+  opacity: 0.7;
+}
+
+.markingLine:nth-child(5n+5) { /* 每5个刻度线加长一点 */
+  width: 25%;
+}
+
+.doughVisual {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #f5deb3; /* 小麦色面团 */
+  border-top: 2px solid #deb887; /* 面团顶部颜色略深，增加立体感 */
+  transition: height 1.5s ease-in-out; /* 平滑过渡动画，符合规范2.8 */
+  display: flex;
+  align-items: flex-end; /* 使其从底部开始填充 */
+  justify-content: center;
+  color: #8b4513; /* 鞍褐色字体 */
+  font-size: 0.8em;
+  box-shadow: inset 0px 5px 10px rgba(0,0,0,0.1);
+}
+
+.volumeReading {
+  margin-top: 8px;
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #228b22; /* 森林绿 */
+  background-color: #fffacd; /* 柠檬绸色背景 */
+  padding: 3px 6px;
+  border-radius: 5px;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+} 

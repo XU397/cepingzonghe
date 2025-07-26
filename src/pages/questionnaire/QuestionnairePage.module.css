@@ -1,0 +1,405 @@
+/* 问卷页面通用样式 - 卡通风格 */
+
+/* 页面容器 */
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 85vh;
+  padding: 0px 10px;
+
+  font-family: 'Arial', sans-serif;
+  animation: fadeIn 0.5s ease-out;
+  overflow: hidden; /* 防止页面级别的滚动条 */
+  box-sizing: border-box; /* 新增：确保padding包含在100vh内 */
+}
+
+/* 问卷内容区域 */
+.questionnaireContent {
+  background-color: #ffffff;
+  padding: 10px 10px;
+  border-radius: 15px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 1200px; /* 增加最大宽度适应表格 */
+  text-align: left;
+  margin-top: 0px;
+  max-height: calc(100vh - 40px); /* 限制内容区域高度 */
+  overflow-y: auto; /* 只在内容区域允许滚动 */
+  display: flex;
+  flex-direction: column;
+}
+
+/* 卡通装饰元素 */
+.questionnaireContent::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 30px;
+  width: 60px;
+  height: 10px;
+  background-color: var(--cartoon-secondary);
+  border-radius: 5px 5px 0 0;
+  box-shadow: 0 2px 4px var(--cartoon-shadow);
+}
+
+/* 隐藏标题样式 - 不再使用 */
+.questionnaireContent h1,
+.questionnaireContent h2 {
+  display: none; /* 隐藏顶部标题 */
+}
+
+/* 问卷说明页面专用标题样式 */
+.questionnaireContent h1.introTitle {
+  display: block !important; /* 恢复显示 */
+  color: var(--cartoon-primary);
+  text-align: center;
+  margin-bottom: 25px;
+  font-weight: bold;
+  font-size: 2em;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, var(--cartoon-light) 0%, #e6f7ff 100%);
+  border-radius: 15px;
+  border: 3px solid var(--cartoon-border);
+  box-shadow: 0 6px 16px rgba(89, 193, 255, 0.3);
+  position: relative;
+}
+
+.questionnaireContent h1.introTitle::before {
+  content: '📋';
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2em;
+}
+
+/* 分类标题 */
+.questionnaireContent h3.categoryTitle {
+  font-size: 1.3em;
+  color: #555;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 5px;
+}
+
+/* 页面描述 */
+.pageDescription {
+  font-size: 1.05em;
+  color: #555;
+  margin-bottom: 0px;
+  line-height: 1.8;
+  text-align: left;
+  text-indent: 2em;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--cartoon-light) 0%, #e6f7ff 100%);
+  border-radius: 10px;
+  border: 2px dashed var(--cartoon-border);
+  flex-shrink: 0; /* 防止被压缩 */
+  margin: 10px 0px;
+}
+
+.pageDescription::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50px;
+  background-color: white;
+  padding: 0 8px;
+  font-size: 1.2em;
+}
+
+/* 介绍文本 */
+.introText {
+  margin-bottom: 20px;
+  font-size: 1.05em;
+  color: #444;
+  line-height: 1.7;
+  flex-shrink: 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+  border-radius: 15px;
+  border: 2px solid var(--cartoon-border);
+  box-shadow: 0 4px 12px rgba(89, 193, 255, 0.1);
+  position: relative;
+}
+
+.introText::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 25px;
+  background-color: white;
+  padding: 5px 8px;
+  border-radius: 50%;
+  font-size: 1.2em;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.introText p {
+  margin-bottom: 15px;
+}
+
+.introText p:first-child {
+  font-size: 1.1em;
+  color: var(--cartoon-primary);
+  font-weight: 600;
+  text-align: center;
+  padding: 10px 15px;
+  background: linear-gradient(135deg, var(--cartoon-light) 0%, #e6f7ff 100%);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.introText p:last-child {
+  text-align: center;
+  font-size: 1.1em;
+  margin-bottom: 0;
+}
+
+.introText strong {
+  color: #ff6347;
+  font-weight: 700;
+}
+
+.introText ul {
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.introText ul li {
+  margin-bottom: 12px;
+  padding-left: 25px;
+  position: relative;
+  color: #555;
+}
+
+.introText ul li::before {
+  content: '✅';
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 1em;
+}
+
+/* 表格容器样式 - 确保可以滚动且适应容器 */
+.tableContainer {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 0px;
+  border-radius: 12px;
+}
+
+/* 按钮容器 */
+.buttonContainer {
+  text-align: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 2px solid #e6f3ff;
+  flex-shrink: 0; /* 按钮区域不被压缩 */
+}
+
+/* 按钮样式 */
+.nextButton,
+.submitButton,
+.startButton {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin: 10px 5px;
+  cursor: pointer;
+  border-radius: 25px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.nextButton:hover,
+.submitButton:hover,
+.startButton:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+}
+
+.nextButton:disabled,
+.submitButton:disabled,
+.startButton:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.finalSubmitButton {
+  background-color: #007bff;
+}
+.finalSubmitButton:hover {
+  background-color: #0056b3;
+}
+
+/* 阅读计时器 */
+.readingTimer {
+  text-align: center;
+  margin: 20px 0;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #fff3cd 0%, #fef9e7 100%);
+  color: #856404;
+  border-radius: 20px;
+  font-size: 1.1em;
+  flex-shrink: 0;
+  border: 2px solid #ffeaa7;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+  position: relative;
+  animation: pulseGlow 2s infinite alternate;
+}
+
+.readingTimer::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  padding: 5px 8px;
+  border-radius: 50%;
+  font-size: 1.3em;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+  }
+  100% {
+    box-shadow: 0 6px 16px rgba(255, 193, 7, 0.4);
+  }
+}
+
+.countdown {
+  font-weight: bold;
+  color: #d9534f;
+  font-size: 1.4em;
+  animation: countdown-pulse 1s infinite;
+}
+
+@keyframes countdown-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* 超时提示 */
+.timeUpMessage {
+  color: #d9534f;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 15px;
+  font-size: 1.1em;
+  flex-shrink: 0;
+}
+
+/* 问题分类容器 */
+.questionCategory {
+  margin-bottom: 0px;
+  padding: 5px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+}
+
+.questionCategory::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 20px;
+  width: 40px;
+  height: 8px;
+  background-color: var(--cartoon-secondary);
+  border-radius: 4px 4px 0 0;
+}
+
+/* 感谢信息容器 */
+.thankYouMessageContainer {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+/* 感谢页面标题样式 */
+.thankYouMessageContainer h2 {
+  color: #4CAF50;
+  font-size: 2em;
+  margin-bottom: 20px;
+  display: block !important; /* 感谢页面的标题需要显示 */
+}
+
+.thankYouMessageContainer p {
+  font-size: 1.2em;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 10px;
+  }
+  
+  .questionnaireContent {
+    padding: 5px 5px;
+    max-height: calc(100vh - 30px);
+  }
+  
+  .pageDescription {
+    font-size: 1em;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+  }
+  
+  .nextButton,
+  .submitButton,
+  .startButton {
+    padding: 10px 20px;
+    font-size: 1em;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageContainer {
+    padding: 8px;
+  }
+  
+  .questionnaireContent {
+    padding: 5px 5px;
+    max-height: calc(100vh - 25px);
+    max-width: 95%;
+  }
+  
+  .pageDescription {
+    font-size: 0.95em;
+    padding: 8px 12px;
+  }
+}

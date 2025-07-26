@@ -1,0 +1,67 @@
+/* SimulationControls.module.css */
+.controlsContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background-color: #fff0f5; /* 淡粉色背景，柔和卡通 */
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  margin-top: 0px;
+  width: 100%;
+  max-width: 400px; /* 控制最大宽度 */
+}
+
+.timeSelectorContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.timeAdjustButton {
+  padding: 8px 12px !important; /* 确保 !important 如果通用 Button 有冲突 */
+  font-size: 1.2em !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  line-height: 1 !important;
+  margin: 0 10px !important;
+}
+
+.timeDisplay {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: #ff4500; /* 橙红色，醒目 */
+  min-width: 100px; /* 保证宽度一致性 */
+  text-align: center;
+  padding: 5px 10px;
+  background-color: #fffacd; /* 柠檬绸色 */
+  border-radius: 8px;
+  border: 1px dashed #ffd700; /* 金色虚线边框 */
+}
+
+.actionButtonsContainer {
+  display: flex;
+  justify-content: center; /* 按钮居中 */
+  gap: 20px; /* 按钮之间的间距 */
+  width: 100%;
+}
+
+.controlButton {
+  padding: 12px 25px !important;
+  font-size: 1.1em !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 如果 Button 组件没有 variant="warning" 样式，可以在这里补充 */
+/* 例如，如果 Button 组件的 warning 变体是通过添加 .buttonWarning 类实现的 */
+/*
+.controlButton.buttonWarning {
+  background-color: #ffa500; // 橙色
+  color: white;
+}
+
+.controlButton.buttonWarning:hover {
+  background-color: #e69500;
+}
+*/ 

@@ -1,0 +1,77 @@
+/* RadioButtonGroup.module.css */
+.radioButtonGroupContainer {
+  display: flex;
+  gap: 10px; /* 选项之间的间距 */
+  font-family: 'Comic Sans MS', 'Chalkduster', 'cursive', sans-serif; /* 卡通字体 */
+}
+
+.radioButtonGroupContainer.vertical {
+  flex-direction: column;
+}
+
+.radioButtonGroupContainer.horizontal {
+  flex-direction: row;
+  flex-wrap: wrap; /* 水平排列时允许换行 */
+  align-items: center;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 20px; /* 圆角边框 */
+  background-color: #fff8dc; /* 玉米色背景 */
+  border: 2px solid transparent;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.radioLabel:hover {
+  background-color: #f0e68c; /* 卡其色悬停 */
+  border-color: #ffd700; /* 金色边框 */
+}
+
+.radioInput {
+  appearance: none; /* 隐藏默认radio外观 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ff69b4; /* 亮粉色边框 */
+  border-radius: 50%; /* 圆形 */
+  margin-right: 10px;
+  outline: none;
+  cursor: pointer;
+  position: relative; /* 用于定位内部圆点 */
+  transition: border-color 0.2s ease-in-out;
+}
+
+.radioInput:checked {
+  border-color: #ff1493; /* 深粉色选中边框 */
+}
+
+/* 自定义选中时的圆点 */
+.radioInput:checked::before {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 10px;
+  background-color: #ff1493; /* 深粉色圆点 */
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.radioInput:hover {
+  border-color: #db7093; /* 淡紫色悬停 */
+}
+
+.radioText {
+  font-size: 1em;
+  color: #4b0082; /* 靛蓝色文本 */
+  user-select: none; /* 防止文本被选中 */
+} 

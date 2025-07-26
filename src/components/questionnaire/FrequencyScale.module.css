@@ -1,0 +1,140 @@
+.frequencyScaleContainer {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 2px solid var(--cartoon-border);
+  border-radius: 15px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.scaleTitle {
+  font-size: 1.4em;
+  color: var(--cartoon-dark);
+  margin-bottom: 20px;
+  text-align: center;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--cartoon-light) 0%, #e6f7ff 100%);
+  border-radius: 12px;
+  border-left: 5px solid var(--cartoon-primary);
+  box-shadow: 0 3px 8px rgba(89, 193, 255, 0.2);
+}
+
+.scaleDescription {
+  font-size: 1.05em;
+  color: #666;
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: 1.6;
+  padding: 15px 20px;
+  background-color: var(--cartoon-light);
+  border-radius: 10px;
+  border: 2px dashed var(--cartoon-border);
+}
+
+.frequencyTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 2px;
+  table-layout: fixed;
+  margin-top: 15px;
+}
+
+.frequencyTable th,
+.frequencyTable td {
+  border: 2px solid var(--cartoon-border);
+  padding: 5px 8px;
+  height: 60px;
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.frequencyTable th {
+  background: linear-gradient(135deg, var(--cartoon-primary) 0%, #4babff 100%);
+  color: white;
+  font-weight: 500;
+  font-size: 0.95em;
+  box-shadow: 0 2px 6px rgba(89, 193, 255, 0.3);
+}
+
+.activityColumn {
+  width: 30%; /* 缩小活动名称列宽度，为选项列留更多空间 */
+  text-align: center !important; /* 表头居中对齐 */
+  font-size: 0.9em;
+  line-height: 1.3;
+  padding: 8px 6px;
+}
+
+.optionColumn {
+  /* 其他选项列均分剩余宽度 */
+  font-size: 0.8em;
+  line-height: 1.2;
+  padding: 8px 4px;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+.activityCell {
+  text-align: left;
+  font-size: 0.95em;
+  background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+  font-weight: 500;
+  color: var(--cartoon-dark);
+  position: relative;
+  padding: 8px 8px 8px 30px;
+  line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  vertical-align: top;
+}
+
+.activityCell::before {
+  content: '📋';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1em;
+}
+
+.radioCell {
+  background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  vertical-align: middle !important;
+  padding: 12px 6px;
+}
+
+.radioCell:hover {
+  background: linear-gradient(135deg, #e6f7ff 0%, #cce7ff 100%);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(89, 193, 255, 0.2);
+}
+
+.radioCell input[type="radio"] {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto;
+  display: block;
+  accent-color: var(--cartoon-primary);
+  transform: scale(1.2);
+}
+
+.radioCell input[type="radio"]:checked {
+  background-color: var(--cartoon-primary);
+}
+
+.radioCell input[type="radio"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.radioCell:has(input[type="radio"]:checked) {
+  background: linear-gradient(135deg, var(--cartoon-primary) 0%, #4babff 100%);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(89, 193, 255, 0.4);
+} 

@@ -1,0 +1,141 @@
+/* P20 问卷介绍页面专用样式 - 卡通风格 */
+
+/* 继承通用问卷样式 */
+@import url('./QuestionnairePage.module.css');
+
+/* P20 特定样式覆盖和扩展 */
+.pageContainer {
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+}
+
+.questionnaireContent {
+  border: 3px solid #67d5b5;
+  box-shadow: 0 12px 35px rgba(103, 213, 181, 0.2);
+}
+
+.questionnaireContent::before {
+  background-color: #67d5b5;
+}
+
+/* 标题特殊样式 */
+.questionnaireContent h1 {
+  color: #2c7a7b;
+  background: linear-gradient(135deg, #67d5b5 0%, #5cbb9f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  border-bottom: 4px solid #67d5b5;
+}
+
+/* 介绍文本特殊样式 */
+.introText {
+  background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+  border: 2px solid #67d5b5;
+  position: relative;
+}
+
+.introText::before {
+  content: '📋';
+  position: absolute;
+  top: -15px;
+  left: 20px;
+  font-size: 2em;
+  background-color: white;
+  padding: 0 10px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(103, 213, 181, 0.3);
+}
+
+/* 重要提示样式增强 */
+.introText strong {
+  color: #2c7a7b;
+  background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+/* 列表项特殊样式 */
+.introText ul li::before {
+  content: '✨';
+  color: #67d5b5;
+}
+
+/* 阅读计时器特殊样式 */
+.readingTimer {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 3px solid #f6ad55;
+  box-shadow: 0 6px 15px rgba(246, 173, 85, 0.3);
+  animation: gentlePulse 2s ease-in-out infinite;
+}
+
+.countdown {
+  color: #c05621;
+  font-size: 1.4em;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 开始按钮特殊样式 */
+.startButton {
+  background: linear-gradient(135deg, #67d5b5 0%, #5cbb9f 100%);
+  font-size: 1.2em;
+  padding: 16px 40px;
+  box-shadow: 0 8px 20px rgba(103, 213, 181, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.startButton::after {
+  content: '🚀';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2em;
+  opacity: 0.8;
+}
+
+.startButton:hover {
+  background: linear-gradient(135deg, #5cbb9f 0%, #4a9d8e 100%);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(103, 213, 181, 0.5);
+}
+
+.startButton:disabled {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+  color: #a0aec0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.startButton:disabled::after {
+  content: '⏳';
+  opacity: 0.5;
+}
+
+/* 动画效果 */
+@keyframes gentlePulse {
+  0%, 100% { 
+    transform: scale(1); 
+    box-shadow: 0 6px 15px rgba(246, 173, 85, 0.3);
+  }
+  50% { 
+    transform: scale(1.02); 
+    box-shadow: 0 8px 20px rgba(246, 173, 85, 0.4);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .startButton {
+    padding: 14px 30px;
+    font-size: 1.1em;
+  }
+  
+  .startButton::after {
+    right: 12px;
+    font-size: 1.1em;
+  }
+}

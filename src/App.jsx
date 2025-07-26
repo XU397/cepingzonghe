@@ -1,0 +1,256 @@
+import React, { useEffect } from 'react';
+import { AppProvider, useAppContext } from './context/AppContext';
+import Timer from './components/common/Timer';
+import QuestionnaireTimer from './components/questionnaire/QuestionnaireTimer';
+import PageRouter from './components/PageRouter';
+import StepNavigation from './components/common/StepNavigation';
+import QuestionnaireNavigation from './components/questionnaire/QuestionnaireNavigation';
+import UserInfoBar from './components/common/UserInfoBar';
+import ApiConfigDebug from './components/debug/ApiConfigDebug';
+import { isQuestionnairePage, getQuestionnaireStepNumber, TOTAL_QUESTIONNAIRE_STEPS } from './utils/pageMappings';
+// import { initGlobalErrorHandling } from './utils/errorHandler'; // 可选：启用错误过滤
+import './styles/global.css'; // Ensure global styles are imported
+
+// 导入模块路由器
+const ModuleRouter = React.lazy(() => import('./modules/ModuleRouter.jsx'));
+
+/**
+ * 主应用内容组件
+ * 根据登录状态和任务状态渲染不同内容
+ */
+const AppContent = () => {
+  const { 
+    isLoggedIn,
+    isAuthenticated, 
+    currentPageId, 
+    isTimeUp, 
+    isTaskFinished, 
+    setCurrentPageId,
+    setIsTaskFinished,
+    startTaskTimer,
+    currentStepNumber,
+    totalUserSteps,
+    submitPageData,
+    questionnaireRemainingTime,
+    isQuestionnaireTimeUp,
+    taskStartTime,
+    currentUser,
+    batchCode,
+    examNo,
+    // 模块系统需要的状态
+    remainingTime,
+    pageNum,
+    currentPageData,
+    pageEnterTime,
+    authToken,
+    moduleUrl,
+    questionnaireData,
+    questionnaireAnswers,
+    isQuestionnaireCompleted,
+    logOperation,
+    collectAnswer
+  } = useAppContext();
+
+  useEffect(() => {
+    if (isTimeUp && !isTaskFinished && currentPageId !== 'Page_19_Task_Completion') {
+      console.log("时间到，自动提交当前页面并导航到完成页...");
+      
+      // 使用AppContext的submitPageData，它已包含session过期处理
+      const doTimeUpSubmission = async () => {
+        await submitPageData();
+        // 无论提交成功与否，都导航到完成页（时间已到）
+        setIsTaskFinished(true);
+        setCurrentPageId('Page_19_Task_Completion');
+      };
+      
+      doTimeUpSubmission();
+    }
+  }, [isTimeUp, isTaskFinished, currentPageId, submitPageData, setCurrentPageId, setIsTaskFinished]);
+
+  // 计时器检查：确保在任务页面时计时器已启动
+  useEffect(() => {
+    if (isAuthenticated && isLoggedIn && !taskStartTime && !isTaskFinished) {
+      // 定义需要计时器的页面
+      const taskPages = [
+        'Page_02_Introduction',
+        'Page_03_Dialogue_Question',
+        'Page_04_Material_Reading_Factor_Selection',
+        'Page_10_Hypothesis_Focus',
+        'Page_11_Solution_Design_Measurement_Ideas',
+        'Page_12_Solution_Evaluation_Measurement_Critique',
+        'Page_13_Transition_To_Simulation',
+        'Page_14_Simulation_Intro_Exploration',
+        'Page_15_Simulation_Question_1',
+        'Page_16_Simulation_Question_2',
+        'Page_17_Simulation_Question_3',
+        'Page_18_Solution_Selection'
+      ];
+      
+      if (taskPages.includes(currentPageId)) {
+        console.log(`[App] 🚨 检测到用户在任务页面 ${currentPageId} 但计时器未启动，立即启动计时器`);
+        startTaskTimer();
+      }
+    }
+  }, [isAuthenticated, isLoggedIn, taskStartTime, isTaskFinished, currentPageId, startTaskTimer]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="app-container">
+        <div className="task-wrapper">
+          <PageRouter />
+        </div>
+      </div>
+    );
+  }
+
+  // 检查当前页面是否是问卷页面（P20-P28）
+  const isQuestionnairePageId = (pageId) => {
+    return pageId && pageId.startsWith('Page_2') && ['Page_20_Questionnaire_Intro', 'Page_21_Curiosity_Questions', 'Page_22_Creativity_Questions', 'Page_23_Imagination_Questions', 'Page_24_Science_Efficacy_Questions', 'Page_25_Environment_Questions', 'Page_26_School_Activities', 'Page_27_Outschool_Activities', 'Page_28_Effort_Submit'].includes(pageId);
+  };
+
+  if (isTaskFinished && currentPageId !== 'Page_19_Task_Completion' && !isQuestionnairePageId(currentPageId)) {
+    // 如果任务已标记为完成，但当前页面不是P19且不是问卷页面，则强制导航到P19
+    // 这可以处理刷新后回到错误页面的情况，但允许问卷页面正常显示
+    setCurrentPageId('Page_19_Task_Completion');
+  }
+
+  // 任务进行中，显示计时器和页面路由器（注意事项页面开始显示计时器）
+  const showTimer = currentPageId !== 'Page_01_Precautions'; // 注意事项页面不显示计时器
+  const showStepNavigation = currentStepNumber > 0;
+  
+  // 判断是否是问卷页面
+  const isCurrentPageQuestionnaire = isQuestionnairePage(currentPageId);
+  const currentQuestionnaireStep = getQuestionnaireStepNumber(currentPageId);
+
+  // 如果有模块URL，使用模块路由器
+  if (moduleUrl) {
+    console.log('[App] 📦 渲染模块系统界面');
+    
+    // 构造全局上下文（从 AppContext 获取）
+    const globalContext = {
+      currentPageId,
+      remainingTime,
+      taskStartTime,
+      batchCode,
+      examNo,
+      pageNum,
+      currentPageData,
+      pageEnterTime,
+      isLoggedIn,
+      isAuthenticated,
+      authToken,
+      currentUser,
+      moduleUrl,
+      isTaskFinished,
+      isTimeUp,
+      questionnaireData,
+      questionnaireAnswers,
+      isQuestionnaireCompleted,
+      logOperation,
+      collectAnswer
+    };
+    
+    // 认证信息
+    const authInfo = {
+      url: moduleUrl,
+      pageNum: currentPageId,
+      examNo: examNo,
+      batchCode: batchCode
+    };
+    
+    return (
+      <div className="app-container">
+        <UserInfoBar />
+        {showTimer && (
+          isCurrentPageQuestionnaire ? (
+            <QuestionnaireTimer 
+              remainingTime={questionnaireRemainingTime} 
+              isTimeUp={isQuestionnaireTimeUp} 
+            />
+          ) : (
+            <Timer />
+          )
+        )}
+        <div className="main-content-wrapper">
+          {isCurrentPageQuestionnaire ? (
+            <QuestionnaireNavigation 
+              currentQuestionnaireStep={currentQuestionnaireStep} 
+              totalQuestionnaireSteps={TOTAL_QUESTIONNAIRE_STEPS} 
+            />
+          ) : (
+            showStepNavigation && <StepNavigation currentStepNumber={currentStepNumber} totalSteps={totalUserSteps} />
+          )}
+          <div className="task-wrapper">
+            <React.Suspense fallback={
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                minHeight: '200px',
+                fontSize: '16px'
+              }}>
+                🚀 正在加载模块系统...
+              </div>
+            }>
+              <ModuleRouter 
+                globalContext={globalContext}
+                authInfo={authInfo}
+              />
+            </React.Suspense>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 默认情况：使用传统页面路由器
+  return (
+    <div className="app-container">
+      {/* 用户信息条 */}
+      <UserInfoBar />
+      {/* 根据当前页面类型显示不同的计时器 */}
+      {showTimer && (
+        isCurrentPageQuestionnaire ? (
+          <QuestionnaireTimer 
+            remainingTime={questionnaireRemainingTime} 
+            isTimeUp={isQuestionnaireTimeUp} 
+          />
+        ) : (
+          <Timer />
+        )
+      )}
+      <div className="main-content-wrapper">
+        {/* 根据当前页面类型显示不同的导航 */}
+        {isCurrentPageQuestionnaire ? (
+          <QuestionnaireNavigation 
+            currentQuestionnaireStep={currentQuestionnaireStep} 
+            totalQuestionnaireSteps={TOTAL_QUESTIONNAIRE_STEPS} 
+          />
+        ) : (
+          showStepNavigation && <StepNavigation currentStepNumber={currentStepNumber} totalSteps={totalUserSteps} />
+        )}
+        <div className="task-wrapper">
+          <PageRouter />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 应用主组件
+ * 包含全局状态管理和页面路由
+ */
+function App() {
+  // 显示调试信息（可以通过查询参数控制）
+  const showDebug = new URLSearchParams(window.location.search).get('debug') === 'true';
+  
+  return (
+    <AppProvider>
+      <AppContent />
+      {showDebug && <ApiConfigDebug />}
+    </AppProvider>
+  );
+}
+
+export default App;

@@ -1,0 +1,91 @@
+/* 问卷计时器样式 - 卡通风格 */
+
+.timerContainer {
+  position: fixed;
+  top: 55px;
+  right: 20px;
+  background: linear-gradient(135deg, #67d5b5 0%, #5cbb9f 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 1.1em;
+  font-weight: bold;
+  box-shadow: 0 6px 15px rgba(103, 213, 181, 0.3);
+  z-index: 999;
+  border: 3px solid #ffffff;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.timerContainer::before {
+  content: '⏰';
+  font-size: 1.2em;
+}
+
+/* 时间警告状态（剩余时间少于2分钟） */
+.timeWarning {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  box-shadow: 0 6px 15px rgba(255, 107, 107, 0.4);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.timeWarning::before {
+  content: '⚠️';
+}
+
+/* 时间到状态 */
+.timeUp {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  box-shadow: 0 6px 15px rgba(220, 53, 69, 0.5);
+  animation: shake 0.5s ease-in-out infinite;
+}
+
+.timeUp::before {
+  content: '🚨';
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 6px 15px rgba(255, 107, 107, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.6);
+  }
+}
+
+/* 震动动画 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .timerContainer {
+    top: 10px;
+    right: 10px;
+    padding: 10px 16px;
+    font-size: 1em;
+  }
+  
+  .timerContainer::before {
+    font-size: 1.1em;
+  }
+}
+
+@media (max-width: 480px) {
+  .timerContainer {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 10px auto;
+    width: fit-content;
+  }
+}
