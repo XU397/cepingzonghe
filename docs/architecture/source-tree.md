@@ -1,39 +1,69 @@
-# **6.0 源代码树集成 (Source Tree Integration)**
+# **7.0 源代码树集成 (Source Tree Integration)**
 
-### **6.1 集成原则**
+### **7.1 集成原则**
 
 新模块的引入必须在不扰乱现有项目结构的前提下进行。我们将通过在src目录下创建新的、专门的文件夹来清晰地组织新代码。
 
-### **6.2 最终目录结构**
+### **7.2 分阶段目录结构 (Phased Directory Structure)**
 
-以下是整合了新模块后，项目src目录的最终结构。AI开发代理必须严格遵守此结构创建和放置文件。
+**当前阶段（Phase 1）目录结构**：实现4年级模块构建，7年级保持原结构
 
-src/  
-├── components/           \# (现有) 存放七年级模块的组件  
-├── context/              \# (现有) 存放 AppContext.jsx  
-├── modules/              \# 【新】所有测评模块的根目录  
-│   ├── grade-4/          \# 【新】四年级“火车购票”模块  
-│   │   ├── assets/       \#  \- 存放图片、SVG等静态资源  
-│   │   ├── components/   \#  \- 存放该模块独有的React组件  
-│   │   │   ├── containers/  
-│   │   │   └── ui/  
-│   │   ├── context/      \#  \- 存放 Grade4Context.jsx  
-│   │   ├── hooks/        \#  \- 存放该模块独有的自定义Hooks  
-│   │   ├── pages/        \#  \- 存放代表每个测评页面的顶层组件  
-│   │   ├── types/        \#  \- 存放 TypeScript类型定义  
-│   │   └── index.tsx     \#  \- 四年级模块的主入口文件  
-│   ├── grade-7/          \# 【新】七年级“蒸馒头”模块的包装器  
-│   │   └── wrapper.jsx  
-│   ├── ModuleRegistry.js \# 【新】模块注册中心  
-│   └── ModuleRouter.jsx  \# 【新】顶层模块路由器  
-├── pages/                \# (现有) 存放七年级模块的页面  
-├── services/             \# (现有) 存放七年级模块的服务 (将被别名指向shared)  
-├── shared/               \# 【新】跨模块共享的代码  
-│   ├── services/         \#  \- 存放 apiService.js, dataLogger.js  
-│   ├── types/            \#  \- 存放 submissionPayload.ts  
-│   └── ... (其他共享代码)  
-├── styles/               \# (现有) 存放七年级模块的样式  
-├── utils/                \# (现有) 存放七年级模块的工具函数  
-└── ... (所有其他现有文件和目录保持原位)
+```
+src/
+├── components/           # (现有) 七年级模块组件 - 完全不变
+├── context/              # (现有) AppContext.jsx - 完全不变  
+├── pages/                # (现有) 七年级模块页面 - 完全不变
+├── services/             # (现有) 保持现有位置，通过别名重定向
+├── styles/               # (现有) 七年级模块样式 - 完全不变
+├── utils/                # (现有) 七年级工具函数 - 完全不变
+├── modules/              # 【新】模块系统根目录
+│   ├── ModuleRegistry.js # 【新】模块注册中心
+│   ├── ModuleRouter.jsx  # 【新】顶层模块路由器  
+│   ├── ErrorBoundary.jsx # 【新】错误边界保护
+│   ├── grade-7/          # 【新】七年级包装器目录
+│   │   ├── index.jsx     #  - 模块入口点
+│   │   ├── wrapper.jsx   #  - PageRouter包装器
+│   │   └── config.js     #  - 模块配置
+│   └── grade-4/          # 【新】四年级独立模块
+│       ├── assets/       #  - 图片、SVG等静态资源
+│       ├── components/   #  - 模块专用React组件
+│       │   ├── containers/ #  - 智能组件（含状态逻辑）
+│       │   │   ├── InteractiveMap.jsx
+│       │   │   ├── TimePlanner.jsx  # 拖拽+关键路径计算
+│       │   │   └── FinalCalculator.jsx
+│       │   └── ui/       #  - 纯展示组件
+│       │       ├── DraggableTask.jsx
+│       │       ├── OnScreenKeyboard.jsx
+│       │       └── RouteMapModal.jsx
+│       ├── context/      #  - Grade4Context.jsx状态管理
+│       ├── hooks/        #  - 模块专用自定义Hooks
+│       ├── pages/        #  - 11个测评页面组件
+│       ├── utils/        #  - 关键路径计算等工具函数
+│       └── index.jsx     #  - 四年级模块主入口
+└── shared/               # 【新】跨模块共享代码
+    ├── services/         #  - apiService.js, dataLogger.js
+    ├── components/       #  - 可复用UI组件（逐步提取）
+    ├── utils/            #  - 共享工具函数
+    └── types/            #  - TypeScript类型定义
+```
 
-**开发要求**: AI代理在执行开发任务时，必须根据此目录结构创建新文件。例如，为题目7创建的拖拽组件应位于 src/modules/grade-4/components/containers/TimePlanner.tsx。
+**关键实现策略**：
+
+1. **路径别名配置** (vite.config.js)：
+```javascript
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@/services': '/src/shared/services',
+      '@/shared': '/src/shared',
+      // 7年级模块的现有导入路径透明重定向
+      '../services/apiService': '/src/shared/services/apiService.js'
+    }
+  }
+});
+```
+
+2. **零影响迁移原则**：
+   - 所有7年级文件保持原位置和原内容
+   - 通过Vite别名实现服务层重定向
+   - 新模块完全独立开发，不依赖现有结构

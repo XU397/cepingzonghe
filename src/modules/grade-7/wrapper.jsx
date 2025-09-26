@@ -23,7 +23,7 @@ import PageRouter from '../../components/PageRouter';
  */
 export const Grade7Wrapper = ({ userContext, initialPageId }) => {
   
-  // 记录包装器的使用情况，便于调试
+  // 记录包装器的使用情况，便于调试 - 只在真正需要时记录
   useEffect(() => {
     console.log('[Grade7Wrapper] 🎯 7年级模块包装器已挂载', {
       hasUserContext: !!userContext,
@@ -35,7 +35,7 @@ export const Grade7Wrapper = ({ userContext, initialPageId }) => {
     return () => {
       console.log('[Grade7Wrapper] 🧹 7年级模块包装器已卸载');
     };
-  }, [userContext, initialPageId]);
+  }, [initialPageId]); // 只依赖initialPageId，避免userContext对象引用变化导致重复执行
 
   // 处理初始页面设置
   useEffect(() => {

@@ -1,0 +1,236 @@
+/**
+ * 故事 2.6: 拖拽式时间规划 - 交互教程页面样式
+ * PDF第13页样式实现
+ */
+
+.timelinePlanningPage {
+  background: #f8f9fa;
+}
+
+.contentArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 指令说明区域 */
+.instructionSection {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.mainText {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+.taskList {
+  display: inline-block; /* 核心修改：从 block 改为 inline-block */
+  margin: 0 8px; /* 调整外边距 */
+  padding: 8px 12px; /* 调整内边距 */
+  vertical-align: middle; /* 优化垂直对齐 */
+  background: #e3f2fd;
+  border-left: 4px solid #2196F3;
+  border-radius: 4px;
+  font-weight: 500;
+  color: #1976D2;
+}
+
+.noteText {
+  font-size: 14px;
+  color: #666;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 16px 0 0 0;
+}
+
+/* 演示控制区域 */
+.demoControlSection {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.demoInstructions {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.playButton {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  margin: 0 8px;
+}
+
+.playButton:hover:not(:disabled) {
+  background: #45a049;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.playButton:active {
+  transform: scale(0.95);
+}
+
+.playButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.playButton.playing {
+  background: #ff9800;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* 演示区域 */
+.demoArea {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  min-height: 400px;
+  flex: 1;
+}
+
+/* 导航区域 */
+.navigationSection {
+  display: flex;
+  justify-content: center;
+  padding: 24px 20px;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  margin-top: auto;
+}
+
+.nextButton {
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.nextButton:hover {
+  background: #1976D2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.nextButton:active {
+  transform: translateY(0);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .contentArea {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .instructionSection,
+  .demoControlSection,
+  .demoArea {
+    padding: 16px;
+  }
+  
+  .mainText {
+    font-size: 15px;
+  }
+  
+  .demoInstructions {
+    font-size: 15px;
+    text-align: center;
+  }
+  
+  .taskList {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  .playButton {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+  
+  .demoArea {
+    min-height: 300px;
+  }
+  
+  .nextButton {
+    padding: 10px 24px;
+    font-size: 15px;
+  }
+  
+  .navigationSection {
+    padding: 16px;
+  }
+}
+
+.pageTitle {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+.pageNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: #f5a623;
+  color: white;
+  margin-right: 12px;
+  font-size: 16px;
+  flex-shrink: 0;
+}

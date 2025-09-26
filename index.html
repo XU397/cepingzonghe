@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/src/assets/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>蒸馒头科学探究任务</title>
+    <style>
+      /* 全屏样式 */
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+      
+      #root {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      /* 隐藏滚动条 */
+      ::-webkit-scrollbar {
+        display: none;
+      }
+      
+      /* 禁用选择和拖拽 */
+      * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-user-drag: none;
+        -khtml-user-drag: none;
+        -moz-user-drag: none;
+        -o-user-drag: none;
+        user-drag: none;
+      }
+      
+      /* 禁用右键菜单 */
+      body {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // 禁用右键菜单
+      document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+      });
+      
+      // 禁用F12、Ctrl+Shift+I等开发者工具快捷键
+      document.addEventListener('keydown', function(e) {
+        // F12
+        if (e.keyCode === 123) {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+Shift+I
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+Shift+C
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 67) {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+U (查看源代码)
+        if (e.ctrlKey && e.keyCode === 85) {
+          e.preventDefault();
+          return false;
+        }
+        // F5 (刷新)
+        if (e.keyCode === 116) {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+R (刷新)
+        if (e.ctrlKey && e.keyCode === 82) {
+          e.preventDefault();
+          return false;
+        }
+        // Alt+F4 (关闭窗口)
+        if (e.altKey && e.keyCode === 115) {
+          e.preventDefault();
+          return false;
+        }
+      });
+      
+      // 进入全屏功能 (健壮版)
+function enterFullscreen() {
+  const elem = document.documentElement;
+  const request = elem.requestFullscreen || elem.webkitRequestFullscreen || elem.msRequestFullscreen;
+
+  if (typeof request === 'function') {
+    // requestFullscreen 返回一个 Promise。我们必须处理潜在的拒绝情况。
+    const promise = request.call(elem);
+    if (promise) {
+      promise.catch(err => {
+        // 优雅地处理错误，而不是让整个应用崩溃
+        console.warn('Fullscreen request was denied or failed. Reason:', err.message);
+      });
+    }
+  }
+}
+      
+      // 页面加载完成后自动尝试进入全屏
+      window.addEventListener('load', function() {
+        var hasTriggeredFullscreen = false;
+        
+        // 需要用户交互才能进入全屏，所以添加点击事件
+        function autoFullscreen() {
+          if (!hasTriggeredFullscreen) {
+            enterFullscreen();
+            hasTriggeredFullscreen = true;
+            document.removeEventListener('click', autoFullscreen);
+          }
+        }
+        
+        document.addEventListener('click', autoFullscreen);
+        
+        // 显示提示信息
+        var notification = document.createElement('div');
+        notification.style.cssText = [
+          'position: fixed',
+          'top: 50%',
+          'left: 50%',
+          'transform: translate(-50%, -50%)',
+          'background: rgba(0, 0, 0, 0.8)',
+          'color: white',
+          'padding: 20px',
+          'border-radius: 10px',
+          'font-size: 18px',
+          'text-align: center',
+          'z-index: 9999',
+          'font-family: Arial, sans-serif'
+        ].join(';');
+        notification.innerHTML = '点击屏幕任意位置进入全屏模式';
+        document.body.appendChild(notification);
+        
+        // 5秒后自动隐藏提示
+        setTimeout(function() {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 5000);
+        
+        // 点击后隐藏提示
+        var hasHiddenNotification = false;
+        function hideNotification() {
+          if (!hasHiddenNotification && notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+            hasHiddenNotification = true;
+            document.removeEventListener('click', hideNotification);
+          }
+        }
+        document.addEventListener('click', hideNotification);
+      });
+      
+      // 监听全屏状态变化
+      document.addEventListener('fullscreenchange', function() {
+        if (!document.fullscreenElement) {
+          // 如果退出全屏，提示重新进入
+          setTimeout(function() {
+            if (confirm('检测到退出全屏模式，是否重新进入全屏？')) {
+              enterFullscreen();
+            }
+          }, 100);
+        }
+      });
+      
+      // 兼容性处理
+      document.addEventListener('webkitfullscreenchange', function() {
+        if (!document.webkitFullscreenElement) {
+          setTimeout(function() {
+            if (confirm('检测到退出全屏模式，是否重新进入全屏？')) {
+              enterFullscreen();
+            }
+          }, 100);
+        }
+      });
+      
+      // 添加错误处理和调试信息
+      window.addEventListener('error', function(e) {
+        console.error('JavaScript Error:', e.error);
+        console.error('Error details:', {
+          message: e.message,
+          filename: e.filename,
+          lineno: e.lineno,
+          colno: e.colno
+        });
+      });
+      
+      // 检查关键功能是否可用
+       window.addEventListener('load', function() {
+         console.log('Browser compatibility check:');
+         console.log('- ES6 const/let support:', (function() { try { eval('const x = 1'); return true; } catch(e) { return false; } })());
+         console.log('- Arrow functions support:', (function() { try { eval('() => {}'); return true; } catch(e) { return false; } })());
+         console.log('- Template literals support:', (function() { try { eval('`test`'); return true; } catch(e) { return false; } })());
+         console.log('- addEventListener support:', typeof document.addEventListener === 'function');
+         console.log('- React module loading will be handled by bundler');
+         
+         // 如果是低版本浏览器，显示额外的提示
+         var isOldBrowser = (function() {
+           try {
+             eval('const x = 1; () => {}; `test`');
+             return false;
+           } catch(e) {
+             return true;
+           }
+         })();
+         
+         if (isOldBrowser) {
+           console.warn('检测到低版本浏览器，某些功能可能无法正常工作');
+           var warningDiv = document.createElement('div');
+           warningDiv.style.cssText = [
+             'position: fixed',
+             'top: 10px',
+             'right: 10px',
+             'background: #ff9800',
+             'color: white',
+             'padding: 10px',
+             'border-radius: 5px',
+             'font-size: 14px',
+             'z-index: 10000',
+             'max-width: 300px'
+           ].join(';');
+           warningDiv.innerHTML = '检测到浏览器版本较低，建议升级到最新版Chrome以获得最佳体验';
+           document.body.appendChild(warningDiv);
+           
+           setTimeout(function() {
+             if (warningDiv.parentNode) {
+               warningDiv.parentNode.removeChild(warningDiv);
+             }
+           }, 8000);
+         }
+       });
+    </script>
+    <script type="module" src="src/main.jsx"></script>
+  </body>
+</html>

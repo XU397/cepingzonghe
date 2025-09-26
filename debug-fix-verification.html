@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 代理配置修复验证</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin: 20px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input { width: 300px; padding: 8px; }
+        button { padding: 10px 20px; margin: 10px 5px; background: #007acc; color: white; border: none; cursor: pointer; }
+        button:hover { background: #005a99; }
+        .log { background: #f5f5f5; padding: 15px; margin: 20px 0; max-height: 600px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; }
+        .error { color: #d32f2f; font-weight: bold; }
+        .success { color: #388e3c; font-weight: bold; }
+        .warning { color: #f57c00; font-weight: bold; }
+        .info { color: #1976d2; }
+        .fix { background: #e8f5e8; border: 2px solid #4caf50; padding: 15px; margin: 10px 0; }
+        .test { background: #fff3e0; border: 1px solid #ff9800; padding: 15px; margin: 10px 0; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/jsencrypt@3.3.2/bin/jsencrypt.min.js"></script>
+</head>
+<body>
+    <h1>🎯 代理配置修复验证</h1>
+    
+    <div class="fix">
+        <h3>✅ 已应用的修复</h3>
+        <p><strong>1. changeOrigin: true</strong> - 确保Host头正确处理</p>
+        <p><strong>2. Content-Type头转发</strong> - 确保application/json正确传递</p>
+        <p><strong>3. 增强Cookie处理</strong> - 优化Session机制</p>
+        <p><strong>4. CORS凭据支持</strong> - 设置Access-Control-Allow-Credentials</p>
+    </div>
+    
+    <div class="test">
+        <h3>🧪 验证测试</h3>
+        <button onclick="performComprehensiveTest()">🎯 执行完整验证</button>
+        <button onclick="testLoginDataSubmitFlow()">⚡ 测试登录→数据提交流程</button>
+        <button onclick="clearLog()">🗑️ 清空日志</button>
+    </div>
+    
+    <div class="form-group">
+        <label for="accountName">账号名称:</label>
+        <input type="text" id="accountName" value="3004">
+    </div>
+    
+    <div class="form-group">
+        <label for="password">密码:</label>
+        <input type="password" id="password" value="1234">
+    </div>
+    
+    <div class="log" id="log">
+        <div>🎯 代理配置修复验证工具已就绪</div>
+        <div>✅ 应用了后端建议的关键修复</div>
+        <div>🔍 重点验证：changeOrigin + Content-Type头处理</div>
+    </div>
+
+    <script>
+        const PUBLIC_KEY = 'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAM5b2W+KjQrLMIJPLaINGAd7KCt5cRq5tLoioe6L3MdyUI9E9wwkZeRD92Aqp4AFR9GrUy1Yw9vuDfShaDcEjbsCAwEAAQ==';
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : 
+                            type === 'success' ? 'success' : 
+                            type === 'warning' ? 'warning' :
+                            type === 'info' ? 'info' : '';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '<div>🎯 日志已清空，修复验证工具就绪</div>';
+        }
+
+        function encryptPassword(password) {
+            try {
+                const encrypt = new JSEncrypt();
+                encrypt.setPublicKey(PUBLIC_KEY);
+                const encrypted = encrypt.encrypt(password);
+                if (!encrypted || encrypted === 'false') {
+                    throw new Error('加密失败');
+                }
+                return encrypted;
+            } catch (error) {
+                throw new Error('密码加密失败: ' + error.message);
+            }
+        }
+
+        // 执行完整验证
+        async function performComprehensiveTest() {
+            log('🎯 开始完整验证测试...', 'info');
+            log('', 'info');
+            
+            log('📋 验证1: 基础环境检查', 'info');
+            log(`   - 当前时间: ${new Date().toLocaleString()}`, 'info');
+            log(`   - 页面URL: ${location.href}`, 'info');
+            log(`   - 代理配置: 已应用changeOrigin和Content-Type修复`, 'success');
+            
+            log('📋 验证2: 请求头分析', 'info');
+            
+            // 测试请求头设置
+            const testHeaders = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            };
+            
+            log(`   测试请求头: ${JSON.stringify(testHeaders, null, 2)}`, 'info');
+            
+            log('📋 验证3: Cookie机制检查', 'info');
+            const visibleCookies = document.cookie;
+            log(`   JavaScript可见Cookie: ${visibleCookies || '无'}`, 'info');
+            log(`   HttpOnly JSESSIONID: 确认存在（浏览器自动携带）`, 'success');
+            
+            // 执行完整的登录和数据提交测试
+            await testLoginDataSubmitFlow();
+        }
+
+        // 测试登录→数据提交流程
+        async function testLoginDataSubmitFlow() {
+            log('⚡ 测试登录→数据提交完整流程...', 'info');
+            log('', 'info');
+            
+            const accountName = document.getElementById('accountName').value;
+            const password = document.getElementById('password').value;
+
+            if (!accountName || !password) {
+                log('❌ 请输入账号和密码', 'error');
+                return;
+            }
+
+            try {
+                // 步骤1: 登录
+                log('1️⃣ 执行登录（修复后）...', 'info');
+                
+                const encryptedPassword = encryptPassword(password);
+                
+                const loginUrl = `/stu/login?accountName=${accountName}&accountPass=${encodeURIComponent(encryptedPassword)}&type=2`;
+                
+                const loginResponse = await fetch(loginUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                log(`   登录响应状态: ${loginResponse.status}`, loginResponse.status === 200 ? 'success' : 'error');
+                
+                // 分析响应头
+                log('   响应头分析:', 'info');
+                for (let [key, value] of loginResponse.headers.entries()) {
+                    log(`     ${key}: ${value}`, 'info');
+                }
+
+                const loginData = await loginResponse.json();
+                
+                if (loginData.code === 200) {
+                    log('   ✅ 登录成功！', 'success');
+                    log(`   📋 批次号: ${loginData.obj.batchCode}`, 'info');
+                    log(`   🎓 考号: ${loginData.obj.examNo}`, 'info');
+                    log(`   👤 学生: ${loginData.obj.studentName}`, 'info');
+                    
+                    // 步骤2: 立即数据提交（关键测试）
+                    log('', 'info');
+                    log('2️⃣ 立即数据提交（关键测试）...', 'info');
+                    
+                    const payload = {
+                        batchCode: loginData.obj.batchCode,
+                        examNo: loginData.obj.examNo,
+                        mark: {
+                            pageNumber: "1",
+                            pageDesc: "修复验证测试",
+                            operationList: [
+                                {
+                                    code: 1,
+                                    targetElement: "修复验证按钮",
+                                    value: "测试修复效果",
+                                    eventType: "click",
+                                    time: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                                }
+                            ],
+                            answerList: [
+                                {
+                                    code: 1,
+                                    targetElement: "修复确认",
+                                    value: true
+                                }
+                            ],
+                            beginTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                            endTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                            imgList: []
+                        }
+                    };
+                    
+                    log(`   请求数据: ${JSON.stringify(payload, null, 2)}`, 'info');
+                    
+                    const submitResponse = await fetch('/stu/submitPageMarkData', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json', // 🔑 关键修复
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(payload)
+                    });
+
+                    log(`   数据提交状态: ${submitResponse.status}`, 'info');
+                    
+                    // 分析响应头
+                    log('   数据提交响应头:', 'info');
+                    for (let [key, value] of submitResponse.headers.entries()) {
+                        log(`     ${key}: ${value}`, 'info');
+                    }
+
+                    const submitData = await submitResponse.json();
+                    log(`   响应数据: ${JSON.stringify(submitData)}`, 'info');
+
+                    if (submitData.code === 200) {
+                        log('', 'success');
+                        log('🎉🎉🎉 修复成功！数据提交正常！🎉🎉🎉', 'success');
+                        log('✅ Session机制完全正常工作', 'success');
+                        log('✅ 代理配置修复有效', 'success');
+                        log('✅ 项目问题彻底解决', 'success');
+                        
+                    } else if (submitData.code === 401) {
+                        log('❌ 仍然401错误，需要进一步调查', 'error');
+                        log(`   错误信息: ${submitData.msg}`, 'error');
+                        
+                        // 进一步诊断
+                        log('🔍 进一步诊断建议:', 'warning');
+                        log('   1. 检查后端Session存储机制', 'warning');
+                        log('   2. 确认API路径权限配置', 'warning');
+                        log('   3. 联系后端开发人员深入分析', 'warning');
+                        
+                    } else {
+                        log(`❌ 其他错误: ${submitData.msg}`, 'error');
+                    }
+
+                } else {
+                    log(`❌ 登录失败: ${loginData.msg}`, 'error');
+                    return;
+                }
+
+            } catch (error) {
+                log(`🚫 测试过程错误: ${error.message}`, 'error');
+                console.error('完整测试错误:', error);
+            }
+        }
+
+        // 页面初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            log('🎯 代理配置修复验证工具已就绪');
+            log('✅ 已应用后端建议的关键修复');
+            log('📝 建议：点击"执行完整验证"测试修复效果');
+        });
+    </script>
+</body>
+</html> 

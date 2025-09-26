@@ -1,0 +1,316 @@
+/**
+ * 问题识别页面样式 - CSS Modules版本
+ * 四年级火车购票测评
+ * 使用共享变量系统确保视觉一致性
+ */
+
+@import '../styles/shared-variables.css';
+
+/* 问题识别页面根容器 */
+.problemIdentificationContainer {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-family-primary);
+  overflow: hidden;
+}
+
+/* 页面标题容器 */
+.titleContainer {
+  position: absolute;
+  top: var(--spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.95);
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--button-border-radius-round);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+}
+
+.pageTitle {
+  font-size: var(--font-size-2xl);
+  color: var(--color-dark);
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-primary);
+  text-align: center;
+  line-height: var(--line-height-tight);
+}
+
+/* 主内容区域 - 左右分栏布局 */
+.mainContent {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+/* 左侧：聊天对话图片区域 */
+.leftImageArea {
+  width: 50%;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* 右侧：问题提示和输入区域 */
+.rightInputArea {
+  width: 50%;
+  height: 100%;
+  min-height: 100%;
+  padding: calc(var(--spacing-4xl) + var(--spacing-lg)) var(--spacing-3xl) var(--spacing-3xl) var(--spacing-3xl);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* 问题输入卡片容器 */
+.inputCard {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--border-radius-large);
+  border: 3px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-3xl);
+  flex: 1;
+  margin: var(--spacing-lg) 0;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(15px);
+  min-height: 300px;
+}
+
+/* 问题标题 */
+.questionTitle {
+  font-size: var(--font-size-2xl);
+  color: var(--color-dark);
+  margin-bottom: var(--spacing-xl);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  line-height: var(--line-height-normal);
+  font-family: var(--font-family-primary);
+}
+
+/* 文本输入区域容器 */
+.textInputContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 文本输入框 */
+.textInput {
+  width: 100%;
+  padding: var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  border: 3px solid var(--border-color);
+  border-radius: var(--border-radius-large);
+  resize: none;
+  font-family: var(--font-family-primary);
+  transition: var(--transition-normal);
+  outline: none;
+  background-color: var(--bg-white);
+  flex: 1;
+  line-height: var(--line-height-relaxed);
+  min-height: 120px;
+}
+
+.textInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: var(--input-focus-shadow);
+}
+
+.textInput.valid {
+  border-color: var(--color-success);
+}
+
+.textInput.invalid {
+  border-color: var(--border-color);
+}
+
+/* 输入提示 */
+.inputHint {
+  margin-top: var(--spacing-lg);
+  font-size: var(--font-size-base);
+  text-align: center;
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family-primary);
+  transition: var(--transition-normal);
+}
+
+.inputHint.valid {
+  color: var(--color-success);
+}
+
+.inputHint.invalid {
+  color: var(--text-muted);
+}
+
+/* 响应式设计 */
+@media (max-width: 1280px) {
+  .titleContainer {
+    padding: var(--spacing-sm) var(--spacing-lg);
+  }
+  
+  .pageTitle {
+    font-size: var(--font-size-xl);
+  }
+  
+  .rightInputArea {
+    padding: calc(var(--spacing-3xl) + var(--spacing-md)) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
+  }
+  
+  .inputCard {
+    padding: var(--spacing-lg);
+    min-height: 250px;
+  }
+  
+  .questionTitle {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .textInput {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-base);
+    min-height: 100px;
+  }
+}
+
+@media (max-height: 720px) {
+  .titleContainer {
+    top: var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-lg);
+  }
+  
+  .pageTitle {
+    font-size: var(--font-size-lg);
+  }
+  
+  .rightInputArea {
+    padding: calc(var(--spacing-xl) + var(--spacing-md)) var(--spacing-md) var(--spacing-md) var(--spacing-md);
+  }
+  
+  .inputCard {
+    padding: var(--spacing-md);
+    margin: var(--spacing-sm) 0;
+    min-height: 200px;
+  }
+  
+  .questionTitle {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .textInput {
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    min-height: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    flex-direction: column;
+  }
+  
+  .leftImageArea {
+    width: 100%;
+    height: 30%;
+    min-height: 200px;
+  }
+  
+  .rightInputArea {
+    width: 100%;
+    height: 70%;
+    padding: var(--spacing-md);
+  }
+  
+  .titleContainer {
+    top: var(--spacing-base);
+    padding: var(--spacing-xs) var(--spacing-md);
+  }
+  
+  .pageTitle {
+    font-size: var(--font-size-base);
+  }
+  
+  .inputCard {
+    padding: var(--spacing-base);
+    margin: var(--spacing-xs) 0;
+    min-height: 150px;
+  }
+  
+  .questionTitle {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .textInput {
+    font-size: var(--font-size-sm);
+    min-height: 60px;
+  }
+  
+  .inputHint {
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-sm);
+  }
+}
+
+/* 动画效果 */
+.fadeIn {
+  animation: fadeInAnimation 0.8s ease-in-out;
+}
+
+@keyframes fadeInAnimation {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slideInFromRight {
+  animation: slideInRight 1s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slideInFromLeft {
+  animation: slideInLeft 1s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

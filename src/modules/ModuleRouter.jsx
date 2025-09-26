@@ -12,7 +12,7 @@
  * - 性能优化与错误边界
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import ModuleFallback from './ModuleFallback';
 import { performanceMonitor } from './config/performance.js';
 
@@ -121,15 +121,26 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
   // 性能优化：使用 ref 避免重复初始化
   const initializationRef = useRef(false);
   const moduleCleanupRef = useRef(null);
+  const moduleUserContextRef = useRef(null);
 
-  // 性能优化：记忆化用户上下文
+  // 性能优化：记忆化用户上下文 - 使用更稳定的依赖
   const moduleUserContext = useMemo(() => {
-    return constructModuleUserContext(globalContext, authInfo);
-  }, [globalContext, authInfo]);
+    const context = constructModuleUserContext(globalContext, authInfo);
+    moduleUserContextRef.current = context; // 保存到ref中
+    return context;
+  }, [
+    // 只依赖真正会变化的关键字段
+    authInfo?.examNo,
+    authInfo?.batchCode, 
+    authInfo?.url,
+    authInfo?.pageNum,
+    globalContext?.currentPageId,
+    globalContext?.isAuthenticated
+  ]);
 
   /**
    * 初始化模块系统
-   * 使用 ref 确保只初始化一次
+   * 使用 ref 确保只初始化一次，优化加载速度
    */
   const initializeModuleSystem = useCallback(async () => {
     // 防止重复初始化
@@ -146,9 +157,17 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
       
       initializationRef.current = true;
       
-      // 导入并初始化模块注册表
-      const registry = (await import('./ModuleRegistry.js')).default;
-      await registry.initialize();
+      // 🚀 优化：使用动态导入并立即解析Promise
+      const [registryModule] = await Promise.all([
+        import('./ModuleRegistry.js')
+      ]);
+      
+      const registry = registryModule.default;
+      
+      // 🚀 优化：只进行必要的初始化
+      if (typeof registry.initialize === 'function') {
+        await registry.initialize();
+      }
       
       setModuleRegistry(registry);
       
@@ -174,25 +193,26 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
    * 根据用户上下文加载对应的模块
    */
   const loadModuleForUser = useCallback(async () => {
-    if (!moduleRegistry || !moduleUserContext) {
+    const currentContext = moduleUserContextRef.current;
+    if (!moduleRegistry || !currentContext) {
       return;
     }
 
     try {
       console.log('[ModuleRouter] 🔍 开始加载用户模块...', {
-        url: moduleUserContext.url,
-        pageNum: moduleUserContext.pageNum,
-        examNo: moduleUserContext.examNo
+        url: currentContext.url,
+        pageNum: currentContext.pageNum,
+        examNo: currentContext.examNo
       });
 
       // 性能监控：开始模块加载计时
       performanceMonitor.start('module_load_time');
 
       // 根据URL查找对应的模块
-      const module = moduleRegistry.getModuleByUrl(moduleUserContext.url);
+      const module = moduleRegistry.getModuleByUrl(currentContext.url);
       
       if (!module) {
-        throw new Error(`未找到URL对应的模块: ${moduleUserContext.url}`);
+        throw new Error(`未找到URL对应的模块: ${currentContext.url}`);
       }
 
       console.log('[ModuleRouter] 📦 找到对应模块:', {
@@ -204,11 +224,11 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
 
       // 获取初始页面ID（用于页面恢复）
       let pageId = null;
-      if (moduleUserContext.pageNum) {
+      if (currentContext.pageNum) {
         try {
-          pageId = module.getInitialPage(moduleUserContext.pageNum);
+          pageId = module.getInitialPage(currentContext.pageNum);
           console.log('[ModuleRouter] 🔄 页面恢复:', {
-            pageNum: moduleUserContext.pageNum,
+            pageNum: currentContext.pageNum,
             initialPageId: pageId
           });
         } catch (err) {
@@ -217,14 +237,30 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
         }
       }
 
-      // 执行模块初始化
+      // 🚀 优化：模块初始化改为异步并行
+      const initPromises = [];
       if (typeof module.onInitialize === 'function') {
         try {
-          await module.onInitialize();
-          console.log('[ModuleRouter] ✅ 模块初始化完成');
+          // 确保初始化函数返回Promise，如果不是则包装
+          const initResult = module.onInitialize();
+          const initPromise = initResult && typeof initResult.then === 'function' 
+            ? initResult 
+            : Promise.resolve(initResult);
+            
+          initPromises.push(
+            initPromise.catch(err => {
+              console.warn('[ModuleRouter] ⚠️ 模块初始化失败:', err.message);
+            })
+          );
         } catch (err) {
-          console.warn('[ModuleRouter] ⚠️ 模块初始化失败:', err.message);
+          console.warn('[ModuleRouter] ⚠️ 模块初始化同步执行失败:', err.message);
         }
+      }
+      
+      // 并行执行初始化操作
+      if (initPromises.length > 0) {
+        await Promise.allSettled(initPromises);
+        console.log('[ModuleRouter] ✅ 模块初始化完成');
       }
 
       // 保存清理函数引用
@@ -255,7 +291,7 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
     } finally {
       setLoading(false);
     }
-  }, [moduleRegistry, moduleUserContext]);
+  }, [moduleRegistry]); // 移除moduleUserContext依赖，在函数内直接访问
 
   /**
    * 清理当前模块
@@ -315,12 +351,14 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
     };
   }, [initializeModuleSystem, cleanupCurrentModule]);
 
-  // 模块注册表准备就绪后加载用户模块
+  // 模块注册表准备就绪后加载用户模块 - 优化依赖
   useEffect(() => {
-    if (moduleRegistry) {
+    if (moduleRegistry && moduleUserContextRef.current?.url) {
+      // 🚀 优化：立即设置loading为false，先显示组件再执行加载
+      setLoading(false);
       loadModuleForUser();
     }
-  }, [moduleRegistry, loadModuleForUser]);
+  }, [moduleRegistry, authInfo?.url, loadModuleForUser]); // 使用稳定的authInfo.url
 
   // 当模块发生变化时，清理旧模块
   useEffect(() => {
@@ -351,7 +389,7 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
             fontSize: '14px', 
             color: '#666' 
           }}>
-            {moduleUserContext?.url && `目标模块: ${moduleUserContext.url}`}
+            {authInfo?.url && `目标模块: ${authInfo.url}`}
           </div>
           {/* 性能优化：显示加载进度 */}
           <div style={{
@@ -454,7 +492,7 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
               }}>
                 {JSON.stringify({
                   error: error,
-                  moduleUserContext: moduleUserContext,
+                  authInfo: authInfo,
                   hasModuleRegistry: !!moduleRegistry,
                   timestamp: new Date().toISOString()
                 }, null, 2)}
@@ -532,7 +570,7 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
             color: '#999',
             textAlign: 'center'
           }}>
-            目标URL: {moduleUserContext?.url || 'unknown'}
+            目标URL: {authInfo?.url || 'unknown'}
           </div>
         )}
       </div>
@@ -540,4 +578,24 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
   );
 };
 
-export default ModuleRouter;
+// 使用React.memo优化，减少不必要的重新渲染
+export default React.memo(ModuleRouter, (prevProps, nextProps) => {
+  // 自定义比较函数，只比较关键字段
+  const prevAuth = prevProps.authInfo;
+  const nextAuth = nextProps.authInfo;
+  
+  const authChanged = (
+    prevAuth?.url !== nextAuth?.url ||
+    prevAuth?.pageNum !== nextAuth?.pageNum ||
+    prevAuth?.examNo !== nextAuth?.examNo ||
+    prevAuth?.batchCode !== nextAuth?.batchCode
+  );
+  
+  // 如果认证信息变化，则需要重新渲染
+  if (authChanged) {
+    return false; // 返回false表示需要重新渲染
+  }
+  
+  // 其他情况下，避免重新渲染
+  return true; // 返回true表示跳过重新渲染
+});

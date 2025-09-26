@@ -1,0 +1,150 @@
+/**
+ * 四年级模块共享CSS变量系统
+ * 确保与项目整体设计系统的一致性
+ * 基于global.css中定义的设计规范
+ */
+
+:root {
+  /* 颜色系统 - 继承全局卡通风格配色 */
+  --color-primary: var(--cartoon-primary, #59c1ff);
+  --color-secondary: var(--cartoon-secondary, #ffce6b);
+  --color-accent: var(--cartoon-accent, #ff7eb6);
+  --color-success: var(--cartoon-green, #67d5b5);
+  --color-warning: var(--warning-color, #f7ba2a);
+  --color-error: var(--cartoon-red, #ff8a80);
+  --color-dark: var(--cartoon-dark, #2d5b8e);
+  
+  /* 背景颜色系统 */
+  --bg-primary: var(--cartoon-bg, #fff9f0);
+  --bg-secondary: var(--cartoon-light, #e6f7ff);
+  --bg-white: #ffffff;
+  --bg-card: #fff;
+  
+  /* 文本颜色 */
+  --text-primary: var(--text-color, #333);
+  --text-secondary: #666;
+  --text-muted: #999;
+  --text-white: #ffffff;
+  
+  /* 边框和阴影 */
+  --border-color: var(--cartoon-border, #ffd99e);
+  --border-radius: 8px;
+  --border-radius-small: 6px;
+  --border-radius-large: 15px;
+  --border-radius-round: 25px;
+  --shadow-card: 0 2px 8px var(--cartoon-shadow, rgba(255, 188, 97, 0.3));
+  --shadow-button: 0 4px 15px rgba(89, 193, 255, 0.4);
+  --shadow-hover: 0 6px 20px rgba(89, 193, 255, 0.6);
+  
+  /* 字体系统 */
+  --font-family-primary: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 28px;
+  --font-size-4xl: 32px;
+  
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+  --font-weight-extra-bold: 700;
+  
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.4;
+  --line-height-relaxed: 1.6;
+  --line-height-loose: 1.8;
+  
+  /* 间距系统 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-base: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 20px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 40px;
+  --spacing-4xl: 48px;
+  
+  /* 布局相关 */
+  --container-max-width: 1200px;
+  --page-padding: 30px;
+  --sidebar-width: 100px;
+  --header-height: 40px;
+  
+  /* 响应式断点 - 与项目标准一致 */
+  --breakpoint-mobile: 480px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1200px;
+  --breakpoint-large: 1280px;
+  
+  /* 动画和过渡 */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* 表单元素样式 */
+  --input-padding: 14px;
+  --input-border-width: 3px;
+  --input-focus-shadow: 0 0 0 4px rgba(89, 193, 255, 0.2);
+  
+  /* 按钮样式变量 */
+  --button-padding: 12px 24px;
+  --button-padding-large: 16px 32px;
+  --button-padding-small: 8px 16px;
+  --button-border-radius: 12px;
+  --button-border-radius-round: 25px;
+  
+  /* Z-index层级管理 */
+  --z-dropdown: 100;
+  --z-modal: 200;
+  --z-tooltip: 300;
+  --z-timer: 999;
+}
+
+/* 响应式变量调整 */
+@media (max-width: 1280px) {
+  :root {
+    --page-padding: 20px;
+    --sidebar-width: 85px;
+    --font-size-2xl: 20px;
+    --font-size-3xl: 24px;
+    --font-size-4xl: 28px;
+  }
+}
+
+@media (max-height: 720px) {
+  :root {
+    --page-padding: 15px;
+    --sidebar-width: 75px;
+    --header-height: 35px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --page-padding: 16px;
+    --sidebar-width: 60px;
+    --font-size-base: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --spacing-base: 10px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --page-padding: 12px;
+    --font-size-sm: 12px;
+    --font-size-base: 14px;
+    --spacing-sm: 6px;
+    --spacing-base: 8px;
+    --spacing-md: 10px;
+  }
+}

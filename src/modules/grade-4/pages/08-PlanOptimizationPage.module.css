@@ -1,0 +1,101 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.contentArea {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.section {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 16px 16px 20px;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.solutionDisplay {
+  border: 1px dashed #ddd;
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.timelineContainer {
+  position: relative;
+  width: 100%;
+  height: 180px;
+}
+
+.taskBlock {
+  position: absolute;
+  height: 36px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+}
+
+.totalTimeDisplay {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  font-size: 14px;
+}
+
+.timeValue {
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.question {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.choiceOptions {
+  display: flex;
+  gap: 20px;
+}
+
+.radioOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.taskSourceArea {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.improvementDropZone {
+  border: 1px dashed #ccc;
+  border-radius: 6px;
+  padding: 10px;
+  background: #fefefe;
+}
+
+.timeDisplay {
+  margin-top: 8px;
+  text-align: right;
+}
+

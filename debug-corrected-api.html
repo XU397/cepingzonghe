@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 API修复验证工具</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .form-group { margin: 20px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea { width: 300px; padding: 8px; }
+        button { padding: 10px 20px; margin: 10px 5px; background: #007acc; color: white; border: none; cursor: pointer; }
+        button:hover { background: #005a99; }
+        .log { background: #f5f5f5; padding: 15px; margin: 20px 0; max-height: 700px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; }
+        .error { color: #d32f2f; font-weight: bold; }
+        .success { color: #388e3c; font-weight: bold; }
+        .warning { color: #f57c00; font-weight: bold; }
+        .info { color: #1976d2; }
+        .critical { background: #ffebee; border: 2px solid #f44336; padding: 15px; margin: 10px 0; }
+        .success-box { background: #e8f5e8; border: 2px solid #4caf50; padding: 15px; margin: 10px 0; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/jsencrypt@3.3.2/bin/jsencrypt.min.js"></script>
+</head>
+<body>
+    <h1>🔧 API修复验证工具</h1>
+    
+    <div class="success-box">
+        <h3>🎯 修复内容</h3>
+        <p><strong>修复1：</strong>API端点从 <code>/submitPageMarkData</code> 改为 <code>/saveHcMark</code></p>
+        <p><strong>修复2：</strong>数据格式从JSON改为FormData</p>
+        <p><strong>依据：</strong>前端API规范文档中定义的正确接口</p>
+    </div>
+    
+    <div class="form-group">
+        <label for="accountName">账号名称:</label>
+        <input type="text" id="accountName" value="3004">
+    </div>
+    
+    <div class="form-group">
+        <label for="password">密码:</label>
+        <input type="password" id="password" value="1234">
+    </div>
+    
+    <div class="form-group">
+        <label for="batchCode">批次号:</label>
+        <input type="text" id="batchCode" placeholder="登录后自动填充">
+    </div>
+    
+    <div class="form-group">
+        <label for="examNo">考号:</label>
+        <input type="text" id="examNo" placeholder="登录后自动填充">
+    </div>
+    
+    <div class="form-group">
+        <button onclick="testCorrectedAPI()">🔧 测试修正后的API</button>
+        <button onclick="compareAPIs()">📊 对比新旧API</button>
+        <button onclick="clearLog()">🗑️ 清空日志</button>
+    </div>
+    
+    <div class="log" id="log">
+        <div>🔧 API修复验证工具已就绪</div>
+        <div>🎯 目标：验证使用正确的saveHcMark API和FormData格式</div>
+        <div>📋 预期：解决401 session过期问题</div>
+    </div>
+
+    <script>
+        const PUBLIC_KEY = 'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAM5b2W+KjQrLMIJPLaINGAd7KCt5cRq5tLoioe6L3MdyUI9E9wwkZeRD92Aqp4AFR9GrUy1Yw9vuDfShaDcEjbsCAwEAAQ==';
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : 
+                            type === 'success' ? 'success' : 
+                            type === 'warning' ? 'warning' :
+                            type === 'info' ? 'info' : '';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '<div>🔧 日志已清空，API修复验证工具就绪</div>';
+        }
+
+        function encryptPassword(password) {
+            try {
+                const encrypt = new JSEncrypt();
+                encrypt.setPublicKey(PUBLIC_KEY);
+                const encrypted = encrypt.encrypt(password);
+                if (!encrypted || encrypted === 'false') {
+                    throw new Error('加密失败');
+                }
+                return encrypted;
+            } catch (error) {
+                throw new Error('密码加密失败: ' + error.message);
+            }
+        }
+
+        // 测试修正后的API
+        async function testCorrectedAPI() {
+            log('🔧 开始测试修正后的API...', 'info');
+            
+            const accountName = document.getElementById('accountName').value;
+            const password = document.getElementById('password').value;
+
+            if (!accountName || !password) {
+                log('❌ 请输入账号和密码', 'error');
+                return;
+            }
+
+            try {
+                // 1. 登录
+                log('1️⃣ 执行登录...', 'info');
+                const encryptedPassword = encryptPassword(password);
+                
+                const loginResponse = await fetch(`/stu/login?accountName=${accountName}&accountPass=${encodeURIComponent(encryptedPassword)}&type=2`, {
+                    method: 'GET',
+                    headers: { 
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                if (loginData.code !== 200) {
+                    log(`❌ 登录失败: ${loginData.msg}`, 'error');
+                    return;
+                }
+                
+                log('✅ 登录成功', 'success');
+                log(`📋 批次号: ${loginData.obj.batchCode}`, 'info');
+                log(`🎓 考号: ${loginData.obj.examNo}`, 'info');
+                
+                // 填充表单
+                document.getElementById('batchCode').value = loginData.obj.batchCode;
+                document.getElementById('examNo').value = loginData.obj.examNo;
+                
+                // 2. 使用修正后的API提交数据
+                log('2️⃣ 使用修正后的saveHcMark API...', 'info');
+                
+                // 🔑 修复：使用FormData格式
+                const formData = new FormData();
+                formData.append('batchCode', loginData.obj.batchCode);
+                formData.append('examNo', loginData.obj.examNo);
+                
+                const markData = {
+                    pageNumber: "1",
+                    pageDesc: "API修复验证测试",
+                    operationList: [
+                        {
+                            code: 1,
+                            targetElement: "修复验证按钮",
+                            value: "测试修复效果",
+                            eventType: "click",
+                            time: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                        }
+                    ],
+                    answerList: [
+                        {
+                            code: 1,
+                            targetElement: "修复确认",
+                            value: true
+                        }
+                    ],
+                    beginTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                    endTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                    imgList: []
+                };
+                
+                formData.append('mark', JSON.stringify(markData));
+                
+                log('📤 FormData内容:', 'info');
+                log(`   - batchCode: ${loginData.obj.batchCode}`, 'info');
+                log(`   - examNo: ${loginData.obj.examNo}`, 'info');
+                log(`   - mark: ${JSON.stringify(markData)}`, 'info');
+                
+                // 🔑 修复：使用正确的API端点
+                const submitResponse = await fetch('/stu/saveHcMark', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData // 🔑 使用FormData而不是JSON
+                });
+                
+                log(`数据提交状态: ${submitResponse.status}`, 'info');
+                
+                const submitData = await submitResponse.json();
+                log(`响应数据: ${JSON.stringify(submitData)}`, 
+                    submitData.code === 200 ? 'success' : 'error');
+                
+                if (submitData.code === 200) {
+                    log('🎉 修复成功！使用saveHcMark API和FormData格式工作正常！', 'success');
+                } else {
+                    log(`❌ 仍然失败: ${submitData.msg}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`🚫 测试错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 对比新旧API
+        async function compareAPIs() {
+            log('📊 开始对比新旧API...', 'info');
+            
+            const batchCode = document.getElementById('batchCode').value;
+            const examNo = document.getElementById('examNo').value;
+
+            if (!batchCode || !examNo) {
+                log('❌ 请先登录获取批次号和考号', 'error');
+                return;
+            }
+
+            const testData = {
+                batchCode: batchCode,
+                examNo: examNo,
+                mark: {
+                    pageNumber: "1",
+                    pageDesc: "API对比测试",
+                    operationList: [],
+                    answerList: [],
+                    beginTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                    endTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                    imgList: []
+                }
+            };
+
+            try {
+                // 测试旧API (submitPageMarkData + JSON)
+                log('🔍 测试旧API: submitPageMarkData + JSON', 'warning');
+                const oldResponse = await fetch('/stu/submitPageMarkData', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(testData)
+                });
+                
+                const oldData = await oldResponse.json();
+                log(`   旧API结果: ${JSON.stringify(oldData)}`, oldData.code === 200 ? 'success' : 'warning');
+                
+                // 测试新API (saveHcMark + FormData)
+                log('🔧 测试新API: saveHcMark + FormData', 'info');
+                const formData = new FormData();
+                formData.append('batchCode', testData.batchCode);
+                formData.append('examNo', testData.examNo);
+                formData.append('mark', JSON.stringify(testData.mark));
+                
+                const newResponse = await fetch('/stu/saveHcMark', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+                
+                const newData = await newResponse.json();
+                log(`   新API结果: ${JSON.stringify(newData)}`, newData.code === 200 ? 'success' : 'warning');
+                
+                // 对比结果
+                log('📊 对比结果:', 'info');
+                if (oldData.code === 200 && newData.code === 200) {
+                    log('   🎉 两个API都成功！', 'success');
+                } else if (oldData.code !== 200 && newData.code === 200) {
+                    log('   ✅ 新API修复了问题！', 'success');
+                } else if (oldData.code === 200 && newData.code !== 200) {
+                    log('   ⚠️ 旧API有效，新API需要进一步调试', 'warning');
+                } else {
+                    log('   ❌ 两个API都失败，需要进一步分析', 'error');
+                }
+                
+            } catch (error) {
+                log(`🚫 对比测试错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            log('🔧 API修复验证工具已就绪');
+            log('💡 关键修复：使用saveHcMark API + FormData格式');
+            log('📝 建议：点击"测试修正后的API"验证修复效果');
+        });
+    </script>
+</body>
+</html>

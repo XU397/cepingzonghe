@@ -1,0 +1,260 @@
+/**
+ * 注意事项页面样式 - 四年级火车购票测评
+ * 简化布局，直接使用外层容器
+ */
+
+.notices-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #FFFBEF; /* 浅米色背景 - 按照UI/UX规范 */
+  border-radius: 8px; /* 圆角设计 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* 页面头部 */
+.page-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 28px;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+  font-weight: bold;
+}
+
+/* 内容区域 */
+.content-section {
+  margin-bottom: 20px;
+  padding: 18px 25px;
+  border-left: 6px solid var(--cartoon-red);
+  position: relative;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 导航区域 */
+.navigation-area {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 20px;
+}
+
+.confirmation-box {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.confirmation-checkbox {
+  font-size: 18px !important;
+  font-weight: 500;
+  color: #333 !important;
+}
+
+/* 导航区域 */
+.navigation-area {
+  display: flex;
+  justify-content: center;
+}
+
+.next-button {
+  padding: 12px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.next-button.enabled {
+  background: #2196F3; /* 蓝绿色激活状态 - 按照UI/UX规范 */
+  color: white;
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+.next-button.enabled:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+}
+
+.next-button.enabled:active {
+  transform: translateY(0);
+}
+
+.next-button.disabled {
+  background: #E0E0E0; /* 灰色背景禁用状态 - 按照UI/UX规范 */
+  color: #9e9e9e;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 页面底部 */
+.page-footer {
+  padding: 20px 40px;
+  text-align: center;
+  background: #fafbfc;
+  border-top: 1px solid #e9ecef;
+}
+
+.timer-info {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.timer-text {
+  color: #6c757d;
+  transition: color 0.3s ease;
+}
+
+.timer-text.completed {
+  color: #28a745;
+}
+
+.timer-text.ready {
+  color: #007bff;
+  font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 1280px) {
+  .page-content {
+    padding: 15px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+    margin-bottom: 15px;
+  }
+  
+  .content-section {
+    padding: 15px 20px;
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-height: 720px) {
+  .page-content {
+    padding: 10px;
+  }
+  
+  .page-title {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  
+  .content-section {
+    padding: 12px 18px;
+    margin-bottom: 12px;
+  }
+  
+  .navigation-area {
+    padding-top: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .notices-page {
+    padding: 10px;
+  }
+  
+  .notices-container {
+    margin: 0;
+    border-radius: 8px;
+  }
+  
+  .page-header {
+    padding: 20px;
+  }
+  
+  .page-title {
+    font-size: 28px;
+  }
+  
+  .page-subtitle {
+    font-size: 16px;
+  }
+  
+  .notices-content {
+    padding: 20px;
+  }
+  
+  .section-title {
+    font-size: 18px;
+  }
+  
+  .notices-list li {
+    font-size: 15px;
+  }
+  
+  .confirmation-area {
+    padding: 20px;
+  }
+  
+  .confirmation-checkbox {
+    font-size: 16px !important;
+  }
+  
+  .next-button {
+    padding: 10px 24px;
+    font-size: 16px;
+  }
+  
+  .page-footer {
+    padding: 15px 20px;
+  }
+  
+  .timer-info {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .notices-content {
+    padding: 15px;
+  }
+  
+  .notices-section {
+    margin-bottom: 24px;
+  }
+  
+  .confirmation-area {
+    padding: 15px;
+  }
+  
+  .page-footer {
+    padding: 12px 15px;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .notices-page {
+    background: white;
+    padding: 0;
+  }
+  
+  .notices-container {
+    box-shadow: none;
+    border-radius: 0;
+  }
+  
+  .page-header {
+    background: white;
+    color: black;
+    border-bottom: 2px solid #333;
+  }
+  
+  .confirmation-area,
+  .page-footer {
+    display: none;
+  }
+}

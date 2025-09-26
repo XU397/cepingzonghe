@@ -1,1257 +1,483 @@
-# 编码规范文档 (Coding Standards)
+# **编码标准与开发规范 (Coding Standards & Development Guidelines)**
 
-本文档基于现有代码库的深入分析，定义了项目的编码规范、文件结构、命名约定和组件模式。所有新代码必须严格遵循这些规范以确保代码库的一致性和可维护性。
+## **核心开发原则 (Core Development Principles)**
 
-## 文件命名规范 (File Naming Conventions)
+### **1.1 代码隔离原则**
+- **绝对禁止**修改现有七年级"蒸馒头"模块的任何代码
+- **混合架构**：新模块通过顶层模块路由器 (ModuleRouter.jsx) 集成，实现新旧模块共存
+- **零影响迁移**：所有7年级文件保持原位置和原内容，通过Vite别名实现重定向
 
-### 组件文件命名
+### **1.2 模式复用原则**
+- 新模块开发必须复用和遵循现有项目的编码模式和视觉风格
+- 所有新组件必须继承现有的基础样式类和组件架构
+- 保持与现有项目的技术栈完全一致
 
-#### 页面组件 (Page Components)
-**格式**: `Page_XX_Description.jsx`
-```
-✅ 正确示例:
-- Page_03_Dialogue_Question.jsx
-- Page_15_Simulation_Question_1.jsx  
-- Page_28_Effort_Submit.jsx
+## **组件开发标准 (Component Development Standards)**
 
-❌ 错误示例:
-- DialoguePage.jsx
-- page-03.jsx
-- Simulation1.jsx
-```
+### **2.1 标准页面组件模板**
 
-#### 通用组件 (Common Components)
-**格式**: `ComponentName.jsx` (PascalCase)
-```
-✅ 正确示例:
-- Button.jsx
-- Modal.jsx
-- TextInput.jsx
-- NavigationButton.jsx
+所有新开发的页面组件必须遵循以下结构模板：
 
-❌ 错误示例:
-- button.jsx
-- nav-button.jsx
-- text_input.jsx
-```
+```jsx
+// 标准页面组件模板
+import React, { useEffect } from 'react';
+import { useAppContext } from '../../../context/AppContext';
+import { useGrade4Context } from '../context/Grade4Context';
 
-#### 专用组件 (Specialized Components)
-按功能分组，使用描述性名称
-```
-✅ 正确示例:
-- materials/MaterialDiscussion.jsx
-- questionnaire/EffortScale.jsx
-- simulation/InteractiveSimulationEnvironment.jsx
-
-❌ 错误示例:
-- Discussion.jsx
-- Scale.jsx
-- Environment.jsx
-```
-
-### 非组件文件命名
-
-#### 工具函数 (Utility Files)
-**格式**: `camelCase.js`
-```
-✅ 正确示例:
-- pageMappings.js
-- errorHandler.js
-- pageTransitionUtils.js
-- questionnaireData.js
-
-❌ 错误示例:
-- PageMappings.js
-- error-handler.js
-- page_transition_utils.js
-```
-
-#### Context 和服务文件
-```
-✅ Context 文件: PascalCaseContext.jsx
-- AppContext.jsx
-- DataLoggerContext.jsx
-
-✅ Service 文件: camelCase.js
-- apiService.js
-- dataLogger.js
-
-✅ Hook 文件: use + PascalCase.js
-- useDataLogging.js
-- useBrowserCloseHandler.js
-```
-
-#### CSS 文件
-```
-✅ CSS Modules: ComponentName.module.css
-- Button.module.css
-- QuestionnaireTimer.module.css
-- StepNavigation.module.css
-
-✅ 全局样式: descriptive.css
-- global.css
-- LoginPage.css
-- Pages.module.css
-```
-
-## 目录结构规范 (Directory Structure)
-
-**严格遵循以下目录结构**:
-
-```
-src/
-├── components/                 # 可复用 UI 组件
-│   ├── common/                # 通用组件 (Button, Modal, TextInput)
-│   ├── materials/             # 材料阅读相关组件
-│   ├── questionnaire/         # 问卷调查相关组件
-│   ├── simulation/            # 仿真实验相关组件
-│   └── debug/                 # 开发调试组件
-├── pages/                     # 页面级组件
-│   └── questionnaire/         # 问卷页面分组
-├── modules/                   # 模块系统 (新架构)
-│   ├── ModuleRegistry.js      # 模块注册中心
-│   ├── ModuleRouter.jsx       # 模块路由组件
-│   └── grade-*/              # 年级模块目录
-├── shared/                    # 跨模块共享代码
-│   ├── components/            # 共享组件
-│   ├── services/              # 共享服务
-│   ├── utils/                 # 共享工具
-│   └── hooks/                 # 共享钩子
-├── context/                   # React Context 提供者
-├── hooks/                     # 自定义 React 钩子
-├── services/                  # API 和外部服务集成
-├── utils/                     # 工具函数和助手
-├── styles/                    # 全局和共享 CSS 文件
-├── config/                    # 配置文件
-└── assets/                    # 静态资源
-    └── images/                # 图片资源
-```
-
-### 目录使用规则
-
-1. **components/**: 仅放置可复用的 UI 组件
-2. **pages/**: 仅放置页面级组件，按功能分组
-3. **shared/**: 跨模块共享的代码，新架构的核心
-4. **utils/**: 纯函数工具，无副作用
-5. **services/**: 外部 API 调用和数据服务
-6. **assets/**: 静态资源，按类型分组
-
-## 导入/导出规范 (Import/Export Patterns)
-
-### 导入顺序 (Import Order)
-**严格按以下顺序导入**:
-
-```javascript
-// 1. React 相关导入 (最优先)
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-
-// 2. 第三方库导入
-import PropTypes from 'prop-types';
-
-// 3. Context 和 Hooks
-import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
-
-// 4. 组件导入
-import NavigationButton from '../components/common/NavigationButton';
-import TextInput from '../components/common/TextInput';
-
-// 5. 工具函数和配置
-import { formatDateTime } from '../utils/pageTransitionUtils';
-import { buildApiUrl } from '../config/apiConfig';
-
-// 6. 静态资源导入 (最后)
-import backgroundImage from '../assets/images/P2.png';
-import styles from './ComponentName.module.css';
-```
-
-### 导出规范 (Export Patterns)
-
-```javascript
-// ✅ 默认导出 - 用于主要组件
-export default ComponentName;
-
-// ✅ 命名导出 - 用于工具函数、常量
-export const utilityFunction = () => {};
-export const CONSTANT_VALUE = 'value';
-
-// ✅ 重导出 - 用于服务文件的向后兼容
-export * from './shared/services/apiService.js';
-```
-
-## 组件结构规范 (Component Structure)
-
-### 标准组件模板
-
-**所有组件必须遵循以下结构顺序**:
-
-```javascript
-/**
- * @file ComponentName.jsx
- * @description 组件功能描述和用途说明
- */
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import PropTypes from 'prop-types';
-import { useAppContext } from '../context/AppContext';
-import styles from './ComponentName.module.css';
-
-/**
- * 组件功能描述
- * @param {Object} props - 组件属性
- * @param {string} props.prop1 - 属性1描述
- * @param {function} props.prop2 - 属性2描述
- * @returns {JSX.Element} React 组件
- */
-const ComponentName = ({ 
-  prop1, 
-  prop2 = defaultValue,
-  ...restProps 
-}) => {
-  // 1. 状态声明 (State Declarations)
-  const [localState, setLocalState] = useState(initialValue);
-  const [loading, setLoading] = useState(false);
-  
-  // 2. Context 使用 (Context Usage)
+const NewModulePage = () => {
   const { 
-    contextMethod, 
-    contextValue 
+    // 从全局上下文获取必要的状态
+    isAuthenticated,
+    logOperation,
+    collectAnswer
   } = useAppContext();
   
-  // 3. 自定义钩子 (Custom Hooks)
-  const { customMethod, customValue } = useCustomHook();
-  
-  // 4. Refs (用于防止重复执行和 DOM 引用)
-  const preventDuplicateRef = useRef(false);
-  const elementRef = useRef(null);
-  
-  // 5. 记忆化值 (Memoized Values)
-  const memoizedValue = useMemo(() => {
-    return expensiveComputation(prop1);
-  }, [prop1]);
-  
-  // 6. 回调函数 (Callback Functions)
-  const handleAction = useCallback(async (event) => {
-    try {
-      setLoading(true);
-      await performAction(event);
-    } catch (error) {
-      console.error('操作失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [dependencies]);
-  
-  const handleInputChange = useCallback((value) => {
-    setLocalState(value);
-    prop2?.(value); // 可选回调
-  }, [prop2]);
-  
-  // 7. 副作用 (Effects)
+  const { currentPage, updateCurrentPage } = useGrade4Context();
+
   useEffect(() => {
-    // 组件挂载时的副作用
-    const cleanup = setupComponent();
-    
-    return () => {
-      // 清理函数
-      cleanup?.();
-    };
+    // 页面进入时的必要日志记录
+    logOperation({
+      targetElement: '页面',
+      eventType: 'page_enter',
+      value: `进入页面${currentPage}`
+    });
   }, []);
-  
-  useEffect(() => {
-    // 依赖变化时的副作用
-    if (prop1) {
-      updateComponentState(prop1);
-    }
-  }, [prop1]);
-  
-  // 8. 渲染 (Render)
+
+  const handleNextPage = () => {
+    // 收集页面答案
+    collectAnswer({
+      targetElement: '问题标识',
+      value: '用户的答案'
+    });
+    
+    // 导航到下一页
+    updateCurrentPage(currentPage + 1);
+  };
+
+  // 页面内容
   return (
-    <div className={styles.container} {...restProps}>
-      <div className={styles.header}>
-        <h2>{prop1}</h2>
-      </div>
-      
-      <div className={styles.content}>
-        {loading ? (
-          <div className={styles.loading}>加载中...</div>
-        ) : (
-          <div className={styles.mainContent}>
-            {/* 主要内容 */}
-          </div>
-        )}
-      </div>
-      
-      <div className={styles.actions}>
+    <div className="page-content">
+      <div className="page-title">页面标题</div>
+      <div className="cartoon-box">
+        {/* 页面具体内容在这里 */}
         <button 
-          onClick={handleAction}
-          disabled={loading}
-          className={styles.actionButton}
+          className="btn btn-primary"
+          onClick={handleNextPage}
         >
-          执行操作
+          下一页
         </button>
       </div>
     </div>
   );
 };
 
-// PropTypes 定义
-ComponentName.propTypes = {
-  prop1: PropTypes.string.isRequired,
-  prop2: PropTypes.func,
-  prop3: PropTypes.oneOf(['option1', 'option2']),
-  prop4: PropTypes.shape({
-    nestedProp: PropTypes.string
-  })
-};
-
-// 默认属性
-ComponentName.defaultProps = {
-  prop2: undefined,
-  prop3: 'option1'
-};
-
-export default ComponentName;
+export default NewModulePage;
 ```
 
-### 页面组件特殊要求
+### **2.2 模块集成标准**
 
-页面组件必须包含以下标准功能:
+新模块的根组件必须正确集成到现有框架内：
 
-```javascript
-const PageComponent = () => {
-  const {
-    logOperation,           // 记录用户操作
-    collectAnswer,          // 收集答案
-    submitPageData,         // 提交页面数据
-    navigateToPage,         // 页面导航
-    setPageEnterTime        // 设置页面进入时间
-  } = useAppContext();
-  
-  // 页面进入记录 (必需)
-  useEffect(() => {
-    setPageEnterTime(new Date());
-    logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
-      value: `进入页面${pageId}`
-    });
-  }, []);
-  
-  // 页面退出时提交数据 (必需)
-  const handleNavigation = useCallback(async (nextPageId) => {
-    try {
-      await submitPageData();
-      navigateToPage(nextPageId);
-    } catch (error) {
-      console.error('页面数据提交失败:', error);
-    }
-  }, [submitPageData, navigateToPage]);
-  
-  // 其余组件逻辑...
-};
-```
+```jsx
+// src/modules/grade-4/index.jsx - 正确的集成方式
+import React from 'react';
+import { Grade4Provider } from './context/Grade4Context';
+import Grade4Router from './components/Grade4Router';
 
-## CSS/样式规范 (CSS/Styling Standards)
-
-### CSS Modules 使用规范
-
-```css
-/* ComponentName.module.css */
-
-/* 1. 根容器样式 */
-.container {
-  display: flex;
-  flex-direction: column;
-  padding: var(--spacing-medium);
-  background: var(--background-primary);
-  border-radius: var(--border-radius-large);
-  box-shadow: var(--shadow-card);
-}
-
-/* 2. 语义化类名 */
-.header {
-  margin-bottom: var(--spacing-medium);
-}
-
-.content {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: var(--spacing-medium);
-}
-
-/* 3. 状态类名 */
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  color: var(--text-secondary);
-}
-
-.disabled {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-/* 4. 交互元素样式 */
-.actionButton {
-  padding: var(--spacing-small) var(--spacing-medium);
-  background: var(--cartoon-primary);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-medium);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.actionButton:hover:not(:disabled) {
-  background: var(--cartoon-primary-dark);
-  transform: translateY(-1px);
-}
-
-.actionButton:disabled {
-  background: var(--button-disabled);
-  cursor: not-allowed;
-}
-```
-
-### CSS 变量使用
-
-**必须使用项目定义的 CSS 变量**:
-
-```css
-/* 颜色变量 */
---cartoon-primary: #59c1ff;
---cartoon-secondary: #ffce6b;
---cartoon-accent: #ff7eb6;
---cartoon-success: #4ade80;
---cartoon-warning: #fbbf24;
---cartoon-error: #f87171;
-
-/* 间距变量 */
---spacing-xs: 4px;
---spacing-small: 8px;
---spacing-medium: 16px;
---spacing-large: 24px;
---spacing-xl: 32px;
-
-/* 边框半径 */
---border-radius-small: 4px;
---border-radius-medium: 8px;
---border-radius-large: 12px;
-
-/* 阴影 */
---shadow-card: 0 4px 6px rgba(0, 0, 0, 0.1);
---shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.15);
-```
-
-## 本地存储规范 (localStorage Standards)
-
-### localStorage 键命名约定
-
-**必须遵循 camelCase 格式，与状态变量名保持一致**:
-
-```javascript
-// ✅ 正确的键命名格式
-const LOCALSTORAGE_KEYS = {
-  // 用户认证相关
-  IS_AUTHENTICATED: 'isAuthenticated',
-  CURRENT_USER: 'currentUser',
-  BATCH_CODE: 'batchCode',
-  EXAM_NO: 'examNo',
-  MODULE_URL: 'moduleUrl',          // 新增：模块路由URL
-  
-  // 任务状态相关
-  CURRENT_PAGE_ID: 'currentPageId',
-  TASK_START_TIME: 'taskStartTime',
-  REMAINING_TIME: 'remainingTime',
-  IS_TASK_FINISHED: 'isTaskFinished',
-  
-  // 问卷相关
-  QUESTIONNAIRE_ANSWERS: 'questionnaireAnswers',
-  QUESTIONNAIRE_START_TIME: 'questionnaireStartTime',
-  IS_QUESTIONNAIRE_STARTED: 'isQuestionnaireStarted',
-  IS_QUESTIONNAIRE_COMPLETED: 'isQuestionnaireCompleted'
-};
-
-// ❌ 错误的键命名格式
-// 'module_url'     - 使用下划线
-// 'module-url'     - 使用连字符
-// 'ModuleUrl'      - 使用 PascalCase
-// 'MODULEURL'      - 全大写
-```
-
-### localStorage 操作模式
-
-```javascript
-// ✅ 标准存储操作 - 带错误处理
-const setLocalStorageItem = (key, value) => {
-  try {
-    const serializedValue = typeof value === 'object' 
-      ? JSON.stringify(value) 
-      : String(value);
-    localStorage.setItem(key, serializedValue);
-    console.log(`[localStorage] 成功存储: ${key}`);
-  } catch (error) {
-    console.error(`[AppContext] localStorage operation failed: set - ${key}:`, error);
-    // 不抛出错误，允许应用继续运行
-  }
-};
-
-// ✅ 标准读取操作 - 带默认值处理
-const getLocalStorageItem = (key, defaultValue = null) => {
-  try {
-    const item = localStorage.getItem(key);
-    return item !== null ? item : defaultValue;
-  } catch (error) {
-    console.error(`[AppContext] localStorage operation failed: get - ${key}:`, error);
-    return defaultValue;
-  }
-};
-
-// ✅ JSON 对象存储和读取
-const setLocalStorageObject = (key, object) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(object));
-  } catch (error) {
-    console.error(`[AppContext] localStorage operation failed: setObject - ${key}:`, error);
-  }
-};
-
-const getLocalStorageObject = (key, defaultValue = null) => {
-  try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (error) {
-    console.error(`[AppContext] localStorage operation failed: getObject - ${key}:`, error);
-    return defaultValue;
-  }
-};
-```
-
-### localStorage 清理模式
-
-```javascript
-// ✅ 批量清理键
-const clearLocalStorageKeys = (keys) => {
-  keys.forEach(key => {
-    try {
-      localStorage.removeItem(key);
-      console.log(`[localStorage] 清除成功: ${key}`);
-    } catch (error) {
-      console.error(`[AppContext] localStorage operation failed: remove - ${key}:`, error);
-    }
-  });
-};
-
-// ✅ 登出时的完整清理
-const handleLogout = () => {
-  const keysToRemove = [
-    LOCALSTORAGE_KEYS.IS_AUTHENTICATED,
-    LOCALSTORAGE_KEYS.CURRENT_USER,
-    LOCALSTORAGE_KEYS.BATCH_CODE,
-    LOCALSTORAGE_KEYS.EXAM_NO,
-    LOCALSTORAGE_KEYS.MODULE_URL,  // 清理模块URL
-    LOCALSTORAGE_KEYS.CURRENT_PAGE_ID,
-    LOCALSTORAGE_KEYS.TASK_START_TIME,
-    LOCALSTORAGE_KEYS.REMAINING_TIME
-  ];
-  
-  clearLocalStorageKeys(keysToRemove);
-  console.log('[AppContext] 用户登出，localStorage已清理');
-};
-```
-
-## 错误处理与日志规范 (Error Handling & Logging)
-
-### 错误消息标准格式
-
-**所有错误消息必须遵循统一格式**: `[模块名] 错误类型: 具体描述`
-
-```javascript
-// ✅ AppContext 相关错误格式
-const ERROR_MESSAGES = {
-  // 登录相关错误
-  LOGIN_FAILED: '[AppContext] Login error: {错误描述}',
-  LOGIN_VALIDATION: '[AppContext] Login validation failed: {验证失败原因}',
-  
-  // URL 处理错误
-  URL_EXTRACTION_FAILED: '[AppContext] URL extraction failed: {错误原因}',
-  URL_VALIDATION_FAILED: '[AppContext] URL validation failed: {验证失败详情}',
-  
-  // localStorage 操作错误
-  LOCALSTORAGE_SET_FAILED: '[AppContext] localStorage operation failed: set - {错误详情}',
-  LOCALSTORAGE_GET_FAILED: '[AppContext] localStorage operation failed: get - {错误详情}',
-  LOCALSTORAGE_REMOVE_FAILED: '[AppContext] localStorage operation failed: remove - {错误详情}',
-  
-  // 状态恢复错误
-  STATE_RECOVERY_FAILED: '[AppContext] State recovery failed: {恢复失败原因}',
-  
-  // 默认值应用提示
-  USING_DEFAULT_VALUE: '[AppContext] Using default {参数名}: {默认值} ({原因})'
-};
-
-// 使用示例
-const handleLoginSuccess = (userData) => {
-  try {
-    const moduleUrl = userData.url || '/seven-grade';
-    
-    if (!userData.url) {
-      console.warn(
-        ERROR_MESSAGES.USING_DEFAULT_VALUE
-          .replace('{参数名}', 'moduleUrl')
-          .replace('{默认值}', '/seven-grade')
-          .replace('{原因}', 'API response missing url field')
-      );
-    }
-    
-    // 存储到 localStorage
-    setLocalStorageItem(LOCALSTORAGE_KEYS.MODULE_URL, moduleUrl);
-    
-  } catch (error) {
-    console.error(
-      ERROR_MESSAGES.URL_EXTRACTION_FAILED
-        .replace('{错误原因}', error.message)
-    );
-    throw error;
-  }
-};
-```
-
-### 错误等级分类
-
-```javascript
-// ✅ 错误等级标准
-const LOG_LEVELS = {
-  ERROR: 'error',     // 阻塞性错误，需要立即处理
-  WARN: 'warn',       // 警告，使用默认值或降级处理
-  INFO: 'info',       // 信息性日志，正常操作记录
-  DEBUG: 'debug'      // 调试信息，开发环境使用
-};
-
-// 错误处理示例
-const processApiResponse = (response) => {
-  try {
-    // 正常处理逻辑
-    if (!response.url) {
-      // 警告级别：缺少可选字段，使用默认值
-      console.warn('[AppContext] Using default moduleUrl: /seven-grade (API response missing url field)');
-      return { ...response, url: '/seven-grade' };
-    }
-    
-    // 信息级别：正常操作
-    console.info('[AppContext] URL extraction successful:', response.url);
-    return response;
-    
-  } catch (error) {
-    // 错误级别：严重问题
-    console.error('[AppContext] URL extraction failed:', error.message);
-    throw error;
-  }
-};
-```
-
-### 认证流程错误处理规范
-
-```javascript
-// ✅ 认证相关错误处理模式
-const handleAuthenticationError = (error) => {
-  // Session 过期检测
-  if (error.status === 401 || error.message?.includes('session已过期')) {
-    console.warn('[AppContext] Session expired, redirecting to login');
-    
-    // 清理认证相关状态但保留任务数据
-    const authKeys = [
-      LOCALSTORAGE_KEYS.IS_AUTHENTICATED,
-      LOCALSTORAGE_KEYS.CURRENT_USER,
-      LOCALSTORAGE_KEYS.MODULE_URL
-    ];
-    clearLocalStorageKeys(authKeys);
-    
-    // 显示用户友好的提示
-    alert('登录会话已过期，请重新登录以继续使用');
-    return;
-  }
-  
-  // 网络错误处理
-  if (error.name === 'NetworkError' || !navigator.onLine) {
-    console.error('[AppContext] Network error detected:', error.message);
-    alert('网络连接异常，请检查网络设置后重试');
-    return;
-  }
-  
-  // 其他未知错误
-  console.error('[AppContext] Authentication error:', error.message);
-  alert('登录过程中发生错误，请稍后重试');
-};
-```
-
-## 状态管理规范 (State Management)
-
-### Context 使用模式
-
-```javascript
-// Context 提供者模式
-const AppContext = createContext();
-
-export const AppProvider = ({ children }) => {
-  const [state, setState] = useState(initialState);
-  
-  // 认证流程增强：添加 moduleUrl 状态管理
-  const [moduleUrl, setModuleUrl] = useState('');
-  
-  /**
-   * 处理登录成功 - 增强版本支持 URL 提取
-   * @param {Object} userData - 用户数据
-   * @param {string} [userData.url] - 可选的模块路由URL
-   */
-  const handleLoginSuccess = useCallback((userData) => {
-    try {
-      // 提取 URL 字段，提供默认值
-      const userModuleUrl = userData.url || '/seven-grade';
-      
-      // 记录默认值使用情况
-      if (!userData.url) {
-        console.warn('[AppContext] Using default moduleUrl: /seven-grade (API response missing url field)');
-      }
-      
-      // 更新状态
-      setModuleUrl(userModuleUrl);
-      
-      // 持久化存储（使用标准键名）
-      try {
-        localStorage.setItem('moduleUrl', userModuleUrl);
-        console.log('[AppContext] moduleUrl 已成功存储到 localStorage');
-      } catch (storageError) {
-        console.error('[AppContext] localStorage operation failed: set - moduleUrl:', storageError);
-        // 不阻塞认证流程，允许应用继续运行
-      }
-      
-      // 其他登录成功逻辑...
-      setIsAuthenticated(true);
-      setCurrentUser(userData);
-      
-    } catch (error) {
-      console.error('[AppContext] Login error:', error.message);
-      throw error;
-    }
-  }, []);
-  
-  const contextValue = useMemo(() => ({
-    // 状态值
-    currentPageId: state.currentPageId,
-    isAuthenticated: state.isAuthenticated,
-    moduleUrl,  // 新增：暴露 moduleUrl 状态
-    
-    // 操作方法
-    handleLoginSuccess,  // 新增：暴露增强的登录处理函数
-    logOperation: useCallback((operation) => {
-      // 实现逻辑
-    }, []),
-    
-    collectAnswer: useCallback((answer) => {
-      // 实现逻辑
-    }, []),
-  }), [state, moduleUrl, handleLoginSuccess]);
-  
+const Grade4Module = () => {
   return (
-    <AppContext.Provider value={contextValue}>
-      {children}
-    </AppContext.Provider>
+    <Grade4Provider>
+      {/* 注意：不要重新创建UserInfoBar、Timer等，它们已在App.jsx中渲染 */}
+      {/* 只渲染模块特定的内容 */}
+      <Grade4Router />
+    </Grade4Provider>
   );
 };
 
-// 自定义钩子
-export const useAppContext = () => {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useAppContext must be used within AppProvider');
-  }
-  return context;
-};
+export default Grade4Module;
 ```
 
-### 本地状态管理
+### **2.3 禁止的开发模式**
 
-```javascript
-// ✅ 正确的状态管理模式
-const Component = () => {
-  // 简单状态
-  const [loading, setLoading] = useState(false);
-  
-  // 复杂状态使用 useReducer
-  const [formState, dispatch] = useReducer(formReducer, initialFormState);
-  
-  // 记忆化的派生状态
-  const isFormValid = useMemo(() => {
-    return validateForm(formState);
-  }, [formState]);
-  
-  // 防抖的状态更新
-  const debouncedSearch = useMemo(
-    () => debounce((term) => {
-      performSearch(term);
-    }, 300),
-    []
-  );
-};
-```
+以下是明确禁止的开发模式：
 
-## 错误处理规范 (Error Handling)
-
-### 全局错误处理
-
-```javascript
-// 错误分类和过滤
-const HARMLESS_ERROR_PATTERNS = [
-  /ResizeObserver loop limit exceeded/,
-  /Non-passive event listener/,
-];
-
-const isHarmlessError = (message) => {
-  return HARMLESS_ERROR_PATTERNS.some(pattern => pattern.test(message));
-};
-
-// 全局错误处理器
-export const globalErrorHandler = (event) => {
-  if (isHarmlessError(event.message)) {
-    console.debug('[Filtered] 已过滤无害错误:', event.message);
-    return;
-  }
-  console.error('[Global Error]', event);
-};
-```
-
-### API 错误处理
-
-```javascript
-// ✅ 标准 API 错误处理模式
-const apiCall = async (payload) => {
-  try {
-    const response = await fetch(apiUrl, options);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.msg || response.statusText;
-      throw new Error(`API错误 ${response.status}: ${errorMessage}`);
-    }
-    
-    const responseData = await response.json();
-    
-    // 业务层错误检查
-    if (responseData.code !== 200) {
-      if (responseData.code === 401) {
-        const sessionError = new Error(`session已过期: ${responseData.msg}`);
-        sessionError.isSessionExpired = true;
-        throw sessionError;
-      }
-      throw new Error(`业务错误 ${responseData.code}: ${responseData.msg}`);
-    }
-    
-    return responseData;
-  } catch (error) {
-    console.error('API调用失败:', error);
-    
-    // 增强错误信息
-    if (error.message?.includes('401') || error.isSessionExpired) {
-      error.isSessionExpired = true;
-    }
-    
-    throw error;
-  }
-};
-```
-
-## 命名约定规范 (Naming Conventions)
-
-### 函数命名
-
-```javascript
-// ✅ 事件处理器: handle + Action
-const handleInputChange = (value) => {};
-const handleSubmit = async (event) => {};
-const handleModalClose = () => {};
-
-// ✅ 工具函数: 动词 + 名词
-const formatDateTime = (date) => {};
-const validateForm = (formData) => {};
-const parseQueryString = (query) => {};
-
-// ✅ API 函数: 动作 + 对象
-const loginUser = async (credentials) => {};
-const submitPageData = async (data) => {};
-const fetchUserProfile = async (userId) => {};
-
-// ✅ 判断函数: is/has/should + 形容词
-const isAuthenticated = () => {};
-const hasPermission = (user, permission) => {};
-const shouldShowModal = (condition) => {};
-```
-
-### 变量命名
-
-```javascript
-// ✅ 常量: UPPER_SNAKE_CASE
-const TOTAL_TASK_DURATION = 40 * 60 * 1000;
-const DEFAULT_PAGE_SIZE = 10;
-const API_ENDPOINTS = {
-  LOGIN: '/login',
-  SUBMIT: '/saveHcMark'
-};
-
-// ✅ 状态变量: camelCase (与 localStorage 键名保持一致)
-const [currentPageId, setCurrentPageId] = useState('');
-const [isLoading, setIsLoading] = useState(false);
-const [userProfile, setUserProfile] = useState(null);
-const [moduleUrl, setModuleUrl] = useState('');  // 新增：模块URL状态
-
-// ✅ 布尔变量: is/has/should 前缀
-const [isAuthenticated, setIsAuthenticated] = useState(false);
-const [hasError, setHasError] = useState(false);
-const [shouldShowWarning, setShouldShowWarning] = useState(false);
-
-// ✅ 映射对象: 描述性后缀
-const pageInfoMapping = {};
-const questionnaireStepMapping = {};
-const errorMessageMapping = {};
-
-// ✅ localStorage 键名常量 (与状态变量名保持一致)
-const STORAGE_KEYS = {
-  MODULE_URL: 'moduleUrl',           // 对应 moduleUrl 状态
-  IS_AUTHENTICATED: 'isAuthenticated', // 对应 isAuthenticated 状态
-  CURRENT_USER: 'currentUser'        // 对应 currentUser 状态
-};
-```
-
-## 注释规范 (Comment Standards)
-
-### JSDoc 注释
-
-**所有导出的函数必须有 JSDoc 注释**:
-
-```javascript
-/**
- * 提交页面标记数据到后端
- * @param {Object} payload - 提交数据对象
- * @param {string} payload.batchCode - 测评批次号
- * @param {string} payload.examNo - 学生考号
- * @param {Object} payload.mark - 页面标记数据
- * @param {string} payload.mark.pageNumber - 页面序号
- * @param {Array} payload.mark.operationList - 操作记录列表
- * @returns {Promise<Object>} 后端响应数据
- * @throws {Error} 当网络请求失败或业务逻辑错误时抛出异常
- */
-export const submitPageMarkData = async (payload) => {
-  // 实现逻辑
-};
-
-/**
- * React 组件用于显示用户信息栏
- * @param {Object} props - 组件属性
- * @param {Object} props.userInfo - 用户信息对象
- * @param {string} props.userInfo.studentName - 学生姓名
- * @param {string} props.userInfo.schoolName - 学校名称
- * @param {function} [props.onLogout] - 可选的登出回调函数
- * @returns {JSX.Element} 用户信息栏组件
- */
-const UserInfoBar = ({ userInfo, onLogout }) => {
-  // 组件实现
-};
-```
-
-### 文件头注释
-
-**所有文件必须包含文件头注释**:
-
-```javascript
-/**
- * @file ComponentName.jsx
- * @description 组件功能的详细描述，包括主要用途和交互方式
- * @author 开发者姓名
- * @created 2025-07-26
- * @updated 2025-07-26
- */
-```
-
-### 行内注释
-
-```javascript
-// ✅ 中文注释用于解释业务逻辑
-const handleSubmit = async () => {
-  // 🔑 关键修复: 提交前必须验证表单数据完整性
-  if (!validateFormData(formData)) {
-    return;
-  }
-  
-  try {
-    // 提交数据并记录操作日志
-    await submitData(formData);
-    logOperation({
-      targetElement: '提交按钮',
-      eventType: 'form_submit',
-      value: '表单提交成功'
-    });
-  } catch (error) {
-    // TODO: 添加更详细的错误处理和用户反馈
-    console.error('提交失败:', error);
-  }
-};
-```
-
-## 性能优化规范 (Performance Standards)
-
-### 组件优化
-
-```javascript
-// ✅ 使用 memo 防止不必要的重渲染
-const ExpensiveComponent = React.memo(({ data, onUpdate }) => {
-  // 组件实现
-}, (prevProps, nextProps) => {
-  // 自定义比较函数 (可选)
-  return prevProps.data.id === nextProps.data.id;
-});
-
-// ✅ 使用 useCallback 缓存函数
-const Component = ({ onItemClick }) => {
-  const handleClick = useCallback((item) => {
-    onItemClick(item);
-  }, [onItemClick]);
-  
-  // 使用 useMemo 缓存计算结果
-  const expensiveValue = useMemo(() => {
-    return performExpensiveCalculation(data);
-  }, [data]);
-};
-
-// ✅ 使用 useRef 防止重复执行
-const Component = () => {
-  const hasInitialized = useRef(false);
-  
-  useEffect(() => {
-    if (hasInitialized.current) return;
-    hasInitialized.current = true;
-    
-    // 只执行一次的初始化逻辑
-    initializeComponent();
-  }, []);
-};
-```
-
-## 数据流规范 (Data Flow Standards)
-
-### 用户操作记录
-
-**所有用户交互必须记录**:
-
-```javascript
-const handleUserAction = useCallback((actionType, targetElement, value) => {
-  // 记录用户操作
-  logOperation({
-    targetElement,
-    eventType: actionType,
-    value: value || '',
-    elementId: targetElement.toLowerCase().replace(/\s+/g, '_')
-  });
-  
-  // 如果是答案，还需要收集答案
-  if (isAnswerAction(actionType)) {
-    collectAnswer({
-      targetElement,
-      value
-    });
-  }
-}, [logOperation, collectAnswer]);
-
-// 使用示例
-<button onClick={() => handleUserAction('button_click', '下一页按钮', '导航到下一页')}>
-  下一页
-</button>
-```
-
-### 数据提交模式
-
-```javascript
-// ✅ 标准页面数据提交模式
-const submitCurrentPageData = useCallback(async () => {
-  try {
-    // 构建 MarkObject 数据结构
-    const markData = {
-      pageNumber: String(currentPageNumber),
-      pageDesc: currentPageDescription,
-      operationList: getCollectedOperations(),
-      answerList: getCollectedAnswers(),
-      beginTime: formatTimestamp(pageEnterTime),
-      endTime: formatTimestamp(new Date()),
-      imgList: []
-    };
-    
-    // 提交到后端
-    await submitPageMarkData({
-      batchCode: userContext.batchCode,
-      examNo: userContext.examNo,
-      mark: markData
-    });
-    
-    console.log('页面数据提交成功');
-  } catch (error) {
-    console.error('页面数据提交失败:', error);
-    
-    // 特殊处理 session 过期
-    if (error.isSessionExpired) {
-      handleSessionExpiration();
-    }
-    
-    throw error;
-  }
-}, [/* 依赖项 */]);
-```
-
-## 测试规范 (Testing Standards)
-
-### 组件测试模式
-
-```javascript
-// ComponentName.test.jsx
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { AppProvider } from '../context/AppContext';
-import ComponentName from './ComponentName';
-
-// 测试工具函数
-const renderWithContext = (component, contextValue = {}) => {
-  return render(
-    <AppProvider value={contextValue}>
-      {component}
-    </AppProvider>
-  );
-};
-
-describe('ComponentName', () => {
-  const defaultProps = {
-    prop1: 'test value',
-    prop2: jest.fn()
-  };
-  
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-  
-  test('应该正确渲染组件', () => {
-    renderWithContext(<ComponentName {...defaultProps} />);
-    expect(screen.getByText('test value')).toBeInTheDocument();
-  });
-  
-  test('应该处理用户交互', async () => {
-    const mockProp2 = jest.fn();
-    renderWithContext(
-      <ComponentName {...defaultProps} prop2={mockProp2} />
-    );
-    
-    fireEvent.click(screen.getByRole('button'));
-    
-    await waitFor(() => {
-      expect(mockProp2).toHaveBeenCalledWith(expect.any(String));
-    });
-  });
-});
-```
-
-## 国际化规范 (Internationalization)
-
-### 文本内容处理
-
-```javascript
-// ✅ 中文文本直接使用，英文文本使用常量
-const UI_TEXT = {
-  LOADING: '加载中...',
-  ERROR: '操作失败',
-  SUCCESS: '操作成功',
-  CONFIRM: '确认',
-  CANCEL: '取消'
-};
-
-// 在组件中使用
-const Component = () => {
+```jsx
+// ❌ 错误：不要重新创建顶部导航栏
+const WrongPage = () => {
   return (
     <div>
-      <h1>七年级科学探究任务</h1>
-      <p>{UI_TEXT.LOADING}</p>
+      {/* ❌ 禁止：重复创建用户信息栏 */}
+      <div className="my-custom-header">自定义头部</div>
+      
+      {/* ❌ 禁止：使用不一致的样式 */}
+      <div style={{backgroundColor: '#ff0000'}}>
+        内容
+      </div>
+    </div>
+  );
+};
+
+// ❌ 错误：不要绕过全局布局系统
+const AnotherWrongPage = () => {
+  return (
+    <div className="my-custom-layout"> {/* ❌ 禁止自定义布局 */}
+      {/* 内容 */}
     </div>
   );
 };
 ```
 
-## 安全规范 (Security Standards)
+## **样式规范 (Style Guidelines)**
 
-### 数据处理安全
+### **3.1 必须使用的CSS变量系统**
+
+```css
+:root {
+  /* 主色系 */
+  --cartoon-primary: #59c1ff;    /* 主要交互色，导航高亮 */
+  --cartoon-secondary: #ffce6b;  /* 次要强调色，计时器背景 */
+  --cartoon-accent: #ff7eb6;     /* 强调色，按钮激活状态 */
+  
+  /* 背景色系 */
+  --cartoon-bg: #fff9f0;         /* 全局背景 */
+  --cartoon-light: #e6f7ff;      /* 左侧导航背景 */
+  
+  /* 功能色系 */
+  --cartoon-green: #67d5b5;      /* 成功/已完成状态 */
+  --cartoon-red: #ff8a80;        /* 警告/错误状态 */
+  --cartoon-dark: #2d5b8e;       /* 主要文本色 */
+  
+  /* 装饰色系 */
+  --cartoon-border: #ffd99e;     /* 边框色 */
+  --cartoon-shadow: rgba(255, 188, 97, 0.3); /* 阴影色 */
+}
+```
+
+### **3.2 必须使用的基础样式类**
+
+```css
+/* 必须使用的基础样式类 */
+.btn                    /* 按钮基础样式 */
+.btn-primary           /* 主要按钮样式 */
+.page-content          /* 页面内容容器 */
+.page-title            /* 页面标题 */
+.cartoon-box           /* 卡片容器样式 */
+.form-control          /* 表单控件样式 */
+.text-input            /* 文本输入框样式 */
+```
+
+### **3.3 布局标准**
+
+```css
+/* 中央内容区域标准 */
+.central-content-area {
+  background: white;
+  border-radius: 20px;
+  border: 3px solid var(--cartoon-border);
+  box-shadow: 0 10px 30px var(--cartoon-shadow);
+  padding: 20px;
+  /* 关键要求：所有内容必须在一屏内完成，不出现滚动条 */
+  max-height: calc(100vh - 150px);
+  overflow: hidden;
+}
+```
+
+## **数据处理规范 (Data Handling Standards)**
+
+### **4.1 数据提交标准格式**
+
+所有页面数据必须遵循以下提交格式：
 
 ```javascript
-// ✅ 输入验证
-const validateInput = (input) => {
-  if (typeof input !== 'string') return false;
-  if (input.length > MAX_INPUT_LENGTH) return false;
-  return /^[a-zA-Z0-9\u4e00-\u9fa5\s]*$/.test(input);
-};
-
-// ✅ 敏感数据处理
-const handleSensitiveData = (data) => {
-  // 不在控制台输出完整的敏感数据
-  console.log('处理敏感数据:', {
-    ...data,
-    password: data.password ? '***' : undefined,
-    token: data.token ? `${data.token.slice(0, 8)}...` : undefined
-  });
-};
-
-// ✅ XSS 防护
-const sanitizeHtml = (html) => {
-  const div = document.createElement('div');
-  div.textContent = html;
-  return div.innerHTML;
+const markObject = {
+  pageNumber: "15",                    // String: 页面序号
+  pageDesc: "第九题",                  // String: 页面描述
+  operationList: [                     // Array: 用户操作记录
+    {
+      code: 1,                         // Number: 操作序号
+      targetElement: "页面",           // String: 操作目标
+      eventType: "page_enter",         // String: 事件类型
+      value: "进入页面Page_15",         // String: 操作值
+      time: "2024-07-24 15:30:45"     // String: 时间戳
+    }
+  ],
+  answerList: [                        // Array: 答案记录
+    {
+      code: 1,                         // Number: 答案序号
+      targetElement: "问题标识",        // String: 问题标识
+      value: "用户答案"                 // Any: 答案值
+    }
+  ],
+  beginTime: "2024-07-24 15:30:45",   // String: 页面进入时间
+  endTime: "2024-07-24 15:32:10",     // String: 页面退出时间
+  imgList: []                          // Array: 图片附件
 };
 ```
 
-## 代码审查检查清单 (Code Review Checklist)
+### **4.2 必需的数据记录函数**
 
-提交代码前，请确保通过以下检查:
+```javascript
+// 操作日志记录
+logOperation({
+  targetElement: string,    // UI元素或组件名称
+  eventType: string,        // 交互类型
+  value?: string,          // 可选：交互值或上下文
+  elementId?: string       // 可选：DOM元素ID
+});
 
-### ✅ 文件和目录规范
-- [ ] 文件命名遵循既定规范
-- [ ] 文件放置在正确的目录中
-- [ ] 导入路径正确且有序
+// 答案收集
+collectAnswer({
+  targetElement: string,    // 问题或输入标识符
+  value: any,              // 学生答案
+  code?: number           // 可选：序号（自动生成）
+});
+```
 
-### ✅ 组件规范
-- [ ] 组件结构遵循标准模板
-- [ ] 使用 PropTypes 进行类型检查
-- [ ] 包含完整的 JSDoc 注释
-- [ ] 错误处理完整
+## **技术栈限制 (Technology Stack Constraints)**
 
-### ✅ 样式规范
-- [ ] 使用 CSS Modules
-- [ ] 使用项目 CSS 变量
-- [ ] 类名语义化且一致
+### **5.1 允许的技术**
 
-### ✅ 状态管理规范
-- [ ] 正确使用 Context API
-- [ ] 状态更新遵循不可变原则
-- [ ] 使用合适的性能优化
-- [ ] localStorage 键名遵循 camelCase 约定
-- [ ] 错误处理遵循统一格式规范
+| 类别 | 技术 | 版本 | 用途 |
+|------|------|------|------|
+| 构建工具 | Vite | 项目当前版本 | 构建和开发 |
+| UI库 | React | 项目当前版本 | 组件开发 |
+| 语言 | JavaScript/JSX | 项目当前版本 | 代码编写 |
+| 状态管理 | React Context API | 项目当前版本 | 状态管理 |
+| 包管理器 | PNPM | 项目当前版本 | 依赖管理 |
 
-### ✅ 数据流规范
-- [ ] 用户操作正确记录
-- [ ] 数据提交格式正确
-- [ ] 错误处理完整
+### **5.2 禁止引入的技术**
 
-### ✅ 安全性检查
-- [ ] 输入验证充分
-- [ ] 敏感数据处理安全
-- [ ] 无 XSS 风险
+- **原则**：**禁止引入任何新的核心框架或库**
+- **例外**：仅允许小型的UI交互辅助库（如拖拽功能），但需要经过明确批准
+- **理由**：确保项目稳定性和一致性
 
----
+## **开发验证清单 (Development Validation Checklist)**
 
-**本文档基于现有代码库深入分析制定，所有新代码必须严格遵循以上规范。如有疑问或需要更新规范，请联系技术负责人。**
+### **6.1 视觉一致性检查**
+
+- [ ] 绿色顶部导航栏正确显示平台名称和用户姓名
+- [ ] 橙色计时器位于右上角，显示格式正确
+- [ ] 左侧圆形进度导航显示当前步骤状态
+- [ ] 中央内容卡片具有正确的圆角和阴影效果
+- [ ] 所有按钮使用统一的样式和动画效果
+- [ ] 色彩使用符合既定的CSS变量系统
+
+### **6.2 功能集成检查**
+
+- [ ] 页面切换时正确记录操作日志
+- [ ] 用户答案正确收集并格式化
+- [ ] 计时器与模块状态正确同步
+- [ ] 页面刷新后状态正确恢复
+- [ ] 与现有7年级模块无冲突
+
+### **6.3 代码质量检查**
+
+- [ ] 遵循标准组件模板结构
+- [ ] 正确使用Context API进行状态管理
+- [ ] 所有交互都有相应的日志记录
+- [ ] 错误边界处理完整
+- [ ] 无硬编码样式，全部使用CSS变量
+
+## **路径别名配置 (Path Alias Configuration)**
+
+```javascript
+// vite.config.js
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@/services': '/src/shared/services',
+      '@/shared': '/src/shared',
+      // 7年级模块的现有导入路径透明重定向
+      '../services/apiService': '/src/shared/services/apiService.js'
+    }
+  }
+});
+```
+
+## **7.0 模块布局规范 (Module Layout Standards)**
+
+### **7.1 容器适配原则**
+
+新模块必须完美适配现有的应用框架布局，不能出现滚动条或溢出问题。
+
+**核心要求**：
+- 模块内容必须完全填满白色背景区域
+- 禁止出现灰色背景的滚动区域
+- 支持多分辨率自适应显示
+- 内容垂直居中，水平限制最大宽度
+
+### **7.2 模块根容器规范**
+
+```css
+/* 模块根容器标准样式 */
+.module-name-module {
+  width: 100%;
+  height: 100%;              /* 使用100%而非100vh */
+  max-height: 100%;
+  overflow: hidden;           /* 强制禁用滚动 */
+  display: flex;
+  flex-direction: column;
+  background: transparent;    /* 透明背景，使用外层白色背景 */
+  font-family: 'Microsoft YaHei', Arial, sans-serif;
+  position: relative;
+}
+```
+
+### **7.3 页面内容容器规范**
+
+```css
+/* 重写全局page-content样式以适配模块容器 */
+.module-name-module .page-content {
+  padding: 0;
+  max-height: 100%;
+  height: 100%;
+  overflow: hidden;           /* 禁用滚动 */
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+```
+
+### **7.4 页面组件布局标准**
+
+```jsx
+// 标准页面组件布局结构
+const ModulePage = () => {
+  return (
+    <div className="page-content page-fade-in" style={{ 
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100%',           // 完全填满容器
+      width: '100%',
+      boxSizing: 'border-box',
+      padding: '20px',          // 适中的内边距
+      overflow: 'hidden'        // 强制禁用滚动
+    }}>
+      {/* 页面标题 */}
+      <h1 className="page-title">页面标题</h1>
+      
+      {/* 主要内容区域 */}
+      <div className="content-section" style={{
+        width: '100%',
+        maxWidth: '800px',        // 限制最大宽度
+        flex: '0 0 auto'          // 不拉伸
+      }}>
+        {/* 内容 */}
+      </div>
+      
+      {/* 按钮区域 */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        width: '100%',
+        maxWidth: '800px',
+        marginTop: '20px'
+      }}>
+        <button className="btn btn-primary">下一页</button>
+      </div>
+    </div>
+  );
+};
+```
+
+### **7.5 自适应设计要求**
+
+**宽度自适应**：
+```css
+/* 内容区域自适应宽度 */
+.content-container {
+  width: 100%;              /* 小屏幕完全填满 */
+  max-width: 800px;         /* 大屏幕限制最大宽度 */
+  margin: 0 auto;           /* 居中显示 */
+}
+```
+
+**高度适配**：
+```css
+/* 高度完全适配容器 */
+.page-container {
+  height: 100%;             /* 而非min-height或vh单位 */
+  overflow: hidden;         /* 强制禁用滚动 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;  /* 垂直居中 */
+}
+```
+
+### **7.6 全局样式覆盖规范**
+
+当全局样式与模块需求冲突时，使用模块特定的CSS选择器进行覆盖：
+
+```css
+/* 覆盖全局page-content的滚动设置 */
+.grade-4-module .page-content {
+  max-height: 100% !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+/* 覆盖全局容器的视口高度设置 */
+.grade-4-module .container {
+  height: 100% !important;
+  max-height: 100% !important;
+}
+```
+
+### **7.7 布局验证检查清单**
+
+开发完成后必须验证以下布局要求：
+
+- [ ] **完全填满**: 内容完全适配白色背景区域，无空白
+- [ ] **无滚动条**: 页面内任何区域都不出现滚动条
+- [ ] **垂直居中**: 主要内容在可视区域内垂直居中
+- [ ] **宽度适配**: 在1280px和更大分辨率下限制最大宽度
+- [ ] **小屏适配**: 在较小分辨率下内容完全填满可用宽度
+- [ ] **高度适配**: 内容高度完全适配容器，不溢出
+- [ ] **背景透明**: 模块背景透明，显示外层框架的白色背景
+- [ ] **字体一致**: 使用统一的字体系统
+
+### **7.8 常见布局问题解决方案**
+
+**问题1**: 出现灰色滚动区域
+```css
+/* 解决方案: 强制禁用overflow */
+.module-container {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+```
+
+**问题2**: 内容不能垂直居中
+```css
+/* 解决方案: 使用flexbox居中 */
+.page-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+```
+
+**问题3**: 在大屏幕上内容过宽
+```css
+/* 解决方案: 设置最大宽度 */
+.content-area {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+```
+
+## **总结 (Summary)**
+
+通过严格遵循以上编码标准和开发规范，新开发的模块将：
+
+1. 与现有系统保持完美的视觉和功能一致性
+2. 确保代码的可维护性和可扩展性
+3. 避免对现有7年级模块造成任何影响
+4. 为用户提供统一、流畅的学习评估体验

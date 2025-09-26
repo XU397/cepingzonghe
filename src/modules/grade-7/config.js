@@ -5,6 +5,17 @@
  * 保持与现有 pageMappings.js 的兼容性
  */
 
+// 导入必要的映射函数
+import { 
+  pageInfoMapping, 
+  pageNumToPageIdMapping, 
+  TOTAL_USER_STEPS, 
+  TOTAL_QUESTIONNAIRE_STEPS,
+  getTargetPageIdFromPageNum,
+  isTaskCompletedByPageNum,
+  isQuestionnairePage
+} from '../../utils/pageMappings.js';
+
 /**
  * 7年级模块配置对象
  * 基于现有的pageInfoMapping数据结构
@@ -31,48 +42,23 @@ export const grade7Config = {
   // 页面配置 - 引用现有的页面映射
   // 注意：这里我们不复制数据，而是引用现有的配置
   get pages() {
-    try {
-      // 动态导入现有的页面映射配置
-      const { pageInfoMapping } = require('../../utils/pageMappings.js');
-      return pageInfoMapping;
-    } catch (error) {
-      console.error('[Grade7Config] ❌ 无法加载现有页面映射:', error);
-      return {};
-    }
+    return pageInfoMapping || {};
   },
 
   // 页面编号到页面ID的映射 - 引用现有的映射
   get pageNumMapping() {
-    try {
-      const { pageNumToPageIdMapping } = require('../../utils/pageMappings.js');
-      return pageNumToPageIdMapping;
-    } catch (error) {
-      console.error('[Grade7Config] ❌ 无法加载页面编号映射:', error);
-      return {};
-    }
+    return pageNumToPageIdMapping || {};
   },
 
   // 总步骤数 - 引用现有的配置
   get totalSteps() {
-    try {
-      const { TOTAL_USER_STEPS } = require('../../utils/pageMappings.js');
-      return TOTAL_USER_STEPS;
-    } catch (error) {
-      console.error('[Grade7Config] ❌ 无法加载总步骤数:', error);
-      return 0;
-    }
+    return TOTAL_USER_STEPS || 0;
   },
 
   // 问卷相关配置
   questionnaire: {
     get totalSteps() {
-      try {
-        const { TOTAL_QUESTIONNAIRE_STEPS } = require('../../utils/pageMappings.js');
-        return TOTAL_QUESTIONNAIRE_STEPS;
-      } catch (error) {
-        console.error('[Grade7Config] ❌ 无法加载问卷步骤数:', error);
-        return 9; // 默认值
-      }
+      return TOTAL_QUESTIONNAIRE_STEPS || 9;
     }
   },
 
@@ -84,7 +70,6 @@ export const grade7Config = {
      */
     getTargetPageId: (pageNum) => {
       try {
-        const { getTargetPageIdFromPageNum } = require('../../utils/pageMappings.js');
         return getTargetPageIdFromPageNum(pageNum);
       } catch (error) {
         console.error('[Grade7Config] ❌ 页面恢复失败:', error);
@@ -97,7 +82,6 @@ export const grade7Config = {
      */
     isTaskCompleted: (pageNum) => {
       try {
-        const { isTaskCompletedByPageNum } = require('../../utils/pageMappings.js');
         return isTaskCompletedByPageNum(pageNum);
       } catch (error) {
         console.error('[Grade7Config] ❌ 任务完成检查失败:', error);
@@ -110,7 +94,6 @@ export const grade7Config = {
      */
     isQuestionnairePage: (pageId) => {
       try {
-        const { isQuestionnairePage } = require('../../utils/pageMappings.js');
         return isQuestionnairePage(pageId);
       } catch (error) {
         console.error('[Grade7Config] ❌ 问卷页面检查失败:', error);

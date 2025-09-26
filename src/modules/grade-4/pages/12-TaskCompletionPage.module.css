@@ -1,0 +1,24 @@
+._page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 16px 80px;
+}
+
+.hero {
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.title { font-size: 22px; font-weight: 800; color: #0e7490; }
+.desc { color:#155e75; margin-top:6px; }
+
+.submitWrap { display:flex; gap:12px; align-items:center; }
+.finishBtn { padding: 12px 24px; font-size: 18px; font-weight: 800; border-radius: 10px; border: 2px solid white; background:#0ea5e9; color:#fff; cursor:pointer; }
+.finishBtn[disabled] { background:#e2e8f0; color:#94a3b8; cursor:not-allowed; }
+
+.statusOk { color:#16a34a; font-weight:700; }
+.statusBad { color:#dc2626; font-weight:700; }
+

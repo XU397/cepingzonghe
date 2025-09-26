@@ -1,0 +1,160 @@
+.route-calculator {
+  background-color: white;
+  border: 2px solid #E0E0E0;
+  border-radius: 8px;
+  padding: 20px;
+  height: fit-content;
+}
+
+.calculator-header {
+  margin-bottom: 16px;
+}
+
+.calculator-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.route-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.route-table th,
+.route-table td {
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #E0E0E0;
+}
+
+.route-table th {
+  background-color: #F5F5F5;
+  font-weight: 600;
+  color: #333;
+}
+
+.route-table tr:nth-child(even) {
+  background-color: #FAFAFA;
+}
+
+.route-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.route-distance {
+  position: relative;
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.distance-input {
+  width: 80px;
+  padding: 8px 12px;
+  border: 2px solid #E0E0E0;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  transition: border-color 0.2s ease;
+}
+
+.distance-input:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+.distance-input.invalid {
+  border-color: #f87171;
+  background-color: #fef2f2;
+}
+
+.static-distance {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.error-hint {
+  font-size: 12px;
+  color: #f87171;
+  margin-top: 4px;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.calculator-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #E0E0E0;
+}
+
+.instruction-text {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.instruction-text strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 900px) {
+  .route-calculator {
+    padding: 16px;
+  }
+  
+  .route-table th,
+  .route-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+  
+  .distance-input {
+    width: 70px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 600px) {
+  .route-calculator {
+    padding: 12px;
+  }
+  
+  .calculator-header h3 {
+    font-size: 14px;
+  }
+  
+  .route-table th,
+  .route-table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+  
+  .distance-input {
+    width: 60px;
+    padding: 5px 6px;
+    font-size: 12px;
+  }
+  
+  .instruction-text {
+    font-size: 12px;
+  }
+}

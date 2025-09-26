@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS 测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 CORS API 连接测试</h1>
+    
+    <div class="test-container">
+        <h3>当前环境信息</h3>
+        <div class="result info" id="envInfo"></div>
+    </div>
+
+    <div class="test-container">
+        <h3>API 连接测试</h3>
+        <p>测试不同的API端点配置:</p>
+        
+        <button onclick="testApi('direct')">测试直接连接</button>
+        <button onclick="testApi('proxy')">测试代理模式</button>
+        <button onclick="testApi('sameOrigin')">测试同源模式</button>
+        <button onclick="clearResults()">清除结果</button>
+        
+        <div class="result" id="testResult"></div>
+    </div>
+
+    <div class="test-container">
+        <h3>使用说明</h3>
+        <ul>
+            <li><strong>直接连接</strong>: 直接请求 http://117.72.14.166:9002/stu/login</li>
+            <li><strong>代理模式</strong>: 请求 /api/stu/login (需要服务器配置代理)</li>
+            <li><strong>同源模式</strong>: 请求 /stu/login (需要API部署在同一服务器)</li>
+        </ul>
+        <p><strong>注意</strong>: 这个测试页面使用简化的GET请求，实际应用可能需要POST请求和认证。</p>
+    </div>
+
+    <script>
+        // 显示环境信息
+        function showEnvInfo() {
+            const envInfo = document.getElementById('envInfo');
+            const info = {
+                '当前URL': window.location.href,
+                '域名': window.location.origin,
+                '时间': new Date().toLocaleString(),
+                '用户代理': navigator.userAgent.substring(0, 100) + '...'
+            };
+            
+            envInfo.textContent = Object.entries(info)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n');
+        }
+
+        // API 端点配置
+        const API_ENDPOINTS = {
+            direct: 'http://117.72.14.166:9002/stu/login',
+            proxy: '/api/stu/login',
+            sameOrigin: '/stu/login'
+        };
+
+        // 测试 API 连接
+        async function testApi(mode) {
+            const resultDiv = document.getElementById('testResult');
+            const endpoint = API_ENDPOINTS[mode];
+            
+            if (!endpoint) {
+                showResult('error', `未知的测试模式: ${mode}`);
+                return;
+            }
+
+            // 显示开始测试
+            showResult('info', `开始测试 ${mode} 模式...\n端点: ${endpoint}`);
+
+            try {
+                const startTime = Date.now();
+                
+                // 构建测试URL（使用最基本的参数避免复杂性）
+                const testUrl = `${endpoint}?test=1&_=${Date.now()}`;
+                
+                console.log(`[CORS Test] 测试 ${mode} 模式: ${testUrl}`);
+
+                const response = await fetch(testUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit', // 简化测试，不发送凭证
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+
+                const responseText = await response.text();
+                
+                const result = {
+                    模式: mode,
+                    端点: endpoint,
+                    状态: `${response.status} ${response.statusText}`,
+                    耗时: `${duration}ms`,
+                    响应头: Object.fromEntries(response.headers.entries()),
+                    响应内容: responseText.substring(0, 500) + (responseText.length > 500 ? '...' : '')
+                };
+
+                if (response.ok || response.status === 400) {
+                    // 200 OK 或 400 (业务错误) 都表示连接成功
+                    showResult('success', `✅ ${mode} 模式连接成功!\n\n${formatResult(result)}`);
+                } else {
+                    showResult('error', `❌ ${mode} 模式响应错误:\n\n${formatResult(result)}`);
+                }
+
+            } catch (error) {
+                console.error(`[CORS Test] ${mode} 模式测试失败:`, error);
+                
+                let errorType = '未知错误';
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    errorType = 'CORS 错误或网络连接失败';
+                } else if (error.name === 'SyntaxError') {
+                    errorType = 'JSON 解析错误';
+                }
+
+                const result = {
+                    模式: mode,
+                    端点: endpoint,
+                    错误类型: errorType,
+                    错误信息: error.message,
+                    详细错误: error.toString()
+                };
+
+                showResult('error', `❌ ${mode} 模式连接失败:\n\n${formatResult(result)}`);
+            }
+        }
+
+        // 格式化结果显示
+        function formatResult(obj) {
+            return Object.entries(obj)
+                .map(([key, value]) => {
+                    if (typeof value === 'object') {
+                        return `${key}:\n${JSON.stringify(value, null, 2)}`;
+                    }
+                    return `${key}: ${value}`;
+                })
+                .join('\n');
+        }
+
+        // 显示结果
+        function showResult(type, message) {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+
+        // 清除结果
+        function clearResults() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.className = 'result';
+            resultDiv.textContent = '';
+        }
+
+        // 页面加载时显示环境信息
+        document.addEventListener('DOMContentLoaded', showEnvInfo);
+    </script>
+</body>
+</html> 

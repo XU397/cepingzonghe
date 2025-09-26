@@ -1,0 +1,32 @@
+# 手动上传到GitHub的命令
+
+## 1. 初始化Git仓库（如果还没有）
+git init
+
+## 2. 添加远程仓库
+git remote add origin https://github.com/XU397/cepingzonghe.git
+
+## 3. 创建.gitignore文件
+echo "node_modules/" > .gitignore
+echo "dist/" >> .gitignore
+echo ".env.local" >> .gitignore
+echo ".env.development" >> .gitignore
+echo ".env.production" >> .gitignore
+echo "*.log" >> .gitignore
+echo ".DS_Store" >> .gitignore
+echo "Thumbs.db" >> .gitignore
+
+## 4. 添加所有文件
+git add .
+
+## 5. 提交更改
+git commit -m "初次提交：上传完整项目文件"
+
+## 6. 设置主分支并推送
+git branch -M main
+git push -u origin main
+
+## 注意事项：
+# - 如果遇到认证问题，可能需要先配置GitHub的Personal Access Token
+# - 确保已经在GitHub上创建了名为 'cepingzonghe' 的仓库
+# - 如果需要强制推送（覆盖远程仓库），使用：git push -f origin main

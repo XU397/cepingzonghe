@@ -1,0 +1,146 @@
+/* SVG地图容器样式 */
+.interactive-map {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 2px solid #E0E0E0;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.map-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 800px;
+  max-height: 600px;
+}
+
+/* SVG路径动画样式 */
+.path-line {
+  transition: all 0.3s ease;
+}
+
+.path-line.background {
+  stroke-opacity: 0.3;
+  stroke-dasharray: none;
+}
+
+.path-line.highlighted {
+  stroke-opacity: 1;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.3));
+  animation: pathPulse 2s ease-in-out infinite;
+}
+
+@keyframes pathPulse {
+  0%, 100% { stroke-width: 4; }
+  50% { stroke-width: 5; }
+}
+
+/* 距离标签动画 */
+.distance-label {
+  transition: all 0.2s ease;
+  opacity: 0;
+  transform: translateY(5px);
+}
+
+.distance-label.animated {
+  opacity: 1;
+  transform: translateY(0);
+  animation: labelFadeIn 0.4s ease-out 0.15s both;
+}
+
+@keyframes labelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 站点标记样式 */
+.node-marker.station {
+  transition: all 0.2s ease;
+}
+
+.node-marker.station:hover {
+  transform: scale(1.1);
+}
+
+.station-circle {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  transition: all 0.2s ease;
+}
+
+.station-label {
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+  transition: all 0.2s ease;
+}
+
+.station-icon {
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
+}
+
+.junction-circle {
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.junction-circle:hover {
+  opacity: 1;
+  r: 8;
+}
+
+/* 紧凑模式样式 */
+.interactive-map.compact {
+  min-height: 180px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.interactive-map.compact .map-svg {
+  max-width: 280px;
+  max-height: 180px;
+}
+
+.interactive-map.compact .station-label {
+  font-size: 10px;
+}
+
+.interactive-map.compact .distance-label {
+  font-size: 9px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .map-svg {
+    max-width: 600px;
+    max-height: 450px;
+  }
+}
+
+@media (max-width: 900px) {
+  .map-svg {
+    max-width: 500px;
+    max-height: 375px;
+  }
+}
+
+@media (max-width: 600px) {
+  .interactive-map {
+    min-height: 300px;
+  }
+  
+  .map-svg {
+    max-width: 400px;
+    max-height: 300px;
+  }
+}

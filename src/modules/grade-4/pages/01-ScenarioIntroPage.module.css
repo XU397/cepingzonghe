@@ -1,0 +1,254 @@
+/**
+ * 情景介绍页面样式 - CSS Modules版本
+ * 四年级火车购票测评
+ * 使用共享变量系统确保视觉一致性
+ */
+
+@import '../styles/shared-variables.css';
+
+/* 情景介绍页面根容器 */
+.scenarioIntroContainer {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-family-primary);
+  overflow: hidden;
+}
+
+/* 页面标题容器 */
+.titleContainer {
+  position: absolute;
+  top: var(--spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.95);
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--button-border-radius-round);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+}
+
+.pageTitle {
+  font-size: var(--font-size-2xl);
+  color: var(--color-dark);
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-primary);
+  text-align: center;
+  line-height: var(--line-height-tight);
+}
+
+/* 内容区域 - 填满整个可用空间 */
+.contentArea {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  padding: var(--spacing-lg);
+  box-sizing: border-box;
+  flex: 1;
+}
+
+/* 引言文本容器 */
+.introTextBox {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--border-radius-large);
+  border: 3px solid var(--border-color);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-4xl) var(--spacing-4xl);
+  text-align: center;
+  max-width: 700px;
+  backdrop-filter: blur(15px);
+  position: relative;
+  z-index: 1;
+}
+
+.introTitle {
+  font-size: var(--font-size-4xl);
+  color: var(--color-dark);
+  margin-bottom: var(--spacing-xl);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-primary);
+  line-height: var(--line-height-tight);
+}
+
+.introText {
+  font-size: var(--font-size-xl);
+  color: var(--color-dark);
+  line-height: var(--line-height-loose);
+  margin: 0;
+  font-family: var(--font-family-primary);
+}
+
+/* 背景图片样式 - 调整高度避免遮挡按钮 */
+.backgroundImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 80px); /* 为底部按钮预留空间 */
+  background-size: contain; /* 改为contain确保图片完整显示且不会过大 */
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+/* 响应式设计 */
+@media (max-width: 1280px) {
+  .titleContainer {
+    padding: var(--spacing-sm) var(--spacing-lg);
+  }
+  
+  .pageTitle {
+    font-size: var(--font-size-xl);
+  }
+  
+  .contentArea {
+    padding: var(--spacing-md);
+  }
+  
+  .introTextBox {
+    padding: var(--spacing-3xl) var(--spacing-2xl);
+    max-width: 600px;
+  }
+  
+  .introTitle {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .introText {
+    font-size: var(--font-size-lg);
+  }
+  
+  /* 确保背景图片在中等屏幕上不会过大 */
+  .backgroundImage {
+    height: calc(100% - 100px);
+    background-size: contain;
+  }
+}
+
+@media (max-height: 720px) {
+  .titleContainer {
+    top: var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-lg);
+  }
+  
+  .pageTitle {
+    font-size: var(--font-size-lg);
+  }
+  
+  .contentArea {
+    padding: var(--spacing-base);
+  }
+  
+  .introTextBox {
+    padding: var(--spacing-xl) var(--spacing-lg);
+    max-width: 500px;
+  }
+  
+  .introTitle {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .introText {
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+  }
+}
+
+@media (max-width: 768px) {
+  .titleContainer {
+    top: var(--spacing-base);
+    padding: var(--spacing-xs) var(--spacing-md);
+  }
+  
+  .pageTitle {
+    font-size: var(--font-size-base);
+  }
+  
+  .contentArea {
+    padding: var(--spacing-sm);
+    padding-bottom: 120px; /* 为移动端按钮预留更多空间 */
+  }
+  
+  .introTextBox {
+    padding: var(--spacing-lg);
+    max-width: 90%;
+  }
+  
+  .introTitle {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .introText {
+    font-size: var(--font-size-sm);
+  }
+  
+  /* 移动端背景图片调整 */
+  .backgroundImage {
+    height: calc(100% - 120px); /* 为移动端按钮预留更多空间 */
+    background-size: contain;
+    background-position: center top;
+  }
+}
+
+/* 动画效果 */
+.fadeIn {
+  animation: fadeInAnimation 0.8s ease-in-out;
+}
+
+@keyframes fadeInAnimation {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slideInFromBottom {
+  animation: slideIn 1s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 额外的小屏幕优化 */
+@media (max-width: 480px) {
+  .contentArea {
+    padding-bottom: 140px; /* 超小屏幕预留更多空间 */
+  }
+  
+  .backgroundImage {
+    height: calc(100% - 140px);
+    background-size: contain;
+    background-position: center top;
+  }
+  
+  .introTextBox {
+    max-width: 98%;
+    margin: 10px auto;
+  }
+}

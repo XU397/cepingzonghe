@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Grade 4 Module Test</title>
+</head>
+<body>
+    <h1>Grade 4 Module Fix Test</h1>
+    <p>This page tests if the Grade 4 module loads without errors.</p>
+    
+    <script>
+        // 简单测试：检查4年级模块是否能正确加载
+        console.log('Testing Grade 4 module fix...');
+        
+        // 测试模拟认证信息
+        const testAuthInfo = {
+            examNo: 'test001',
+            batchCode: 'test_batch',
+            url: '/four-grade',
+            pageNum: '1'
+        };
+        
+        console.log('Test auth info:', testAuthInfo);
+        
+        // 模拟页面跳转测试
+        setTimeout(() => {
+            window.location.href = 'http://localhost:3000?mock=true';
+        }, 2000);
+    </script>
+</body>
+</html>

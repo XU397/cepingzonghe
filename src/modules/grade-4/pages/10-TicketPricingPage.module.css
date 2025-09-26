@@ -1,0 +1,32 @@
+._page {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 16px;
+  padding: 16px 16px 80px;
+}
+
+.tableWrap {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.trainTable { width: 100%; border-collapse: collapse; }
+.trainTable thead th { background:#f7fafc; text-align:left; padding:10px 12px; border-bottom:1px solid #e5e7eb; }
+.trainTable tbody td { padding:10px 12px; border-bottom:1px solid #f1f5f9; }
+
+.rightPanel { display:flex; flex-direction:column; gap:12px; }
+.card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:12px; }
+.label { font-weight:700; margin-bottom:6px; display:block; }
+.input { width:100%; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; font-size:16px; }
+.textarea { width:100%; min-height:80px; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; font-size:16px; resize:vertical; }
+.readOnly { background:#f8fafc; }
+
+.keypad { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
+.key { padding:12px 10px; font-size:18px; font-weight:700; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; text-align:center; }
+.keyWide { grid-column: span 2; }
+.keyDanger { background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+.statusOk { color:#16a34a; font-weight:700; }
+.statusBad { color:#dc2626; font-weight:700; }
+

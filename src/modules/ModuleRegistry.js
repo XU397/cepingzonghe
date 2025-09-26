@@ -176,15 +176,9 @@ class ModuleRegistry {
       const { Grade7Module } = await import('./grade-7/index.jsx');
       this.registerModule(Grade7Module);
 
-      // 注册4年级模块（占位符模块，将来实现）
-      this.registerModule({
-        moduleId: 'grade-4',
-        displayName: '4年级火车购票测评',
-        url: '/four-grade',
-        version: '1.0.0',
-        ModuleComponent: () => React.createElement('div', null, '4年级模块开发中...'),
-        getInitialPage: () => 'grade-4-initial'
-      });
+      // 动态导入并注册4年级模块
+      const { Grade4Module_Definition } = await import('./grade-4/index.jsx');
+      this.registerModule(Grade4Module_Definition);
 
       this.initialized = true;
       console.log('[ModuleRegistry] ✅ 模块系统初始化完成');

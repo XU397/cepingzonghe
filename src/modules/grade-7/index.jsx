@@ -7,6 +7,25 @@
 import React from 'react';
 import { Grade7Wrapper } from './wrapper.jsx';
 import { grade7Config } from './config.js';
+import { getTargetPageIdFromPageNum } from '../../utils/pageMappings.js';
+
+/**
+ * 7年级模块主组件
+ * 使用包装器组件来渲染现有的PageRouter系统
+ */
+const Grade7ModuleComponent = ({ userContext, initialPageId }) => {
+  console.log('[Grade7Module] 📄 渲染7年级模块组件', {
+    userContext: userContext ? 'present' : 'missing',
+    initialPageId
+  });
+
+  return (
+    <Grade7Wrapper 
+      userContext={userContext}
+      initialPageId={initialPageId}
+    />
+  );
+};
 
 /**
  * 7年级模块定义
@@ -22,26 +41,8 @@ export const Grade7Module = {
   // 模块配置
   config: grade7Config,
 
-  /**
-   * 模块主组件
-   * 使用包装器组件来渲染现有的PageRouter系统
-   * @param {Object} props - 组件属性
-   * @param {Object} props.userContext - 用户上下文信息
-   * @param {string} props.initialPageId - 初始页面ID（用于页面恢复）
-   */
-  ModuleComponent: ({ userContext, initialPageId }) => {
-    console.log('[Grade7Module] 📄 渲染7年级模块组件', {
-      userContext: userContext ? 'present' : 'missing',
-      initialPageId
-    });
-
-    return (
-      <Grade7Wrapper 
-        userContext={userContext}
-        initialPageId={initialPageId}
-      />
-    );
-  },
+  // 模块主组件（使用稳定的组件引用）
+  ModuleComponent: Grade7ModuleComponent,
 
   /**
    * 根据服务器返回的pageNum获取初始页面ID
@@ -54,9 +55,6 @@ export const Grade7Module = {
 
     try {
       // 使用现有的页面映射逻辑（不修改现有文件）
-      // 这里我们需要导入现有的工具函数
-      const { getTargetPageIdFromPageNum } = require('../../utils/pageMappings.js');
-      
       const targetPageId = getTargetPageIdFromPageNum(pageNum);
       
       console.log('[Grade7Module] ✅ 页面恢复', {

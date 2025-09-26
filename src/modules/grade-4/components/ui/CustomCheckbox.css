@@ -1,0 +1,242 @@
+/**
+ * 自定义复选框样式
+ * 实现方形选择框设计，符合PDF规范要求
+ */
+
+.custom-checkbox {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border: 2px solid #E0E0E0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: white;
+  user-select: none;
+  position: relative;
+  min-height: 48px; /* 确保足够的点击区域 */
+}
+
+.custom-checkbox:hover:not(.disabled) {
+  border-color: #2196F3;
+  background-color: #F5F5F5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+}
+
+.custom-checkbox:focus:not(.disabled) {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.custom-checkbox.checked {
+  border-color: #2196F3;
+  background-color: #E3F2FD;
+}
+
+.custom-checkbox.checked:hover:not(.disabled) {
+  background-color: #BBDEFB;
+}
+
+.custom-checkbox.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #F5F5F5;
+}
+
+.custom-checkbox.disabled:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #E0E0E0;
+  background-color: #F5F5F5;
+}
+
+/* 方形选择框样式 */
+.checkbox-box {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #E0E0E0;
+  border-radius: 4px; /* 方形圆角 */
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  transition: all 0.2s ease;
+  flex-shrink: 0; /* 防止压缩 */
+}
+
+.custom-checkbox:hover:not(.disabled) .checkbox-box {
+  border-color: #2196F3;
+}
+
+.custom-checkbox.checked .checkbox-box {
+  border-color: #2196F3;
+  background-color: #2196F3;
+}
+
+.custom-checkbox.disabled .checkbox-box {
+  border-color: #BDBDBD;
+  background-color: #F5F5F5;
+}
+
+/* 勾选标记样式 */
+.checkmark {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 1;
+  animation: checkmarkAppear 0.2s ease-in-out;
+}
+
+@keyframes checkmarkAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.custom-checkbox.disabled .checkmark {
+  color: #BDBDBD;
+}
+
+/* 文本标签样式 */
+.checkbox-label {
+  font-size: 16px;
+  color: #333333;
+  line-height: 1.4;
+  flex: 1; /* 占据剩余空间 */
+  word-break: break-word; /* 长文本换行 */
+}
+
+.custom-checkbox.checked .checkbox-label {
+  color: #1976D2;
+  font-weight: 500;
+}
+
+.custom-checkbox.disabled .checkbox-label {
+  color: #9E9E9E;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .custom-checkbox {
+    padding: 10px 12px;
+    min-height: 44px; /* 移动端稍小的点击区域 */
+  }
+  
+  .checkbox-box {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+  }
+  
+  .checkmark {
+    font-size: 12px;
+  }
+  
+  .checkbox-label {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-checkbox {
+    padding: 8px 10px;
+    min-height: 40px;
+  }
+  
+  .checkbox-box {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+  }
+  
+  .checkmark {
+    font-size: 11px;
+  }
+  
+  .checkbox-label {
+    font-size: 14px;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .custom-checkbox {
+    border-width: 3px;
+  }
+  
+  .checkbox-box {
+    border-width: 3px;
+  }
+  
+  .custom-checkbox.checked {
+    border-color: #000000;
+  }
+  
+  .custom-checkbox.checked .checkbox-box {
+    border-color: #000000;
+    background-color: #000000;
+  }
+  
+  .checkbox-label {
+    color: #000000;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .custom-checkbox {
+    transition: none;
+  }
+  
+  .checkbox-box {
+    transition: none;
+  }
+  
+  .checkmark {
+    animation: none;
+  }
+  
+  .custom-checkbox:hover:not(.disabled) {
+    transform: none;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .custom-checkbox {
+    border: 2px solid #000000;
+    background: white;
+    box-shadow: none;
+  }
+  
+  .custom-checkbox.checked {
+    border-color: #000000;
+    background: white;
+  }
+  
+  .checkbox-box {
+    border: 2px solid #000000;
+    background: white;
+  }
+  
+  .custom-checkbox.checked .checkbox-box {
+    border-color: #000000;
+    background: #000000;
+  }
+  
+  .checkbox-label {
+    color: #000000;
+  }
+  
+  .checkmark {
+    color: white;
+  }
+}

@@ -94,6 +94,37 @@ export const AppProvider = ({ children }) => {
     return internalFormatDateTime(date);
   }, []);
 
+  // 页面加载时从localStorage恢复状态
+  useEffect(() => {
+    const savedModuleUrl = localStorage.getItem('moduleUrl');
+    const savedModulePageNum = localStorage.getItem('modulePageNum');
+    const savedBatchCode = localStorage.getItem('batchCode');
+    const savedExamNo = localStorage.getItem('examNo');
+    
+    console.log('[AppContext] 🔄 从localStorage恢复状态', {
+      moduleUrl: savedModuleUrl,
+      modulePageNum: savedModulePageNum,
+      batchCode: savedBatchCode,
+      examNo: savedExamNo
+    });
+    
+    if (savedModuleUrl) {
+      setModuleUrl(savedModuleUrl);
+    }
+    
+    if (savedModulePageNum) {
+      setPageNum(savedModulePageNum);
+    }
+    
+    if (savedBatchCode) {
+      setBatchCode(savedBatchCode);
+    }
+    
+    if (savedExamNo) {
+      setExamNo(savedExamNo);
+    }
+  }, []);
+
   /**
    * 记录用户交互操作
    * @param {object} operationData - 操作数据
@@ -607,8 +638,8 @@ export const AppProvider = ({ children }) => {
           setModuleUrl(storedModuleUrl);
           console.log('[AppContext] 从localStorage恢复moduleUrl:', storedModuleUrl);
         } else {
-          // 如果没有存储的URL，使用默认值
-          const defaultUrl = '/seven-grade';
+          // 如果没有存储的URL，使用默认值（四年级模块）
+          const defaultUrl = '/four-grade';
           setModuleUrl(defaultUrl);
           localStorage.setItem('moduleUrl', defaultUrl);
           console.log('[AppContext] 使用默认moduleUrl:', defaultUrl);
@@ -1175,7 +1206,7 @@ export const AppProvider = ({ children }) => {
       
       // 处理模块URL字段
       try {
-        const userModuleUrl = userData.url || '/seven-grade'; // 默认值
+        const userModuleUrl = userData.url || '/four-grade'; // 默认值（四年级模块）
         setModuleUrl(userModuleUrl);
         localStorage.setItem('moduleUrl', userModuleUrl);
         console.log('[AppContext] URL字段处理完成:', {
@@ -1185,12 +1216,12 @@ export const AppProvider = ({ children }) => {
         });
         
         if (!userData.url) {
-          console.log('[AppContext] Using default moduleUrl: /seven-grade (API response missing url field)');
+          console.log('[AppContext] Using default moduleUrl: /four-grade (API response missing url field)');
         }
       } catch (error) {
         console.error('[AppContext] URL extraction failed:', error.message);
-        // 错误处理：使用默认值
-        const defaultUrl = '/seven-grade';
+        // 错误处理：使用默认值（四年级模块）
+        const defaultUrl = '/four-grade';
         setModuleUrl(defaultUrl);
         localStorage.setItem('moduleUrl', defaultUrl);
         console.log('[AppContext] 错误恢复 - 使用默认moduleUrl:', defaultUrl);
@@ -1347,4 +1378,4 @@ export const useAppContext = () => {
   return context;
 };
 
-export default AppContext; 
+export default AppContext;

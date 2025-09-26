@@ -1,0 +1,276 @@
+/* 站点推荐页面样式 */
+.stationRecommendationPage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepNumber {
+  width: 32px;
+  height: 32px;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.stepTitle {
+  font-size: 18px;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+/* 最终优化版的 .pageContainer 样式 */
+.pageContainer {
+  flex: 1;
+  display: grid;
+  
+  /* [保留] 采纳您喜欢的 2:3 列宽比例 */
+  grid-template-columns: 2fr 3fr; 
+
+  /* [移除] 删除强制的行划分，以实现自然垂直流 */
+  /* grid-template-rows: 1fr 1fr; */
+
+  gap: 24px;
+  width: 100%;
+  
+  /* [保留] 这是一个有益的布局修复 */
+  min-height: 0;
+
+  /* [新增] 确保两列从顶部开始对齐，实现整洁的流式布局 */
+  align-items: start;
+}
+
+.leftColumn, .rightColumn {
+  display: flex;
+  flex-direction: column;         /* 让列内部的模块垂直堆叠 */
+  gap: 24px;                      /* 定义列内部模块之间的垂直间距 */
+  width: 100%;
+}
+
+
+.quadrant {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; 
+  justify-content: center; /* 垂直居中对齐内容 */
+  /*justify-content: flex-start;    /* [重要] 内容从顶部开始对齐，而非垂直居中 */
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.introText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.stationOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.radioOption:hover {
+  background-color: #f5f5f5;
+}
+
+.radioOption input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.radioLabel {
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.reasonSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%; /* 确保理由部分填满其象限 */
+}
+
+.reasonLabel {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.reasonInput {
+  width: 100%;
+  flex-grow: 1; /* 让输入框填满剩余空间 */
+  min-height: 120px;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.reasonInput:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.reasonInput::placeholder {
+  color: #999;
+}
+
+.comparisonTable {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+  width: 100%;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  background-color: #f8f9fa;
+}
+
+.headerCell {
+  padding: 10px 12px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+  border-right: 1px solid #ddd;
+  text-align: center;
+}
+
+.headerCell:last-child {
+  border-right: none;
+}
+
+.tableBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 1px solid #eee;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableCell {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #333;
+  border-right: 1px solid #eee;
+  text-align: center;
+}
+
+.tableCell:last-child {
+  border-right: none;
+}
+
+.tableRow:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.mapTip {
+  text-align: center;
+  margin: 0;
+}
+
+.tipText {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.routeButtons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.routeButton {
+  min-width: 60px;
+  height: 28px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.routeButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.routeButton.active {
+  border-color: #333;
+  box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2);
+}
+
+.mapContainer {
+  height: 200px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1; /* 让地图填满象限的剩余空间 */
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .pageContainer {
+    grid-template-columns: 1fr; /* 在小屏幕上变为单列 */
+    grid-template-rows: auto;
+  }
+}

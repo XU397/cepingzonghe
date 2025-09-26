@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AppProvider, useAppContext } from './context/AppContext';
 import Timer from './components/common/Timer';
 import QuestionnaireTimer from './components/questionnaire/QuestionnaireTimer';
@@ -50,6 +50,9 @@ const AppContent = () => {
     logOperation,
     collectAnswer
   } = useAppContext();
+
+  // 用于防止重复日志输出
+  const moduleLoggedRef = useRef(false);
 
   useEffect(() => {
     if (isTimeUp && !isTaskFinished && currentPageId !== 'Page_19_Task_Completion') {
@@ -122,9 +125,14 @@ const AppContent = () => {
   const isCurrentPageQuestionnaire = isQuestionnairePage(currentPageId);
   const currentQuestionnaireStep = getQuestionnaireStepNumber(currentPageId);
 
+
   // 如果有模块URL，使用模块路由器
   if (moduleUrl) {
-    console.log('[App] 📦 渲染模块系统界面');
+    // 只在第一次或moduleUrl变化时输出日志
+    if (process.env.NODE_ENV === 'development' && !moduleLoggedRef.current) {
+      console.log('[App] 📦 渲染模块系统界面');
+      moduleLoggedRef.current = true;
+    }
     
     // 构造全局上下文（从 AppContext 获取）
     const globalContext = {
@@ -153,7 +161,7 @@ const AppContent = () => {
     // 认证信息
     const authInfo = {
       url: moduleUrl,
-      pageNum: currentPageId,
+      pageNum: pageNum,
       examNo: examNo,
       batchCode: batchCode
     };
@@ -172,14 +180,7 @@ const AppContent = () => {
           )
         )}
         <div className="main-content-wrapper">
-          {isCurrentPageQuestionnaire ? (
-            <QuestionnaireNavigation 
-              currentQuestionnaireStep={currentQuestionnaireStep} 
-              totalQuestionnaireSteps={TOTAL_QUESTIONNAIRE_STEPS} 
-            />
-          ) : (
-            showStepNavigation && <StepNavigation currentStepNumber={currentStepNumber} totalSteps={totalUserSteps} />
-          )}
+          {/* 模块系统下不显示全局导航，模块内部有自己的导航系统 */}
           <div className="task-wrapper">
             <React.Suspense fallback={
               <div style={{ 
@@ -201,6 +202,11 @@ const AppContent = () => {
         </div>
       </div>
     );
+  }
+
+  // 重置日志标志（当不使用模块系统时）
+  if (moduleLoggedRef.current) {
+    moduleLoggedRef.current = false;
   }
 
   // 默认情况：使用传统页面路由器

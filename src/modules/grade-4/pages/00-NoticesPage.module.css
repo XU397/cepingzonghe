@@ -1,0 +1,373 @@
+/**
+ * 注意事项页面样式 - CSS Modules版本
+ * 四年级火车购票测评
+ * 使用共享变量系统确保视觉一致性
+ */
+
+@import '../styles/shared-variables.css';
+
+/* 注意事项页面根容器 */
+.noticesPageContainer {
+  position: relative;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  background: #ffffff;
+  z-index: 10;
+}
+
+/* 注意事项页面标题 */
+.noticesPageTitle {
+  margin-bottom: 20px;
+  font-size: 28px;
+  flex-shrink: 0;
+  color: #333;
+  font-weight: bold;
+  font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  text-align: center;
+}
+
+/* 注意事项容器 */
+.noticesContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #FFFBEF;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* 页面头部 */
+.pageHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.pageTitle {
+  font-size: 28px;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333;
+  font-weight: bold;
+}
+
+/* 内容区域 */
+.contentSection {
+  margin-bottom: 20px;
+  padding: 18px 25px;
+  border-left: 6px solid var(--cartoon-red);
+  position: relative;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 导航区域 */
+.navigationArea {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+  margin-top: 20px;
+  flex-shrink: 0;
+}
+
+.confirmationBox {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.confirmationCheckbox {
+  font-size: 18px !important;
+  font-weight: 500;
+  color: #333 !important;
+}
+
+.nextButton {
+  padding: 10px 30px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+.nextButton.enabled {
+  background: #2196f3;
+  color: white;
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+  cursor: pointer;
+}
+
+.nextButton.enabled:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+}
+
+.nextButton.enabled:active {
+  transform: translateY(0);
+}
+
+.nextButton.disabled {
+  background: #e0e0e0;
+  color: #9e9e9e;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 页面底部 */
+.pageFooter {
+  padding: 20px 40px;
+  text-align: center;
+  background: #fafbfc;
+  border-top: 1px solid #e9ecef;
+}
+
+.timerInfo {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.timerText {
+  color: #6c757d;
+  transition: color 0.3s ease;
+}
+
+.timerText.completed {
+  color: #28a745;
+}
+
+.timerText.ready {
+  color: #007bff;
+  font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 1280px) {
+  .pageContent {
+    padding: 15px;
+  }
+  
+  .pageTitle {
+    font-size: 24px;
+    margin-bottom: 15px;
+  }
+  
+  .contentSection {
+    padding: 15px 20px;
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-height: 720px) {
+  .pageContent {
+    padding: 10px;
+  }
+  
+  .pageTitle {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  
+  .contentSection {
+    padding: 12px 18px;
+    margin-bottom: 12px;
+  }
+  
+  .navigationArea {
+    padding-top: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .noticesPage {
+    padding: 10px;
+  }
+  
+  .noticesContainer {
+    margin: 0;
+    border-radius: 8px;
+  }
+  
+  .pageHeader {
+    padding: 20px;
+  }
+  
+  .pageTitle {
+    font-size: 28px;
+  }
+  
+  .pageSubtitle {
+    font-size: 16px;
+  }
+  
+  .noticesContent {
+    padding: 20px;
+  }
+  
+  .sectionTitle {
+    font-size: 18px;
+  }
+  
+  .noticesList li {
+    font-size: 15px;
+  }
+  
+  .confirmationArea {
+    padding: 20px;
+  }
+  
+  .confirmationCheckbox {
+    font-size: 16px !important;
+  }
+  
+  .nextButton {
+    padding: 10px 24px;
+    font-size: 16px;
+  }
+  
+  .pageFooter {
+    padding: 15px 20px;
+  }
+  
+  .timerInfo {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .noticesContent {
+    padding: 15px;
+  }
+  
+  .noticesSection {
+    margin-bottom: 24px;
+  }
+  
+  .confirmationArea {
+    padding: 15px;
+  }
+  
+  .pageFooter {
+    padding: 12px 15px;
+  }
+}
+
+/* 打印样式 */
+/* 卡通风格元素样式 */
+.cartoonBox {
+  background: var(--bg-white);
+  border-radius: var(--border-radius-large);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-card);
+  border: 3px solid var(--border-color);
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* 确认区域样式 */
+.checkboxContainer {
+  background: #e3f2fd;
+  border: 2px solid #2196f3;
+  padding: 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 900px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  margin-bottom: 20px;
+}
+
+.checkboxContainer.enabled {
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  transform: translateY(-3px);
+  opacity: 1;
+}
+
+.checkboxContainer.disabled {
+  opacity: 0.7;
+}
+
+.checkboxInner {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.checkboxInput {
+  width: 20px;
+  height: 20px;
+  accent-color: #2196f3;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.checkboxInput:disabled {
+  cursor: not-allowed;
+}
+
+.checkboxLabel {
+  font-size: 16px;
+  font-weight: bold;
+  color: #1565c0;
+  cursor: pointer;
+  user-select: none;
+  font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+.checkboxLabel.disabled {
+  cursor: not-allowed;
+}
+
+/* 重要文本强调样式 */  
+.importantText {
+  color: var(--color-error);
+  font-weight: var(--font-weight-bold);
+}
+
+.bulletPoint {
+  color: var(--color-error);
+  font-weight: var(--font-weight-bold);
+  margin-right: var(--spacing-sm);
+}
+
+@media print {
+  .noticesPage {
+    background: white;
+    padding: 0;
+  }
+  
+  .noticesContainer {
+    box-shadow: none;
+    border-radius: 0;
+  }
+  
+  .pageHeader {
+    background: white;
+    color: black;
+    border-bottom: 2px solid #333;
+  }
+  
+  .confirmationArea,
+  .pageFooter {
+    display: none;
+  }
+}

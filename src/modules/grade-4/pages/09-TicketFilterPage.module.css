@@ -1,0 +1,69 @@
+._page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px 80px;
+}
+
+.constraints {
+  background: #f0f9ff;
+  border: 1px solid #bee3f8;
+  color: #1e3a8a;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.tableWrap {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.trainTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.trainTable thead th {
+  background: #f7fafc;
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 700;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.trainTable tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.selectCell {
+  width: 48px;
+}
+
+.selectBtn {
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  cursor: pointer;
+}
+
+.selected {
+  background: #3b82f6;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.footerHint {
+  color: #64748b;
+  font-size: 14px;
+}
+

@@ -1,0 +1,250 @@
+/**
+ * 放置区域组件样式
+ * 包含磁吸技术视觉效果
+ */
+
+.dropZone {
+  width: 100%;
+  height: 280px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  position: relative;
+  background-color: #fafafa;
+  transition: all 0.3s ease;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dropZone.dragOver {
+  border-color: #2196F3;
+  background-color: rgba(33, 150, 243, 0.05);
+  box-shadow: inset 0 0 20px rgba(33, 150, 243, 0.1);
+}
+
+/* 背景网格 */
+.backgroundGrid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.4;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(to right, #e0e0e0 1px, transparent 1px),
+    linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
+  background-size: 20px 20px;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+  animation: gridFadeIn 0.3s ease;
+}
+
+@keyframes gridFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.4;
+  }
+}
+
+/* 占位符样式 */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  text-align: center;
+  gap: 12px;
+}
+
+.placeholderIcon {
+  font-size: 48px;
+  opacity: 0.6;
+}
+
+.placeholderText {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  max-width: 200px;
+}
+
+/* 任务时间轴容器 */
+.taskTimeline {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+}
+
+/* 已放置的任务块 */
+.placedTask {
+  position: absolute;
+  height: 40px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  cursor: move;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  z-index: 2;
+}
+
+.placedTask:hover:not(.dragging) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.placedTask.dragging {
+  opacity: 0.8;
+  cursor: grabbing;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  border-color: rgba(255,255,255,0.5);
+}
+
+.placedTask.snapped {
+  border-color: rgba(33, 150, 243, 0.6);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  animation: snapEffect 0.4s ease-out;
+}
+
+@keyframes snapEffect {
+  0% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  }
+}
+
+.taskLabel {
+  font-size: 18px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  pointer-events: none;
+}
+
+/* 磁吸预览指示器 */
+.snapPreview {
+  position: absolute;
+  height: 40px;
+  border: 2px dashed #2196F3;
+  border-radius: 6px;
+  background-color: rgba(33, 150, 243, 0.1);
+  pointer-events: none;
+  z-index: 999;
+  animation: snapPreviewPulse 0.6s ease-in-out;
+}
+
+@keyframes snapPreviewPulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+/* 不同类型的磁吸预览样式 */
+.snapPreview.horizontal {
+  border-color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.snapPreview.vertical {
+  border-color: #FF9800;
+  background-color: rgba(255, 152, 0, 0.1);
+}
+
+.snapPreview.serial {
+  border-color: #E91E63;
+  background-color: rgba(233, 30, 99, 0.1);
+}
+
+.snapPreview.grid {
+  border-color: #9E9E9E;
+  background-color: rgba(158, 158, 158, 0.1);
+}
+
+/* 悬停状态下的增强效果 */
+.dropZone:not(.dragOver) .placedTask {
+  transition: all 0.2s ease;
+}
+
+.dropZone.dragOver .placedTask {
+  opacity: 0.7;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .dropZone {
+    height: 250px;
+  }
+  
+  .placedTask {
+    height: 36px;
+  }
+  
+  .taskLabel {
+    font-size: 16px;
+  }
+  
+  .placeholderIcon {
+    font-size: 36px;
+  }
+  
+  .placeholderText {
+    font-size: 14px;
+    max-width: 180px;
+  }
+  
+  .backgroundGrid {
+    background-size: 15px 15px;
+  }
+  
+  .taskTimeline {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dropZone {
+    height: 220px;
+  }
+  
+  .placedTask {
+    height: 32px;
+  }
+  
+  .taskLabel {
+    font-size: 14px;
+  }
+  
+  .placeholderIcon {
+    font-size: 32px;
+  }
+  
+  .placeholderText {
+    font-size: 13px;
+    max-width: 160px;
+  }
+}

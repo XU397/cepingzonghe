@@ -1,0 +1,113 @@
+/**
+ * 拖拽时间轴演示组件样式 (最终修正版)
+ */
+
+ .demoContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* 减小整体间距 */
+  position: relative;
+}
+
+/* --- 顶部任务块区域 --- */
+.taskSourceArea {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+}
+
+.taskBlocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.taskBlock {
+  height: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  user-select: none;
+}
+
+.taskLabel {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* --- 演示方案区域 --- */
+.solutionArea {
+  position: relative;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  height: 220px;
+  background-color: #f9f9f9;
+}
+
+.timelineContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* 新增：用于动画的已放置任务块的样式 */
+.placedTask {
+  position: absolute; /* 核心：使用绝对定位 */
+  height: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  opacity: 0;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* --- 总用时显示 (最终样式) --- */
+.totalTimeDisplay {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-size: 16px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  animation: fadeIn 0.5s 3s ease forwards; /* 在动画最后阶段淡入 */
+}
+
+.timeValueBox {
+  border: 1px solid #333;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.timeValue {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* --- 任务颜色定义 --- */
+.task1 { background-color: #4A90E2; }
+.task2 { background-color: #F5A623; }
+.task3 { background-color: #7ED321; }
+.task4 { background-color: #50E3C2; }
+.task5 { background-color: #D0021B; }

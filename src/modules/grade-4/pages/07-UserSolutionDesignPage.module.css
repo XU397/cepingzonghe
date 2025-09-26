@@ -1,0 +1,329 @@
+/**
+ * 故事 2.6: 用户方案设计页面样式
+ * PDF第14页样式实现
+ */
+
+.userSolutionDesignPage {
+  background: #f8f9fa;
+}
+
+.contentArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* 指令说明区域 */
+.instructionSection {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.pageTitle {
+  margin: 0 0 16px 0;
+  color: #1976D2;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.instructionText {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+.taskLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.taskLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+.legendColor {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* 可拖拽任务块区域 */
+.taskSourceArea {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 2px dashed #e0e0e0;
+}
+
+.sourceTitle {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.taskBlocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  min-height: 60px;
+}
+
+/* 方案设计区域 */
+.solutionArea {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+  min-height: 350px;
+}
+
+.solutionColumn {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.solutionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.solutionTitle {
+  margin: 0;
+  color: #1976D2;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.timeDisplay {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #555;
+  background: #f5f5f5;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.timeValue {
+  font-size: 18px;
+  font-weight: bold;
+  color: #F44336;
+  min-width: 30px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.timeValue:not(:empty) {
+  animation: timeUpdate 0.5s ease-out;
+}
+
+@keyframes timeUpdate {
+  0% {
+    transform: scale(1.2);
+    color: #FF9800;
+  }
+  100% {
+    transform: scale(1);
+    color: #F44336;
+  }
+}
+
+/* 导航区域 */
+.navigationSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+  background: white;
+  border-top: 1px solid #e0e0e0;
+  margin-top: auto;
+}
+
+.progressHint {
+  min-height: 20px;
+}
+
+.hintText {
+  color: #ff9800;
+  font-size: 14px;
+  text-align: center;
+  margin: 0;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nextButton {
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.nextButton:hover:not(:disabled) {
+  background: #1976D2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.nextButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.nextButton.disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.nextButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 拖拽反馈效果 */
+.taskSourceArea:has(.dragging) {
+  border-color: #2196F3;
+  background: rgba(33, 150, 243, 0.05);
+}
+
+.solutionColumn:has(.isOver) {
+  background: rgba(33, 150, 243, 0.05);
+  border: 2px solid #2196F3;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .solutionArea {
+    gap: 16px;
+  }
+  
+  .solutionColumn {
+    padding: 16px;
+  }
+  
+  .taskLegend {
+    gap: 12px;
+  }
+  
+  .taskLegendItem {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .contentArea {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .solutionArea {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    min-height: 600px;
+  }
+  
+  .solutionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .pageTitle {
+    font-size: 20px;
+  }
+  
+  .instructionText {
+    font-size: 15px;
+  }
+  
+  .taskLegend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+  }
+  
+  .taskBlocks {
+    justify-content: center;
+    min-height: 50px;
+  }
+  
+  .sourceTitle,
+  .solutionTitle {
+    font-size: 16px;
+  }
+  
+  .timeDisplay {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  
+  .timeValue {
+    font-size: 16px;
+  }
+  
+  .nextButton {
+    padding: 10px 24px;
+    font-size: 15px;
+  }
+  
+  .navigationSection {
+    padding: 16px;
+  }
+  
+  .hintText {
+    font-size: 13px;
+  }
+}

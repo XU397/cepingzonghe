@@ -44,13 +44,88 @@ src/modules/grade-4/
 
 #### **5.3.3 UI/展示组件 (UI Components)**
 
-这些是可复用的“哑”组件，只负责展示。
+这些是可复用的"哑"组件，只负责展示。
 
-* **AssessmentPageLayout.tsx**: 一个布局组件，用于创建统一的中央内容卡片样式，所有页面组件都将被它包裹。  
+* **AssessmentPageLayout.jsx**: **[核心布局组件]** 统一的页面布局组件，负责：
+  - 完全适配现有应用框架的白色背景区域
+  - 消除滚动条，确保内容在一屏内显示  
+  - 提供垂直居中、水平自适应的响应式布局
+  - 支持可配置的标题、按钮和内容区域
+  - 集成操作日志记录功能
+  
+  **关键特性**:
+  ```jsx
+  <AssessmentPageLayout 
+    title="页面标题"
+    subtitle="可选副标题" 
+    showNextButton={true}
+    isNextButtonEnabled={isReady}
+    onNextClick={handleNext}
+  >
+    <YourPageContent />
+  </AssessmentPageLayout>
+  ```
+
 * **DraggableTask.tsx**: 在时间规划器中，代表一个可被拖拽的任务块。  
 * **DropZone.tsx**: 在时间规划器中，代表可以放置任务块的区域。  
 * **OnScreenKeyboard.tsx**: 专为题目10设计的自定义屏幕小键盘。  
 * **RouteMapModal.tsx**: 在题目5中，用于在弹窗中显示路线图的组件。
+
+#### **5.3.4 布局适配组件规范 (Layout Adaptation Component Standards)**
+
+为确保所有新模块完美适配现有框架，每个模块必须实现以下布局适配组件：
+
+**模块根容器**:
+```jsx
+// src/modules/grade-4/index.jsx
+const Grade4Module = ({ globalContext, authInfo }) => {
+  return (
+    <Grade4Provider globalContext={globalContext} authInfo={authInfo}>
+      <div className="grade-4-module">  {/* 关键：使用模块特定的CSS类 */}
+        <Grade4PageRouter />
+      </div>
+    </Grade4Provider>
+  );
+};
+```
+
+**模块专用样式文件**:
+```css
+/* src/modules/grade-4/styles/Grade4Layout.css */
+.grade-4-module {
+  width: 100%;
+  height: 100%;              /* 使用100%而非100vh */
+  max-height: 100%;
+  overflow: hidden;           /* 强制禁用滚动 */
+  background: transparent;    /* 透明背景，显示外层白色背景 */
+}
+
+/* 覆盖全局样式以消除滚动冲突 */
+.grade-4-module .page-content {
+  max-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+```
+
+**页面组件适配**:
+所有页面组件必须遵循以下结构确保完全填满容器：
+```jsx
+const ModulePage = () => (
+  <div className="page-content" style={{ 
+    height: '100%',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center'
+  }}>
+    {/* 页面内容，最大宽度800px，居中显示 */}
+  </div>
+);
+```
 
 ### **5.4 组件关系图 (Component Relationship Diagram)**
 

@@ -1,0 +1,264 @@
+/**
+ * 情景介绍页面样式
+ * 提供清晰、易读的布局和视觉设计，与现有蒸馒头模块保持一致
+ */
+
+.scenario-intro-page {
+  min-height: 100vh;
+  background: #f0f0f0; /* 浅灰色背景 - 按照UI/UX规范 */
+  font-family: 'Microsoft YaHei', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 顶部导航栏 - 绿色背景 #4CAF50 */
+.top-navigation {
+  background: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.platform-name {
+  font-weight: 500;
+}
+
+.user-info {
+  font-weight: 400;
+}
+
+/* 主应用区 */
+.main-app-area {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* 左侧导航栏样式现在由 LeftNavigation 组件提供 */
+
+/* 右侧内容区域 */
+.content-area {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.scenario-container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: #FFFBEF; /* 浅米色背景 - 按照UI/UX规范 */
+  border-radius: 8px; /* 圆角设计 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* 页面头部 */
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.page-subtitle {
+  font-size: 18px;
+  opacity: 0.9;
+  font-weight: 300;
+}
+
+/* 情景内容 */
+.scenario-content {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.scenario-image-section {
+  text-align: center;
+}
+
+.scenario-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.intro-text-section {
+  flex: 1;
+}
+
+.intro-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333333; /* 深灰色文本 - 按照UI/UX规范 */
+  margin: 0;
+}
+
+.intro-text p {
+  margin: 0 0 20px 0;
+  text-align: justify;
+  text-indent: 2em; /* 中文段落首行缩进 */
+}
+
+.intro-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* 导航区域 */
+.navigation-area {
+  padding: 30px 40px;
+  text-align: right;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.next-button {
+  padding: 12px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.next-button.enabled {
+  background: #2196F3; /* 蓝绿色激活状态 - 按照UI/UX规范 */
+  color: white;
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+}
+
+.next-button.enabled:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+}
+
+.next-button.enabled:active {
+  transform: translateY(0);
+}
+
+.next-button.disabled {
+  background: #E0E0E0; /* 灰色背景禁用状态 - 按照UI/UX规范 */
+  color: #9e9e9e;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .main-app-area {
+    flex-direction: column;
+  }
+  
+  .content-area {
+    order: 1;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .scenario-container {
+    margin: 0;
+    border-radius: 8px;
+  }
+  
+  .page-header {
+    padding: 20px;
+  }
+  
+  .page-title {
+    font-size: 28px;
+  }
+  
+  .page-subtitle {
+    font-size: 16px;
+  }
+  
+  .scenario-content {
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  .intro-text {
+    font-size: 15px;
+  }
+  
+  .navigation-area {
+    padding: 20px;
+  }
+  
+  .next-button {
+    padding: 10px 24px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .scenario-content {
+    padding: 15px;
+    gap: 15px;
+  }
+  
+  .intro-text {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  .intro-text p {
+    text-indent: 1.5em;
+  }
+  
+  .navigation-area {
+    padding: 15px;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .scenario-intro-page {
+    background: white;
+  }
+  
+  .top-navigation,
+  .left-navigation,
+  .navigation-area {
+    display: none;
+  }
+  
+  .main-app-area {
+    flex-direction: column;
+  }
+  
+  .content-area {
+    padding: 0;
+  }
+  
+  .scenario-container {
+    box-shadow: none;
+    border-radius: 0;
+  }
+  
+  .page-header {
+    background: white;
+    color: black;
+    border-bottom: 2px solid #333;
+  }
+}

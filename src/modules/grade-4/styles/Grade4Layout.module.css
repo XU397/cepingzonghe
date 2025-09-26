@@ -1,0 +1,433 @@
+/**
+ * 四年级模块全局布局样式 - CSS Modules版本
+ * 确保适应1280x720分辨率，右侧内容在一屏内完成
+ * 使用CSS Modules实现样式完全隔离
+ * 导入共享变量系统确保设计一致性
+ */
+
+@import './shared-variables.css';
+
+/* 四年级模块独立容器 */
+.moduleContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  overflow: visible;
+  font-family: var(--font-family-primary);
+  background: var(--bg-primary);
+}
+
+/* 四年级模块根容器 */
+.grade4Module {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  font-family: var(--font-family-primary);
+  overflow: visible;
+  color: var(--text-primary);
+}
+
+/* 模块主布局：左侧导航 + 右侧内容 */
+.moduleLayout {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 左侧导航栏容器 */
+.leftSidebar {
+  width: 100px;
+  height: 100%;
+  background: var(--cartoon-light, #e6f7ff);
+  border-right: 2px solid var(--cartoon-border, #ffd99e);
+  overflow: hidden;
+  flex-shrink: 0;
+  margin: 0;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 全屏页面容器 - 用于注意事项页面 */
+.fullPageContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  overflow: visible;
+  background: var(--bg-white);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  flex: 1;
+  z-index: 1;
+}
+
+/* 全屏容器内的页面内容样式 */
+.pageContent {
+  padding: 30px;
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  justify-content: flex-start;
+  align-items: center;
+  max-width: none;
+  gap: 20px;
+}
+
+/* 右侧页面内容容器 */
+.pageContainer {
+  flex: 1;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  background: white;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* 内容区域 */
+.contentArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* 顶部导航栏 */
+.topNavigation {
+  background: #4CAF50;
+  color: white;
+  padding: 8px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  height: 40px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.platformName {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.userInfo {
+  font-weight: 400;
+  font-size: 13px;
+}
+
+/* 主应用区 */
+.mainAppArea {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 40px);
+  overflow: hidden;
+}
+
+/* 页面头部 */
+.pageHeader {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px 20px;
+  text-align: center;
+  border-radius: 8px 8px 0 0;
+  flex-shrink: 0;
+  margin-bottom: 15px;
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 0 5px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.pageSubtitle {
+  font-size: 14px;
+  opacity: 0.9;
+  font-weight: 300;
+  margin: 0;
+}
+
+/* 内容区域样式 */
+.contentSection {
+  background: #FFFBEF;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* 导航区域 */
+.navigationArea {
+  display: flex;
+  justify-content: center;
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  flex-shrink: 0;
+  border-radius: 0 0 8px 8px;
+}
+
+.nextButton {
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.nextButton.enabled {
+  background: #2196F3;
+  color: white;
+  box-shadow: 0 3px 10px rgba(33, 150, 243, 0.4);
+}
+
+.nextButton.enabled:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.6);
+}
+
+.nextButton.disabled {
+  background: #E0E0E0;
+  color: #9e9e9e;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 响应式设计 - 针对1280x720分辨率优化 */
+@media (max-width: 1280px) {
+  .leftSidebar {
+    width: 85px;
+  }
+  
+  .pageContainer {
+    padding: 0;
+  }
+  
+  .pageHeader {
+    padding: 12px 15px;
+  }
+  
+  .pageTitle {
+    font-size: 20px;
+  }
+  
+  .contentSection {
+    padding: 15px;
+    margin-bottom: 10px;
+  }
+  
+  .navigationArea {
+    padding: 12px 15px;
+  }
+}
+
+@media (max-height: 720px) {
+  .leftSidebar {
+    width: 75px;
+  }
+  
+  .pageHeader {
+    padding: 10px 15px;
+  }
+  
+  .pageTitle {
+    font-size: 18px;
+    margin-bottom: 3px;
+  }
+  
+  .pageSubtitle {
+    font-size: 12px;
+  }
+  
+  .contentSection {
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .navigationArea {
+    padding: 10px 15px;
+  }
+  
+  .nextButton {
+    padding: 8px 20px;
+    font-size: 14px;
+  }
+}
+
+/* 特殊布局：确保在720p高度下内容不溢出 */
+@media (max-height: 720px) and (max-width: 1280px) {
+  .leftSidebar {
+    width: 70px;
+  }
+  
+  .topNavigation {
+    height: 35px;
+    padding: 6px 15px;
+    font-size: 13px;
+  }
+  
+  .mainAppArea {
+    height: calc(100vh - 35px);
+  }
+  
+  .pageContainer {
+    padding: 0;
+  }
+  
+  .pageHeader {
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+  
+  .contentSection {
+    padding: 10px;
+    margin-bottom: 6px;
+  }
+}
+
+/* 图片容器样式 */
+.imageContainer {
+  text-align: center;
+  margin: 15px 0;
+}
+
+.contentImage {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 文本内容样式 */
+.textContent {
+  line-height: 1.6;
+  color: #333;
+  font-size: 14px;
+}
+
+.textContent p {
+  margin: 0 0 12px 0;
+}
+
+.textContent p:last-child {
+  margin-bottom: 0;
+}
+
+/* 确认区域样式 */
+.confirmationArea {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.confirmationCheckbox {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 选择题样式 */
+.optionsContainer {
+  display: grid;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.optionItem {
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.optionItem:hover {
+  border-color: #2196F3;
+  background: #f3f9ff;
+}
+
+.optionItem.selected {
+  border-color: #2196F3;
+  background: #e3f2fd;
+}
+
+/* 输入框样式 */
+.inputGroup {
+  margin: 10px 0;
+}
+
+.inputLabel {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.textInput {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.textInput:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+/* 表格样式 */
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  font-size: 13px;
+}
+
+.dataTable th,
+.dataTable td {
+  padding: 8px 10px;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.dataTable th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
