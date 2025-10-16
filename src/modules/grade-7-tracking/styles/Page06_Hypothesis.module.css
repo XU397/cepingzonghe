@@ -1,0 +1,265 @@
+/**
+ * Page06_Hypothesis Styles
+ * 假设陈述页面样式
+ */
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px;
+  background-color: #f5f7fa;
+}
+
+/* ============================================================================
+   Header Section
+   ============================================================================ */
+
+.header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+/* ============================================================================
+   Content Section
+   ============================================================================ */
+
+.content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+/* Left Side: Hypothesis Statement */
+
+.hypothesisSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.hypothesisCard {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  height: 100%;
+}
+
+.hypothesisIcon {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.hypothesisTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.hypothesisText {
+  font-size: 16px;
+  color: #555555;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.hypothesisStatement {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  padding: 24px;
+  color: #ffffff;
+}
+
+.statementHighlight {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  text-align: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+}
+
+.statementDetails {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.statementDetails li {
+  font-size: 15px;
+  line-height: 1.8;
+  margin-bottom: 12px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.statementDetails li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.statementDetails strong {
+  font-weight: 600;
+  color: #ffd700;
+}
+
+/* Right Side: Weather Chart */
+
+.weatherSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.weatherCard {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.weatherTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.weatherImageContainer {
+  flex: 1;
+  position: relative;
+  min-height: 300px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.weatherImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.weatherPlaceholder {
+  display: none; /* 默认隐藏,图片加载失败时显示 */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999999;
+}
+
+.placeholderIcon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.placeholderText {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #666666;
+}
+
+.placeholderDetails {
+  font-size: 14px;
+  color: #999999;
+}
+
+.weatherDescription {
+  padding: 16px;
+  background-color: #e8f4f8;
+  border-radius: 6px;
+  border-left: 4px solid #3498db;
+}
+
+.weatherDescription p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #2c3e50;
+  margin: 0;
+}
+
+/* ============================================================================
+   Footer Section
+   ============================================================================ */
+
+.footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+@media (max-width: 1366px) {
+  .content {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .hypothesisCard,
+  .weatherCard {
+    padding: 24px;
+  }
+
+  .weatherImageContainer {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .hypothesisTitle,
+  .weatherTitle {
+    font-size: 20px;
+  }
+
+  .statementHighlight {
+    font-size: 16px;
+  }
+}
+
+/* ============================================================================
+   Accessibility
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

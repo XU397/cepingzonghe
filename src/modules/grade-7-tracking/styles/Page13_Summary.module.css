@@ -1,0 +1,185 @@
+/**
+ * Page13_Summary 样式文件
+ * 任务总结页面的专用样式
+ */
+
+.summaryContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 40px;
+}
+
+.summaryCard {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 20px;
+  padding: 48px 60px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  max-width: 900px;
+  width: 100%;
+  text-align: center;
+  animation: fadeInScale 0.6s ease;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.title {
+  font-size: 42px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 40px 0;
+  position: relative;
+  display: inline-block;
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #3498db, #9b59b6);
+  border-radius: 2px;
+}
+
+.content {
+  margin-bottom: 32px;
+}
+
+.icon {
+  margin: 0 auto 32px;
+  width: 100px;
+  height: 100px;
+  animation: bounceIn 0.8s ease;
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.checkIcon {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 8px rgba(76, 175, 80, 0.3));
+}
+
+.conclusionText {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #34495e;
+  margin: 0 0 24px 0;
+  text-align: left;
+  padding: 0 20px;
+}
+
+.conclusionText:last-of-type {
+  margin-bottom: 32px;
+}
+
+.congratsBox {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 28px 32px;
+  margin: 32px 0 0 0;
+}
+
+.congratsText {
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 12px 0;
+}
+
+.nextStepText {
+  font-size: 18px;
+  color: #f0f0f0;
+  margin: 0;
+}
+
+.continueButton {
+  padding: 18px 72px;
+  font-size: 22px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: #ffffff;
+}
+
+.continueButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(76, 175, 80, 0.4);
+}
+
+.continueButton:active {
+  transform: translateY(-1px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .summaryContainer {
+    padding: 20px;
+  }
+
+  .summaryCard {
+    padding: 32px 24px;
+  }
+
+  .title {
+    font-size: 32px;
+    margin-bottom: 28px;
+  }
+
+  .icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 24px;
+  }
+
+  .conclusionText {
+    font-size: 16px;
+    padding: 0 12px;
+  }
+
+  .congratsBox {
+    padding: 20px 24px;
+  }
+
+  .congratsText {
+    font-size: 18px;
+  }
+
+  .nextStepText {
+    font-size: 16px;
+  }
+
+  .continueButton {
+    padding: 16px 56px;
+    font-size: 20px;
+  }
+}

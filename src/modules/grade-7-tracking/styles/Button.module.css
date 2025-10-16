@@ -1,0 +1,207 @@
+/**
+ * Button Component Styles - Grade 7 Tracking Module
+ *
+ * Aligned with Grade 7 traditional module button styling (global.css)
+ * Uses cartoon-style design with hover effects and shine animation
+ */
+
+/* Base button styles - matches global.css .btn */
+.button {
+  cursor: pointer;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px var(--cartoon-shadow);
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1.5;
+  outline: none;
+  user-select: none;
+  white-space: nowrap;
+  min-height: 44px;
+}
+
+/* Shine effect on hover - matches global.css .btn::before */
+.button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: 0.5s;
+}
+
+.button:hover::before {
+  left: 100%;
+}
+
+.button:focus-visible {
+  outline: 2px solid #4a90e2;
+  outline-offset: 2px;
+}
+
+/* Primary variant - matches global.css .btn-primary */
+.primary {
+  background-color: var(--cartoon-primary);
+  color: white;
+}
+
+.primary:hover:not(.disabled):not(.loading) {
+  background-color: var(--primary-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px var(--cartoon-shadow);
+}
+
+.primary:active:not(.disabled):not(.loading) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px var(--cartoon-shadow);
+}
+
+/* Secondary variant - less prominent actions */
+.secondary {
+  background: #f5f5f5;
+  color: #333333;
+  border: 1px solid #d0d0d0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.secondary:hover:not(.disabled):not(.loading) {
+  background: #e8e8e8;
+  border-color: #b8b8b8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.secondary:active:not(.disabled):not(.loading) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: #d8d8d8;
+}
+
+/* Danger variant - destructive actions */
+.danger {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
+}
+
+.danger:hover:not(.disabled):not(.loading) {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+  transform: translateY(-1px);
+}
+
+.danger:active:not(.disabled):not(.loading) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(231, 76, 60, 0.2);
+}
+
+/* Disabled state - matches global.css .btn-disabled */
+.disabled {
+  background-color: #cccccc;
+  color: #888888;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.disabled:hover {
+  transform: none;
+}
+
+.disabled:hover::before {
+  left: -100%;
+}
+
+/* Loading state */
+.loading {
+  cursor: wait;
+  pointer-events: none;
+}
+
+.buttonTextLoading {
+  opacity: 0.6;
+}
+
+.buttonText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading spinner */
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 16px;
+}
+
+.spinnerIcon {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.secondary .spinnerIcon {
+  border-color: rgba(51, 51, 51, 0.3);
+  border-top-color: #333333;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .button {
+    padding: 10px 18px;
+    font-size: 16px;
+    min-height: 40px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .button {
+    border: 2px solid currentColor;
+  }
+
+  .disabled {
+    opacity: 0.5;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .button::before {
+    transition: none;
+  }
+
+  .button:hover:not(.disabled):not(.loading) {
+    transform: none;
+  }
+
+  .spinnerIcon {
+    animation: none;
+    border-top-color: currentColor;
+  }
+}

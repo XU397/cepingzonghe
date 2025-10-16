@@ -1,0 +1,195 @@
+/**
+ * RadioButtonGroup Styles
+ * 单选按钮组组件样式
+ */
+
+/* ============================================================================
+   Container
+   ============================================================================ */
+
+.radioButtonGroup {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.radioButtonGroup.vertical {
+  flex-direction: column;
+}
+
+.radioButtonGroup.horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* ============================================================================
+   Radio Label (整体容器)
+   ============================================================================ */
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  user-select: none;
+}
+
+/* Hover状态 */
+.radioLabel:hover:not(.disabled) {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+/* 选中状态 */
+.radioLabel.checked {
+  border-color: #3b82f6;
+  background-color: #dbeafe;
+  font-weight: 500;
+}
+
+.radioLabel.checked .radioText {
+  color: #1e40af;
+}
+
+/* 禁用状态 */
+.radioLabel.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background-color: #f3f4f6;
+}
+
+/* Focus状态(键盘导航) */
+.radioLabel:has(.radioInput:focus-visible) {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Radio Input (隐藏原生input)
+   ============================================================================ */
+
+.radioInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   Radio Control (自定义外观)
+   ============================================================================ */
+
+.radioControl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border: 2px solid #9ca3af;
+  border-radius: 50%;
+  background-color: #ffffff;
+  transition: all 0.2s ease-in-out;
+}
+
+.radioLabel.checked .radioControl {
+  border-color: #3b82f6;
+  background-color: #3b82f6;
+}
+
+/* Radio Indicator (选中时的内部圆点) */
+.radioIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: transparent;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.radioLabel.checked .radioIndicator {
+  background-color: #ffffff;
+}
+
+/* ============================================================================
+   Radio Text (标签文本)
+   ============================================================================ */
+
+.radioText {
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #374151;
+  transition: color 0.2s ease-in-out;
+}
+
+/* ============================================================================
+   布局变体 - 按选项数量
+   ============================================================================ */
+
+/* 4选项 - 紧凑布局 */
+.options4 .radioLabel {
+  padding: 10px 14px;
+}
+
+.options4 .radioText {
+  font-size: 14px;
+}
+
+/* 5选项 - 标准布局 */
+.options5 .radioLabel {
+  padding: 12px 16px;
+}
+
+/* 10选项 - 横向数字布局 */
+.options10 {
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.options10 .radioLabel {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 8px;
+  min-width: 50px;
+  flex: 1;
+  gap: 6px;
+}
+
+.options10 .radioControl {
+  order: 2;
+  margin-top: 4px;
+}
+
+.options10 .radioText {
+  order: 1;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ============================================================================
+   响应式设计
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .radioButtonGroup.horizontal {
+    flex-direction: column;
+  }
+
+  .options10 {
+    flex-wrap: wrap;
+  }
+
+  .options10 .radioLabel {
+    min-width: calc(20% - 8px);
+  }
+}

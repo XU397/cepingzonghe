@@ -1,0 +1,148 @@
+/**
+ * LineChart 样式
+ * T051 - LineChart样式
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e8e8e8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chartHeader {
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.chartTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #262626;
+  margin: 0 0 6px 0;
+}
+
+.chartSubtitle {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+/* 自定义Tooltip样式 */
+.customTooltip {
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 2px solid #1890ff;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tooltipLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #262626;
+  margin: 0 0 8px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.tooltipItem {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 4px 0;
+  display: flex;
+  align-items: center;
+}
+
+.tooltipItem::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  background: currentColor;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+/* 图表底部洞察 */
+.chartFooter {
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.insightBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+  border: 1px solid #91d5ff;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(24, 144, 255, 0.15);
+}
+
+.insightIcon {
+  font-size: 20px;
+}
+
+.insightText {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0050b3;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .chartTitle {
+    font-size: 16px;
+  }
+
+  .chartSubtitle {
+    font-size: 12px;
+  }
+
+  .customTooltip {
+    padding: 10px 12px;
+  }
+
+  .tooltipLabel {
+    font-size: 13px;
+  }
+
+  .tooltipItem {
+    font-size: 12px;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .container {
+    border-color: #000;
+    box-shadow: none;
+  }
+
+  .insightBadge {
+    background: white;
+    border-color: #000;
+  }
+
+  .customTooltip {
+    display: none;
+  }
+}
+
+/* 辅助功能 */
+@media (prefers-reduced-motion: reduce) {
+  /* Recharts动画会自动禁用,无需额外处理 */
+}

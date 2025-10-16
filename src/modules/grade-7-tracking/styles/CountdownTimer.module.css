@@ -1,0 +1,167 @@
+/**
+ * CountdownTimer Component Styles - Grade 7 Tracking Module
+ *
+ * Aligned with Grade 7 traditional module Timer.jsx styling
+ * Uses fixed positioning with cartoon-style design
+ */
+
+/* Timer container - fixed positioning like Timer.jsx */
+.timer {
+  position: fixed;
+  top: 55px;
+  right: 20px;
+  background-color: var(--cartoon-secondary);
+  color: var(--text-color);
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-weight: bold;
+  box-shadow: 0 4px 10px var(--cartoon-shadow);
+  z-index: 999;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  border: 2px solid #ffb347;
+  transition: all 0.3s ease;
+}
+
+/* Clock emoji before time display */
+.timer::before {
+  content: '⏱️';
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+/* Time display */
+.timeDisplay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeText {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-color);
+  letter-spacing: 1px;
+  transition: color 0.3s ease;
+  line-height: 1;
+}
+
+/* Warning state - time is low (less than 5 minutes / 300 seconds) */
+.warning {
+  background-color: var(--cartoon-red);
+  color: white;
+  border: 2px solid #ff6b6b;
+  animation: pulse 2s infinite;
+}
+
+/* Warning emoji before time display */
+.warning::before {
+  content: '⚠️ ';
+  margin-right: 8px;
+}
+
+.warning .timeText {
+  color: white;
+}
+
+/* Pulse animation - matches global.css */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.warningText {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  margin-left: 8px;
+}
+
+/* Complete state - time is up */
+.complete {
+  background-color: var(--cartoon-red);
+  color: white;
+  border-color: #ff6b6b;
+  animation: pulse 2s infinite;
+}
+
+.complete .timeText {
+  color: white;
+}
+
+.completeText {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  margin-left: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .timer {
+    top: 50px;
+    right: 15px;
+    padding: 10px 16px;
+    font-size: 16px;
+  }
+
+  .timer::before {
+    font-size: 18px;
+    margin-right: 6px;
+  }
+
+  .timeText {
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .warningText,
+  .completeText {
+    font-size: 13px;
+    margin-left: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .timer {
+    top: 45px;
+    right: 10px;
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+
+  .timer::before {
+    font-size: 16px;
+    margin-right: 5px;
+  }
+
+  .timeText {
+    font-size: 14px;
+  }
+
+  .warningText,
+  .completeText {
+    font-size: 12px;
+    margin-left: 5px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .timer {
+    transition: none;
+  }
+
+  .warning,
+  .complete {
+    animation: none;
+  }
+}

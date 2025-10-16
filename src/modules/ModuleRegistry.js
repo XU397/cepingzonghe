@@ -17,10 +17,15 @@ class ModuleRegistry {
    * @param {Object} module - 模块定义对象
    * @param {string} module.moduleId - 模块唯一标识
    * @param {string} module.displayName - 模块显示名称
-   * @param {string} module.url - 模块URL路径 (如 "/seven-grade")
+   * @param {string} module.url - 模块URL路径 (例如: "/seven-grade", "/four-grade", "/grade-7-tracking")
    * @param {string} module.version - 模块版本
    * @param {React.Component} module.ModuleComponent - 模块主组件
    * @param {Function} module.getInitialPage - 获取初始页面的函数
+   *
+   * 已注册模块URL列表:
+   * - /seven-grade: 7年级传统评估模块 (蒸馒头)
+   * - /four-grade: 4年级互动评估模块 (火车票订购)
+   * - /grade-7-tracking: 7年级追踪测评模块 (蜂蜜黏度探究)
    */
   registerModule(module) {
     // 验证模块结构
@@ -72,14 +77,14 @@ class ModuleRegistry {
       url: '/fallback',
       version: '1.0.0',
       ModuleComponent: () => React.createElement(
-        'div', 
+        'div',
         { style: { padding: '20px', textAlign: 'center' } },
         React.createElement('h2', null, '模块未找到'),
         React.createElement('p', null, '请求的模块不存在，请检查URL路径。'),
         React.createElement('p', null, '可用模块：'),
-        React.createElement('ul', null, 
-          this.getAllUrlMappings().map(mapping => 
-            React.createElement('li', { key: mapping.url }, 
+        React.createElement('ul', null,
+          this.getAllUrlMappings().map(mapping =>
+            React.createElement('li', { key: mapping.url },
               `${mapping.displayName} (${mapping.url})`
             )
           )
@@ -130,7 +135,7 @@ class ModuleRegistry {
    */
   validateModule(module) {
     const requiredFields = ['moduleId', 'displayName', 'url', 'version', 'ModuleComponent', 'getInitialPage'];
-    
+
     for (const field of requiredFields) {
       if (!module[field]) {
         console.error(`[ModuleRegistry] ❌ 模块缺少必需字段: ${field}`);
@@ -179,6 +184,10 @@ class ModuleRegistry {
       // 动态导入并注册4年级模块
       const { Grade4Module_Definition } = await import('./grade-4/index.jsx');
       this.registerModule(Grade4Module_Definition);
+
+      // 动态导入并注册7年级追踪测评模块
+      const { Grade7TrackingModule_Definition } = await import('./grade-7-tracking/index.jsx');
+      this.registerModule(Grade7TrackingModule_Definition);
 
       this.initialized = true;
       console.log('[ModuleRegistry] ✅ 模块系统初始化完成');

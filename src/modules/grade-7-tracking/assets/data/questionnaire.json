@@ -1,0 +1,397 @@
+{
+  "totalQuestions": 27,
+  "pages": [
+    {
+      "pageNumber": 14,
+      "pageId": "questionnaire_page_1",
+      "title": "科学探究态度问卷 (1/8)",
+      "instructions": "请根据你的真实想法选择最符合的选项。所有问题均为必答题。",
+      "questions": [
+        {
+          "id": 1,
+          "text": "我对科学实验很感兴趣",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 2,
+          "text": "我喜欢通过实验来验证科学理论",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 3,
+          "text": "科学探究活动能提高我的思维能力",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        }
+      ]
+    },
+    {
+      "pageNumber": 15,
+      "pageId": "questionnaire_page_2",
+      "title": "实验操作与分析 (2/8)",
+      "instructions": "请根据你的实际情况选择最符合的选项。",
+      "questions": [
+        {
+          "id": 4,
+          "text": "我能够准确理解实验操作步骤",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 5,
+          "text": "我能独立完成实验数据的记录",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 6,
+          "text": "我善于分析实验数据之间的关系",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 7,
+          "text": "我能够根据实验结果得出合理的结论",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        }
+      ]
+    },
+    {
+      "pageNumber": 16,
+      "pageId": "questionnaire_page_3",
+      "title": "问题解决与创新 (3/8)",
+      "instructions": "请根据你的实际情况选择最符合的选项。",
+      "questions": [
+        {
+          "id": 8,
+          "text": "遇到实验问题时,我会尝试多种解决方法",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 9,
+          "text": "我能够提出有创意的科学问题",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 10,
+          "text": "我愿意尝试不同的实验方法",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        }
+      ]
+    },
+    {
+      "pageNumber": 17,
+      "pageId": "questionnaire_page_4",
+      "title": "自信度评估 (4/8)",
+      "instructions": "请评估你对以下能力的自信程度。",
+      "questions": [
+        {
+          "id": 11,
+          "text": "我对自己的科学探究能力有信心",
+          "options": [
+            { "value": "A", "label": "非常有信心" },
+            { "value": "B", "label": "比较有信心" },
+            { "value": "C", "label": "一般" },
+            { "value": "D", "label": "不太有信心" }
+          ],
+          "type": "confidence"
+        },
+        {
+          "id": 12,
+          "text": "我相信自己能解决复杂的科学问题",
+          "options": [
+            { "value": "A", "label": "非常有信心" },
+            { "value": "B", "label": "比较有信心" },
+            { "value": "C", "label": "一般" },
+            { "value": "D", "label": "不太有信心" }
+          ],
+          "type": "confidence"
+        },
+        {
+          "id": 13,
+          "text": "我相信自己能够设计合理的实验方案",
+          "options": [
+            { "value": "A", "label": "非常有信心" },
+            { "value": "B", "label": "比较有信心" },
+            { "value": "C", "label": "一般" },
+            { "value": "D", "label": "不太有信心" }
+          ],
+          "type": "confidence"
+        }
+      ]
+    },
+    {
+      "pageNumber": 18,
+      "pageId": "questionnaire_page_5",
+      "title": "合作与交流 (5/8)",
+      "instructions": "请根据你在科学学习中的实际情况作答。",
+      "questions": [
+        {
+          "id": 14,
+          "text": "我愿意与同学合作完成科学实验",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 15,
+          "text": "我能够清楚地向他人解释我的实验想法",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 16,
+          "text": "我会认真倾听同学的科学观点",
+          "options": [
+            { "value": "A", "label": "非常同意" },
+            { "value": "B", "label": "同意" },
+            { "value": "C", "label": "不确定" },
+            { "value": "D", "label": "不同意" }
+          ],
+          "type": "likert4"
+        }
+      ]
+    },
+    {
+      "pageNumber": 19,
+      "pageId": "questionnaire_page_6",
+      "title": "校内科学活动参与频率 (6/8)",
+      "instructions": "请选择你参与以下活动的频率。",
+      "questions": [
+        {
+          "id": 17,
+          "text": "参加学校的科学实验课",
+          "options": [
+            { "value": "A", "label": "总是" },
+            { "value": "B", "label": "经常" },
+            { "value": "C", "label": "有时" },
+            { "value": "D", "label": "很少" },
+            { "value": "E", "label": "从不" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 18,
+          "text": "参加学校的科学兴趣小组或社团",
+          "options": [
+            { "value": "A", "label": "总是" },
+            { "value": "B", "label": "经常" },
+            { "value": "C", "label": "有时" },
+            { "value": "D", "label": "很少" },
+            { "value": "E", "label": "从不" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 19,
+          "text": "参加学校组织的科学竞赛",
+          "options": [
+            { "value": "A", "label": "总是" },
+            { "value": "B", "label": "经常" },
+            { "value": "C", "label": "有时" },
+            { "value": "D", "label": "很少" },
+            { "value": "E", "label": "从不" }
+          ],
+          "type": "frequency5"
+        }
+      ]
+    },
+    {
+      "pageNumber": 20,
+      "pageId": "questionnaire_page_7",
+      "title": "校外科学活动参与频率 (7/8)",
+      "instructions": "请选择你参与以下活动的频率。",
+      "questions": [
+        {
+          "id": 20,
+          "text": "参观科技馆、博物馆或天文馆",
+          "options": [
+            { "value": "A", "label": "总是" },
+            { "value": "B", "label": "经常" },
+            { "value": "C", "label": "有时" },
+            { "value": "D", "label": "很少" },
+            { "value": "E", "label": "从不" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 21,
+          "text": "观看科学类纪录片或视频",
+          "options": [
+            { "value": "A", "label": "总是" },
+            { "value": "B", "label": "经常" },
+            { "value": "C", "label": "有时" },
+            { "value": "D", "label": "很少" },
+            { "value": "E", "label": "从不" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 22,
+          "text": "阅读科普书籍或杂志",
+          "options": [
+            { "value": "A", "label": "总是" },
+            { "value": "B", "label": "经常" },
+            { "value": "C", "label": "有时" },
+            { "value": "D", "label": "很少" },
+            { "value": "E", "label": "从不" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 23,
+          "text": "在家做科学小实验",
+          "options": [
+            { "value": "A", "label": "总是" },
+            { "value": "B", "label": "经常" },
+            { "value": "C", "label": "有时" },
+            { "value": "D", "label": "很少" },
+            { "value": "E", "label": "从不" }
+          ],
+          "type": "frequency5"
+        }
+      ]
+    },
+    {
+      "pageNumber": 21,
+      "pageId": "questionnaire_page_8",
+      "title": "学习努力程度评估 (8/8)",
+      "instructions": "请在1-10的量表上评估你在以下方面的努力程度。(1=完全不努力, 10=非常努力)",
+      "questions": [
+        {
+          "id": 24,
+          "text": "你在科学学习上投入的努力程度",
+          "options": [
+            { "value": "A", "label": "1" },
+            { "value": "B", "label": "2" },
+            { "value": "C", "label": "3" },
+            { "value": "D", "label": "4" },
+            { "value": "E", "label": "5" },
+            { "value": "F", "label": "6" },
+            { "value": "G", "label": "7" },
+            { "value": "H", "label": "8" },
+            { "value": "I", "label": "9" },
+            { "value": "J", "label": "10" }
+          ],
+          "type": "scale10"
+        },
+        {
+          "id": 25,
+          "text": "你完成科学作业的认真程度",
+          "options": [
+            { "value": "A", "label": "1" },
+            { "value": "B", "label": "2" },
+            { "value": "C", "label": "3" },
+            { "value": "D", "label": "4" },
+            { "value": "E", "label": "5" },
+            { "value": "F", "label": "6" },
+            { "value": "G", "label": "7" },
+            { "value": "H", "label": "8" },
+            { "value": "I", "label": "9" },
+            { "value": "J", "label": "10" }
+          ],
+          "type": "scale10"
+        },
+        {
+          "id": 26,
+          "text": "你在科学课堂上的专注程度",
+          "options": [
+            { "value": "A", "label": "1" },
+            { "value": "B", "label": "2" },
+            { "value": "C", "label": "3" },
+            { "value": "D", "label": "4" },
+            { "value": "E", "label": "5" },
+            { "value": "F", "label": "6" },
+            { "value": "G", "label": "7" },
+            { "value": "H", "label": "8" },
+            { "value": "I", "label": "9" },
+            { "value": "J", "label": "10" }
+          ],
+          "type": "scale10"
+        },
+        {
+          "id": 27,
+          "text": "你在本次测评中的努力程度",
+          "options": [
+            { "value": "A", "label": "1" },
+            { "value": "B", "label": "2" },
+            { "value": "C", "label": "3" },
+            { "value": "D", "label": "4" },
+            { "value": "E", "label": "5" },
+            { "value": "F", "label": "6" },
+            { "value": "G", "label": "7" },
+            { "value": "H", "label": "8" },
+            { "value": "I", "label": "9" },
+            { "value": "J", "label": "10" }
+          ],
+          "type": "scale10"
+        }
+      ]
+    }
+  ]
+}

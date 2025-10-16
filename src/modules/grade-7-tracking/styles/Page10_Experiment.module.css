@@ -1,0 +1,377 @@
+/**
+ * Page10_Experiment 样式
+ * T046 - Page10_Experiment样式
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  min-height: 100%;
+}
+
+.pageTitle {
+  text-align: center;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.pageTitle h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #262626;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+/* 左右分栏布局 */
+.contentLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+}
+
+@media (max-width: 1200px) {
+  .contentLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 左侧面板 */
+.leftPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.experimentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1890ff;
+}
+
+.parameterSection {
+  /* BeakerSelector和TemperatureControl的容器 */
+}
+
+.animationSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.experimentDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+/* 控制按钮区 */
+.controlSection {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.controlButton {
+  flex: 1;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.startButton {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+}
+
+.startButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.startButton:disabled {
+  background: #d9d9d9;
+  color: #8c8c8c;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.resetButton {
+  background: white;
+  color: #262626;
+  border: 2px solid #d9d9d9;
+}
+
+.resetButton:hover:not(:disabled) {
+  border-color: #ff4d4f;
+  color: #ff4d4f;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.2);
+}
+
+.resetButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 实验历史记录 */
+.historySection {
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.historySectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #595959;
+  margin: 0 0 12px 0;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #fafafa;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+}
+
+.historyIndex {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1890ff;
+  min-width: 30px;
+}
+
+.historyDetails {
+  flex: 1;
+  font-size: 13px;
+  color: #595959;
+}
+
+.historyTime {
+  font-size: 16px;
+  font-weight: 700;
+  color: #52c41a;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 右侧面板 */
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.instructionCard {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+  border-radius: 8px;
+  border: 1px solid #91d5ff;
+}
+
+.characterAvatar {
+  flex-shrink: 0;
+}
+
+.avatarCircle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.dialogueBubble {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #262626;
+}
+
+.dialogueBubble p {
+  margin: 0 0 12px 0;
+}
+
+.dialogueBubble p:last-child {
+  margin-bottom: 0;
+}
+
+.dialogueBubble strong {
+  color: #0050b3;
+  font-weight: 600;
+}
+
+/* 步骤卡片 */
+.stepsCard {
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.stepsTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0 0 12px 0;
+}
+
+.stepsList {
+  margin: 0;
+  padding-left: 24px;
+  list-style-type: decimal;
+}
+
+.stepsList li {
+  font-size: 14px;
+  line-height: 2;
+  color: #595959;
+}
+
+.stepsList li::marker {
+  font-weight: 700;
+  color: #1890ff;
+}
+
+/* 提示卡片 */
+.hintCard {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #fffbe6;
+  border-radius: 8px;
+  border: 1px solid #ffe58f;
+}
+
+.hintIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.hintContent {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #595959;
+}
+
+.hintContent strong {
+  display: block;
+  font-size: 14px;
+  color: #d48806;
+  margin-bottom: 8px;
+}
+
+.hintContent p {
+  margin: 4px 0;
+}
+
+/* 页面底部导航 */
+.navigationFooter {
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 2px solid #e8e8e8;
+}
+
+.nextButton {
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.nextButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%);
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.5);
+  transform: translateY(-2px);
+}
+
+.nextButton:disabled {
+  background: #d9d9d9;
+  color: #8c8c8c;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .pageTitle h2 {
+    font-size: 22px;
+  }
+
+  .contentLayout {
+    gap: 16px;
+  }
+
+  .controlSection {
+    flex-direction: column;
+  }
+
+  .instructionCard {
+    flex-direction: column;
+  }
+
+  .avatarCircle {
+    width: 50px;
+    height: 50px;
+    font-size: 14px;
+  }
+}

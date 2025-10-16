@@ -29,7 +29,7 @@ const safeEval = (expr) => {
   const allowed = /^[0-9+\-*/().\s]+$/;
   if (!allowed.test(normalized)) return null;
   try {
-    // eslint-disable-next-line no-new-func
+     
     const fn = new Function(`"use strict"; return (${normalized})`);
     const v = fn();
     return Number.isFinite(v) ? Number(v) : null;

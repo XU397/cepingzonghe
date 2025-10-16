@@ -1,0 +1,189 @@
+/**
+ * Page02_QuestionnaireNotice Styles
+ * 问卷说明页样式
+ */
+
+/* ============================================================================
+   Notice Container
+   ============================================================================ */
+
+.noticeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 40px 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ============================================================================
+   Congratulations Section
+   ============================================================================ */
+
+.congratsSection {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.congratsIcon {
+  display: inline-block;
+  color: #10b981;
+  margin-bottom: 20px;
+  animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.congratsTitle {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.congratsSubtitle {
+  font-size: 18px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* ============================================================================
+   Instructions Section
+   ============================================================================ */
+
+.instructionsSection {
+  width: 100%;
+  background-color: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.instructionsTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 24px;
+  text-align: center;
+  border-bottom: 2px solid #3b82f6;
+  padding-bottom: 12px;
+}
+
+.instructionsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.instructionItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.instructionItem:hover {
+  background-color: #f3f4f6;
+}
+
+.instructionItem:last-child {
+  margin-bottom: 0;
+}
+
+.itemNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background-color: #3b82f6;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.itemText {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #374151;
+  flex: 1;
+}
+
+.itemText strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   Button Container
+   ============================================================================ */
+
+.buttonContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* ============================================================================
+   响应式设计
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .noticeContainer {
+    padding: 24px 16px;
+  }
+
+  .congratsTitle {
+    font-size: 26px;
+  }
+
+  .congratsSubtitle {
+    font-size: 16px;
+  }
+
+  .instructionsSection {
+    padding: 24px 20px;
+  }
+
+  .instructionsTitle {
+    font-size: 20px;
+  }
+
+  .instructionItem {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .itemNumber {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: 14px;
+  }
+
+  .itemText {
+    font-size: 15px;
+  }
+}

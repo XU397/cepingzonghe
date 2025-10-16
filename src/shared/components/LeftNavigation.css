@@ -1,0 +1,221 @@
+/**
+ * 左侧导航栏样式 - 共享组件
+ * 统一的导航组件样式，适用于所有模块
+ * 优化间距以确保在1280x720分辨率下显示完整
+ */
+
+.left-navigation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 6px;
+  background-color: var(--cartoon-light);
+  height: 100%;
+  box-sizing: border-box;
+  width: 100%;
+  position: relative;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.left-navigation::before {
+  content: '进度';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  color: var(--cartoon-dark);
+  font-size: 12px;
+  z-index: 2;
+}
+
+/* 总体进度显示 */
+.progress-indicator {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: var(--cartoon-dark);
+  margin-bottom: 12px;
+  margin-top: 25px;
+  background-color: var(--cartoon-secondary);
+  padding: 6px 4px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px var(--cartoon-shadow);
+  z-index: 2;
+  position: relative;
+}
+
+.navigation-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  flex: 1;
+  justify-content: flex-start;
+}
+
+/* 导航项包装器 */
+.nav-item-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* 移除原有的连续竖线，改为在每个项目之间单独显示 */
+
+/* 连接线样式 - 缩短高度以节省空间 */
+.nav-connector {
+  width: 3px;
+  height: 8px;
+  background-color: var(--cartoon-border);
+  border-radius: 2px;
+  margin: 2px 0;
+  z-index: 0;
+}
+
+.nav-item {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #fff;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85em;
+  font-weight: bold;
+  border: 2px solid var(--cartoon-border);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 2px 6px var(--cartoon-shadow);
+  cursor: default; /* 不允许点击 */
+  flex-shrink: 0;
+}
+
+/* 移除hover效果，不允许交互 */
+
+.nav-item.highlighted {
+  background-color: var(--cartoon-primary);
+  color: white;
+  border-color: var(--cartoon-dark);
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(89, 193, 255, 0.4);
+}
+
+.nav-item.highlighted::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  background-color: var(--cartoon-accent);
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* 已完成步骤样式 */
+.nav-item.completed {
+  background-color: var(--cartoon-green);
+  color: white;
+  border-color: #5cbb9f;
+}
+
+/* 删除空规则集 */
+  /* 数字直接显示在圆形容器中，不需要额外样式 */
+
+
+.nav-label {
+  /* 隐藏文字标签，只显示数字 */
+  display: none;
+}
+
+/* 响应式设计 - 针对720p高度优化 */
+@media (max-height: 720px) {
+  .left-navigation {
+    padding: 6px 4px;
+  }
+
+  .left-navigation::before {
+    top: 6px;
+    font-size: 11px;
+  }
+
+  .progress-indicator {
+    margin-top: 20px;
+    margin-bottom: 8px;
+    padding: 4px 3px;
+    font-size: 0.8em;
+  }
+
+  .navigation-items {
+    margin-top: 0;
+  }
+
+  .nav-item {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75em;
+  }
+
+  .nav-connector {
+    height: 12px;
+    margin: 1px 0;
+  }
+
+  .nav-item.highlighted::after {
+    width: 10px;
+    height: 10px;
+    top: -2px;
+    right: -2px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .left-navigation {
+    width: 100%;
+    border-right: none;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .navigation-items {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 0;
+  }
+
+  .nav-item {
+    flex-shrink: 0;
+    white-space: nowrap;
+    border-bottom: none;
+    border-right: 1px solid #f5f5f5;
+  }
+
+  .nav-item:last-child {
+    border-right: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-item {
+    padding: 8px 12px;
+  }
+
+  .nav-number {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    margin-right: 8px;
+  }
+
+  .nav-label {
+    font-size: 12px;
+  }
+}

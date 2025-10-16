@@ -1,0 +1,378 @@
+/**
+ * Page23_Completion Styles
+ * 测评完成页面样式
+ */
+
+/* ============================================================================
+   Main Container
+   ============================================================================ */
+
+.completionContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 60px 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  text-align: center;
+}
+
+/* ============================================================================
+   Icon Section
+   ============================================================================ */
+
+.iconSection {
+  margin-bottom: 32px;
+  animation: scaleIn 0.6s ease-out;
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.successIcon {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.checkmark {
+  color: #ffffff;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* ============================================================================
+   Message Section
+   ============================================================================ */
+
+.messageSection {
+  margin-bottom: 48px;
+  animation: fadeInUp 0.8s ease-out 0.3s both;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mainTitle {
+  font-size: 48px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 16px;
+  line-height: 1.2;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.subtitle {
+  font-size: 22px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.6;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================================================
+   Thanks Section
+   ============================================================================ */
+
+.thanksSection {
+  width: 100%;
+  max-width: 700px;
+  margin-bottom: 48px;
+  animation: fadeInUp 1s ease-out 0.5s both;
+}
+
+.thanksCard {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 40px 48px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.thanksCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+}
+
+.thanksIcon {
+  margin-bottom: 20px;
+  color: #ffffff;
+  display: inline-flex;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10%, 30% {
+    transform: scale(1.1);
+  }
+  20%, 40% {
+    transform: scale(1);
+  }
+}
+
+.thanksTitle {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 16px;
+  line-height: 1.3;
+}
+
+.thanksText {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.8;
+  text-align: center;
+}
+
+/* ============================================================================
+   Encouragement Section
+   ============================================================================ */
+
+.encouragementSection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  width: 100%;
+  max-width: 1000px;
+  margin-bottom: 48px;
+  animation: fadeInUp 1.2s ease-out 0.7s both;
+}
+
+.encouragementCard {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 32px 24px;
+  transition: all 0.3s ease;
+}
+
+.encouragementCard:hover {
+  transform: translateY(-6px);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.encouragementIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.encouragementCard:nth-child(1) .encouragementIcon {
+  animation-delay: 0s;
+}
+
+.encouragementCard:nth-child(2) .encouragementIcon {
+  animation-delay: 0.2s;
+}
+
+.encouragementCard:nth-child(3) .encouragementIcon {
+  animation-delay: 0.4s;
+}
+
+.encouragementTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.encouragementText {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.6;
+}
+
+/* ============================================================================
+   Closing Section
+   ============================================================================ */
+
+.closingSection {
+  width: 100%;
+  max-width: 600px;
+  animation: fadeIn 1.4s ease-out 1s both;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.closingText {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.divider {
+  width: 80px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.5);
+  margin: 24px auto;
+}
+
+.smallText {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+  .encouragementSection {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    max-width: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  .completionContainer {
+    padding: 40px 24px;
+  }
+
+  .successIcon {
+    width: 100px;
+    height: 100px;
+  }
+
+  .checkmark {
+    width: 80px;
+    height: 80px;
+  }
+
+  .mainTitle {
+    font-size: 36px;
+  }
+
+  .subtitle {
+    font-size: 18px;
+  }
+
+  .thanksCard {
+    padding: 32px 28px;
+  }
+
+  .thanksTitle {
+    font-size: 26px;
+  }
+
+  .thanksText {
+    font-size: 16px;
+  }
+
+  .thanksIcon svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .encouragementIcon {
+    font-size: 40px;
+  }
+
+  .encouragementTitle {
+    font-size: 18px;
+  }
+
+  .encouragementText {
+    font-size: 14px;
+  }
+
+  .closingText {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .completionContainer {
+    padding: 32px 16px;
+  }
+
+  .mainTitle {
+    font-size: 28px;
+  }
+
+  .subtitle {
+    font-size: 16px;
+  }
+
+  .thanksCard {
+    padding: 24px 20px;
+  }
+
+  .thanksTitle {
+    font-size: 22px;
+  }
+
+  .thanksText {
+    font-size: 15px;
+  }
+
+  .encouragementCard {
+    padding: 24px 20px;
+  }
+}

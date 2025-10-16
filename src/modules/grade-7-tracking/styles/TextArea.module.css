@@ -1,0 +1,145 @@
+/**
+ * TextArea Component Styles - Grade 7 Tracking Module
+ *
+ * Provides consistent textarea styling with character count and states
+ */
+
+/* Container for textarea and character count */
+.textareaContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Textarea element */
+.textarea {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333333;
+  background-color: #ffffff;
+  border: 2px solid #d0d0d0;
+  border-radius: 8px;
+  resize: vertical;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  outline: none;
+  min-height: 100px;
+}
+
+.textarea::placeholder {
+  color: #999999;
+}
+
+.textarea:hover:not(:disabled) {
+  border-color: #b0b0b0;
+}
+
+.textarea:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+/* Near character limit warning */
+.nearLimit {
+  border-color: #f39c12;
+}
+
+.nearLimit:focus {
+  border-color: #e67e22;
+  box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+}
+
+/* Disabled state */
+.disabled .textarea,
+.textarea:disabled {
+  background-color: #f5f5f5;
+  color: #999999;
+  border-color: #e0e0e0;
+  cursor: not-allowed;
+  resize: none;
+}
+
+/* Character count display */
+.charCount {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 14px;
+  color: #666666;
+  transition: color 0.2s ease;
+}
+
+.charCountWarning {
+  color: #f39c12;
+  font-weight: 500;
+}
+
+/* Auto-resize mode */
+.textarea[style*="height"] {
+  resize: none;
+  overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .textarea {
+    padding: 10px 14px;
+    font-size: 15px;
+    min-height: 80px;
+  }
+
+  .charCount {
+    font-size: 13px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .textarea {
+    border-width: 3px;
+  }
+
+  .textarea:focus {
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .textarea,
+  .charCount {
+    transition: none;
+  }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  .textarea {
+    background-color: #2a2a2a;
+    color: #f0f0f0;
+    border-color: #4a4a4a;
+  }
+
+  .textarea::placeholder {
+    color: #888888;
+  }
+
+  .textarea:focus {
+    border-color: #5ca3ff;
+    box-shadow: 0 0 0 3px rgba(92, 163, 255, 0.2);
+  }
+
+  .disabled .textarea,
+  .textarea:disabled {
+    background-color: #1a1a1a;
+    color: #666666;
+    border-color: #3a3a3a;
+  }
+
+  .charCount {
+    color: #aaaaaa;
+  }
+}

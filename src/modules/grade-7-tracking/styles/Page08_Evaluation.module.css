@@ -1,0 +1,291 @@
+/**
+ * Page08_Evaluation Styles
+ * 方案评估页面样式
+ */
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px;
+  background-color: #f5f7fa;
+}
+
+/* ============================================================================
+   Header Section
+   ============================================================================ */
+
+.header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #555555;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.subtitle strong {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   Content Section
+   ============================================================================ */
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Method Card */
+
+.methodCard {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+}
+
+.methodCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Method Header */
+
+.methodHeader {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.methodImageContainer {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.methodImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.methodPlaceholder {
+  display: none; /* 默认隐藏 */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.placeholderIcon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.placeholderText {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.methodInfo {
+  flex: 1;
+}
+
+.methodName {
+  font-size: 22px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+}
+
+.methodDescription {
+  font-size: 15px;
+  color: #666666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Evaluation Inputs */
+
+.evaluationInputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.labelIcon {
+  font-size: 18px;
+}
+
+.labelText {
+  flex: 1;
+}
+
+.charCount {
+  font-size: 13px;
+  color: #999999;
+  font-weight: 400;
+}
+
+/* Progress/Success Bar */
+
+.progressBar,
+.successBar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.progressBar {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+  box-shadow: 0 2px 8px rgba(253, 203, 110, 0.3);
+}
+
+.successBar {
+  background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+  box-shadow: 0 2px 8px rgba(0, 184, 148, 0.3);
+}
+
+.progressIcon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  border-radius: 50%;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.progressText {
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.progressMessage {
+  color: #2c3e50;
+}
+
+.progressMessage strong {
+  font-weight: 600;
+  color: #d63031;
+}
+
+.successMessage {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* ============================================================================
+   Footer Section
+   ============================================================================ */
+
+.footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+@media (max-width: 1366px) {
+  .evaluationInputs {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .methodHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .methodImageContainer {
+    width: 100%;
+    height: 150px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .methodName {
+    font-size: 20px;
+  }
+
+  .methodCard {
+    padding: 20px;
+  }
+}
+
+/* ============================================================================
+   Accessibility
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

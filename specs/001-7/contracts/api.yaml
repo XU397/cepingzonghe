@@ -1,0 +1,978 @@
+openapi: 3.0.3
+info:
+  title: 7年级追踪测评-蜂蜜黏度探究 API契约
+  description: |
+    定义7年级追踪测评模块与后端服务的API交互契约。
+    遵循平台constitution.md中的Data Logging & Submission Protocol。
+  version: 1.0.0
+  contact:
+    name: HCI-Evaluation Assessment Platform
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com
+    description: 生产环境服务器
+  - url: http://localhost:3000
+    description: 本地开发服务器（Mock模式）
+
+tags:
+  - name: data-submission
+    description: 数据提交相关接口
+  - name: session-management
+    description: 会话管理相关接口
+
+paths:
+  /stu/saveHcMark:
+    post:
+      summary: 提交页面数据标记
+      description: |
+        学生每完成一页内容后，提交该页的操作记录、答案数据和时间戳。
+        这是平台统一的数据提交接口，所有模块共用。
+
+        **✅ 后端已确认**：
+        - `batchCode` 和 `examNo` 参数可从 Session 获取，前端可选传递
+        - `mark` 字段为 JSON 对象（非数组），包含单个页面的 MarkObject
+        - Session 失效时由后端拦截器自动返回 `code === 401`
+
+        **调用时机**：
+        - 点击"下一页"按钮后
+        - 页面数据验证通过后
+
+        **重试策略**：
+        - 失败时自动重试3次
+        - 重试间隔：1秒、2秒、4秒（指数退避）
+        - 所有重试失败后显示错误模态框
+      tags:
+        - data-submission
+      operationId: saveHcMark
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - mark
+              properties:
+                batchCode:
+                  type: string
+                  description: 评价批次（可从 Session 获取，可选参数）
+                  example: "375186"
+                examNo:
+                  type: string
+                  description: 考生号（可从 Session 获取，可选参数）
+                  example: "xxx"
+                mark:
+                  type: string
+                  description: |
+                    ⚠️ 注意：这是 JSON 字符串（对象，非数组）。
+                    包含单个页面的操作记录、答案列表、时间戳等。
+
+                    **MarkObject 结构**：
+                    - pageNumber: string (如 "3.5")
+                    - pageDesc: string (页面描述)
+                    - beginTime: string (ISO 8601格式)
+                    - endTime: string (ISO 8601格式)
+                    - answerList: array<{key, value}>
+                    - imgList: array<{imgUrl}>
+                    - operationList: array<{code, targetElement, eventType, time, value?}>
+                  example: |
+                    {
+                      "pageNumber": "9",
+                      "pageDesc": "第1次蜂蜜黏度实验",
+                      "operationList": [
+                        {
+                          "timestamp": 1697012340000,
+                          "action": "select_water_content",
+                          "target": "water_content_selector",
+                          "value": 20
+                        },
+                        {
+                          "timestamp": 1697012342000,
+                          "action": "select_temperature",
+                          "target": "temperature_selector",
+                          "value": 25
+                        },
+                        {
+                          "timestamp": 1697012350000,
+                          "action": "click_start_animation",
+                          "target": "start_button",
+                          "value": null
+                        },
+                        {
+                          "timestamp": 1697012358700,
+                          "action": "animation_complete",
+                          "target": "ball_drop_animation",
+                          "value": 8.7
+                        }
+                      ],
+                      "answerList": [
+                        {
+                          "questionId": "trial_1_water_content",
+                          "answer": 20,
+                          "answerTime": 1697012340000
+                        },
+                        {
+                          "questionId": "trial_1_temperature",
+                          "answer": 25,
+                          "answerTime": 1697012342000
+                        },
+                        {
+                          "questionId": "trial_1_fall_time",
+                          "answer": 8.7,
+                          "answerTime": 1697012358700
+                        }
+                      ],
+                      "beginTime": 1697012330000,
+                      "endTime": 1697012360000,
+                      "imgList": []
+                    }
+                file:
+                  type: string
+                  format: binary
+                  description: |
+                    文件上传字段（本模块不使用）。
+                    保留以保持与平台其他模块的接口兼容性。
+                  nullable: true
+            encoding:
+              jsonStr:
+                contentType: application/json
+              file:
+                contentType: image/png, image/jpeg
+      responses:
+        '200':
+          description: 数据提交成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                success:
+                  summary: 提交成功示例
+                  value:
+                    code: 200
+                    msg: "成功"
+                    obj: true
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                invalid_json:
+                  summary: JSON格式错误
+                  value:
+                    code: 400
+                    msg: "JSON格式错误：jsonStr参数无法解析"
+                    obj: false
+                missing_required_field:
+                  summary: 缺少必填字段
+                  value:
+                    code: 400
+                    msg: "缺少必填字段：pageNumber"
+                    obj: false
+        '401':
+          description: 会话已失效（多设备登录检测）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                session_expired:
+                  summary: 会话被踢出
+                  value:
+                    code: 401
+                    msg: "您的账号已在其他设备登录，当前会话已失效"
+                    obj: false
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                server_error:
+                  summary: 服务器错误
+                  value:
+                    code: 500
+                    msg: "服务器内部错误，请稍后重试"
+                    obj: false
+      security:
+        - sessionAuth: []
+
+  /stu/checkSession:
+    get:
+      summary: 检查会话有效性（心跳检测） - ❌ **不需要新增**
+      description: |
+        ✅ **后端已确认**：无需新增此接口，后端已通过拦截器实现 session 失效检测。
+
+        **后端实现机制**：
+        - 所有 API 请求经过统一拦截器检查 session 有效性
+        - Session 失效时，任何 API 请求自动返回 `code === 401`
+        - 前端无需单独调用心跳检测接口
+
+        **前端实现策略**：
+        - 在全局 axios 拦截器中捕获 `response.data.code === 401`
+        - 401 响应时，清空 Context 状态并跳转到登录页
+        - 显示提示："您的账号已在其他设备登录"
+
+        **不需要的功能**：
+        - ❌ 不需要 30秒轮询心跳检测
+        - ❌ 不需要 Page Visibility API 优化
+        - ❌ 不需要单独的 `/stu/checkSession` 接口
+
+        **注意**：以下接口定义仅供参考，实际开发中不需要实现。
+      deprecated: true
+      tags:
+        - session-management
+      operationId: checkSession
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          description: |
+            客户端生成的会话唯一标识（UUID v4）。
+            在学生登录后生成，存储在Context中。
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: studentCode
+          in: query
+          required: true
+          description: 学生代码（用于服务端查找活跃会话）
+          schema:
+            type: string
+            example: "STU001"
+      responses:
+        '200':
+          description: 会话有效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                valid_session:
+                  summary: 会话正常
+                  value:
+                    code: 200
+                    msg: "会话有效"
+                    obj: true
+        '401':
+          description: 会话已失效（已在其他设备登录）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                session_kicked:
+                  summary: 会话被踢出
+                  value:
+                    code: 401
+                    msg: "您的账号已在其他设备登录，当前会话已失效"
+                    obj: false
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              examples:
+                server_error:
+                  summary: 服务器错误
+                  value:
+                    code: 500
+                    msg: "服务器内部错误"
+                    obj: false
+      security:
+        - sessionAuth: []
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      description: 平台统一的API响应格式
+      required:
+        - code
+        - msg
+        - obj
+      properties:
+        code:
+          type: integer
+          description: |
+            响应状态码：
+            - 200: 成功
+            - 400: 请求参数错误
+            - 401: 会话失效
+            - 500: 服务器错误
+          example: 200
+        msg:
+          type: string
+          description: 响应消息（用于错误提示）
+          example: "成功"
+        obj:
+          description: |
+            响应数据载荷。
+            - Boolean: 表示操作是否成功（saveHcMark, checkSession）
+            - Object: 包含具体业务数据（其他接口）
+          oneOf:
+            - type: boolean
+            - type: object
+          example: true
+
+    MarkObject:
+      type: object
+      description: |
+        页面数据标记对象，定义学生在单个页面的完整操作和答案记录。
+        参考 data-model.md 中的 MarkObject 定义。
+      required:
+        - pageNumber
+        - pageDesc
+        - operationList
+        - answerList
+        - beginTime
+        - endTime
+      properties:
+        pageNumber:
+          type: string
+          description: |
+            页码字符串。
+            可能的值："0.1", "0.2", "1"-"21"
+          example: "9"
+        pageDesc:
+          type: string
+          description: 页面描述（用于后端数据分析）
+          example: "第1次蜂蜜黏度实验"
+        operationList:
+          type: array
+          description: 用户操作序列（按时间戳升序排列）
+          items:
+            $ref: '#/components/schemas/Operation'
+        answerList:
+          type: array
+          description: 答案列表（页面中所有可回答问题的答案）
+          items:
+            $ref: '#/components/schemas/Answer'
+        beginTime:
+          type: integer
+          format: int64
+          description: 页面进入时间戳（毫秒）
+          example: 1697012330000
+        endTime:
+          type: integer
+          format: int64
+          description: 页面离开时间戳（毫秒）
+          example: 1697012360000
+        imgList:
+          type: array
+          description: |
+            图片附件列表（本模块不使用）。
+            始终为空数组，保留以保持接口兼容性。
+          items:
+            $ref: '#/components/schemas/Image'
+          default: []
+
+    Operation:
+      type: object
+      description: 单个用户操作记录
+      required:
+        - timestamp
+        - action
+      properties:
+        timestamp:
+          type: integer
+          format: int64
+          description: 操作发生时间戳（毫秒）
+          example: 1697012340000
+        action:
+          type: string
+          description: |
+            操作类型。常见值：
+            - select_water_content: 选择含水量
+            - select_temperature: 选择温度
+            - click_start_animation: 开始动画
+            - animation_complete: 动画完成
+            - input_text: 输入文本
+            - select_option: 选择选项（问卷）
+            - click_next: 点击下一页
+          example: "select_water_content"
+        target:
+          type: string
+          description: 操作目标元素标识（可选）
+          example: "water_content_selector"
+          nullable: true
+        value:
+          description: 操作值（类型根据action动态）
+          nullable: true
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+          example: 20
+
+    Answer:
+      type: object
+      description: 单个问题的答案记录
+      required:
+        - questionId
+        - answer
+      properties:
+        questionId:
+          type: string
+          description: |
+            问题唯一标识。格式示例：
+            - trial_1_water_content: 第1次试验的含水量
+            - text_question_1: 第1个开放性问题
+            - questionnaire_q1: 问卷第1题
+          example: "trial_1_water_content"
+        answer:
+          description: |
+            答案内容（类型根据问题动态）：
+            - 数字: 含水量、温度、下落时间
+            - 字符串: 文本回答、选项（A/B/C/D/E）
+            - 数组: 多选题答案（本模块未使用）
+          oneOf:
+            - type: string
+            - type: number
+            - type: array
+              items:
+                type: string
+          example: 20
+        answerTime:
+          type: integer
+          format: int64
+          description: 回答时间戳（毫秒，可为null表示未回答）
+          example: 1697012340000
+          nullable: true
+
+    Image:
+      type: object
+      description: 图片附件对象（本模块不使用）
+      required:
+        - imageKey
+        - imageUrl
+      properties:
+        imageKey:
+          type: string
+          description: 图片唯一标识
+          example: "screenshot_001"
+        imageUrl:
+          type: string
+          format: uri
+          description: 图片访问URL
+          example: "https://cdn.example.com/images/abc123.png"
+
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: |
+        会话认证令牌（如果平台使用JWT或Bearer Token）。
+        具体实现取决于平台的认证机制。
+
+        **注意**：本契约假设平台已有统一的认证机制，
+        模块无需额外处理认证逻辑。
+
+# ============================================================================
+# 数据示例：不同页面类型的MarkObject
+# ============================================================================
+
+x-examples:
+  experiment-trial-page:
+    summary: 实验试验页面（第9页）
+    description: |
+      学生完成第1次蜂蜜黏度实验：
+      1. 选择含水量20%
+      2. 选择温度25°C
+      3. 点击开始按钮，观察小球下落
+      4. 系统记录下落时间8.7秒
+    value:
+      pageNumber: "9"
+      pageDesc: "第1次蜂蜜黏度实验"
+      operationList:
+        - timestamp: 1697012340000
+          action: "select_water_content"
+          target: "water_content_selector"
+          value: 20
+        - timestamp: 1697012342000
+          action: "select_temperature"
+          target: "temperature_selector"
+          value: 25
+        - timestamp: 1697012350000
+          action: "click_start_animation"
+          target: "start_button"
+          value: null
+        - timestamp: 1697012358700
+          action: "animation_complete"
+          target: "ball_drop_animation"
+          value: 8.7
+        - timestamp: 1697012360000
+          action: "click_next"
+          target: "next_button"
+          value: null
+      answerList:
+        - questionId: "trial_1_water_content"
+          answer: 20
+          answerTime: 1697012340000
+        - questionId: "trial_1_temperature"
+          answer: 25
+          answerTime: 1697012342000
+        - questionId: "trial_1_fall_time"
+          answer: 8.7
+          answerTime: 1697012358700
+      beginTime: 1697012330000
+      endTime: 1697012360000
+      imgList: []
+
+  chart-page:
+    summary: 图表绘制页面（第12页）
+    description: |
+      学生基于3次实验结果绘制折线图：
+      - 添加3个数据点
+      - 查看Recharts渲染的图表
+    value:
+      pageNumber: "12"
+      pageDesc: "绘制含水量与下落时间关系图"
+      operationList:
+        - timestamp: 1697012400000
+          action: "add_chart_point"
+          target: "chart_data_input"
+          value: { waterContent: 20, fallTime: 8.7 }
+        - timestamp: 1697012410000
+          action: "add_chart_point"
+          target: "chart_data_input"
+          value: { waterContent: 25, fallTime: 6.5 }
+        - timestamp: 1697012420000
+          action: "add_chart_point"
+          target: "chart_data_input"
+          value: { waterContent: 15, fallTime: 11.2 }
+        - timestamp: 1697012430000
+          action: "view_chart"
+          target: "line_chart"
+          value: null
+        - timestamp: 1697012440000
+          action: "click_next"
+          target: "next_button"
+          value: null
+      answerList:
+        - questionId: "chart_data_points"
+          answer:
+            - { waterContent: 20, fallTime: 8.7, source: "trial", trialNumber: 1 }
+            - { waterContent: 25, fallTime: 6.5, source: "trial", trialNumber: 2 }
+            - { waterContent: 15, fallTime: 11.2, source: "trial", trialNumber: 3 }
+          answerTime: 1697012420000
+      beginTime: 1697012390000
+      endTime: 1697012440000
+      imgList: []
+
+  text-response-page:
+    summary: 开放性问题页面（第13页）
+    description: |
+      学生回答3个开放性问题：
+      1. 描述含水量与下落时间的关系
+      2. 解释原因
+      3. 预测温度变化的影响（未回答）
+    value:
+      pageNumber: "13"
+      pageDesc: "开放性问题回答"
+      operationList:
+        - timestamp: 1697012500000
+          action: "focus_textarea"
+          target: "question_1_input"
+          value: null
+        - timestamp: 1697012510000
+          action: "input_text"
+          target: "question_1_input"
+          value: "含水量越高，蜂蜜黏度越小，小球下落时间越短。"
+        - timestamp: 1697012520000
+          action: "focus_textarea"
+          target: "question_2_input"
+          value: null
+        - timestamp: 1697012540000
+          action: "input_text"
+          target: "question_2_input"
+          value: "含水量增加会降低蜂蜜的黏度，减少对小球的阻力。"
+        - timestamp: 1697012550000
+          action: "click_next"
+          target: "next_button"
+          value: null
+      answerList:
+        - questionId: "text_question_1"
+          answer: "含水量越高，蜂蜜黏度越小，小球下落时间越短。"
+          answerTime: 1697012510000
+        - questionId: "text_question_2"
+          answer: "含水量增加会降低蜂蜜的黏度，减少对小球的阻力。"
+          answerTime: 1697012540000
+        - questionId: "text_question_3"
+          answer: ""
+          answerTime: null
+      beginTime: 1697012490000
+      endTime: 1697012550000
+      imgList: []
+
+  questionnaire-page:
+    summary: 问卷调查页面（第14页）
+    description: |
+      学生回答问卷第1页的3个单选题：
+      - 问题1选择B
+      - 问题2选择A
+      - 问题3选择C
+    value:
+      pageNumber: "14"
+      pageDesc: "问卷调查第1页"
+      operationList:
+        - timestamp: 1697012600000
+          action: "select_option"
+          target: "question_1"
+          value: "B"
+        - timestamp: 1697012610000
+          action: "select_option"
+          target: "question_2"
+          value: "A"
+        - timestamp: 1697012620000
+          action: "select_option"
+          target: "question_3"
+          value: "C"
+        - timestamp: 1697012630000
+          action: "click_next"
+          target: "next_button"
+          value: null
+      answerList:
+        - questionId: "questionnaire_q1"
+          answer: "B"
+          answerTime: 1697012600000
+        - questionId: "questionnaire_q2"
+          answer: "A"
+          answerTime: 1697012610000
+        - questionId: "questionnaire_q3"
+          answer: "C"
+          answerTime: 1697012620000
+      beginTime: 1697012590000
+      endTime: 1697012630000
+      imgList: []
+
+  transition-page:
+    summary: 过渡页面（第0.1页-注意事项）
+    description: |
+      学生阅读注意事项页面：
+      - 无交互操作
+      - 无答案记录
+      - 仅记录停留时间
+    value:
+      pageNumber: "0.1"
+      pageDesc: "注意事项"
+      operationList:
+        - timestamp: 1697012100000
+          action: "page_enter"
+          target: null
+          value: null
+        - timestamp: 1697012150000
+          action: "click_next"
+          target: "next_button"
+          value: null
+      answerList: []
+      beginTime: 1697012100000
+      endTime: 1697012150000
+      imgList: []
+
+# ============================================================================
+# 错误处理示例
+# ============================================================================
+
+x-error-scenarios:
+  invalid-json-format:
+    description: |
+      场景：前端提交的jsonStr参数不是有效的JSON字符串。
+      原因：序列化错误或数据损坏。
+    request:
+      jsonStr: "{ invalid json }"
+    response:
+      code: 400
+      msg: "JSON格式错误：Unexpected token i in JSON at position 2"
+      obj: false
+    frontend-action: |
+      显示错误模态框："数据格式错误，请刷新页面重试"
+
+  missing-required-field:
+    description: |
+      场景：MarkObject缺少必填字段（如pageNumber）。
+      原因：前端数据构造错误。
+    request:
+      jsonStr: |
+        {
+          "pageDesc": "第1次实验",
+          "operationList": [],
+          "answerList": []
+        }
+    response:
+      code: 400
+      msg: "缺少必填字段：pageNumber"
+      obj: false
+    frontend-action: |
+      开发阶段：控制台报错并中断提交
+      生产阶段：记录到Sentry，显示通用错误提示
+
+  session-expired:
+    description: |
+      场景：学生在设备A登录后，又在设备B登录，设备A的会话被踢出。
+      触发时机：设备A调用saveHcMark或checkSession接口。
+    request:
+      jsonStr: "{ valid mark object }"
+    response:
+      code: 401
+      msg: "您的账号已在其他设备登录，当前会话已失效"
+      obj: false
+    frontend-action: |
+      1. 停止心跳检测定时器
+      2. 显示模态框："您的账号已在其他设备登录"（5秒后自动关闭）
+      3. 清空Context状态
+      4. 自动跳转到登录页
+
+  network-timeout:
+    description: |
+      场景：网络不稳定，请求超时（超过10秒无响应）。
+    request:
+      jsonStr: "{ valid mark object }"
+    response: null (timeout)
+    frontend-action: |
+      1. 第1次重试（1秒后）
+      2. 第2次重试（2秒后）
+      3. 第3次重试（4秒后）
+      4. 所有重试失败后显示错误模态框：
+         "网络连接不稳定，数据提交失败。请检查网络后点击重试。"
+         [重试按钮] [取消按钮]
+
+  server-error:
+    description: |
+      场景：服务器内部错误（数据库连接失败、异常抛出等）。
+    request:
+      jsonStr: "{ valid mark object }"
+    response:
+      code: 500
+      msg: "服务器内部错误，请稍后重试"
+      obj: false
+    frontend-action: |
+      执行重试策略（同network-timeout）
+
+# ============================================================================
+# Mock服务器实现指南
+# ============================================================================
+
+x-mock-server-guide:
+  description: |
+    本地开发时，可使用Mock服务器模拟后端API响应。
+
+    **推荐工具**：
+    - json-server: 轻量级REST API模拟
+    - msw (Mock Service Worker): 浏览器级拦截
+    - Vite插件: vite-plugin-mock
+
+  json-server-setup:
+    install: "npm install -g json-server"
+    config-file: "mock-db.json"
+    run-command: "json-server --watch mock-db.json --port 3000"
+
+  msw-setup:
+    install: "npm install msw --save-dev"
+    init-command: "npx msw init public/ --save"
+    handler-file: "src/mocks/handlers.js"
+    example-handler: |
+      import { rest } from 'msw';
+
+      export const handlers = [
+        // 模拟saveHcMark接口
+        rest.post('/stu/saveHcMark', async (req, res, ctx) => {
+          const formData = await req.formData();
+          const jsonStr = formData.get('jsonStr');
+          const markObject = JSON.parse(jsonStr);
+
+          console.log('📝 接收到MarkObject:', markObject);
+
+          // 模拟10%的失败率（用于测试重试逻辑）
+          if (Math.random() < 0.1) {
+            return res(
+              ctx.delay(500),
+              ctx.status(500),
+              ctx.json({ code: 500, msg: '服务器错误', obj: false })
+            );
+          }
+
+          // 成功响应
+          return res(
+            ctx.delay(300), // 模拟网络延迟
+            ctx.status(200),
+            ctx.json({ code: 200, msg: '成功', obj: true })
+          );
+        }),
+
+        // 模拟checkSession接口
+        rest.get('/stu/checkSession', (req, res, ctx) => {
+          const sessionId = req.url.searchParams.get('sessionId');
+
+          // 模拟5%的会话失效率（测试多设备登录检测）
+          if (Math.random() < 0.05) {
+            return res(
+              ctx.delay(200),
+              ctx.status(401),
+              ctx.json({
+                code: 401,
+                msg: '您的账号已在其他设备登录，当前会话已失效',
+                obj: false
+              })
+            );
+          }
+
+          // 正常会话
+          return res(
+            ctx.delay(200),
+            ctx.status(200),
+            ctx.json({ code: 200, msg: '会话有效', obj: true })
+          );
+        })
+      ];
+
+  vite-plugin-mock-setup:
+    install: "npm install vite-plugin-mock -D"
+    vite-config: |
+      import { defineConfig } from 'vite';
+      import { viteMockServe } from 'vite-plugin-mock';
+
+      export default defineConfig({
+        plugins: [
+          viteMockServe({
+            mockPath: 'mock',
+            enable: true,
+          }),
+        ],
+      });
+    mock-file: "mock/api.js"
+    example-mock: |
+      export default [
+        {
+          url: '/stu/saveHcMark',
+          method: 'post',
+          timeout: 300,
+          response: ({ body }) => {
+            const jsonStr = body.get('jsonStr');
+            const markObject = JSON.parse(jsonStr);
+            console.log('📝 Mock API 接收:', markObject);
+            return {
+              code: 200,
+              msg: '成功',
+              obj: true,
+            };
+          },
+        },
+        {
+          url: '/stu/checkSession',
+          method: 'get',
+          timeout: 200,
+          response: ({ query }) => {
+            return {
+              code: 200,
+              msg: '会话有效',
+              obj: true,
+            };
+          },
+        },
+      ];
+
+# ============================================================================
+# 集成测试建议
+# ============================================================================
+
+x-integration-testing:
+  description: |
+    针对API契约的集成测试用例，确保前后端协议一致性。
+
+  test-cases:
+    - name: "正常提交实验试验数据"
+      request:
+        endpoint: POST /stu/saveHcMark
+        jsonStr: { pageNumber: "9", ... }
+      expected:
+        status: 200
+        response.code: 200
+        response.obj: true
+
+    - name: "提交空operationList（边界情况）"
+      request:
+        endpoint: POST /stu/saveHcMark
+        jsonStr: { pageNumber: "9", operationList: [], ... }
+      expected:
+        status: 200
+        response.code: 200
+        note: "operationList可为空，不影响提交"
+
+    - name: "提交超大JSON（压力测试）"
+      request:
+        endpoint: POST /stu/saveHcMark
+        jsonStr: { pageNumber: "13", operationList: [1000个操作], ... }
+      expected:
+        status: 200 or 413 (Payload Too Large)
+        note: "验证服务器payload限制"
+
+    - name: "会话过期后提交数据"
+      setup: "在设备A登录，然后在设备B登录（踢出设备A）"
+      request:
+        endpoint: POST /stu/saveHcMark
+        jsonStr: { valid mark object }
+      expected:
+        status: 401
+        response.code: 401
+        response.msg: "您的账号已在其他设备登录，当前会话已失效"
+
+    - name: "心跳检测正常流程"
+      request:
+        endpoint: GET /stu/checkSession?sessionId=xxx&studentCode=STU001
+      expected:
+        status: 200
+        response.code: 200
+        response.obj: true
+
+    - name: "心跳检测会话失效"
+      setup: "在设备A发起心跳，同时设备B已登录"
+      request:
+        endpoint: GET /stu/checkSession?sessionId=xxx&studentCode=STU001
+      expected:
+        status: 401
+        response.code: 401
+
+# ============================================================================
+# 版本历史
+# ============================================================================
+
+x-changelog:
+  - version: 1.0.0
+    date: 2025-10-14
+    changes:
+      - 初始版本
+      - 定义saveHcMark和checkSession接口
+      - 添加MarkObject、Operation、Answer schema
+      - 提供4种页面类型的数据示例
+      - 定义错误处理场景
+      - 添加Mock服务器实现指南
+      - 添加集成测试建议
+
+# ============================================================================
+# 下一步计划
+# ============================================================================
+
+x-next-steps:
+  - task: "生成quickstart.md"
+    description: "开发者上手指南，包括环境搭建、Mock模式配置、模块注册步骤"
+    priority: P0
+
+  - task: "更新Agent Context"
+    description: "运行 update-agent-context.ps1 添加Recharts到Claude Code上下文"
+    priority: P1
+
+  - task: "执行Constitution Check"
+    description: "验证Phase 1设计artifacts是否符合7大核心原则"
+    priority: P1
+
+  - task: "生成tasks.md"
+    description: "Phase 2任务分解，为实现阶段准备"
+    priority: P2
