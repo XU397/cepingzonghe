@@ -11,30 +11,8 @@ import { useEffect, useCallback, useState } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
 import { useDataLogger } from '../hooks/useDataLogger';
 import PageLayout from '../components/layout/PageLayout';
-import styles from '../styles/ExplorationPages.module.css';
-
-const DIALOGUE_CONTENT = [
-  {
-    speaker: '小明',
-    text: '爸爸，我发现这瓶蜂蜜好像比刚买回来的时候要稀一些了。',
-    avatar: 'xiaoming'
-  },
-  {
-    speaker: '爸爸',
-    text: '嗯，你观察得很仔细。蜂蜜的黏度确实会发生变化。',
-    avatar: 'baba'
-  },
-  {
-    speaker: '小明',
-    text: '那是什么原因导致蜂蜜变稀的呢？',
-    avatar: 'xiaoming'
-  },
-  {
-    speaker: '爸爸',
-    text: '这是个好问题！你可以通过实验来探究这个现象。',
-    avatar: 'baba'
-  }
-];
+import styles from '../styles/Page03_Question.module.css';
+import dialogueImage from '../../../assets/images/小明和爸爸对话.png';
 
 const Page03_Question = () => {
   const {
@@ -143,22 +121,17 @@ const Page03_Question = () => {
   return (
     <PageLayout showNavigation={true} showTimer={true}>
       <div className={styles.pageContainer}>
+        <h2 className={styles.pageTitle}>蜂蜜的奥秘</h2>
+
         <div className={styles.splitLayout}>
-          {/* 左侧: 对话气泡 */}
+          {/* 左侧: 对话图片 */}
           <div className={styles.leftPanel}>
-            <h2 className={styles.sectionTitle}>蜂蜜的奥秘</h2>
-            <div className={styles.dialogueContainer}>
-              {DIALOGUE_CONTENT.map((dialogue, index) => (
-                <div
-                  key={index}
-                  className={`${styles.dialogueBubble} ${
-                    dialogue.speaker === '小明' ? styles.xiaomingBubble : styles.babaBubble
-                  }`}
-                >
-                  <div className={styles.speakerName}>{dialogue.speaker}:</div>
-                  <div className={styles.dialogueText}>{dialogue.text}</div>
-                </div>
-              ))}
+            <div className={styles.imageWrapper}>
+              <img
+                src={dialogueImage}
+                alt="小明和爸爸的对话"
+                className={styles.dialogueImage}
+              />
             </div>
           </div>
 
