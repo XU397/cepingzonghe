@@ -20,11 +20,11 @@
    ============================================================================ */
 
 .leftNavWrapper {
-  width: 80px;
-  min-width: 80px;
+  width: 100px;
+  min-width: 100px;
   flex-shrink: 0;
   background-color: #ffffff;
-  border-right: 2px solid #e0e0e0;
+  border-right: 3px solid var(--cartoon-border);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
   overflow-y: auto;
   overflow-x: hidden;
@@ -35,45 +35,74 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 8px;
+  padding: 15px 10px;
+  background-color: var(--cartoon-light);
   height: 100%;
   box-sizing: border-box;
+  width: 100%;
+  position: relative;
+  flex-shrink: 0;
+  overflow-y: auto;
 }
 
-/* 导航标题 */
-.navTitle {
-  font-size: 14px;
+.leftNavigation::before {
+  content: '进度';
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
   font-weight: bold;
-  color: #333;
-  margin-bottom: 12px;
-  text-align: center;
-  letter-spacing: 0.5px;
+  color: var(--cartoon-dark);
+  font-size: 14px;
+  z-index: 2;
+}
+
+/* 导航标题 - 隐藏不使用 */
+.navTitle {
+  display: none;
 }
 
 /* 总体进度显示 */
 .progressIndicator {
-  font-size: 16px;
+  font-size: 1em;
   font-weight: bold;
-  color: #2c3e50;
-  margin-bottom: 16px;
-  background-color: #e3f2fd;
-  padding: 8px 12px;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: var(--cartoon-dark);
+  margin-bottom: 20px;
+  margin-top: 35px;
+  background-color: var(--cartoon-secondary);
+  padding: 10px 5px;
+  border-radius: 15px;
+  box-shadow: 0 3px 6px var(--cartoon-shadow);
+  z-index: 2;
+  position: relative;
 }
 
 /* 导航项列表容器 */
 .navigationItems {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  gap: 0;
+  position: relative;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0;
-  margin: 0;
+  justify-content: flex-start;
+}
+
+/* 问卷模式：添加连续竖线背景 */
+.navigationItems.questionnaire::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  bottom: 20px;
+  width: 4px;
+  background-color: var(--cartoon-border);
+  transform: translateX(-50%);
+  z-index: 0;
+  border-radius: 2px;
 }
 
 /* 导航项包装器 */
@@ -86,42 +115,48 @@
 
 /* 导航圆形数字 */
 .navItem {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background-color: #ffffff;
-  color: #666;
+  background-color: #fff;
+  color: var(--text-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 1em;
   font-weight: bold;
-  border: 3px solid #d0d0d0;
+  border: 3px solid var(--cartoon-border);
   transition: all 0.3s ease;
   position: relative;
   z-index: 1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 8px var(--cartoon-shadow);
   cursor: default;
   flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
+.navItem:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px var(--cartoon-shadow);
 }
 
 /* 高亮(当前页面) */
 .navItem.highlighted {
-  background-color: #42a5f5;
+  background-color: var(--cartoon-primary);
   color: white;
-  border-color: #1976d2;
-  transform: scale(1.15);
-  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+  border-color: var(--cartoon-dark);
+  transform: scale(1.1);
+  box-shadow: 0 5px 15px rgba(89, 193, 255, 0.4);
 }
 
 .navItem.highlighted::after {
   content: '';
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 14px;
-  height: 14px;
-  background-color: #ff5722;
+  top: -5px;
+  right: -5px;
+  width: 15px;
+  height: 15px;
+  background-color: var(--cartoon-accent);
   border-radius: 50%;
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -129,19 +164,24 @@
 
 /* 已完成样式 */
 .navItem.completed {
-  background-color: #66bb6a;
+  background-color: var(--cartoon-green);
   color: white;
-  border-color: #43a047;
+  border-color: #5cbb9f;
 }
 
-/* 连接线 */
+/* 连接线 - 仅在实验模式下显示 */
 .navConnector {
-  width: 4px;
-  height: 12px;
-  background-color: #d0d0d0;
+  width: 3px;
+  height: 8px;
+  background-color: var(--cartoon-border);
   border-radius: 2px;
-  margin: 4px 0;
+  margin: 2px 0;
   z-index: 0;
+}
+
+/* 问卷模式下隐藏单独的连接线(因为有连续竖线) */
+.navigationItems.questionnaire .navConnector {
+  display: none;
 }
 
 /* ============================================================================
@@ -156,34 +196,51 @@
   overflow: hidden;
 }
 
-/* 计时器容器(右上角) */
+/* 计时器容器(右上角) - 与Grade 4 GlobalTimer样式保持一致 */
 .timerContainer {
-  position: absolute;
-  top: 20px;
-  right: 30px;
+  position: fixed;
+  top: 55px;
+  right: 20px;
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #fff;
+  background-color: var(--cartoon-secondary);
+  color: var(--text-color);
   padding: 12px 20px;
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  border-radius: 30px;
+  box-shadow: 0 4px 10px var(--cartoon-shadow);
+  z-index: 999;
   font-size: 18px;
   font-weight: bold;
-  border: 2px solid #e0e0e0;
+  border: 2px solid #ffb347;
+  transition: all 0.3s ease;
+}
+
+/* 时钟图标样式 */
+.timerIcon {
+  margin-right: 8px;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+/* 计时器文本容器 */
+.timerText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .timerLabel {
-  color: #555;
-  font-size: 16px;
-  font-weight: normal;
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1;
+  margin-bottom: 2px;
 }
 
 .timerValue {
-  color: #d32f2f;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
+  line-height: 1;
   font-family: 'Courier New', monospace;
   letter-spacing: 1px;
 }
@@ -201,90 +258,55 @@
    响应式设计
    ============================================================================ */
 
-/* 中等屏幕(1366x768) */
-@media (max-width: 1400px) {
-  .leftNavWrapper {
-    width: 70px;
-    min-width: 70px;
+/* 响应式设计 - 针对720p高度优化 */
+@media (max-height: 720px) {
+  .leftNavigation {
+    padding: 6px 4px;
   }
 
-  .navItem {
-    width: 38px;
-    height: 38px;
-    font-size: 14px;
+  .leftNavigation::before {
+    top: 6px;
+    font-size: 11px;
   }
 
   .progressIndicator {
-    font-size: 14px;
-    padding: 6px 10px;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    padding: 4px 3px;
+    font-size: 0.8em;
+  }
+
+  .navigationItems {
+    margin-top: 0;
+  }
+
+  .navItem {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75em;
+  }
+
+  .navConnector {
+    height: 12px;
+    margin: 1px 0;
+  }
+
+  .navItem.highlighted::after {
+    width: 10px;
+    height: 10px;
+    top: -2px;
+    right: -2px;
   }
 
   .timerContainer {
-    top: 15px;
-    right: 25px;
+    top: 50px;
+    right: 15px;
     padding: 10px 16px;
     font-size: 16px;
   }
 
-  .timerLabel {
-    font-size: 14px;
-  }
-
-  .timerValue {
+  .timerIcon {
     font-size: 18px;
-  }
-
-  .contentWrapper {
-    padding: 70px 30px 30px 30px;
-  }
-}
-
-/* 小屏幕(1280x720) */
-@media (max-width: 1280px) {
-  .leftNavWrapper {
-    width: 60px;
-    min-width: 60px;
-  }
-
-  .navTitle {
-    font-size: 12px;
-    margin-bottom: 8px;
-  }
-
-  .navItem {
-    width: 34px;
-    height: 34px;
-    font-size: 13px;
-    border-width: 2px;
-  }
-
-  .navItem.highlighted::after {
-    width: 12px;
-    height: 12px;
-    top: -3px;
-    right: -3px;
-  }
-
-  .progressIndicator {
-    font-size: 13px;
-    padding: 5px 8px;
-    margin-bottom: 12px;
-  }
-
-  .navConnector {
-    height: 10px;
-    margin: 3px 0;
-  }
-
-  .timerContainer {
-    top: 12px;
-    right: 20px;
-    padding: 8px 14px;
-    font-size: 14px;
-  }
-
-  .timerLabel {
-    font-size: 13px;
   }
 
   .timerValue {
@@ -296,39 +318,39 @@
   }
 }
 
-/* 超小屏幕(移动设备, 不推荐) */
 @media (max-width: 1024px) {
-  .leftNavWrapper {
-    width: 50px;
-    min-width: 50px;
+  .leftNavigation {
+    width: 100%;
+    border-right: none;
+    border-top: 1px solid #e0e0e0;
   }
 
-  .navTitle {
-    font-size: 10px;
-    writing-mode: vertical-rl;
-    text-orientation: upright;
+  .navigationItems {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 0;
   }
 
   .navItem {
-    width: 30px;
-    height: 30px;
-    font-size: 12px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    border-bottom: none;
+    border-right: 1px solid #f5f5f5;
   }
 
-  .progressIndicator {
-    font-size: 12px;
-    padding: 4px 6px;
+  .navItem:last-child {
+    border-right: none;
   }
 
   .timerContainer {
     top: 10px;
     right: 15px;
-    padding: 6px 10px;
+    padding: 6px 12px;
     font-size: 12px;
   }
 
-  .timerLabel {
-    font-size: 11px;
+  .timerIcon {
+    font-size: 16px;
   }
 
   .timerValue {
@@ -337,5 +359,16 @@
 
   .contentWrapper {
     padding: 50px 20px 20px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navItem {
+    padding: 8px 12px;
+  }
+
+  .navItem.highlighted::after {
+    width: 10px;
+    height: 10px;
   }
 }

@@ -73,8 +73,8 @@ const LeftNavigation = ({ currentPage, totalPages, navigationMode }) => {
         {currentStepNumber}/{totalPages}
       </div>
 
-      {/* 导航项列表 */}
-      <div className={styles.navigationItems}>
+      {/* 导航项列表 - 问卷模式下添加questionnaire类名 */}
+      <div className={`${styles.navigationItems} ${navigationMode === 'questionnaire' ? styles.questionnaire : ''}`}>
         {navigationItems.map((item, index) => {
           const stepNumber = item.pageNumber;
           const isHighlighted = stepNumber === currentStepNumber;
@@ -149,11 +149,14 @@ const PageLayout = ({ children, showNavigation = true, showTimer = true }) => {
 
       {/* 主内容区域 */}
       <div className={styles.mainContent}>
-        {/* 计时器容器(右上角) */}
+        {/* 计时器容器(右上角) - 与Grade 4 GlobalTimer布局保持一致 */}
         {showTimer && (
           <div className={styles.timerContainer}>
-            <span className={styles.timerLabel}>剩余时间:</span>
-            <span className={styles.timerValue}>{formatTime(remainingTime)}</span>
+            <div className={styles.timerIcon}>⏰</div>
+            <div className={styles.timerText}>
+              <span className={styles.timerLabel}>剩余时间</span>
+              <span className={styles.timerValue}>{formatTime(remainingTime)}</span>
+            </div>
           </div>
         )}
 

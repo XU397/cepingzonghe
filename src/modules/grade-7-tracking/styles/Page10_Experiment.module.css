@@ -1,97 +1,175 @@
 /**
  * Page10_Experiment 样式
- * T046 - Page10_Experiment样式
+ * 参考7年级蒸馒头模块(Page_14_Simulation_Intro_Exploration)的样式
+ * 布局: 1:2 比例 (左侧说明, 右侧实验环境)
  */
 
+/* 页面容器 */
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 24px;
-  min-height: 100%;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
+/* 页面标题 */
 .pageTitle {
   text-align: center;
-  padding-bottom: 16px;
-  border-bottom: 2px solid #e8e8e8;
-}
-
-.pageTitle h2 {
+  color: #333;
+  margin-bottom: 10px;
   font-size: 28px;
-  font-weight: 700;
-  color: #262626;
-  margin: 0 0 8px 0;
+  font-weight: 600;
 }
 
-.subtitle {
-  font-size: 16px;
-  color: #8c8c8c;
-  margin: 0;
-}
-
-/* 左右分栏布局 */
+/* 内容布局: 左右分栏 1:2 */
 .contentLayout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  flex: 1;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+  align-items: flex-start;
 }
 
-@media (max-width: 1200px) {
-  .contentLayout {
-    grid-template-columns: 1fr;
-  }
+/* ====================
+   左侧: 说明面板
+   ==================== */
+.instructionsPanel {
+  background-color: #e3f2fd;
+  padding: 25px;
+  border-radius: 12px;
+  border: 2px dashed #64b5f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* 左侧面板 */
-.leftPanel {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.experimentSection {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.sectionTitle {
+.instructionsTitle {
+  margin-top: 0;
+  color: #01579b;
+  border-bottom: 2px solid #00796b;
+  padding-bottom: 2px;
+  margin-bottom: 15px;
   font-size: 18px;
   font-weight: 600;
-  color: #262626;
-  margin: 0;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #1890ff;
 }
 
-.parameterSection {
-  /* BeakerSelector和TemperatureControl的容器 */
+.stepsList {
+  padding-left: 20px;
+  font-size: 0.9em;
+  line-height: 1.8;
+  color: #37474f;
+  margin-bottom: 0;
 }
 
-.animationSection {
+.stepsList li {
+  margin-bottom: 8px;
+}
+
+.divider {
+  margin: 20px 0;
+  border: none;
+  border-top: 1px solid #90caf9;
+}
+
+.instructionsSectionTitle {
+  color: #00796b;
+  margin-top: 15px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.instructionsList {
+  padding-left: 20px;
+  font-size: 0.9em;
+  line-height: 1.7;
+  color: #37474f;
+  list-style-type: disc;
+}
+
+.instructionsList li {
+  margin-bottom: 8px;
+}
+
+/* 提示框 */
+.hintBox {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #fffbe6;
+  border-radius: 8px;
+  border: 1px solid #ffe58f;
+  margin-top: 20px;
+}
+
+.hintIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.hintContent {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #595959;
+}
+
+.hintContent strong {
+  display: block;
+  font-size: 14px;
+  color: #d48806;
+  margin-bottom: 8px;
+}
+
+.hintContent p {
+  margin: 4px 0;
+}
+
+/* ====================
+   右侧: 实验环境面板
+   ==================== */
+.simulationEnvironmentPanel {
+  border: 2px solid #81c784;
+  border-radius: 12px;
+  padding: 20px;
+  background-color: #f1f8e9;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.experimentContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+/* 参数选择区 */
+.parameterSelectionArea {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  padding: 15px;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
 }
 
-.experimentDisplay {
+/* 实验显示区 */
+.experimentDisplayArea {
   display: flex;
   flex-direction: column;
   gap: 16px;
   align-items: center;
   padding: 20px;
-  background: #fafafa;
-  border-radius: 8px;
-  border: 1px solid #e8e8e8;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  width: 100%;
 }
 
 /* 控制按钮区 */
-.controlSection {
+.controlButtonsArea {
   display: flex;
   gap: 12px;
   justify-content: center;
+  width: 100%;
+  max-width: 500px;
 }
 
 .controlButton {
@@ -148,6 +226,7 @@
   background: white;
   border-radius: 8px;
   border: 1px solid #e8e8e8;
+  width: 100%;
 }
 
 .historySectionTitle {
@@ -193,131 +272,13 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 右侧面板 */
-.rightPanel {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.instructionCard {
-  display: flex;
-  gap: 16px;
-  padding: 20px;
-  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
-  border-radius: 8px;
-  border: 1px solid #91d5ff;
-}
-
-.characterAvatar {
-  flex-shrink: 0;
-}
-
-.avatarCircle {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
-  color: white;
-  font-size: 16px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
-}
-
-.dialogueBubble {
-  flex: 1;
-  font-size: 14px;
-  line-height: 1.8;
-  color: #262626;
-}
-
-.dialogueBubble p {
-  margin: 0 0 12px 0;
-}
-
-.dialogueBubble p:last-child {
-  margin-bottom: 0;
-}
-
-.dialogueBubble strong {
-  color: #0050b3;
-  font-weight: 600;
-}
-
-/* 步骤卡片 */
-.stepsCard {
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e8e8e8;
-}
-
-.stepsTitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: #262626;
-  margin: 0 0 12px 0;
-}
-
-.stepsList {
-  margin: 0;
-  padding-left: 24px;
-  list-style-type: decimal;
-}
-
-.stepsList li {
-  font-size: 14px;
-  line-height: 2;
-  color: #595959;
-}
-
-.stepsList li::marker {
-  font-weight: 700;
-  color: #1890ff;
-}
-
-/* 提示卡片 */
-.hintCard {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  background: #fffbe6;
-  border-radius: 8px;
-  border: 1px solid #ffe58f;
-}
-
-.hintIcon {
-  font-size: 24px;
-  flex-shrink: 0;
-}
-
-.hintContent {
-  flex: 1;
-  font-size: 13px;
-  line-height: 1.8;
-  color: #595959;
-}
-
-.hintContent strong {
-  display: block;
-  font-size: 14px;
-  color: #d48806;
-  margin-bottom: 8px;
-}
-
-.hintContent p {
-  margin: 4px 0;
-}
-
-/* 页面底部导航 */
+/* ====================
+   底部导航
+   ==================== */
 .navigationFooter {
-  display: flex;
-  justify-content: center;
-  padding-top: 20px;
-  border-top: 2px solid #e8e8e8;
+  text-align: center;
+  margin-top: 20px;
+  display: block;
 }
 
 .nextButton {
@@ -347,13 +308,25 @@
   box-shadow: none;
 }
 
-/* 响应式调整 */
+/* ====================
+   响应式设计
+   ==================== */
+@media (max-width: 1200px) {
+  .contentLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .instructionsPanel {
+    margin-bottom: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 16px;
   }
 
-  .pageTitle h2 {
+  .pageTitle {
     font-size: 22px;
   }
 
@@ -361,17 +334,16 @@
     gap: 16px;
   }
 
-  .controlSection {
+  .controlButtonsArea {
     flex-direction: column;
   }
 
-  .instructionCard {
-    flex-direction: column;
+  .instructionsTitle {
+    font-size: 16px;
   }
 
-  .avatarCircle {
-    width: 50px;
-    height: 50px;
-    font-size: 14px;
+  .stepsList,
+  .instructionsList {
+    font-size: 0.85em;
   }
 }
