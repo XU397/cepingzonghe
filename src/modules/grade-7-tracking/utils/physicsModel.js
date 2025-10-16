@@ -1,13 +1,60 @@
 /**
  * 蜂蜜黏度物理模型
  *
- * 基于简化的Stokes定律近似:
- * - 基准下落时间: 10.0秒 (15%含水量@25℃)
- * - 含水量影响: 每增加1%,时间减少约8%
- * - 温度影响: 每增加5℃,时间减少约10%
+ * 基于实际实验数据表:
+ * - 数据来源: 7年级追踪测评需求文档中的实验数据表
+ * - 含水量选项: 15%, 17%, 19%, 21%
+ * - 温度选项: 25℃, 30℃, 35℃, 40℃, 45℃
+ * - 数据表示小球在蜂蜜中的下落时间(秒)
  *
- * 参考: research.md - Research Topic 1
+ * 实验数据表:
+ * ┌────────┬──────┬──────┬──────┬──────┬──────┐
+ * │ 温度\含水量│ 15%  │ 17%  │ 19%  │ 21%  │
+ * ├────────┼──────┼──────┼──────┼──────┤
+ * │  25℃  │ 16.5 │  5.7 │  2.9 │  1.5 │
+ * │  30℃  │  8.6 │  3.1 │  1.6 │  1.1 │
+ * │  35℃  │  4.8 │  1.8 │  1.0 │  0.7 │
+ * │  40℃  │  2.7 │  1.1 │  0.6 │  0.4 │
+ * │  45℃  │  1.6 │  0.7 │  0.4 │  0.3 │
+ * └────────┴──────┴──────┴──────┴──────┘
  */
+
+/**
+ * 实验数据表 - 小球下落时间(秒)
+ * 第一层键: 含水量(15, 17, 19, 21)
+ * 第二层键: 温度(25, 30, 35, 40, 45)
+ * 值: 下落时间(秒)
+ */
+const FALL_TIME_DATA = {
+  15: {
+    25: 16.5,
+    30: 8.6,
+    35: 4.8,
+    40: 2.7,
+    45: 1.6
+  },
+  17: {
+    25: 5.7,
+    30: 3.1,
+    35: 1.8,
+    40: 1.1,
+    45: 0.7
+  },
+  19: {
+    25: 2.9,
+    30: 1.6,
+    35: 1.0,
+    40: 0.6,
+    45: 0.4
+  },
+  21: {
+    25: 1.5,
+    30: 1.1,
+    35: 0.7,
+    40: 0.4,
+    45: 0.3
+  }
+};
 
 /**
  * 计算小球在蜂蜜中的下落时间
@@ -17,25 +64,25 @@
  * @returns {number} 下落时间(秒, 保留1位小数)
  */
 export function calculateFallTime(waterContent, temperature) {
-  // 基准参数
-  const BASE_TIME = 10.0; // 基准下落时间(秒), 15%含水量@25℃
-  const WATER_BASE = 15; // 基准含水量
-  const TEMP_BASE = 25; // 基准温度
+  // 验证参数
+  if (!FALL_TIME_DATA[waterContent]) {
+    console.error(`[physicsModel] Invalid water content: ${waterContent}`);
+    return 5.0; // 返回默认值
+  }
 
-  // 含水量影响系数: 含水量每增加1%, 时间减少约8%
-  const waterContentFactor = 1 - (waterContent - WATER_BASE) * 0.08;
+  if (!FALL_TIME_DATA[waterContent][temperature]) {
+    console.error(`[physicsModel] Invalid temperature: ${temperature} for water content: ${waterContent}`);
+    return 5.0; // 返回默认值
+  }
 
-  // 温度影响系数: 温度每增加1℃, 时间减少约2%
-  const temperatureFactor = 1 - (temperature - TEMP_BASE) * 0.02;
+  // 获取基准时间
+  const baseTime = FALL_TIME_DATA[waterContent][temperature];
 
-  // 计算理论下落时间
-  const theoreticalTime = BASE_TIME * waterContentFactor * temperatureFactor;
-
-  // 添加±4%的随机波动(模拟真实实验的测量误差)
-  const randomVariation = 0.96 + Math.random() * 0.08; // 0.96-1.04
+  // 添加±3%的随机波动(模拟真实实验的测量误差)
+  const randomVariation = 0.97 + Math.random() * 0.06; // 0.97-1.03
 
   // 返回最终时间(保留1位小数)
-  const fallTime = theoreticalTime * randomVariation;
+  const fallTime = baseTime * randomVariation;
   return parseFloat(fallTime.toFixed(1));
 }
 
@@ -75,15 +122,45 @@ export function validateExperimentParameters(waterContent, temperature) {
  * @returns {{min: number, max: number, avg: number}} 时间范围(秒)
  */
 export function calculateExpectedRange(waterContent, temperature) {
-  const BASE_TIME = 10.0;
-  const waterContentFactor = 1 - (waterContent - 15) * 0.08;
-  const temperatureFactor = 1 - (temperature - 25) * 0.02;
+  // 验证参数
+  if (!FALL_TIME_DATA[waterContent] || !FALL_TIME_DATA[waterContent][temperature]) {
+    console.error(`[physicsModel] Invalid parameters for range calculation: waterContent=${waterContent}, temperature=${temperature}`);
+    return {
+      min: 0.0,
+      max: 0.0,
+      avg: 0.0
+    };
+  }
 
-  const avgTime = BASE_TIME * waterContentFactor * temperatureFactor;
+  // 获取基准时间
+  const avgTime = FALL_TIME_DATA[waterContent][temperature];
 
+  // 计算范围(±3%波动)
   return {
-    min: parseFloat((avgTime * 0.96).toFixed(1)),
-    max: parseFloat((avgTime * 1.04).toFixed(1)),
+    min: parseFloat((avgTime * 0.97).toFixed(1)),
+    max: parseFloat((avgTime * 1.03).toFixed(1)),
     avg: parseFloat(avgTime.toFixed(1))
   };
+}
+
+/**
+ * 获取所有实验参数组合的数据
+ * 用于生成折线图或数据表格
+ *
+ * @returns {Array<{waterContent: number, temperature: number, fallTime: number}>} 所有组合的数据
+ */
+export function getAllExperimentData() {
+  const data = [];
+
+  for (const waterContent in FALL_TIME_DATA) {
+    for (const temperature in FALL_TIME_DATA[waterContent]) {
+      data.push({
+        waterContent: parseInt(waterContent),
+        temperature: parseInt(temperature),
+        fallTime: FALL_TIME_DATA[waterContent][temperature]
+      });
+    }
+  }
+
+  return data;
 }

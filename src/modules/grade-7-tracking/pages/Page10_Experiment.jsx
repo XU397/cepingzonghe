@@ -186,27 +186,50 @@ const Page10_Experiment = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.pageTitle}>
-        <h2>模拟实验:蜂蜜黏度测量</h2>
-        <p className={styles.subtitle}>利用落球法测量不同条件下蜂蜜的黏度</p>
-      </div>
+      <h1 className={styles.pageTitle}>蜂蜜黏度: 模拟实验</h1>
 
       <div className={styles.contentLayout}>
-        {/* 左侧:实验操作区 */}
-        <div className={styles.leftPanel}>
-          <div className={styles.experimentSection}>
-            <h3 className={styles.sectionTitle}>实验参数设置</h3>
+        {/* 左侧:说明面板 */}
+        <div className={styles.instructionsPanel}>
+          <h2 className={styles.instructionsTitle}>模拟实验步骤如下：</h2>
+          <ol className={styles.stepsList}>
+            <li>准备4个量筒,分别装有不同含水量的蜂蜜(15%、17%、19%、21%)；</li>
+            <li>准备5个恒温箱,分别设其温度为 25°C、30°C、35°C、40°C、45°C；</li>
+            <li>选择量筒和温度后,将量筒放入恒温箱,记录小钢球从顶部落到底部的时间。</li>
+          </ol>
 
-            <div className={styles.parameterSection}>
+          <hr className={styles.divider} />
+
+          <h3 className={styles.instructionsSectionTitle}>【说明】右侧为实验互动界面:</h3>
+          <ul className={styles.instructionsList}>
+            <li>选择量筒(对应不同的蜂蜜含水量:15%、17%、19%、21%)。</li>
+            <li>调节温度控制器设置环境温度(25°C-45°C,共5档)。</li>
+            <li>设置完成后,单击&quot;开始实验&quot;按钮,小球会在量筒中下落。</li>
+            <li>下落结束后,计时器显示小球的下落时间。</li>
+            <li>单击&quot;重置实验&quot;可重新开始。</li>
+          </ul>
+
+          <div className={styles.hintBox}>
+            <div className={styles.hintIcon}>💡</div>
+            <div className={styles.hintContent}>
+              <strong>提示：</strong>
+              <p>含水量越高,黏度越低,小球下落越快</p>
+              <p>温度越高,黏度越低,小球下落越快</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 右侧:实验环境面板 */}
+        <div className={styles.simulationEnvironmentPanel}>
+          <div className={styles.experimentContainer}>
+            {/* 实验参数选择区 */}
+            <div className={styles.parameterSelectionArea}>
               <BeakerSelector
                 selectedWaterContent={selectedWaterContent}
                 onWaterContentChange={handleWaterContentChange}
                 disabled={isAnimating}
                 waterContentOptions={WATER_CONTENT_OPTIONS}
               />
-            </div>
-
-            <div className={styles.parameterSection}>
               <TemperatureControl
                 selectedTemperature={selectedTemperature}
                 onTemperatureChange={handleTemperatureChange}
@@ -214,11 +237,9 @@ const Page10_Experiment = () => {
                 temperatureOptions={TEMPERATURE_OPTIONS}
               />
             </div>
-          </div>
 
-          <div className={styles.animationSection}>
-            <h3 className={styles.sectionTitle}>实验演示</h3>
-            <div className={styles.experimentDisplay}>
+            {/* 实验动画显示区 */}
+            <div className={styles.experimentDisplayArea}>
               <BallDropAnimation
                 fallTime={currentFallTime || 5}
                 isAnimating={isAnimating}
@@ -235,94 +256,58 @@ const Page10_Experiment = () => {
                 size="large"
               />
             </div>
-          </div>
 
-          <div className={styles.controlSection}>
-            <button
-              type="button"
-              className={`${styles.controlButton} ${styles.startButton}`}
-              onClick={handleStartExperiment}
-              disabled={!canStartExperiment() || isAnimating}
-            >
-              {experimentState === 'idle' || experimentState === 'selecting'
-                ? '开始实验'
-                : experimentState === 'animating'
-                ? '实验进行中...'
-                : '再次实验'}
-            </button>
+            {/* 控制按钮区 */}
+            <div className={styles.controlButtonsArea}>
+              <button
+                type="button"
+                className={`${styles.controlButton} ${styles.startButton}`}
+                onClick={handleStartExperiment}
+                disabled={!canStartExperiment() || isAnimating}
+              >
+                {experimentState === 'idle' || experimentState === 'selecting'
+                  ? '开始实验'
+                  : experimentState === 'animating'
+                  ? '实验进行中...'
+                  : '再次实验'}
+              </button>
 
-            <button
-              type="button"
-              className={`${styles.controlButton} ${styles.resetButton}`}
-              onClick={handleResetExperiment}
-              disabled={isAnimating}
-            >
-              重置实验
-            </button>
-          </div>
+              <button
+                type="button"
+                className={`${styles.controlButton} ${styles.resetButton}`}
+                onClick={handleResetExperiment}
+                disabled={isAnimating}
+              >
+                重置实验
+              </button>
+            </div>
 
-          {experimentHistory.length > 0 && (
-            <div className={styles.historySection}>
-              <h4 className={styles.historySectionTitle}>
-                实验记录 ({experimentHistory.length}/3)
-              </h4>
-              <div className={styles.historyList}>
-                {experimentHistory.map((record, index) => (
-                  <div key={record.id} className={styles.historyItem}>
-                    <span className={styles.historyIndex}>#{index + 1}</span>
-                    <span className={styles.historyDetails}>
-                      含水量 {record.waterContent}% · 温度 {record.temperature}°C
-                    </span>
-                    <span className={styles.historyTime}>
-                      {record.fallTime.toFixed(1)}秒
-                    </span>
-                  </div>
-                ))}
+            {/* 实验历史记录 */}
+            {experimentHistory.length > 0 && (
+              <div className={styles.historySection}>
+                <h4 className={styles.historySectionTitle}>
+                  实验记录 ({experimentHistory.length}/3)
+                </h4>
+                <div className={styles.historyList}>
+                  {experimentHistory.map((record, index) => (
+                    <div key={record.id} className={styles.historyItem}>
+                      <span className={styles.historyIndex}>#{index + 1}</span>
+                      <span className={styles.historyDetails}>
+                        含水量 {record.waterContent}% · 温度 {record.temperature}°C
+                      </span>
+                      <span className={styles.historyTime}>
+                        {record.fallTime.toFixed(1)}秒
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* 右侧:说明区 */}
-        <div className={styles.rightPanel}>
-          <div className={styles.instructionCard}>
-            <div className={styles.characterAvatar}>
-              <div className={styles.avatarCircle}>小明</div>
-            </div>
-
-            <div className={styles.dialogueBubble}>
-              <p>
-                我想利用<strong>落球法</strong>测量蜂蜜的黏度。
-              </p>
-              <p>
-                通过观察小钢球在不同条件下的蜂蜜中下落的时间，
-                我可以比较不同含水量和温度对蜂蜜黏度的影响。
-              </p>
-            </div>
-          </div>
-
-          <div className={styles.stepsCard}>
-            <h4 className={styles.stepsTitle}>实验步骤</h4>
-            <ol className={styles.stepsList}>
-              <li>选择一个量筒(对应不同的蜂蜜含水量)</li>
-              <li>设置环境温度(5个温度档位可选)</li>
-              <li>点击&quot;开始实验&quot;按钮,观察小球下落</li>
-              <li>记录小球从顶部落到底部的时间</li>
-              <li>可以重复实验,探索不同条件的影响</li>
-            </ol>
-          </div>
-
-          <div className={styles.hintCard}>
-            <div className={styles.hintIcon}>💡</div>
-            <div className={styles.hintContent}>
-              <strong>提示:</strong>
-              <p>含水量越高,黏度越低,小球下落越快</p>
-              <p>温度越高,黏度越低,小球下落越快</p>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
+      {/* 底部导航按钮 */}
       <div className={styles.navigationFooter}>
         <button
           type="button"
@@ -331,7 +316,7 @@ const Page10_Experiment = () => {
           disabled={!hasCompletedExperiment() || isNavigating}
         >
           {hasCompletedExperiment()
-            ? (isNavigating ? '跳转中...' : '完成实验,进入分析')
+            ? (isNavigating ? '跳转中...' : '下一页')
             : '请先完成至少一次实验'}
         </button>
       </div>
