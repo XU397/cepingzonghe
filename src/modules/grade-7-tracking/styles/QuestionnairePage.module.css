@@ -1,0 +1,204 @@
+/**
+ * QuestionnairePage Shared Styles
+ * 问卷页面共享样式
+ */
+
+/* ============================================================================
+   Page Container
+   ============================================================================ */
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 32px 24px 24px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ============================================================================
+   Header Section
+   ============================================================================ */
+
+.header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.instructions {
+  font-size: 16px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* ============================================================================
+   Progress Indicator
+   ============================================================================ */
+
+.progressSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background-color: #eff6ff;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.progressLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e40af;
+}
+
+.progressBar {
+  flex: 1;
+  max-width: 200px;
+  height: 8px;
+  background-color: #dbeafe;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #3b82f6;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progressText {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* ============================================================================
+   Questions Section
+   ============================================================================ */
+
+.questionsSection {
+  flex: 1;
+  margin-bottom: 24px;
+}
+
+/* ============================================================================
+   Footer Section (Button Container)
+   ============================================================================ */
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 2px solid #e5e7eb;
+}
+
+.navigationHint {
+  flex: 1;
+  font-size: 14px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+}
+
+/* 禁用按钮提示 */
+.disabledHint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #92400e;
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.warningIcon {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   响应式设计
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 24px 16px;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+
+  .instructions {
+    font-size: 15px;
+  }
+
+  .progressSection {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .progressBar {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .progressText {
+    text-align: center;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .navigationHint {
+    text-align: center;
+    order: 2;
+  }
+
+  .buttonGroup {
+    order: 1;
+    justify-content: center;
+  }
+
+  .disabledHint {
+    margin-top: 8px;
+  }
+}

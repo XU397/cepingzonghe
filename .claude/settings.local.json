@@ -1,30 +1,18 @@
 {
   "permissions": {
     "allow": [
+      "Bash(python:*)",
+      "Bash(where npx)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp:*)",
+      "Bash(del \".mcp.json\")",
+      "Bash(powershell:*)",
       "Bash(npm run lint)",
-      "Bash(npm run build:*)",
-      "Bash(mv:*)",
-      "Bash(node:*)",
-      "Bash(md-tree:*)",
-      "Bash(mkdir:*)",
-      "Bash(find:*)",
-      "Bash(move:*)",
-      "Bash(cmd /c \"move \"\"D:\\myproject\\public1\\steamed-bun-task\\src\\services\\apiService.js\"\" \"\"D:\\myproject\\public1\\steamed-bun-task\\src\\shared\\services\\apiService.js\"\"\")",
-      "Bash(rm:*)",
-      "Bash(npm run dev:*)",
-      "Bash(timeout 10 npm run dev)",
-      "Bash(npm run lint:*)",
-      "Bash(npm test:*)",
-      "Bash(npm run:*)",
-      "Bash(ls:*)",
-      "Bash(npx vitest:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
       "Bash(npx eslint:*)",
-      "Bash(timeout 8 npm run dev)",
-      "Bash(curl:*)",
-      "Bash(del \"D:\\myproject\\public1\\steamed-bun-task\\src\\modules\\grade-4\\styles\\Grade4Layout.css\")"
+      "Bash(npm run dev:*)",
+      "Bash(timeout:*)"
     ],
-    "deny": []
+    "deny": [],
+    "ask": []
   }
 }

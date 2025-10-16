@@ -24,13 +24,13 @@ export default defineConfig(({ mode }) => {
             obj: {
               batchCode: '250619',
               examNo: '1001',
-              pageNum: '13',
+              pageNum: '0.1',
               pwd: '1234',
               schoolCode: '24146',
               schoolName: '开发环境（Mock）',
               studentCode: 'M001',
               studentName: '本地模拟用户',
-              url: '/four-grade'
+              url: '/grade-7-tracking'
             }
           }))
           return
@@ -38,6 +38,18 @@ export default defineConfig(({ mode }) => {
         if (url.startsWith('/stu/saveHcMark')) {
           res.setHeader('Content-Type', 'application/json; charset=utf-8')
           res.end(JSON.stringify({ code: 200, msg: 'ok', obj: true }))
+          return
+        }
+        if (url.startsWith('/stu/checkSession')) {
+          // Mock session heartbeat - 95% success rate
+          const isValid = Math.random() > 0.05
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+          if (isValid) {
+            res.end(JSON.stringify({ code: 200, msg: '会话有效', obj: true }))
+          } else {
+            res.statusCode = 401
+            res.end(JSON.stringify({ code: 401, msg: '您的账号已在其他设备登录', obj: false }))
+          }
           return
         }
         next()
@@ -56,13 +68,62 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
+            // Vendor chunks
             if (id.includes('node_modules')) {
               if (id.includes('react') || id.includes('react-dom')) {
                 return 'vendor-react'
               }
+              if (id.includes('recharts')) {
+                return 'vendor-recharts'
+              }
               return 'vendor'
             }
-            if (id.includes('/modules/')) return 'module-system'
+
+            // Module system
+            if (id.includes('/modules/ModuleRegistry') || id.includes('/modules/ModuleRouter')) {
+              return 'module-system'
+            }
+
+            // Grade 7 Tracking Module (T103: Code Splitting)
+            if (id.includes('/modules/grade-7-tracking/')) {
+              // Grade 7 Tracking pages - split into chunks
+              if (id.includes('/grade-7-tracking/pages/')) {
+                if (id.includes('Questionnaire') || id.includes('Page15_') || id.includes('Page16_') ||
+                    id.includes('Page17_') || id.includes('Page18_') || id.includes('Page19_') ||
+                    id.includes('Page20_') || id.includes('Page21_') || id.includes('Page22_')) {
+                  return 'grade-7-tracking-questionnaire'
+                }
+                if (id.includes('Page10_Experiment') || id.includes('Page11_Analysis') ||
+                    id.includes('Page12_Analysis') || id.includes('Page13_Analysis') ||
+                    id.includes('Page14_Solution')) {
+                  return 'grade-7-tracking-experiment'
+                }
+                return 'grade-7-tracking-pages'
+              }
+              // Grade 7 Tracking components
+              if (id.includes('/grade-7-tracking/components/')) {
+                return 'grade-7-tracking-components'
+              }
+              // Grade 7 Tracking context and utils
+              return 'grade-7-tracking-core'
+            }
+
+            // Grade 4 Module
+            if (id.includes('/modules/grade-4/')) {
+              return 'grade-4-module'
+            }
+
+            // Grade 7 Module (legacy)
+            if (id.includes('/modules/grade-7/')) {
+              return 'grade-7-module'
+            }
+
+            // Shared components and utils
+            if (id.includes('/shared/')) {
+              return 'shared'
+            }
+
+            // Legacy chunks (for backwards compatibility)
             if (id.includes('/questionnaire/')) return 'questionnaire-pages'
             if (id.includes('/materials/')) return 'materials'
             if (id.includes('/simulation/')) return 'simulation'
@@ -109,4 +170,3 @@ export default defineConfig(({ mode }) => {
     }
   }
 })
-

@@ -1,0 +1,341 @@
+/**
+ * PageLayout 样式 - 7年级追踪测评模块
+ * 提供统一的页面布局样式，包括左侧导航和主内容区
+ */
+
+/* ============================================================================
+   根布局容器
+   ============================================================================ */
+
+.pageLayout {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  background-color: #f9f9f9;
+  overflow: hidden;
+}
+
+/* ============================================================================
+   左侧导航区域
+   ============================================================================ */
+
+.leftNavWrapper {
+  width: 80px;
+  min-width: 80px;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border-right: 2px solid #e0e0e0;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 左侧导航容器 */
+.leftNavigation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* 导航标题 */
+.navTitle {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* 总体进度显示 */
+.progressIndicator {
+  font-size: 16px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 16px;
+  background-color: #e3f2fd;
+  padding: 8px 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 导航项列表容器 */
+.navigationItems {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+/* 导航项包装器 */
+.navItemWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* 导航圆形数字 */
+.navItem {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  border: 3px solid #d0d0d0;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: default;
+  flex-shrink: 0;
+}
+
+/* 高亮(当前页面) */
+.navItem.highlighted {
+  background-color: #42a5f5;
+  color: white;
+  border-color: #1976d2;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+}
+
+.navItem.highlighted::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  background-color: #ff5722;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 已完成样式 */
+.navItem.completed {
+  background-color: #66bb6a;
+  color: white;
+  border-color: #43a047;
+}
+
+/* 连接线 */
+.navConnector {
+  width: 4px;
+  height: 12px;
+  background-color: #d0d0d0;
+  border-radius: 2px;
+  margin: 4px 0;
+  z-index: 0;
+}
+
+/* ============================================================================
+   主内容区域
+   ============================================================================ */
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 计时器容器(右上角) */
+.timerContainer {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  font-size: 18px;
+  font-weight: bold;
+  border: 2px solid #e0e0e0;
+}
+
+.timerLabel {
+  color: #555;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.timerValue {
+  color: #d32f2f;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+/* 页面内容包装器 */
+.contentWrapper {
+  flex: 1;
+  padding: 80px 40px 40px 40px; /* 顶部留出计时器空间 */
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   响应式设计
+   ============================================================================ */
+
+/* 中等屏幕(1366x768) */
+@media (max-width: 1400px) {
+  .leftNavWrapper {
+    width: 70px;
+    min-width: 70px;
+  }
+
+  .navItem {
+    width: 38px;
+    height: 38px;
+    font-size: 14px;
+  }
+
+  .progressIndicator {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+  .timerContainer {
+    top: 15px;
+    right: 25px;
+    padding: 10px 16px;
+    font-size: 16px;
+  }
+
+  .timerLabel {
+    font-size: 14px;
+  }
+
+  .timerValue {
+    font-size: 18px;
+  }
+
+  .contentWrapper {
+    padding: 70px 30px 30px 30px;
+  }
+}
+
+/* 小屏幕(1280x720) */
+@media (max-width: 1280px) {
+  .leftNavWrapper {
+    width: 60px;
+    min-width: 60px;
+  }
+
+  .navTitle {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .navItem {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+    border-width: 2px;
+  }
+
+  .navItem.highlighted::after {
+    width: 12px;
+    height: 12px;
+    top: -3px;
+    right: -3px;
+  }
+
+  .progressIndicator {
+    font-size: 13px;
+    padding: 5px 8px;
+    margin-bottom: 12px;
+  }
+
+  .navConnector {
+    height: 10px;
+    margin: 3px 0;
+  }
+
+  .timerContainer {
+    top: 12px;
+    right: 20px;
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+
+  .timerLabel {
+    font-size: 13px;
+  }
+
+  .timerValue {
+    font-size: 16px;
+  }
+
+  .contentWrapper {
+    padding: 60px 25px 25px 25px;
+  }
+}
+
+/* 超小屏幕(移动设备, 不推荐) */
+@media (max-width: 1024px) {
+  .leftNavWrapper {
+    width: 50px;
+    min-width: 50px;
+  }
+
+  .navTitle {
+    font-size: 10px;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+  }
+
+  .navItem {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .progressIndicator {
+    font-size: 12px;
+    padding: 4px 6px;
+  }
+
+  .timerContainer {
+    top: 10px;
+    right: 15px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .timerLabel {
+    font-size: 11px;
+  }
+
+  .timerValue {
+    font-size: 14px;
+  }
+
+  .contentWrapper {
+    padding: 50px 20px 20px 20px;
+  }
+}

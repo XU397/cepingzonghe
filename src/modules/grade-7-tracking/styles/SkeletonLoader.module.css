@@ -1,0 +1,57 @@
+/**
+ * SkeletonLoader 样式
+ * T093 - 骨架屏加载组件
+ */
+
+.skeletonContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+/* 骨架线基础样式 */
+.skeletonLine {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #f8f8f8 50%,
+    #f0f0f0 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* 加载动画 */
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* 文本变体 */
+.skeletonLine.text {
+  border-radius: 4px;
+}
+
+/* 矩形变体 */
+.skeletonLine.rectangular {
+  border-radius: 8px;
+}
+
+/* 圆形变体 */
+.skeletonLine.circular {
+  border-radius: 50%;
+}
+
+/* 响应式调整 */
+@media (max-width: 1280px) {
+  .skeletonContainer {
+    gap: 10px;
+    padding: 12px 0;
+  }
+}

@@ -1,0 +1,395 @@
+/**
+ * Page14_Solution 样式
+ * T053 - Page14_Solution样式
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  min-height: 100%;
+}
+
+.pageTitle {
+  text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.pageTitle h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #262626;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+/* 左右分栏布局 */
+.contentLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+}
+
+@media (max-width: 1200px) {
+  .contentLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 左侧面板(折线图) */
+.leftPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 右侧面板(表格+理由) */
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 表格卡片 */
+.tableCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e8e8e8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.tableTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #262626;
+  margin: 0;
+}
+
+.tableHint {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+/* 动态表格 */
+.tableContainer {
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+}
+
+.dynamicTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.dynamicTable thead {
+  background: #fafafa;
+}
+
+.dynamicTable th {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #595959;
+  text-align: left;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.iconColumn {
+  width: 60px;
+  text-align: center;
+}
+
+.selectColumn {
+  width: auto;
+}
+
+.actionColumn {
+  width: 100px;
+  text-align: center;
+}
+
+.tableRow {
+  transition: background 0.2s ease;
+}
+
+.tableRow:hover {
+  background: #f5f5f5;
+}
+
+.dynamicTable td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #262626;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 图标单元格 */
+.iconCell {
+  text-align: center;
+}
+
+.lightIcon {
+  font-size: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fafafa;
+  border: 2px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.tableRow:hover .lightIcon {
+  transform: scale(1.1);
+}
+
+/* 选择框单元格 */
+.selectCell {
+  /* 容器 */
+}
+
+.selectInput {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #262626;
+  background: white;
+  border: 2px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.selectInput:hover {
+  border-color: #40a9ff;
+}
+
+.selectInput:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* 操作单元格 */
+.actionCell {
+  text-align: center;
+}
+
+.deleteButton {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ff4d4f;
+  background: white;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: #fff1f0;
+  border-color: #ff4d4f;
+}
+
+.deleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: #d9d9d9;
+  border-color: #e8e8e8;
+}
+
+/* 表格操作按钮 */
+.tableActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.addButton {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(82, 196, 26, 0.3);
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.addButton:hover {
+  background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%);
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.5);
+  transform: translateY(-2px);
+}
+
+/* 理由卡片 */
+.reasonCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e8e8e8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.reasonTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #262626;
+  margin: 0;
+}
+
+.reasonHint {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+.reasonTextarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #262626;
+  background: white;
+  border: 2px solid #d9d9d9;
+  border-radius: 6px;
+  resize: vertical;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.reasonTextarea:hover {
+  border-color: #40a9ff;
+}
+
+.reasonTextarea:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.reasonTextarea::placeholder {
+  color: #bfbfbf;
+}
+
+/* 字符计数 */
+.characterCount {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.characterCount .valid {
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.characterCount .invalid {
+  color: #ff4d4f;
+  font-weight: 600;
+}
+
+.countHint {
+  color: #8c8c8c;
+}
+
+/* 页面底部导航 */
+.navigationFooter {
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 2px solid #e8e8e8;
+}
+
+.nextButton {
+  padding: 16px 40px;
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.nextButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.nextButton:disabled {
+  background: #d9d9d9;
+  color: #8c8c8c;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .pageTitle h2 {
+    font-size: 22px;
+  }
+
+  .contentLayout {
+    gap: 16px;
+  }
+
+  .tableCard,
+  .reasonCard {
+    padding: 16px;
+  }
+
+  .dynamicTable th,
+  .dynamicTable td {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .selectInput {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .reasonTextarea {
+    font-size: 13px;
+  }
+
+  .nextButton {
+    padding: 14px 32px;
+    font-size: 15px;
+  }
+}

@@ -579,7 +579,7 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
     
     try {
       // 自动提交当前页面数据（除非明确跳过）；开发环境或缺少认证信息时跳过提交
-      const isDev = typeof import !== 'undefined' && import.meta && import.meta.env && import.meta.env.DEV;
+      const isDev = import.meta && import.meta.env && import.meta.env.DEV;
       const hasAuthInfo = !!(state.authInfo?.batchCode && state.authInfo?.examNo);
       const shouldAttemptSubmit = !skipSubmit && currentPageNumber && state.operations.length > 0 && hasAuthInfo;
       if (shouldAttemptSubmit) {

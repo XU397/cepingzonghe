@@ -1,0 +1,173 @@
+/**
+ * QuestionBlock Styles
+ * 问题块容器组件样式
+ */
+
+/* ============================================================================
+   Question Block Container
+   ============================================================================ */
+
+.questionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+  background-color: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.3s ease-in-out;
+  margin-bottom: 20px;
+}
+
+/* 已回答状态 */
+.questionBlock.answered {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+}
+
+/* Hover状态 */
+.questionBlock:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================================================
+   Question Header
+   ============================================================================ */
+
+.questionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.questionTitle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+}
+
+/* ============================================================================
+   Question Number & Text
+   ============================================================================ */
+
+.questionNumber {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+.questionText {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1.6;
+  flex: 1;
+}
+
+/* 必答标记(红色星号) */
+.requiredMark {
+  color: #ef4444;
+  font-size: 18px;
+  font-weight: 700;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   Completion Indicator (完成状态指示)
+   ============================================================================ */
+
+.completionIndicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background-color: #10b981;
+  color: #ffffff;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.checkIcon {
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.completionText {
+  line-height: 1;
+}
+
+/* ============================================================================
+   Options Container
+   ============================================================================ */
+
+.optionsContainer {
+  width: 100%;
+}
+
+/* ============================================================================
+   Required Hint (必答提示)
+   ============================================================================ */
+
+.requiredHint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #fef3c7;
+  border-left: 3px solid #f59e0b;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #92400e;
+  margin-top: 4px;
+}
+
+.infoIcon {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   响应式设计
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .questionBlock {
+    padding: 16px 18px;
+    gap: 14px;
+  }
+
+  .questionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .questionNumber,
+  .questionText {
+    font-size: 15px;
+  }
+
+  .completionIndicator {
+    align-self: flex-start;
+  }
+}

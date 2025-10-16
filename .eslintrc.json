@@ -27,6 +27,17 @@
       "warn",
       { "allowConstantExport": true }
     ],
-    "react/prop-types": "off"
+    "react/prop-types": "off",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["../../../modules/*", "../../modules/*"],
+            "message": "Cross-module imports are not allowed. Use shared components from src/shared/ instead."
+          }
+        ]
+      }
+    ]
   }
 } 
