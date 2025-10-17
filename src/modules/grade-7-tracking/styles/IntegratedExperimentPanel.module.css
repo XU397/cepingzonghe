@@ -1,0 +1,400 @@
+/**
+ * IntegratedExperimentPanel 样式
+ * 完全模仿7年级蒸馒头实验的UI设计
+ */
+
+/* 主容器 */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 30px;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* ====================
+   量筒行
+   ==================== */
+.beakersRow {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  min-height: 350px;
+}
+
+/* 单个量筒容器 */
+.beakerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 量筒主体 */
+.beaker {
+  position: relative;
+  width: 80px;
+  height: 280px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 3px solid #78909c;
+  border-radius: 8px 8px 4px 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 刻度线 */
+.scales {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.scaleLine {
+  position: absolute;
+  right: 5px;
+  width: 15px;
+  height: 1px;
+  background: #90a4ae;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.scaleLine:nth-child(1) { top: 5%; }
+.scaleLine:nth-child(2) { top: 25%; }
+.scaleLine:nth-child(3) { top: 45%; }
+.scaleLine:nth-child(4) { top: 65%; }
+.scaleLine:nth-child(5) { top: 85%; }
+
+.scaleLabel {
+  font-size: 9px;
+  color: #607d8b;
+  margin-right: 2px;
+  font-family: monospace;
+}
+
+/* 蜂蜜液体 */
+.honeyLiquid {
+  width: 100%;
+  background: linear-gradient(180deg, #ffb74d 0%, #ffa726 100%);
+  transition: height 0.5s ease;
+  position: relative;
+  z-index: 1;
+}
+
+/* 小球 */
+.ball {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle at 30% 30%, #e0e0e0, #757575);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+/* 浓度标签 */
+.concentrationLabel {
+  font-size: 18px;
+  font-weight: 700;
+  color: #424242;
+  padding: 8px 16px;
+  background: white;
+  border-radius: 6px;
+  border: 2px solid #81c784;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* ====================
+   时间显示条 (绿色)
+   ==================== */
+.timeBar {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+  border-radius: 10px;
+  padding: 12px 20px;
+  box-shadow: 0 3px 10px rgba(67, 160, 71, 0.3);
+}
+
+.timeLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  margin-bottom: 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.timeValues {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 16px;
+}
+
+.timeValue {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1b5e20;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ====================
+   控制按钮行
+   ==================== */
+.controlsRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+}
+
+/* 重置按钮 (蓝色) */
+.resetButton {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(30, 136, 229, 0.3);
+  transition: all 0.3s ease;
+  font-family: inherit;
+  min-width: 110px;
+}
+
+.resetButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
+  box-shadow: 0 5px 12px rgba(30, 136, 229, 0.4);
+  transform: translateY(-2px);
+}
+
+.resetButton:disabled {
+  background: #b0bec5;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+/* 计时开始按钮 (蓝色) */
+.startButton {
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #29b6f6 0%, #0288d1 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(2, 136, 209, 0.3);
+  transition: all 0.3s ease;
+  font-family: inherit;
+  min-width: 130px;
+}
+
+.startButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+  box-shadow: 0 5px 12px rgba(2, 136, 209, 0.4);
+  transform: translateY(-2px);
+}
+
+.startButton:disabled {
+  background: #b0bec5;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+/* ====================
+   温度选择器 (温度计样式)
+   ==================== */
+.temperatureSelector {
+  position: relative;
+  display: inline-block;
+}
+
+.temperatureButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: white;
+  border: 3px solid #607d8b;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.temperatureButton:hover:not(:disabled) {
+  border-color: #455a64;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.temperatureButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.thermometerIcon {
+  width: 24px;
+  height: 24px;
+  color: #f44336;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thermometerIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.temperatureValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #212121;
+  font-variant-numeric: tabular-nums;
+  min-width: 50px;
+  text-align: center;
+}
+
+/* 温度选项下拉菜单 */
+.temperatureOptions {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 2px solid #607d8b;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  min-width: 100px;
+}
+
+.temperatureOption {
+  padding: 10px 16px;
+  background: white;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: #424242;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-family: inherit;
+}
+
+.temperatureOption:hover {
+  background: #e3f2fd;
+  border-color: #42a5f5;
+}
+
+.temperatureOption.active {
+  background: #1e88e5;
+  color: white;
+  border-color: #1565c0;
+}
+
+/* ====================
+   响应式设计
+   ==================== */
+@media (max-width: 1024px) {
+  .beakersRow {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .beaker {
+    width: 70px;
+    height: 250px;
+  }
+
+  .concentrationLabel {
+    font-size: 16px;
+    padding: 6px 12px;
+  }
+
+  .timeValue {
+    font-size: 16px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .beakersRow {
+    gap: 8px;
+    padding: 12px;
+    min-height: 280px;
+  }
+
+  .beaker {
+    width: 60px;
+    height: 220px;
+    border-width: 2px;
+  }
+
+  .ball {
+    width: 12px;
+    height: 12px;
+  }
+
+  .concentrationLabel {
+    font-size: 14px;
+    padding: 4px 10px;
+  }
+
+  .controlsRow {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .resetButton,
+  .startButton {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .timeValue {
+    font-size: 14px;
+    padding: 6px;
+  }
+}

@@ -12,7 +12,14 @@
       "Bash(npm run dev:*)",
       "Bash(timeout:*)",
       "Bash(node:*)",
-      "Bash(del \"src\\modules\\grade-7-tracking\\utils\\test-physicsModel.js\")"
+      "Bash(del \"src\\modules\\grade-7-tracking\\utils\\test-physicsModel.js\")",
+      "Bash(del \"src\\modules\\grade-7-tracking\\components\\experiment\\BeakerSelector.jsx\")",
+      "Bash(del \"src\\modules\\grade-7-tracking\\components\\experiment\\TemperatureControl.jsx\")",
+      "Bash(del \"src\\modules\\grade-7-tracking\\components\\experiment\\BallDropAnimation.jsx\")",
+      "Bash(del \"src\\modules\\grade-7-tracking\\components\\experiment\\TimerDisplay.jsx\")",
+      "Bash(git add:*)",
+      "Bash(del nul)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

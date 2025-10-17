@@ -13,11 +13,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
 import { useDataLogger } from '../hooks/useDataLogger';
-import BeakerSelector from '../components/experiment/BeakerSelector';
-import TemperatureControl from '../components/experiment/TemperatureControl';
-import BallDropAnimation from '../components/experiment/BallDropAnimation';
-import TimerDisplay from '../components/experiment/TimerDisplay';
-import useExperiment from '../hooks/useExperiment';
+import CompactExperimentPanel from '../components/experiment/CompactExperimentPanel';
+import { calculateFallTime } from '../utils/physicsModel';
 import { WATER_CONTENT_OPTIONS, TEMPERATURE_OPTIONS } from '../config';
 import styles from '../styles/AnalysisPage.module.css';
 
@@ -34,20 +31,7 @@ const Page13_Analysis3 = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  const {
-    selectedWaterContent,
-    selectedTemperature,
-    currentFallTime,
-    isAnimating,
-    experimentHistory,
-    selectWaterContent,
-    selectTemperature,
-    canStartExperiment,
-    startExperiment,
-    completeExperiment,
-    resetExperiment
-  } = useExperiment();
-
+  // 记录页面进入
   useEffect(() => {
     logOperation({
       action: 'page_enter',
@@ -66,6 +50,39 @@ const Page13_Analysis3 = () => {
     };
   }, [logOperation]);
 
+  // 处理实验开始
+  const handleExperimentStart = useCallback((waterContent, temperature) => {
+    logOperation({
+      action: '点击',
+      target: '开始实验按钮_分析页',
+      value: JSON.stringify({ waterContent, temperature }),
+      time: new Date().toISOString()
+    });
+
+    return calculateFallTime(waterContent, temperature);
+  }, [logOperation]);
+
+  // 处理实验完成
+  const handleExperimentComplete = useCallback((record) => {
+    logOperation({
+      action: '完成',
+      target: '实验动画_分析页',
+      value: JSON.stringify(record),
+      time: new Date().toISOString()
+    });
+  }, [logOperation]);
+
+  // 处理重置
+  const handleReset = useCallback(() => {
+    logOperation({
+      action: '点击',
+      target: '重置按钮_分析页',
+      value: '重置实验',
+      time: new Date().toISOString()
+    });
+  }, [logOperation]);
+
+  // 处理答案选择
   const handleAnswerChange = useCallback((answer) => {
     setSelectedAnswer(answer);
 
@@ -122,75 +139,15 @@ const Page13_Analysis3 = () => {
       </div>
 
       <div className={styles.contentLayout}>
+        {/* 左侧:实验操作区(保留) */}
         <div className={styles.leftPanel}>
-          <div className={styles.experimentZone}>
-            <h3 className={styles.zoneTitle}>继续实验</h3>
-            <p className={styles.zoneHint}>你可以继续进行实验来验证你的答案</p>
-
-            <div className={styles.compactBeakerSelector}>
-              <BeakerSelector
-                selectedWaterContent={selectedWaterContent}
-                onWaterContentChange={selectWaterContent}
-                disabled={isAnimating}
-                waterContentOptions={WATER_CONTENT_OPTIONS}
-              />
-            </div>
-
-            <div className={styles.compactTemperatureControl}>
-              <TemperatureControl
-                selectedTemperature={selectedTemperature}
-                onTemperatureChange={selectTemperature}
-                disabled={isAnimating}
-                temperatureOptions={TEMPERATURE_OPTIONS}
-              />
-            </div>
-
-            <div className={styles.experimentDisplay}>
-              <BallDropAnimation
-                fallTime={currentFallTime || 5}
-                isAnimating={isAnimating}
-                onAnimationEnd={completeExperiment}
-                beakerHeight={250}
-                ballSize={18}
-              />
-              <TimerDisplay
-                time={currentFallTime}
-                isRunning={isAnimating}
-                label="下落时间"
-                size="medium"
-              />
-            </div>
-
-            <div className={styles.experimentControls}>
-              <button
-                type="button"
-                className={styles.startButton}
-                onClick={startExperiment}
-                disabled={!canStartExperiment()}
-              >
-                开始实验
-              </button>
-              <button
-                type="button"
-                className={styles.resetButton}
-                onClick={resetExperiment}
-                disabled={isAnimating}
-              >
-                重置
-              </button>
-            </div>
-
-            {experimentHistory.length > 0 && (
-              <div className={styles.miniHistory}>
-                <strong>实验记录:</strong>
-                {experimentHistory.slice(-2).map((record) => (
-                  <div key={record.id} className={styles.miniHistoryItem}>
-                    {record.waterContent}%·{record.temperature}°C: {record.fallTime.toFixed(1)}s
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <CompactExperimentPanel
+            waterContentOptions={WATER_CONTENT_OPTIONS}
+            temperatureOptions={TEMPERATURE_OPTIONS}
+            onExperimentStart={handleExperimentStart}
+            onExperimentComplete={handleExperimentComplete}
+            onReset={handleReset}
+          />
         </div>
 
         <div className={styles.rightPanel}>
