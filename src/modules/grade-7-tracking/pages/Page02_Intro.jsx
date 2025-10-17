@@ -12,7 +12,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
 import { useDataLogger } from '../hooks/useDataLogger';
 import PageLayout from '../components/layout/PageLayout';
-import styles from '../styles/ExplorationPages.module.css';
+import styles from '../styles/Page02_Intro.module.css';
 
 const Page02_Intro = () => {
   const {
@@ -89,41 +89,24 @@ const Page02_Intro = () => {
   return (
     <PageLayout showNavigation={true} showTimer={true}>
       <div className={styles.pageContainer}>
-        <div className={styles.splitLayout}>
-          {/* 左侧: 背景介绍 */}
-          <div className={styles.leftPanel}>
-            <h2 className={styles.sectionTitle}>蜂蜜的奥秘</h2>
-            <div className={styles.textContent}>
-              <p className={styles.paragraph}>
-                蜂蜜源自大自然的馈赠，富含多种有益成分。成都的中学生小明在超市购买了一瓶蜂蜜，存放一段时间后，他发现蜂蜜的状态似乎发生了变化。
-              </p>
-              <p className={styles.paragraph}>
-                这是怎么回事呢？请你和他一起探索吧！
-              </p>
-            </div>
+        <div className={styles.contentWrapper}>
+          {/* 文字内容区域 */}
+          <div className={styles.textContent}>
+            <h2 className={styles.title}>蜂蜜的奥秘</h2>
+            <p className={styles.paragraph}>
+              蜂蜜源自大自然的馈赠，富含多种有益成分。成都的中学生小明在超市购买了一瓶蜂蜜，存放一段时间后，他发现蜂蜜的状态似乎发生了变化。
+            </p>
+            <p className={styles.paragraph}>
+              这是怎么回事呢？请你和他一起探索吧！
+            </p>
           </div>
 
-          {/* 右侧: 蜂蜜图片 */}
-          <div className={styles.rightPanel}>
-            <div className={styles.imageContainer}>
-              <img
-                src="/assets/grade-7-tracking/honey-jar.jpg"
-                alt="蜂蜜罐"
-                className={styles.mainImage}
-                onError={(e) => {
-                  // 图片加载失败时显示占位符
-                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle" font-size="20"%3E蜂蜜图片%3C/text%3E%3C/svg%3E';
-                }}
-              />
-            </div>
+          {/* 下一页按钮 */}
+          <div className={styles.buttonContainer}>
+            <button onClick={handleNextClick} className={styles.nextButton}>
+              下一页
+            </button>
           </div>
-        </div>
-
-        {/* 下一页按钮 */}
-        <div className={styles.buttonContainer}>
-          <button onClick={handleNextClick} className={styles.nextButton}>
-            下一页
-          </button>
         </div>
       </div>
     </PageLayout>

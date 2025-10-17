@@ -1,0 +1,230 @@
+/**
+ * Page02_Intro.module.css
+ * 情景引入页面 - 蜂蜜背景样式
+ */
+
+/* 页面容器 - 带背景图，负margin抵消PageLayout的padding */
+.pageContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  /* 负margin抵消PageLayout的padding，让背景图填满整个区域 */
+  margin: -80px -40px -40px -40px;
+  padding: 80px 40px 40px 40px;
+  background-image: url('/src/assets/images/蜂蜜图片.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* 半透明遮罩层，让文字更清晰 - 降低不透明度 */
+.pageContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.15);
+  z-index: 1;
+}
+
+/* 内容容器 */
+.contentWrapper {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  padding: 60px 40px;
+}
+
+/* 文本内容区域 - 提高透明度，显示更多背景 */
+.textContent {
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 16px;
+  padding: 40px 48px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  width: 100%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+/* 标题样式 */
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1a252f;
+  margin: 0 0 32px 0;
+  text-align: center;
+  border-bottom: 3px solid #f39c12;
+  padding-bottom: 16px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* 段落样式 */
+.paragraph {
+  font-size: 20px;
+  line-height: 1.8;
+  color: #1a252f;
+  margin: 0 0 24px 0;
+  text-align: justify;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+/* 强调文本 */
+.paragraph strong {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+/* 按钮容器 */
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* 下一页按钮 */
+.nextButton {
+  padding: 18px 80px;
+  font-size: 22px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  position: relative;
+  z-index: 2;
+}
+
+.nextButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(102, 126, 234, 0.5);
+}
+
+.nextButton:active {
+  transform: translateY(-1px);
+}
+
+/* 响应式设计 */
+@media (max-width: 1400px) {
+  .pageContainer {
+    margin: -70px -30px -30px -30px;
+    padding: 70px 30px 30px 30px;
+  }
+
+  .contentWrapper {
+    padding: 50px 30px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .pageContainer {
+    margin: -60px -25px -25px -25px;
+    padding: 60px 25px 25px 25px;
+  }
+
+  .contentWrapper {
+    padding: 40px 25px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pageContainer {
+    margin: -50px -20px -20px -20px;
+    padding: 50px 20px 20px 20px;
+  }
+
+  .contentWrapper {
+    max-width: 750px;
+  }
+
+  .textContent {
+    padding: 32px 40px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .paragraph {
+    font-size: 18px;
+  }
+
+  .nextButton {
+    padding: 16px 64px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 30px 20px;
+    background-position: center center;
+  }
+
+  .contentWrapper {
+    max-width: 100%;
+  }
+
+  .textContent {
+    padding: 28px 32px;
+  }
+
+  .title {
+    font-size: 28px;
+    margin-bottom: 24px;
+  }
+
+  .paragraph {
+    font-size: 17px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .nextButton {
+    padding: 14px 56px;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageContainer {
+    padding: 20px 16px;
+  }
+
+  .textContent {
+    padding: 24px 28px;
+  }
+
+  .title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+  }
+
+  .paragraph {
+    font-size: 16px;
+    margin-bottom: 18px;
+  }
+
+  .nextButton {
+    padding: 12px 48px;
+    font-size: 16px;
+  }
+}

@@ -50,9 +50,9 @@ const Page01_Notice = () => {
     };
   }, [logOperation]);
 
-  // 倒计时逻辑
+  // 倒计时逻辑 - 必须倒计时完成
   useEffect(() => {
-    if (countdown > 0 && !isCheckboxChecked) {
+    if (countdown > 0) {
       const timer = setTimeout(() => {
         setCountdown(countdown - 1);
       }, 1000);
@@ -68,10 +68,15 @@ const Page01_Notice = () => {
         time: new Date().toISOString()
       });
     }
-  }, [countdown, isCheckboxChecked, isTimerComplete, logOperation]);
+  }, [countdown, isTimerComplete, logOperation]);
 
-  // 处理复选框变化
+  // 处理复选框变化 - 只有倒计时完成后才能勾选
   const handleCheckboxChange = useCallback((event) => {
+    // 如果倒计时未完成，不允许勾选
+    if (!isTimerComplete) {
+      return;
+    }
+
     const checked = event.target.checked;
     setIsCheckboxChecked(checked);
 
@@ -81,17 +86,10 @@ const Page01_Notice = () => {
       value: checked ? '勾选' : '取消勾选',
       time: new Date().toISOString()
     });
-  }, [logOperation]);
+  }, [isTimerComplete, logOperation]);
 
-  // 格式化时间显示
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  };
-
-  // 判断是否可以点击下一页
-  const canGoNext = isCheckboxChecked || isTimerComplete;
+  // 判断是否可以点击下一页 - 必须倒计时完成且勾选复选框
+  const canGoNext = isTimerComplete && isCheckboxChecked;
 
   // 处理"下一页"点击
   const handleNextClick = useCallback(async () => {
@@ -112,7 +110,7 @@ const Page01_Notice = () => {
       // 收集答案
       collectAnswer({
         targetElement: 'notice_agreement',
-        value: isCheckboxChecked ? '已阅读并同意' : '倒计时结束'
+        value: '已阅读并同意'
       });
 
       // 构建MarkObject
@@ -161,19 +159,20 @@ const Page01_Notice = () => {
           </div>
 
           <div className={styles.agreementSection}>
-            <label className={styles.checkboxLabel}>
+            <label className={`${styles.checkboxLabel} ${!isTimerComplete ? styles.disabled : ''}`}>
               <input
                 type="checkbox"
                 checked={isCheckboxChecked}
                 onChange={handleCheckboxChange}
+                disabled={!isTimerComplete}
                 className={styles.checkbox}
               />
               <span className={styles.checkboxText}>我已阅读并理解以上注意事项</span>
             </label>
 
-            {!isCheckboxChecked && !isTimerComplete && (
+            {!isTimerComplete && (
               <div className={styles.countdownText}>
-                ({formatTime(countdown)})
+                请仔细阅读注意事项，{countdown} 秒后可继续进入...
               </div>
             )}
           </div>
