@@ -70,14 +70,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Vendor chunks
+            // Vendor chunks: keep all third-party deps in a single vendor to avoid init-order cycles
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom')) {
-                return 'vendor-react'
-              }
-              if (id.includes('recharts')) {
-                return 'vendor-recharts'
-              }
               return 'vendor'
             }
 
