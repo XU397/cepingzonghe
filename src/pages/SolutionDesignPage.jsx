@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import experimentImg from '../assets/images/experiment.png';
 import { useAppContext } from '../context/AppContext';
 import { useDataLogging } from '../hooks/useDataLogging';
 import TextInput from '../components/common/TextInput';
@@ -105,7 +106,7 @@ const SolutionDesignPage = () => {
         <div className="experiment-image">
           {/* 实验场景图片 */}
           <img 
-            src="/src/assets/images/experiment.png" 
+            src={experimentImg} 
             alt="科学实验场景"
             className="experiment-scene-image"
           />

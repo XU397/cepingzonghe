@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import imgBefore from '../assets/images/05-1.png';
+import imgAfter from '../assets/images/05-2.png';
 import { useAppContext } from '../context/AppContext';
 import { useDataLogging } from '../hooks/useDataLogging';
 import TextInput from '../components/common/TextInput';
@@ -173,7 +175,7 @@ const Page_11_Solution_Design_Measurement_Ideas = () => {
             alignItems: 'center'
           }}>
             <img 
-              src="/src/assets/images/05-1.png" 
+              src={imgBefore} 
               alt="发酵前面团" 
               style={{
                 width: '180px',
@@ -206,7 +208,7 @@ const Page_11_Solution_Design_Measurement_Ideas = () => {
             alignItems: 'center'
           }}>
             <img 
-              src="/src/assets/images/05-2.png" 
+              src={imgAfter} 
               alt="发酵后面团" 
               style={{
                 width: '180px',

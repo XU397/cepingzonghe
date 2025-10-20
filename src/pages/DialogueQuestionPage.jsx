@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import dialogueImg from '../assets/images/dialogue.png';
 import { useAppContext } from '../context/AppContext';
 import TextInput from '../components/common/TextInput';
 import NavigationButton from '../components/common/NavigationButton';
@@ -56,7 +57,7 @@ const DialogueQuestionPage = () => {
         <div className="dialogue-image">
           {/* 这里可添加对话场景图片 */}
           <img 
-            src="/src/assets/images/dialogue.png" 
+            src={dialogueImg} 
             alt="小明与馒头的对话场景"
             className="dialogue-scene-image"
           />

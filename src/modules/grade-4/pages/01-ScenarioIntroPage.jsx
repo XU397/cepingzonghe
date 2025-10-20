@@ -5,6 +5,7 @@
  */
 
 import { useEffect } from 'react';
+import bgScenario from '../../../assets/images/g4-p1-xx.png';
 import { useGrade4Context } from '../context/Grade4Context';
 import AssessmentPageLayout from '../components/layout/AssessmentPageLayout';
 import styles from './01-ScenarioIntroPage.module.css';
@@ -51,7 +52,7 @@ const ScenarioIntroPage = () => {
     <AssessmentPageLayout 
       onNextClick={handleNextPage}
       isNextButtonEnabled={true} // 此页面默认启用
-      backgroundImage="/src/assets/images/g4-p1-xx.png"
+      backgroundImage={bgScenario}
       backgroundStyle={{
         backgroundSize: 'cover',
         backgroundPosition: 'center'

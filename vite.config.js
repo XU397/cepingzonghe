@@ -58,6 +58,8 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    // 构建基路径：默认相对路径，支持通过 VITE_BASE 覆盖
+    base: env.VITE_BASE || './',
     plugins: [react(), mockStuApi],
     resolve: {
       alias: {

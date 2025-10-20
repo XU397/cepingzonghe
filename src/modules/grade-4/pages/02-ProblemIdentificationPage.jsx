@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import talkImg from '../../../assets/images/g4-p2-talk.png';
 import { useGrade4Context } from '../context/Grade4Context';
 import AssessmentPageLayout from '../components/layout/AssessmentPageLayout';
 import styles from './02-ProblemIdentificationPage.module.css';
@@ -98,7 +99,7 @@ const ProblemIdentificationPage = () => {
         <div 
           className={`${styles.leftImageArea} ${styles.slideInFromLeft}`}
           style={{
-            backgroundImage: 'url(/src/assets/images/g4-p2-talk.png)'
+            backgroundImage: `url(${talkImg})`
           }}
         >
           {/* 可以添加一些装饰或者留空 */}

@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import imgP45 from '../../assets/images/P4-5.jpg';
 
 /**
  * 酵母用量秘籍资料内容组件
@@ -136,7 +137,7 @@ const MaterialYeastDosage = ({ isModal = true }) => {
           <h3 style={{ color: '#4a90e2', marginBottom: '15px' }}>酵母粉用量示例</h3>
           
           <img 
-            src="/src/assets/images/P4-5.jpg" 
+            src={imgP45} 
             alt="酵母粉用量示例" 
             style={{
               maxWidth: '100%',

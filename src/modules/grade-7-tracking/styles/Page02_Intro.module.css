@@ -14,7 +14,7 @@
   /* 负margin抵消PageLayout的padding，让背景图填满整个区域 */
   margin: -80px -40px -40px -40px;
   padding: 80px 40px 80px 40px; /* 增加底部padding为按钮留出空间 */
-  background-image: url('/src/assets/images/蜂蜜图片.jpg');
+  background-image: url(../../../assets/images/蜂蜜图片.jpg);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

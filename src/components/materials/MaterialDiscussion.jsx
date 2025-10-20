@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import imgP44 from '../../assets/images/P4-4.jpg';
 
 /**
  * 发酵问题讨论资料内容组件
@@ -47,7 +48,7 @@ const MaterialDiscussion = ({ isModal = true }) => {
   return (
     <div style={containerStyle}>
       <img 
-        src="/src/assets/images/P4-4.jpg" 
+        src={imgP44} 
         alt="发酵问题讨论区" 
         style={{
           maxWidth: '85%',
