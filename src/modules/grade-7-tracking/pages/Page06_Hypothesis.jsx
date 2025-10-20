@@ -15,16 +15,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTrackingContext } from '../context/TrackingContext.jsx';
 import { useDataLogger } from '../hooks/useDataLogger.js';
+import { PAGE_MAPPING } from '../config.js';
 import Button from '../components/ui/Button.jsx';
+import PageLayout from '../components/layout/PageLayout.jsx';
 import styles from '../styles/Page06_Hypothesis.module.css';
 
 // 引入天气图 (假设路径)
 // import weatherChartImg from '../assets/images/weather-chart.jpg'; // T104: 使用占位符替代
 
 const Page06_Hypothesis = () => {
-  const { logOperation, clearOperations, currentPageOperations, navigateToPage } = useTrackingContext();
+  const { session, logOperation, clearOperations, buildMarkObject, navigateToPage } = useTrackingContext();
   const { submitPageData } = useDataLogger();
-  const [pageStartTime] = useState(() => new Date());
   const [isNavigating, setIsNavigating] = useState(false);
 
   // 页面进入日志
@@ -61,45 +62,32 @@ const Page06_Hypothesis = () => {
         time: new Date().toISOString()
       });
 
-      // 构建MarkObject
-      const pageEndTime = new Date();
-      const markObject = {
-        pageNumber: '6',
-        pageDesc: '假设陈述',
-        operationList: currentPageOperations.map(op => ({
-          targetElement: op.target,
-          eventType: op.action,
-          value: op.value || '',
-          time: op.time || new Date(op.timestamp).toISOString()
-        })),
-        answerList: [],
-        beginTime: formatDateTime(pageStartTime),
-        endTime: formatDateTime(pageEndTime),
-        imgList: []
-      };
-
-      // 提交数据
+      // 构建并提交MarkObject
+      // 从session获取当前页码而不是硬编码
+      const pageInfo = PAGE_MAPPING[session.currentPage];
+      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '假设陈述');
       const success = await submitPageData(markObject);
+
       if (success) {
         clearOperations();
-        await navigateToPage(7);
+        await navigateToPage(5);
       } else {
-        setIsNavigating(false);
-        alert('页面跳转失败，请重试');
+        throw new Error('数据提交失败');
       }
     } catch (error) {
       console.error('[Page06_Hypothesis] 导航失败:', error);
       setIsNavigating(false);
       alert(error.message || '页面跳转失败，请重试');
     }
-  }, [isNavigating, logOperation, currentPageOperations, pageStartTime, submitPageData, clearOperations, navigateToPage]);
+  }, [isNavigating, session, logOperation, buildMarkObject, submitPageData, clearOperations, navigateToPage]);
 
   return (
-    <div className={styles.pageContainer}>
-      {/* 页面标题 */}
-      <div className={styles.header}>
-        <h1 className={styles.title}>提出假设</h1>
-      </div>
+    <PageLayout showNavigation={true} showTimer={true}>
+      <div className={styles.pageContainer}>
+        {/* 页面标题 */}
+        <div className={styles.header}>
+          <h1 className={styles.title}>提出假设</h1>
+        </div>
 
       {/* 主内容区域 */}
       <div className={styles.content}>
@@ -178,19 +166,9 @@ const Page06_Hypothesis = () => {
           下一页
         </Button>
       </div>
-    </div>
+      </div>
+    </PageLayout>
   );
 };
-
-// 辅助函数: 格式化日期时间
-function formatDateTime(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hour = String(date.getHours()).padStart(2, '0');
-  const minute = String(date.getMinutes()).padStart(2, '0');
-  const second = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-}
 
 export default Page06_Hypothesis;

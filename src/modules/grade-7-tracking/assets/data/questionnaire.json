@@ -1,42 +1,108 @@
 {
-  "totalQuestions": 27,
+  "totalQuestions": 61,
   "pages": [
     {
       "pageNumber": 14,
       "pageId": "questionnaire_page_1",
       "title": "科学探究态度问卷 (1/8)",
-      "instructions": "请根据你的真实想法选择最符合的选项。所有问题均为必答题。",
+      "instructions": "1、你有多同意或不同意下列陈述？（请在每行中选择一个答案）",
       "questions": [
         {
           "id": 1,
-          "text": "我对科学实验很感兴趣",
+          "text": "我对许多不同事物有好奇心。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         },
         {
           "id": 2,
-          "text": "我喜欢通过实验来验证科学理论",
+          "text": "我喜欢发问。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         },
         {
           "id": 3,
-          "text": "科学探究活动能提高我的思维能力",
+          "text": "我喜欢了解事物如何运作。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 4,
+          "text": "我喜欢在学校里学习新东西。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 5,
+          "text": "我比我认识的大多数人更有好奇心。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 6,
+          "text": "我喜欢提出假设，并根据我的观察来验证它。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 7,
+          "text": "我觉得学习新事物很无聊。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 8,
+          "text": "对感兴趣的事物，我会花时间查找更多资讯。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 9,
+          "text": "我喜欢学习新东西。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         }
@@ -45,50 +111,105 @@
     {
       "pageNumber": 15,
       "pageId": "questionnaire_page_2",
-      "title": "实验操作与分析 (2/8)",
-      "instructions": "请根据你的实际情况选择最符合的选项。",
+      "title": "科学探究态度问卷 (2/8)",
+      "instructions": "2、你有多同意或不同意下列陈述？（请在每行中选择一个答案）",
       "questions": [
         {
-          "id": 4,
-          "text": "我能够准确理解实验操作步骤",
+          "id": 10,
+          "text": "做有创造性的事情让我有满足感。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         },
         {
-          "id": 5,
-          "text": "我能独立完成实验数据的记录",
+          "id": 11,
+          "text": "我非常有创造力。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         },
         {
-          "id": 6,
-          "text": "我善于分析实验数据之间的关系",
+          "id": 12,
+          "text": "我喜欢玩挑战我创造力的游戏。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         },
         {
-          "id": 7,
-          "text": "我能够根据实验结果得出合理的结论",
+          "id": 13,
+          "text": "我喜欢需要创造性解决方案的项目。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 14,
+          "text": "我喜欢构思新方法去解决问题。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 15,
+          "text": "我喜欢解决复杂的问题。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 16,
+          "text": "我喜欢有挑战性的学校作业。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 17,
+          "text": "我可以为问题提出多种解决方案。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 18,
+          "text": "我喜欢学习新事物。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         }
@@ -97,39 +218,116 @@
     {
       "pageNumber": 16,
       "pageId": "questionnaire_page_3",
-      "title": "问题解决与创新 (3/8)",
-      "instructions": "请根据你的实际情况选择最符合的选项。",
+      "title": "科学探究态度问卷 (3/8)",
+      "instructions": "3、你有多同意或不同意下列陈述？（请在每行中选择一个答案）",
       "questions": [
         {
-          "id": 8,
-          "text": "遇到实验问题时,我会尝试多种解决方法",
+          "id": 19,
+          "text": "我很难运用自己的想像力。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         },
         {
-          "id": 9,
-          "text": "我能够提出有创意的科学问题",
+          "id": 20,
+          "text": "我经常会陷入沉思。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         },
         {
-          "id": 10,
-          "text": "我愿意尝试不同的实验方法",
+          "id": 21,
+          "text": "提出新的想法让我很有满足感。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 22,
+          "text": "我具有很好的想像力。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 23,
+          "text": "每天都做同样的事情，我会感到无聊。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 24,
+          "text": "我喜欢自发性活动。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 25,
+          "text": "我想去我从未到过的地方。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 26,
+          "text": "自己的创造力是无法很大改变的。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 27,
+          "text": "有些人就是缺乏创造力，无论他们怎么努力学习和训练。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 28,
+          "text": "创造力是少数人的特权，普通人很难真正掌握。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         }
@@ -138,39 +336,61 @@
     {
       "pageNumber": 17,
       "pageId": "questionnaire_page_4",
-      "title": "自信度评估 (4/8)",
-      "instructions": "请评估你对以下能力的自信程度。",
+      "title": "科学探究态度问卷 (4/8)",
+      "instructions": "4、要做以下事情时，你感到有多自信？（请在每行中选择一个答案）",
       "questions": [
         {
-          "id": 11,
-          "text": "我对自己的科学探究能力有信心",
+          "id": 29,
+          "text": "为学校的科学探究项目，提出有创造性的想法。",
           "options": [
-            { "value": "A", "label": "非常有信心" },
-            { "value": "B", "label": "比较有信心" },
-            { "value": "C", "label": "一般" },
-            { "value": "D", "label": "不太有信心" }
+            { "value": "A", "label": "一点也不自信" },
+            { "value": "B", "label": "不太自信" },
+            { "value": "C", "label": "自信" },
+            { "value": "D", "label": "非常自信" }
           ],
           "type": "confidence"
         },
         {
-          "id": 12,
-          "text": "我相信自己能解决复杂的科学问题",
+          "id": 30,
+          "text": "想出许多有关科学实验的好想法。",
           "options": [
-            { "value": "A", "label": "非常有信心" },
-            { "value": "B", "label": "比较有信心" },
-            { "value": "C", "label": "一般" },
-            { "value": "D", "label": "不太有信心" }
+            { "value": "A", "label": "一点也不自信" },
+            { "value": "B", "label": "不太自信" },
+            { "value": "C", "label": "自信" },
+            { "value": "D", "label": "非常自信" }
           ],
           "type": "confidence"
         },
         {
-          "id": 13,
-          "text": "我相信自己能够设计合理的实验方案",
+          "id": 31,
+          "text": "发明新东西。",
           "options": [
-            { "value": "A", "label": "非常有信心" },
-            { "value": "B", "label": "比较有信心" },
-            { "value": "C", "label": "一般" },
-            { "value": "D", "label": "不太有信心" }
+            { "value": "A", "label": "一点也不自信" },
+            { "value": "B", "label": "不太自信" },
+            { "value": "C", "label": "自信" },
+            { "value": "D", "label": "非常自信" }
+          ],
+          "type": "confidence"
+        },
+        {
+          "id": 32,
+          "text": "运用科学知识治理环境污染等问题。",
+          "options": [
+            { "value": "A", "label": "一点也不自信" },
+            { "value": "B", "label": "不太自信" },
+            { "value": "C", "label": "自信" },
+            { "value": "D", "label": "非常自信" }
+          ],
+          "type": "confidence"
+        },
+        {
+          "id": 33,
+          "text": "运用科学创新设计想出许多帮助有需要的人的好主意（如辅助设备、医疗技术等）。",
+          "options": [
+            { "value": "A", "label": "一点也不自信" },
+            { "value": "B", "label": "不太自信" },
+            { "value": "C", "label": "自信" },
+            { "value": "D", "label": "非常自信" }
           ],
           "type": "confidence"
         }
@@ -179,39 +399,127 @@
     {
       "pageNumber": 18,
       "pageId": "questionnaire_page_5",
-      "title": "合作与交流 (5/8)",
-      "instructions": "请根据你在科学学习中的实际情况作答。",
+      "title": "科学探究态度问卷 (5/8)",
+      "instructions": "5、你有多同意或不同意下列陈述？（请在每行中选择一个答案）",
       "questions": [
         {
-          "id": 14,
-          "text": "我愿意与同学合作完成科学实验",
+          "id": 34,
+          "text": "老师给我足够的时间去提出有关作业的有创造性的解决方案。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         },
         {
-          "id": 15,
-          "text": "我能够清楚地向他人解释我的实验想法",
+          "id": 35,
+          "text": "老师重视学生的创造力。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         },
         {
-          "id": 16,
-          "text": "我会认真倾听同学的科学观点",
+          "id": 36,
+          "text": "我们在课堂上的活动有助于我想出解决问题的新方法。",
           "options": [
-            { "value": "A", "label": "非常同意" },
-            { "value": "B", "label": "同意" },
-            { "value": "C", "label": "不确定" },
-            { "value": "D", "label": "不同意" }
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 37,
+          "text": "老师鼓励我提出原创的答案。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 38,
+          "text": "在学校,我有机会表达自己的想法。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 39,
+          "text": "我的朋友对新的想法持开放态度。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 40,
+          "text": "我和朋友对彼此的想法互相给予回应。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 41,
+          "text": "我和朋友互相鼓励提出新的想法。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 42,
+          "text": "我的家人鼓励我尝试新事物。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 43,
+          "text": "在家里,我被鼓励多利用想像力。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
+          ],
+          "type": "likert4"
+        },
+        {
+          "id": 44,
+          "text": "我在家里的讨论帮助我提出新的想法。",
+          "options": [
+            { "value": "A", "label": "非常不同意" },
+            { "value": "B", "label": "比较不同意" },
+            { "value": "C", "label": "比较同意" },
+            { "value": "D", "label": "非常同意" }
           ],
           "type": "likert4"
         }
@@ -221,41 +529,89 @@
       "pageNumber": 19,
       "pageId": "questionnaire_page_6",
       "title": "校内科学活动参与频率 (6/8)",
-      "instructions": "请选择你参与以下活动的频率。",
+      "instructions": "请选择你参与以下各项校内科学活动的频率。",
       "questions": [
         {
-          "id": 17,
-          "text": "参加学校的科学实验课",
+          "id": 45,
+          "text": "科学实验课/活动",
           "options": [
-            { "value": "A", "label": "总是" },
-            { "value": "B", "label": "经常" },
-            { "value": "C", "label": "有时" },
-            { "value": "D", "label": "很少" },
-            { "value": "E", "label": "从不" }
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
           ],
           "type": "frequency5"
         },
         {
-          "id": 18,
-          "text": "参加学校的科学兴趣小组或社团",
+          "id": 46,
+          "text": "科学探究营/研学",
           "options": [
-            { "value": "A", "label": "总是" },
-            { "value": "B", "label": "经常" },
-            { "value": "C", "label": "有时" },
-            { "value": "D", "label": "很少" },
-            { "value": "E", "label": "从不" }
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
           ],
           "type": "frequency5"
         },
         {
-          "id": 19,
-          "text": "参加学校组织的科学竞赛",
+          "id": 47,
+          "text": "科学学会/社团",
           "options": [
-            { "value": "A", "label": "总是" },
-            { "value": "B", "label": "经常" },
-            { "value": "C", "label": "有时" },
-            { "value": "D", "label": "很少" },
-            { "value": "E", "label": "从不" }
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 48,
+          "text": "科普讲座/工作坊",
+          "options": [
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 49,
+          "text": "科普出版物（例如:科学杂志、报纸、年刊）",
+          "options": [
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 50,
+          "text": "科学展览",
+          "options": [
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 51,
+          "text": "科技竞赛",
+          "options": [
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
           ],
           "type": "frequency5"
         }
@@ -265,53 +621,89 @@
       "pageNumber": 20,
       "pageId": "questionnaire_page_7",
       "title": "校外科学活动参与频率 (7/8)",
-      "instructions": "请选择你参与以下活动的频率。",
+      "instructions": "请选择你参与以下各项校外科学活动的频率。",
       "questions": [
         {
-          "id": 20,
-          "text": "参观科技馆、博物馆或天文馆",
+          "id": 52,
+          "text": "科学实验课/活动",
           "options": [
-            { "value": "A", "label": "总是" },
-            { "value": "B", "label": "经常" },
-            { "value": "C", "label": "有时" },
-            { "value": "D", "label": "很少" },
-            { "value": "E", "label": "从不" }
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
           ],
           "type": "frequency5"
         },
         {
-          "id": 21,
-          "text": "观看科学类纪录片或视频",
+          "id": 53,
+          "text": "科学探究营/研学",
           "options": [
-            { "value": "A", "label": "总是" },
-            { "value": "B", "label": "经常" },
-            { "value": "C", "label": "有时" },
-            { "value": "D", "label": "很少" },
-            { "value": "E", "label": "从不" }
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
           ],
           "type": "frequency5"
         },
         {
-          "id": 22,
-          "text": "阅读科普书籍或杂志",
+          "id": 54,
+          "text": "科学学会/社团",
           "options": [
-            { "value": "A", "label": "总是" },
-            { "value": "B", "label": "经常" },
-            { "value": "C", "label": "有时" },
-            { "value": "D", "label": "很少" },
-            { "value": "E", "label": "从不" }
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
           ],
           "type": "frequency5"
         },
         {
-          "id": 23,
-          "text": "在家做科学小实验",
+          "id": 55,
+          "text": "科普讲座/工作坊",
           "options": [
-            { "value": "A", "label": "总是" },
-            { "value": "B", "label": "经常" },
-            { "value": "C", "label": "有时" },
-            { "value": "D", "label": "很少" },
-            { "value": "E", "label": "从不" }
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 56,
+          "text": "科普出版物（例如:科学杂志、报纸、年刊）",
+          "options": [
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 57,
+          "text": "科学展览",
+          "options": [
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
+          ],
+          "type": "frequency5"
+        },
+        {
+          "id": 58,
+          "text": "科技竞赛",
+          "options": [
+            { "value": "A", "label": "没有或几乎没有" },
+            { "value": "B", "label": "大约每年一次或两次" },
+            { "value": "C", "label": "大约每月一次或两次" },
+            { "value": "D", "label": "大约每星期一次或两次" },
+            { "value": "E", "label": "每天或几乎每天" }
           ],
           "type": "frequency5"
         }
@@ -321,11 +713,11 @@
       "pageNumber": 21,
       "pageId": "questionnaire_page_8",
       "title": "学习努力程度评估 (8/8)",
-      "instructions": "请在1-10的量表上评估你在以下方面的努力程度。(1=完全不努力, 10=非常努力)",
+      "instructions": "8、想象用10分的评分尺度来表示你对事情所付出的努力。最高值（10）表示你已尽了自己的最大努力，所投入的努力最高；最低值（1）表示你根本没有努力尝试，所投入的努力最低；现在想想你完成探究任务和问卷所付出的努力。",
       "questions": [
         {
-          "id": 24,
-          "text": "你在科学学习上投入的努力程度",
+          "id": 59,
+          "text": "你为做好探究任务付出了多少努力?",
           "options": [
             { "value": "A", "label": "1" },
             { "value": "B", "label": "2" },
@@ -341,8 +733,8 @@
           "type": "scale10"
         },
         {
-          "id": 25,
-          "text": "你完成科学作业的认真程度",
+          "id": 60,
+          "text": "如果探究任务结果会计入你的学校成绩，你会付出多少努力?",
           "options": [
             { "value": "A", "label": "1" },
             { "value": "B", "label": "2" },
@@ -358,25 +750,8 @@
           "type": "scale10"
         },
         {
-          "id": 26,
-          "text": "你在科学课堂上的专注程度",
-          "options": [
-            { "value": "A", "label": "1" },
-            { "value": "B", "label": "2" },
-            { "value": "C", "label": "3" },
-            { "value": "D", "label": "4" },
-            { "value": "E", "label": "5" },
-            { "value": "F", "label": "6" },
-            { "value": "G", "label": "7" },
-            { "value": "H", "label": "8" },
-            { "value": "I", "label": "9" },
-            { "value": "J", "label": "10" }
-          ],
-          "type": "scale10"
-        },
-        {
-          "id": 27,
-          "text": "你在本次测评中的努力程度",
+          "id": 61,
+          "text": "现在想想你刚回答的问卷，你在提供准确答案方面付出了多少努力?",
           "options": [
             { "value": "A", "label": "1" },
             { "value": "B", "label": "2" },

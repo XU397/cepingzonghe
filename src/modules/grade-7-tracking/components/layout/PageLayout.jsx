@@ -131,8 +131,18 @@ const PageLayout = ({ children, showNavigation = true, showTimer = true }) => {
   const shouldShowNavigation = showNavigation && session.navigationMode !== 'hidden';
 
   // 获取计时器剩余时间
-  // T097: 优先使用TrackingContext中的计时器(40分钟),如果不可用则使用AppContext
-  const remainingTime = session.taskTimeRemaining ?? appContext.remainingTime ?? 2400; // 默认40分钟
+  // 根据当前导航模式选择计时来源
+  const remainingTime = useMemo(() => {
+    if (session.navigationMode === 'experiment') {
+      // 实验阶段: 使用40分钟计时器
+      return session.taskTimeRemaining ?? appContext.remainingTime ?? 2400;
+    } else if (session.navigationMode === 'questionnaire') {
+      // 问卷阶段: 使用10分钟计时器
+      return session.questionnaireTimeRemaining ?? 600;
+    }
+    // 其他情况(如hidden): 兜底使用40分钟
+    return appContext.remainingTime ?? 2400;
+  }, [session.navigationMode, session.taskTimeRemaining, session.questionnaireTimeRemaining, appContext.remainingTime]);
 
   return (
     <div className={styles.pageLayout}>
@@ -161,7 +171,7 @@ const PageLayout = ({ children, showNavigation = true, showTimer = true }) => {
         )}
 
         {/* 页面内容包装器 */}
-        <div className={styles.contentWrapper}>{children}</div>
+        <div className={`${styles.contentWrapper} ${!showTimer ? styles.noTimer : ''}`}>{children}</div>
       </div>
     </div>
   );

@@ -8,20 +8,23 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 16px 30px 12px;
+  /* 使用负margin抵消PageLayout的padding，让内容顶部对齐 */
+  margin: -80px -40px -40px -40px;
+  padding: 80px 40px 40px 40px;
   background: #f0f4f8;
-  overflow: hidden;
+  overflow-y: auto; /* 改为允许滚动 */
+  overflow-x: hidden;
 }
 
 /* 页面标题 */
 .pageTitle {
-  font-size: 24px;
+  font-size: 20px; /* 进一步减小字体 */
   font-weight: 700;
   color: #2c3e50;
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0; /* 移除顶部margin，紧贴顶部 */
   text-align: center;
-  border-bottom: 3px solid #3498db;
-  padding-bottom: 8px;
+  border-bottom: 2px solid #3498db; /* 减小边框宽度 */
+  padding-bottom: 4px; /* 减小内边距 */
   flex-shrink: 0;
 }
 
@@ -29,9 +32,9 @@
 .splitLayout {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
-  gap: 20px;
+  gap: 12px; /* 进一步减小间距 */
   flex: 1;
-  margin-bottom: 12px;
+  margin-bottom: 8px; /* 进一步减小底部间距 */
   min-height: 0;
   overflow: hidden;
 }
@@ -41,7 +44,7 @@
   background: #ffffff;
   border: 2px solid #e0e0e0;
   border-radius: 12px;
-  padding: 12px;
+  padding: 8px; /* 进一步减小内边距 */
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
@@ -75,7 +78,7 @@
   background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
   border: 2px solid #ffd54f;
   border-radius: 12px;
-  padding: 18px;
+  padding: 10px; /* 进一步减小内边距 */
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
@@ -93,19 +96,19 @@
 
 /* 任务标题 */
 .taskTitle {
-  font-size: 20px;
+  font-size: 16px; /* 进一步减小字体 */
   font-weight: 600;
   color: #34495e;
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0; /* 进一步减小间距 */
   flex-shrink: 0;
 }
 
 /* 任务描述 */
 .taskDescription {
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 13px; /* 进一步减小字体 */
+  line-height: 1.3; /* 进一步减小行高 */
   color: #555;
-  margin-bottom: 12px;
+  margin-bottom: 8px; /* 进一步减小间距 */
   flex-shrink: 0;
 }
 
@@ -113,9 +116,9 @@
 .textArea {
   width: 100%;
   flex: 1;
-  padding: 12px;
-  font-size: 15px;
-  line-height: 1.5;
+  padding: 8px; /* 进一步减小内边距 */
+  font-size: 13px; /* 进一步减小字体 */
+  line-height: 1.4; /* 减小行高 */
   border: 2px solid #ddd;
   border-radius: 8px;
   resize: none;
@@ -138,14 +141,14 @@
 .buttonContainer {
   display: flex;
   justify-content: center;
-  padding: 12px 0 0;
+  padding: 6px 0 8px 0; /* 顶部6px，底部8px */
   flex-shrink: 0;
 }
 
 /* 下一页按钮 */
 .nextButton {
-  padding: 12px 56px;
-  font-size: 18px;
+  padding: 9px 44px; /* 进一步减小按钮尺寸 */
+  font-size: 15px; /* 进一步减小字体 */
   font-weight: 600;
   border: none;
   border-radius: 8px;
@@ -179,6 +182,58 @@
 /* ============================================================================
    响应式设计 - 适配各种屏幕尺寸
    ============================================================================ */
+
+/* 800p紧凑模式 - 关键优化，确保1280x800下无滚动 */
+@media (max-height: 800px) {
+  .pageContainer {
+    /* 匹配PageLayout 800p模式：padding: 60px 30px 30px 30px */
+    margin: -60px -30px -30px -30px;
+    padding: 60px 30px 30px 30px;
+  }
+
+  .pageTitle {
+    font-size: 18px; /* 更小的标题 */
+    margin: 0 0 6px 0; /* 移除顶部margin */
+    padding-bottom: 3px;
+    border-bottom-width: 2px;
+  }
+
+  .splitLayout {
+    gap: 10px; /* 更小的间距 */
+    margin-bottom: 6px;
+  }
+
+  .leftPanel,
+  .rightPanel {
+    padding: 6px; /* 更小的内边距 */
+  }
+
+  .taskTitle {
+    font-size: 15px; /* 更小的字体 */
+    margin-bottom: 5px;
+  }
+
+  .taskDescription {
+    font-size: 12px; /* 更小的字体 */
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  .textArea {
+    padding: 6px; /* 更小的内边距 */
+    font-size: 12px; /* 更小的字体 */
+    line-height: 1.3;
+  }
+
+  .buttonContainer {
+    padding: 5px 0 6px 0; /* 更小的间距 */
+  }
+
+  .nextButton {
+    padding: 8px 40px; /* 更小的按钮 */
+    font-size: 14px;
+  }
+}
 
 /* 大屏幕 (1920x1080及以上) - 默认样式已优化 */
 

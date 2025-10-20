@@ -1,13 +1,13 @@
 /**
  * Page07_Design - 方案设计页面
  *
- * FR-014: 3个想法输入框 (每个最少10个字)
+ * FR-014: 3个想法输入框 (每个最少2个字)
  *
  * 页面内容:
  * - 标题: "设计实验方案"
  * - 3个独立的TextArea组件 (想法1, 想法2, 想法3)
  * - 字符计数和验证逻辑
- * - "下一页"按钮 (所有3个输入框字符数≥10才能点击)
+ * - "下一页"按钮 (所有3个输入框字符数≥2才能点击)
  *
  * @component
  */
@@ -15,14 +15,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTrackingContext } from '../context/TrackingContext.jsx';
 import { useDataLogger } from '../hooks/useDataLogger';
+import { PAGE_MAPPING } from '../config.js';
 import Button from '../components/ui/Button.jsx';
 import TextArea from '../components/ui/TextArea.jsx';
+import PageLayout from '../components/layout/PageLayout.jsx';
 import styles from '../styles/Page07_Design.module.css';
 
-const MIN_CHAR_COUNT = 10; // 每个输入框最少字符数
+const MIN_CHAR_COUNT = 2; // 每个输入框最少字符数
 
 const Page07_Design = () => {
   const {
+    session,
     logOperation,
     collectAnswer,
     clearOperations,
@@ -179,12 +182,14 @@ const Page07_Design = () => {
       });
 
       // 构建并提交MarkObject
-      const markObject = buildMarkObject('7', '方案设计');
+      // 从session获取当前页码而不是硬编码
+      const pageInfo = PAGE_MAPPING[session.currentPage];
+      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '方案设计');
       const success = await submitPageData(markObject);
 
       if (success) {
         clearOperations();
-        await navigateToPage(8);
+        await navigateToPage(6);
       } else {
         throw new Error('数据提交失败');
       }
@@ -193,13 +198,14 @@ const Page07_Design = () => {
       alert(error.message || '页面跳转失败，请重试');
       setIsNavigating(false);
     }
-  }, [isNavigating, canNavigate, idea1, idea2, idea3, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage]);
+  }, [isNavigating, canNavigate, idea1, idea2, idea3, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage, session]);
 
   return (
-    <div className={styles.pageContainer}>
-      {/* 页面标题 */}
-      <div className={styles.header}>
-        <h1 className={styles.title}>设计实验方案</h1>
+    <PageLayout showNavigation={true} showTimer={true}>
+      <div className={styles.pageContainer}>
+        {/* 页面标题 */}
+        <div className={styles.header}>
+          <h1 className={styles.title}>设计实验方案</h1>
         <p className={styles.subtitle}>
           请根据提出的假设，设计3种不同的实验方案来验证蜂蜜黏度与温度、含水量的关系。
           每个想法至少填写 <strong>{MIN_CHAR_COUNT}</strong> 个字符。
@@ -330,7 +336,8 @@ const Page07_Design = () => {
           下一页
         </Button>
       </div>
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

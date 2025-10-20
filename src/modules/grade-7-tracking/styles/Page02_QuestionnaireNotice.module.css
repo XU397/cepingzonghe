@@ -12,10 +12,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100%;
-  padding: 40px 24px;
+  min-height: auto; /* 改为auto避免撑满 */
+  padding: 0 24px; /* 移除顶部padding */
   max-width: 800px;
   margin: 0 auto;
+  height: 100%;
 }
 
 /* ============================================================================
@@ -24,7 +25,8 @@
 
 .congratsSection {
   text-align: center;
-  margin-bottom: 48px;
+  margin-top: 0; /* 移除顶部margin */
+  margin-bottom: 32px; /* 减小底部间距 48px -> 32px */
 }
 
 .congratsIcon {
@@ -68,8 +70,8 @@
   background-color: #ffffff;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
-  padding: 32px;
-  margin-bottom: 32px;
+  padding: 24px; /* 减小padding 32px -> 24px */
+  margin-bottom: 24px; /* 减小底部间距 32px -> 24px */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -149,6 +151,64 @@
 /* ============================================================================
    响应式设计
    ============================================================================ */
+
+/* 800p紧凑模式 */
+@media (max-height: 800px) {
+  .congratsSection {
+    margin-bottom: 24px;
+  }
+
+  .congratsIcon {
+    margin-bottom: 12px;
+  }
+
+  .congratsIcon svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .congratsTitle {
+    font-size: 26px;
+    margin-bottom: 8px;
+  }
+
+  .congratsSubtitle {
+    font-size: 16px;
+  }
+
+  .instructionsSection {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .instructionsTitle {
+    font-size: 20px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+  }
+
+  .instructionItem {
+    padding: 12px;
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+
+  .itemNumber {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: 14px;
+  }
+
+  .itemText {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .buttonContainer {
+    margin-top: 12px;
+  }
+}
 
 @media (max-width: 768px) {
   .noticeContainer {

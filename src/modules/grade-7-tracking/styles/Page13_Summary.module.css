@@ -8,13 +8,13 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding: 40px;
+  padding: 20px; /* 从40px减少到20px，节省垂直空间 */
 }
 
 .summaryCard {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 20px;
-  padding: 48px 60px;
+  border-radius: 16px; /* 从20px减少到16px */
+  padding: 32px 48px; /* 从48px 60px减少到32px 48px */
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   max-width: 900px;
   width: 100%;
@@ -34,10 +34,10 @@
 }
 
 .title {
-  font-size: 42px;
+  font-size: 36px; /* 从42px减少到36px */
   font-weight: 700;
   color: #2c3e50;
-  margin: 0 0 40px 0;
+  margin: 0 0 24px 0; /* 从40px减少到24px */
   position: relative;
   display: inline-block;
 }
@@ -45,7 +45,7 @@
 .title::after {
   content: '';
   position: absolute;
-  bottom: -12px;
+  bottom: -10px; /* 从-12px减少到-10px */
   left: 50%;
   transform: translateX(-50%);
   width: 80px;
@@ -55,13 +55,13 @@
 }
 
 .content {
-  margin-bottom: 32px;
+  margin-bottom: 24px; /* 从32px减少到24px */
 }
 
 .icon {
-  margin: 0 auto 32px;
-  width: 100px;
-  height: 100px;
+  margin: 0 auto 20px; /* 从32px减少到20px */
+  width: 80px; /* 从100px减少到80px */
+  height: 80px; /* 从100px减少到80px */
   animation: bounceIn 0.8s ease;
 }
 
@@ -86,41 +86,41 @@
 }
 
 .conclusionText {
-  font-size: 18px;
-  line-height: 1.8;
+  font-size: 16px; /* 从18px减少到16px */
+  line-height: 1.7; /* 从1.8减少到1.7 */
   color: #34495e;
-  margin: 0 0 24px 0;
+  margin: 0 0 16px 0; /* 从24px减少到16px */
   text-align: left;
   padding: 0 20px;
 }
 
 .conclusionText:last-of-type {
-  margin-bottom: 32px;
+  margin-bottom: 20px; /* 从32px减少到20px */
 }
 
 .congratsBox {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
-  padding: 28px 32px;
-  margin: 32px 0 0 0;
+  padding: 20px 28px; /* 从28px 32px减少到20px 28px */
+  margin: 20px 0 0 0; /* 从32px减少到20px */
 }
 
 .congratsText {
-  font-size: 22px;
+  font-size: 19px; /* 从22px减少到19px */
   font-weight: 600;
   color: #ffffff;
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0; /* 从12px减少到10px */
 }
 
 .nextStepText {
-  font-size: 18px;
+  font-size: 16px; /* 从18px减少到16px */
   color: #f0f0f0;
   margin: 0;
 }
 
 .continueButton {
-  padding: 18px 72px;
-  font-size: 22px;
+  padding: 16px 64px; /* 从18px 72px减少到16px 64px */
+  font-size: 20px; /* 从22px减少到20px */
   font-weight: 600;
   border: none;
   border-radius: 10px;
@@ -141,6 +141,71 @@
 }
 
 /* 响应式设计 */
+
+/* 🎯 800p优化：针对1280×800分辨率的垂直空间优化 */
+@media (max-height: 800px) {
+  .summaryContainer {
+    padding: 12px 20px; /* 进一步压缩顶部和底部padding */
+  }
+
+  .summaryCard {
+    padding: 24px 40px; /* 从32px 48px减少到24px 40px */
+    border-radius: 12px;
+  }
+
+  .title {
+    font-size: 30px; /* 从36px减少到30px */
+    margin: 0 0 16px 0; /* 从24px减少到16px */
+  }
+
+  .title::after {
+    bottom: -8px;
+    width: 60px;
+    height: 3px;
+  }
+
+  .content {
+    margin-bottom: 16px; /* 从24px减少到16px */
+  }
+
+  .icon {
+    width: 60px; /* 从80px减少到60px */
+    height: 60px;
+    margin: 0 auto 14px; /* 从20px减少到14px */
+  }
+
+  .conclusionText {
+    font-size: 14px; /* 从16px减少到14px */
+    line-height: 1.6; /* 从1.7减少到1.6 */
+    margin: 0 0 12px 0; /* 从16px减少到12px */
+    padding: 0 16px;
+  }
+
+  .conclusionText:last-of-type {
+    margin-bottom: 14px; /* 从20px减少到14px */
+  }
+
+  .congratsBox {
+    padding: 16px 24px; /* 从20px 28px减少到16px 24px */
+    margin: 14px 0 0 0; /* 从20px减少到14px */
+    border-radius: 10px;
+  }
+
+  .congratsText {
+    font-size: 17px; /* 从19px减少到17px */
+    margin: 0 0 8px 0; /* 从10px减少到8px */
+  }
+
+  .nextStepText {
+    font-size: 14px; /* 从16px减少到14px */
+  }
+
+  .continueButton {
+    padding: 14px 56px; /* 从16px 64px减少到14px 56px */
+    font-size: 18px; /* 从20px减少到18px */
+  }
+}
+
 @media (max-width: 768px) {
   .summaryContainer {
     padding: 20px;

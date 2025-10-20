@@ -9,16 +9,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* 改为flex-start避免居中导致底部被遮挡 */
   min-height: 100%;
   /* 负margin抵消PageLayout的padding，让背景图填满整个区域 */
   margin: -80px -40px -40px -40px;
-  padding: 80px 40px 40px 40px;
+  padding: 80px 40px 80px 40px; /* 增加底部padding为按钮留出空间 */
   background-image: url('/src/assets/images/蜂蜜图片.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  overflow: hidden;
+  overflow-y: auto; /* 允许垂直滚动以防内容过多 */
+  overflow-x: hidden;
 }
 
 /* 半透明遮罩层，让文字更清晰 - 降低不透明度 */
@@ -42,8 +43,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
-  padding: 60px 40px;
+  gap: 32px; /* 减小间距 40px -> 32px */
+  padding: 40px 40px; /* 减小内部padding */
 }
 
 /* 文本内容区域 - 提高透明度，显示更多背景 */
@@ -122,6 +123,43 @@
 }
 
 /* 响应式设计 */
+
+/* 800p紧凑模式 - 关键修复 */
+@media (max-height: 800px) {
+  .pageContainer {
+    /* 匹配PageLayout 800p模式下的padding: 60px 30px 30px 30px */
+    margin: -60px -30px -30px -30px;
+    padding: 60px 30px 80px 30px; /* 保持底部80px给按钮留空间 */
+    justify-content: flex-start;
+  }
+
+  .contentWrapper {
+    gap: 20px; /* 进一步减小间距 */
+    padding: 20px 30px; /* 减小内部padding */
+  }
+
+  .textContent {
+    padding: 24px 32px; /* 减小内边距 */
+  }
+
+  .title {
+    font-size: 28px; /* 减小标题 */
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+  }
+
+  .paragraph {
+    font-size: 16px; /* 减小段落字体 */
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .nextButton {
+    padding: 14px 60px; /* 减小按钮尺寸 */
+    font-size: 18px;
+  }
+}
+
 @media (max-width: 1400px) {
   .pageContainer {
     margin: -70px -30px -30px -30px;

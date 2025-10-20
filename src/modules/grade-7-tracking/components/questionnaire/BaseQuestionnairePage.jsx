@@ -16,7 +16,7 @@ import { useTrackingContext } from '../../context/TrackingContext';
 import { useQuestionnaire } from '../../hooks/useQuestionnaire';
 import { useDataLogger } from '../../hooks/useDataLogger';
 import PageLayout from '../layout/PageLayout';
-import QuestionBlock from './QuestionBlock';
+import QuestionTable from './QuestionTable';
 import Button from '../ui/Button';
 import { getQuestionnairePageData, isLastQuestionnairePage } from '../../utils/questionnaireLoader';
 import styles from '../../styles/QuestionnairePage.module.css';
@@ -197,85 +197,47 @@ const BaseQuestionnairePage = ({ pageNumber }) => {
     );
   }
 
+  // 获取统一的选项列表（假设同一页的问题选项相同）
+  const commonOptions = useMemo(() => {
+    return pageData.questions[0]?.options || [];
+  }, [pageData]);
+
   return (
     <PageLayout showNavigation={true} showTimer={true}>
       <div className={styles.pageContainer}>
-        {/* Header Section */}
-        <div className={styles.header}>
-          <h1 className={styles.pageTitle}>{pageData.title}</h1>
+        {/* Header Section - 橙色边框说明框 */}
+        <div className={styles.instructionBox}>
           <p className={styles.instructions}>{pageData.instructions}</p>
-
-          {/* Progress Indicator */}
-          <div className={styles.progressSection}>
-            <span className={styles.progressLabel}>本页完成进度:</span>
-            <div className={styles.progressBar}>
-              <div
-                className={styles.progressFill}
-                style={{ width: `${completionProgress.rate}%` }}
-              ></div>
-            </div>
-            <span className={styles.progressText}>
-              {completionProgress.answered} / {completionProgress.total}
-            </span>
-          </div>
         </div>
 
-        {/* Questions Section */}
-        <div className={styles.questionsSection}>
-          {pageData.questions.map((question) => {
-            const questionId = `q${question.id}`;
-            return (
-              <QuestionBlock
-                key={question.id}
-                questionNumber={question.id}
-                questionText={question.text}
-                options={question.options}
-                value={answers[questionId]}
-                onChange={(value) => handleAnswerChange(question.id, value)}
-                required={true}
-                orientation={question.type === 'scale10' ? 'horizontal' : 'vertical'}
-              />
-            );
-          })}
+        {/* Questions Table Section */}
+        <div className={styles.tableSection}>
+          <QuestionTable
+            questions={pageData.questions}
+            answers={answers}
+            onAnswerChange={handleAnswerChange}
+            options={commonOptions}
+          />
         </div>
 
-        {/* Footer Section */}
+        {/* Footer Section - 居中按钮 */}
         <div className={styles.footer}>
-          <div className={styles.navigationHint}>
-            {isLastPage ? '完成后将提交问卷' : '完成后点击"下一页"继续'}
-          </div>
+          <Button
+            variant="secondary"
+            disabled={!canProceed}
+            onClick={handleNextClick}
+            className={styles.nextButton}
+          >
+            {isLastPage ? '提交问卷' : '下一页'}
+          </Button>
 
-          <div className={styles.buttonGroup}>
-            <Button
-              variant="primary"
-              size="large"
-              disabled={!canProceed}
-              onClick={handleNextClick}
-            >
-              {isLastPage ? '提交问卷' : '下一页'}
-            </Button>
-          </div>
+          {/* Incomplete Warning */}
+          {showIncompleteWarning && !canProceed && (
+            <div className={styles.warningMessage}>
+              请完成本页所有必答题后再继续
+            </div>
+          )}
         </div>
-
-        {/* Incomplete Warning */}
-        {showIncompleteWarning && !canProceed && (
-          <div className={styles.disabledHint}>
-            <svg
-              className={styles.warningIcon}
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            <span>请完成本页所有必答题后再继续</span>
-          </div>
-        )}
       </div>
     </PageLayout>
   );

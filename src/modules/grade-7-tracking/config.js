@@ -54,4 +54,4 @@ export const HEARTBEAT_INTERVAL = 30 * 1000; // 30秒(毫秒)
 export const MODULE_ID = 'grade-7-tracking';
 export const MODULE_DISPLAY_NAME = '7年级追踪测评-蜂蜜黏度探究';
 export const MODULE_URL = '/grade-7-tracking';
-export const MODULE_VERSION = '1.0.0';
+export const MODULE_VERSION = '1.0.1';

@@ -132,7 +132,7 @@
   box-shadow: 0 3px 8px var(--cartoon-shadow);
   cursor: default;
   flex-shrink: 0;
-  margin-bottom: 8px;
+  margin-bottom: 4px; /* 从8px减少到4px，紧凑导航间距 */
 }
 
 .navItem:hover {
@@ -172,10 +172,10 @@
 /* 连接线 - 仅在实验模式下显示 */
 .navConnector {
   width: 3px;
-  height: 8px;
+  height: 4px; /* 从8px减少到4px，进一步压缩间距 */
   background-color: var(--cartoon-border);
   border-radius: 2px;
-  margin: 2px 0;
+  margin: 1px 0; /* 从2px减少到1px */
   z-index: 0;
 }
 
@@ -254,9 +254,80 @@
   box-sizing: border-box;
 }
 
+/* 无计时器时减少顶部padding */
+.contentWrapper.noTimer {
+  padding-top: 40px;
+}
+
 /* ============================================================================
    响应式设计
    ============================================================================ */
+
+/* 800p紧凑模式优化 - 针对1280x800分辨率 */
+@media (max-height: 800px) {
+  /* 优化左侧导航间距 */
+  .leftNavigation {
+    padding: 10px 8px;
+  }
+
+  .leftNavigation::before {
+    top: 10px;
+    font-size: 13px;
+  }
+
+  .progressIndicator {
+    margin-top: 24px; /* 从28px减少到24px */
+    margin-bottom: 10px; /* 从12px减少到10px */
+    padding: 7px 4px; /* 从8px减少到7px */
+    font-size: 0.9em;
+  }
+
+  .navItem {
+    width: 34px; /* 从36px减少到34px */
+    height: 34px; /* 从36px减少到34px */
+    font-size: 0.85em; /* 从0.9em减少到0.85em */
+    margin-bottom: 3px; /* 从6px减少到3px */
+    border-width: 2px; /* 减少边框宽度 */
+  }
+
+  .navConnector {
+    height: 3px; /* 从6px减少到3px */
+    margin: 0.5px 0; /* 从1px减少到0.5px */
+  }
+
+  .navItem.highlighted::after {
+    width: 12px;
+    height: 12px;
+    top: -3px;
+    right: -3px;
+  }
+
+  /* 优化计时器位置和尺寸 */
+  .timerContainer {
+    top: 45px;
+    right: 18px;
+    padding: 10px 18px;
+    font-size: 16px;
+  }
+
+  .timerIcon {
+    margin-right: 6px;
+    font-size: 18px;
+  }
+
+  .timerValue {
+    font-size: 16px;
+  }
+
+  /* 减少内容包装器padding - 关键优化 */
+  .contentWrapper {
+    padding: 60px 30px 30px 30px;
+  }
+
+  .contentWrapper.noTimer {
+    padding-top: 30px;
+  }
+}
 
 /* 响应式设计 - 针对720p高度优化 */
 @media (max-height: 720px) {
@@ -270,10 +341,10 @@
   }
 
   .progressIndicator {
-    margin-top: 20px;
-    margin-bottom: 8px;
+    margin-top: 18px; /* 从20px减少到18px */
+    margin-bottom: 6px; /* 从8px减少到6px */
     padding: 4px 3px;
-    font-size: 0.8em;
+    font-size: 0.75em; /* 从0.8em减少到0.75em */
   }
 
   .navigationItems {
@@ -281,14 +352,17 @@
   }
 
   .navItem {
-    width: 28px;
-    height: 28px;
-    font-size: 0.75em;
+    width: 26px; /* 从28px减少到26px */
+    height: 26px; /* 从28px减少到26px */
+    font-size: 0.7em; /* 从0.75em减少到0.7em */
+    margin-bottom: 2px; /* 添加margin控制间距 */
+    border-width: 2px; /* 减少边框宽度 */
   }
 
   .navConnector {
-    height: 12px;
-    margin: 1px 0;
+    height: 2px; /* 从12px大幅减少到2px */
+    margin: 0.5px 0; /* 从1px减少到0.5px */
+    width: 2px; /* 从3px减少到2px */
   }
 
   .navItem.highlighted::after {

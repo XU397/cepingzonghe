@@ -11,7 +11,9 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 80px);
-  padding: 40px;
+  /* 负margin抵消PageLayout的60px padding-top，节省垂直空间 */
+  margin-top: -60px;
+  padding: 24px 40px 40px 40px; /* 减少顶部padding */
   background: #f5f7fa;
 }
 
@@ -402,6 +404,68 @@
 /* ============================================================================
  * 响应式设计
  * ========================================================================== */
+
+/* 针对1280×800分辨率的垂直空间优化 */
+@media (max-height: 800px) {
+  .pageContainer {
+    margin-top: -60px; /* 强化负margin抵消 */
+    padding: 16px 40px 24px 40px; /* 进一步压缩顶部空间 */
+    gap: 12px;
+  }
+
+  .splitLayout {
+    gap: 24px; /* 减少左右面板间距 */
+    margin-bottom: 20px; /* 减少底部间距 */
+  }
+
+  .leftPanel,
+  .rightPanel {
+    padding: 24px; /* 减少面板内边距 */
+  }
+
+  .sectionTitle {
+    font-size: 24px; /* 缩小标题 */
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+  }
+
+  .taskTitle {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
+  .taskDescription {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .checkboxGroup {
+    gap: 12px; /* 减少复选框间距 */
+  }
+
+  .checkboxOption {
+    padding: 10px 14px; /* 减少复选框内边距 */
+  }
+
+  .infoCenter {
+    padding: 20px; /* 减少信息中心内边距 */
+    gap: 10px; /* 减少按钮间距 */
+  }
+
+  .infoButton {
+    padding: 14px 18px; /* 减少按钮内边距 */
+    font-size: 15px;
+  }
+
+  .buttonContainer {
+    padding: 16px 0; /* 减少按钮容器内边距 */
+  }
+
+  .nextButton {
+    padding: 14px 56px;
+    font-size: 18px;
+  }
+}
 
 @media (max-width: 1200px) {
   .splitLayout {

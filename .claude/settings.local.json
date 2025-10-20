@@ -19,7 +19,10 @@
       "Bash(del \"src\\modules\\grade-7-tracking\\components\\experiment\\TimerDisplay.jsx\")",
       "Bash(git add:*)",
       "Bash(del nul)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(git commit:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

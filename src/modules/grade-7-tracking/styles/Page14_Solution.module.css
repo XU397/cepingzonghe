@@ -6,35 +6,39 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 24px;
+  gap: 12px; /* 从16px减少到12px */
+  /* 🔧 负margin抵消PageLayout的padding-top (64px)，重新控制对齐 */
+  margin-top: -64px;
+  padding: 8px 20px 8px 20px; /* 进一步优化padding节省垂直空间 */
   min-height: 100%;
 }
 
 .pageTitle {
   text-align: center;
-  padding-bottom: 12px;
+  margin-top: 6px; /* 从12px减少到6px，标题更靠上 */
+  padding-bottom: 6px; /* 从10px减少到6px */
   border-bottom: 2px solid #e8e8e8;
 }
 
 .pageTitle h2 {
-  font-size: 26px;
+  font-size: 22px; /* 从24px减少到22px */
   font-weight: 700;
   color: #262626;
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0; /* 从6px减少到4px */
 }
 
 .subtitle {
-  font-size: 15px;
-  color: #8c8c8c;
+  font-size: 13px; /* 从14px减少到13px */
+  color: #595959; /* 从#8c8c8c调深，提高可读性 */
   margin: 0;
+  line-height: 1.5; /* 添加行高，提高多行文本可读性 */
 }
 
 /* 左右分栏布局 */
 .contentLayout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 14px; /* 从18px减少到14px */
   flex: 1;
 }
 
@@ -54,15 +58,15 @@
 .rightPanel {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px; /* 从14px减少到10px，缩小卡片间距 */
 }
 
 /* 表格卡片 */
 .tableCard {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px;
+  gap: 8px; /* 从10px减少到8px */
+  padding: 12px; /* 从16px减少到12px */
   background: white;
   border-radius: 8px;
   border: 2px solid #e8e8e8;
@@ -70,14 +74,14 @@
 }
 
 .tableTitle {
-  font-size: 18px;
+  font-size: 15px; /* 从17px减少到15px */
   font-weight: 700;
   color: #262626;
   margin: 0;
 }
 
 .tableHint {
-  font-size: 13px;
+  font-size: 11px; /* 从12px减少到11px */
   color: #8c8c8c;
   margin: 0;
 }
@@ -100,8 +104,8 @@
 }
 
 .dynamicTable th {
-  padding: 12px 16px;
-  font-size: 14px;
+  padding: 6px 10px; /* 从8px 12px减少到6px 10px，降低表头高度 */
+  font-size: 12px; /* 从13px减少到12px */
   font-weight: 600;
   color: #595959;
   text-align: left;
@@ -109,12 +113,17 @@
 }
 
 .iconColumn {
-  width: 60px;
+  width: 80px;
   text-align: center;
 }
 
 .selectColumn {
   width: auto;
+}
+
+.bestColumn {
+  width: 100px;
+  text-align: center;
 }
 
 .actionColumn {
@@ -131,32 +140,69 @@
 }
 
 .dynamicTable td {
-  padding: 12px 16px;
-  font-size: 14px;
+  padding: 6px 10px; /* 从8px 12px减少到6px 10px，大幅降低行高 */
+  font-size: 12px; /* 从13px减少到12px */
   color: #262626;
   border-bottom: 1px solid #f0f0f0;
 }
 
-/* 图标单元格 */
+/* 序号单元格 */
 .iconCell {
   text-align: center;
 }
 
-.lightIcon {
-  font-size: 24px;
+.sequenceNumber {
+  font-size: 12px; /* 从13px减少到12px */
+  font-weight: 600;
+  color: #1890ff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #fafafa;
-  border: 2px solid #e8e8e8;
-  transition: all 0.3s ease;
+  padding: 2px 8px; /* 从3px 10px减少到2px 8px，降低高度 */
+  border-radius: 12px;
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
 }
 
-.tableRow:hover .lightIcon {
-  transform: scale(1.1);
+/* 最佳方案单元格 */
+.bestCell {
+  text-align: center;
+}
+
+.starButton {
+  font-size: 24px; /* 从28px减少到24px，降低按钮高度 */
+  padding: 2px 6px; /* 从4px 8px减少到2px 6px */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  line-height: 1;
+  color: #d4d4d4; /* 未激活状态：浅灰色空心星 */
+}
+
+.starButton:hover {
+  transform: scale(1.2);
+  color: #ffd700; /* hover时变为亮黄色 */
+  filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.5));
+}
+
+.starButton:active {
+  transform: scale(0.95);
+}
+
+.starActive {
+  animation: starPulse 0.5s ease;
+  color: #ffd700 !important; /* 激活状态：亮黄色实心星 */
+  filter: drop-shadow(0 2px 6px rgba(255, 215, 0, 0.8));
+}
+
+@keyframes starPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
 }
 
 /* 选择框单元格 */
@@ -166,8 +212,8 @@
 
 .selectInput {
   width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 4px 8px; /* 从6px 10px减少到4px 8px，降低下拉框高度 */
+  font-size: 12px; /* 从13px减少到12px */
   color: #262626;
   background: white;
   border: 2px solid #d9d9d9;
@@ -193,8 +239,8 @@
 }
 
 .deleteButton {
-  padding: 6px 16px;
-  font-size: 13px;
+  padding: 3px 10px; /* 从5px 14px减少到3px 10px */
+  font-size: 11px; /* 从12px减少到11px */
   font-weight: 600;
   color: #ff4d4f;
   background: white;
@@ -224,8 +270,8 @@
 }
 
 .addButton {
-  padding: 10px 20px;
-  font-size: 14px;
+  padding: 6px 14px; /* 从8px 18px减少到6px 14px */
+  font-size: 12px; /* 从13px减少到12px */
   font-weight: 600;
   color: white;
   background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
@@ -247,8 +293,8 @@
 .reasonCard {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px;
+  gap: 8px; /* 从10px减少到8px */
+  padding: 12px; /* 从16px减少到12px */
   background: white;
   border-radius: 8px;
   border: 2px solid #e8e8e8;
@@ -256,28 +302,30 @@
 }
 
 .reasonTitle {
-  font-size: 16px;
+  font-size: 14px; /* 从15px减少到14px */
   font-weight: 700;
   color: #262626;
   margin: 0;
 }
 
 .reasonHint {
-  font-size: 13px;
+  font-size: 11px; /* 从12px减少到11px */
   color: #8c8c8c;
   margin: 0;
 }
 
 .reasonTextarea {
   width: 100%;
-  padding: 12px;
-  font-size: 14px;
-  line-height: 1.6;
+  padding: 8px; /* 从10px减少到8px */
+  font-size: 12px; /* 从13px减少到12px */
+  line-height: 1.4; /* 从1.5减少到1.4 */
   color: #262626;
   background: white;
   border: 2px solid #d9d9d9;
   border-radius: 6px;
   resize: vertical;
+  min-height: 70px; /* 从80px减少到70px */
+  max-height: 100px; /* 从120px减少到100px */
   transition: all 0.3s ease;
   font-family: inherit;
 }
@@ -323,13 +371,14 @@
 .navigationFooter {
   display: flex;
   justify-content: center;
-  padding-top: 20px;
+  padding-top: 10px; /* 从16px减少到10px */
+  padding-bottom: 10px; /* 从8px增加到10px，确保按钮完整显示 */
   border-top: 2px solid #e8e8e8;
 }
 
 .nextButton {
-  padding: 16px 40px;
-  font-size: 16px;
+  padding: 12px 32px; /* 从14px 36px减少到12px 32px */
+  font-size: 14px; /* 从15px减少到14px */
   font-weight: 700;
   background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
   color: white;
@@ -354,7 +403,124 @@
   box-shadow: none;
 }
 
-/* 响应式 */
+/* ============================================================================
+   响应式设计
+   ============================================================================ */
+
+/* 🎯 800p优化：针对1280×800分辨率的紧凑布局 */
+@media (max-height: 800px) {
+  .container {
+    margin-top: -64px; /* 保持负margin抵消 */
+    padding: 6px 20px 8px 20px; /* 进一步减小padding */
+    gap: 10px; /* 从12px减少到10px */
+  }
+
+  .pageTitle {
+    margin-top: 4px; /* 从8px减少到4px */
+    padding-bottom: 4px; /* 从6px减少到4px */
+  }
+
+  .pageTitle h2 {
+    font-size: 20px; /* 从22px减少到20px */
+    margin: 0 0 3px 0; /* 从4px减少到3px */
+  }
+
+  .subtitle {
+    font-size: 12px; /* 从13px减少到12px */
+    line-height: 1.4; /* 紧凑行高 */
+  }
+
+  /* 保持2列布局但缩小间距 */
+  .contentLayout {
+    gap: 10px; /* 从14px减少到10px */
+  }
+
+  /* 紧凑卡片 */
+  .rightPanel {
+    gap: 8px; /* 从10px减少到8px */
+  }
+
+  .tableCard,
+  .reasonCard {
+    padding: 10px; /* 从12px减少到10px */
+    gap: 6px; /* 从8px减少到6px */
+    border-radius: 6px;
+  }
+
+  .tableTitle {
+    font-size: 13px; /* 从15px减少到13px */
+  }
+
+  .reasonTitle {
+    font-size: 13px; /* 从14px减少到13px */
+  }
+
+  .tableHint,
+  .reasonHint {
+    font-size: 10px; /* 从11px减少到10px */
+  }
+
+  /* 紧凑表格 */
+  .dynamicTable th,
+  .dynamicTable td {
+    padding: 4px 6px; /* 从6px 8px进一步减少到4px 6px */
+    font-size: 11px; /* 从12px减少到11px */
+  }
+
+  .sequenceNumber {
+    font-size: 10px; /* 从11px减少到10px */
+    padding: 1px 6px; /* 从2px 6px减少 */
+  }
+
+  .starButton {
+    font-size: 18px; /* 从20px减少到18px */
+    padding: 1px 4px; /* 从2px 6px减少 */
+  }
+
+  .starButton:hover {
+    transform: scale(1.15); /* 800p模式下略微减小hover缩放 */
+  }
+
+  .selectInput {
+    padding: 3px 6px; /* 从4px 6px减少 */
+    font-size: 10px; /* 从11px减少到10px */
+  }
+
+  .deleteButton {
+    padding: 2px 8px; /* 从3px 10px减少 */
+    font-size: 10px; /* 从11px减少到10px */
+  }
+
+  .addButton {
+    padding: 4px 12px; /* 从6px 14px减少 */
+    font-size: 10px; /* 从11px减少到10px */
+  }
+
+  /* 紧凑理由输入框 */
+  .reasonTextarea {
+    padding: 6px; /* 保持6px */
+    font-size: 10px; /* 从11px减少到10px */
+    min-height: 60px; /* 从70px减少到60px */
+    max-height: 80px; /* 从90px减少到80px */
+    line-height: 1.3;
+  }
+
+  .characterCount {
+    font-size: 9px; /* 从10px减少到9px */
+  }
+
+  /* 紧凑底部 */
+  .navigationFooter {
+    padding-top: 8px; /* 从12px减少到8px */
+    padding-bottom: 8px; /* 保持8px确保按钮完整显示 */
+  }
+
+  .nextButton {
+    padding: 10px 24px; /* 从10px 28px减少 */
+    font-size: 13px; /* 从14px减少到13px */
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 16px;

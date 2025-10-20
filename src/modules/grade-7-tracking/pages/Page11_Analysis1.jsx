@@ -13,13 +13,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
 import { useDataLogger } from '../hooks/useDataLogger';
-import CompactExperimentPanel from '../components/experiment/CompactExperimentPanel';
+import IntegratedExperimentPanel from '../components/experiment/IntegratedExperimentPanel';
+import PageLayout from '../components/layout/PageLayout.jsx';
 import { calculateFallTime } from '../utils/physicsModel';
-import { WATER_CONTENT_OPTIONS, TEMPERATURE_OPTIONS } from '../config';
+import { WATER_CONTENT_OPTIONS, TEMPERATURE_OPTIONS, PAGE_MAPPING } from '../config';
 import styles from '../styles/AnalysisPage.module.css';
 
 const Page11_Analysis1 = () => {
   const {
+    session,
     logOperation,
     collectAnswer,
     clearOperations,
@@ -50,24 +52,27 @@ const Page11_Analysis1 = () => {
     };
   }, [logOperation]);
 
-  // 处理实验开始
+  // 处理实验开始 - 计算所有量筒的下落时间
   const handleExperimentStart = useCallback((waterContent, temperature) => {
     logOperation({
       action: '点击',
-      target: '开始实验按钮_分析页',
+      target: '计时开始按钮_分析页1',
       value: JSON.stringify({ waterContent, temperature }),
       time: new Date().toISOString()
     });
 
-    return calculateFallTime(waterContent, temperature);
+    // 使用物理模型计算下落时间
+    const fallTime = calculateFallTime(waterContent, temperature);
+    return fallTime;
   }, [logOperation]);
 
   // 处理实验完成
-  const handleExperimentComplete = useCallback((record) => {
+  const handleExperimentComplete = useCallback((experimentData) => {
+    // experimentData 是一个数组，包含所有量筒的数据
     logOperation({
       action: '完成',
-      target: '实验动画_分析页',
-      value: JSON.stringify(record),
+      target: '实验动画_分析页1',
+      value: JSON.stringify(experimentData),
       time: new Date().toISOString()
     });
   }, [logOperation]);
@@ -117,12 +122,14 @@ const Page11_Analysis1 = () => {
       });
 
       // 构建并提交MarkObject
-      const markObject = buildMarkObject('11', '实验分析1');
+      // 从session获取当前页码而不是硬编码
+      const pageInfo = PAGE_MAPPING[session.currentPage];
+      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '实验分析1');
       const success = await submitPageData(markObject);
 
       if (success) {
         clearOperations();
-        await navigateToPage(12);
+        await navigateToPage(10);
       } else {
         throw new Error('数据提交失败');
       }
@@ -131,18 +138,19 @@ const Page11_Analysis1 = () => {
       alert(error.message || '页面跳转失败，请重试');
       setIsNavigating(false);
     }
-  }, [selectedAnswer, isNavigating, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage]);
+  }, [selectedAnswer, isNavigating, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage, session]);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.pageTitle}>
-        <h2>实验分析(1/3)</h2>
-      </div>
+    <PageLayout showNavigation={true} showTimer={true}>
+      <div className={styles.container}>
+        <div className={styles.pageTitle}>
+          <h2>实验分析(1/3)</h2>
+        </div>
 
       <div className={styles.contentLayout}>
-        {/* 左侧:实验操作区(保留) */}
+        {/* 左侧:实验操作区 - 4个量筒同时下落 */}
         <div className={styles.leftPanel}>
-          <CompactExperimentPanel
+          <IntegratedExperimentPanel
             waterContentOptions={WATER_CONTENT_OPTIONS}
             temperatureOptions={TEMPERATURE_OPTIONS}
             onExperimentStart={handleExperimentStart}
@@ -207,7 +215,8 @@ const Page11_Analysis1 = () => {
           {selectedAnswer ? (isNavigating ? '跳转中...' : '下一题') : '请先回答问题'}
         </button>
       </div>
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

@@ -3,7 +3,7 @@
  * 管理问卷答案状态、完成度检查和验证逻辑
  *
  * 功能:
- * - 管理27题问卷答案状态
+ * - 管理61题问卷答案状态
  * - 完成度检查(所有题目必答)
  * - 批量更新答案
  * - 验证逻辑
@@ -53,17 +53,18 @@ export function useQuestionnaire() {
   /**
    * 页面-问题映射表
    * 定义每个页面包含哪些问题编号
+   * 根据questionnaire.json实际数据更新
    */
   const PAGE_QUESTION_MAPPING = useMemo(
     () => ({
-      14: [1, 2, 3], // 第14页: 3个问题
-      15: [4, 5, 6, 7], // 第15页: 4个问题
-      16: [8, 9, 10], // 第16页: 3个问题
-      17: [11, 12, 13], // 第17页: 3个问题
-      18: [14, 15, 16], // 第18页: 3个问题
-      19: [17, 18, 19], // 第19页: 3个问题
-      20: [20, 21, 22, 23], // 第20页: 4个问题
-      21: [24, 25, 26, 27], // 第21页: 4个问题
+      14: [1, 2, 3, 4, 5, 6, 7, 8, 9], // 第14页: 9个问题 (科学探究态度问卷1)
+      15: [10, 11, 12, 13, 14, 15, 16, 17, 18], // 第15页: 9个问题 (科学探究态度问卷2)
+      16: [19, 20, 21, 22, 23, 24, 25, 26, 27, 28], // 第16页: 10个问题 (科学探究态度问卷3)
+      17: [29, 30, 31, 32, 33], // 第17页: 5个问题 (自信度问卷)
+      18: [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44], // 第18页: 11个问题 (环境支持问卷)
+      19: [45, 46, 47, 48, 49, 50, 51], // 第19页: 7个问题 (校内科学活动频率)
+      20: [52, 53, 54, 55, 56, 57, 58], // 第20页: 7个问题 (校外科学活动频率)
+      21: [59, 60, 61], // 第21页: 3个问题 (学习努力程度评估)
     }),
     []
   );
@@ -71,14 +72,14 @@ export function useQuestionnaire() {
   /**
    * 设置单个问题的答案
    *
-   * @param {number} questionNumber - 问题编号 (1-27)
+   * @param {number} questionNumber - 问题编号 (1-61)
    * @param {string} value - 选项值 ('A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J')
    * @param {string} [questionText] - 问题文本(可选,用于记录)
    */
   const setAnswer = useCallback(
     (questionNumber, value, questionText = '') => {
       // 验证问题编号范围
-      if (questionNumber < 1 || questionNumber > 27) {
+      if (questionNumber < 1 || questionNumber > 61) {
         console.error('[useQuestionnaire] Invalid question number:', questionNumber);
         return;
       }
@@ -166,7 +167,7 @@ export function useQuestionnaire() {
    * @returns {number} 完成率 (0-100)
    */
   const getCompletionRate = useCallback(() => {
-    const totalQuestions = 27;
+    const totalQuestions = 61; // 更新总题数为61
     const answeredCount = getAnsweredCount();
     return Math.round((answeredCount / totalQuestions) * 100);
   }, [getAnsweredCount]);
@@ -210,7 +211,7 @@ export function useQuestionnaire() {
     });
 
     // 遍历所有问题,重置为未回答状态
-    for (let i = 1; i <= 27; i++) {
+    for (let i = 1; i <= 61; i++) {
       updateQuestionnaireAnswer(i, null, '');
     }
   }, [updateQuestionnaireAnswer, logOperation]);
@@ -218,7 +219,7 @@ export function useQuestionnaire() {
   /**
    * 获取指定问题的答案
    *
-   * @param {number} questionNumber - 问题编号 (1-27)
+   * @param {number} questionNumber - 问题编号 (1-61)
    * @returns {string|null} 答案值
    */
   const getAnswer = useCallback(
@@ -232,7 +233,7 @@ export function useQuestionnaire() {
   /**
    * 检查指定问题是否已回答
    *
-   * @param {number} questionNumber - 问题编号 (1-27)
+   * @param {number} questionNumber - 问题编号 (1-61)
    * @returns {boolean} 是否已回答
    */
   const isQuestionAnswered = useCallback(

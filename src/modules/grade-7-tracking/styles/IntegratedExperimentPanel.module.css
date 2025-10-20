@@ -7,8 +7,8 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 30px;
+  gap: 16px; /* 从20px减少到16px，节省垂直空间 */
+  padding: 20px; /* 从30px减少到20px，节省垂直空间 */
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -21,26 +21,28 @@
   display: flex;
   justify-content: space-evenly;
   align-items: flex-end;
-  gap: 16px;
-  padding: 20px;
+  gap: 12px; /* 从16px减少到12px */
+  padding: 16px; /* 从20px减少到16px */
   background: rgba(255, 255, 255, 0.7);
   border-radius: 12px;
-  min-height: 350px;
+  min-height: 300px; /* 从350px减少到300px，节省50px垂直空间 */
 }
 
 /* 单个量筒容器 */
 .beakerContainer {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px; /* 从12px减少到10px */
+  padding-top: 35px; /* 从40px减少到35px */
 }
 
 /* 量筒主体 */
 .beaker {
   position: relative;
-  width: 80px;
-  height: 280px;
+  width: 75px; /* 从80px减少到75px */
+  height: 240px; /* 从280px减少到240px，节省40px垂直空间 */
   background: rgba(255, 255, 255, 0.9);
   border: 3px solid #78909c;
   border-radius: 8px 8px 4px 4px;
@@ -59,6 +61,7 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  z-index: 2;
 }
 
 .scaleLine {
@@ -88,10 +91,63 @@
 /* 蜂蜜液体 */
 .honeyLiquid {
   width: 100%;
-  background: linear-gradient(180deg, #ffb74d 0%, #ffa726 100%);
-  transition: height 0.5s ease;
-  position: relative;
+  /* 让液体始终装满：绝对定位 + 顶/底对齐，忽略内联 height */
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   z-index: 1;
+  background: linear-gradient(180deg, #ffb74d 0%, #ffa726 100%);
+}
+
+/* 根据含水量切换不同深浅的黄色（含水量越高越浅） */
+.wc15 { background: linear-gradient(180deg, #E09400 0%, #C97F00 100%); }
+.wc17 { background: linear-gradient(180deg, #E9A61A 0%, #D18F0A 100%); }
+.wc19 { background: linear-gradient(180deg, #F0B63A 0%, #E5A826 100%); }
+.wc21 { background: linear-gradient(180deg, #F7CB61 0%, #F0BD45 100%); }
+
+/* 夹子（圆环） */
+.clipper {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.clipperHook {
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(180deg, #455a64 0%, #607d8b 100%);
+  border-radius: 2px;
+}
+
+.clipperRing {
+  width: 30px;
+  height: 30px;
+  border: 4px solid #546e7a;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #78909c 0%, #607d8b 100%);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.clipperRing::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #90a4ae, #546e7a);
 }
 
 /* 小球 */
@@ -104,15 +160,15 @@
   background: radial-gradient(circle at 30% 30%, #e0e0e0, #757575);
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  z-index: 2;
+  z-index: 9; /* 小球在夹子下方 */
 }
 
 /* 浓度标签 */
 .concentrationLabel {
-  font-size: 18px;
+  font-size: 17px; /* 从18px减少到17px */
   font-weight: 700;
   color: #424242;
-  padding: 8px 16px;
+  padding: 6px 14px; /* 从8px 16px减少到6px 14px */
   background: white;
   border-radius: 6px;
   border: 2px solid #81c784;
@@ -127,33 +183,33 @@
   flex-direction: column;
   background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
   border-radius: 10px;
-  padding: 12px 20px;
+  padding: 10px 18px; /* 从12px 20px减少到10px 18px */
   box-shadow: 0 3px 10px rgba(67, 160, 71, 0.3);
 }
 
 .timeLabel {
-  font-size: 16px;
+  font-size: 15px; /* 从16px减少到15px */
   font-weight: 600;
   color: white;
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px; /* 从8px减少到6px */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .timeValues {
   display: flex;
   justify-content: space-evenly;
-  gap: 16px;
+  gap: 12px; /* 从16px减少到12px */
 }
 
 .timeValue {
   flex: 1;
   text-align: center;
-  font-size: 18px;
+  font-size: 17px; /* 从18px减少到17px */
   font-weight: 700;
   color: #1b5e20;
   background: rgba(255, 255, 255, 0.9);
-  padding: 10px;
+  padding: 8px; /* 从10px减少到8px */
   border-radius: 6px;
   font-variant-numeric: tabular-nums;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -166,16 +222,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
-  padding: 16px;
+  gap: 16px; /* 从20px减少到16px */
+  padding: 12px; /* 从16px减少到12px */
   background: rgba(255, 255, 255, 0.7);
   border-radius: 12px;
 }
 
 /* 重置按钮 (蓝色) */
 .resetButton {
-  padding: 14px 28px;
-  font-size: 16px;
+  padding: 12px 24px; /* 从14px 28px减少到12px 24px */
+  font-size: 15px; /* 从16px减少到15px */
   font-weight: 600;
   background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
   color: white;
@@ -185,7 +241,7 @@
   box-shadow: 0 3px 8px rgba(30, 136, 229, 0.3);
   transition: all 0.3s ease;
   font-family: inherit;
-  min-width: 110px;
+  min-width: 100px; /* 从110px减少到100px */
 }
 
 .resetButton:hover:not(:disabled) {
@@ -203,8 +259,8 @@
 
 /* 计时开始按钮 (蓝色) */
 .startButton {
-  padding: 14px 28px;
-  font-size: 16px;
+  padding: 12px 24px; /* 从14px 28px减少到12px 24px */
+  font-size: 15px; /* 从16px减少到15px */
   font-weight: 600;
   background: linear-gradient(135deg, #29b6f6 0%, #0288d1 100%);
   color: white;
@@ -214,7 +270,7 @@
   box-shadow: 0 3px 8px rgba(2, 136, 209, 0.3);
   transition: all 0.3s ease;
   font-family: inherit;
-  min-width: 130px;
+  min-width: 120px; /* 从130px减少到120px */
 }
 
 .startButton:hover:not(:disabled) {
@@ -332,15 +388,120 @@
 /* ====================
    响应式设计
    ==================== */
+
+/* 🎯 800p优化：针对1280×800分辨率进一步压缩实验面板 */
+@media (max-height: 800px) {
+  .container {
+    gap: 12px; /* 从16px进一步减少到12px */
+    padding: 16px; /* 从20px减少到16px */
+  }
+
+  .beakersRow {
+    gap: 10px;
+    padding: 12px;
+    min-height: 260px; /* 从300px减少到260px */
+  }
+
+  .beakerContainer {
+    gap: 8px;
+    padding-top: 30px;
+  }
+
+  .beaker {
+    width: 70px; /* 从75px减少到70px */
+    height: 210px; /* 从240px减少到210px */
+    border-width: 2px;
+  }
+
+  .clipperRing {
+    width: 26px;
+    height: 26px;
+    border-width: 3px;
+  }
+
+  .clipperRing::before {
+    width: 14px;
+    height: 14px;
+  }
+
+  .clipperHook {
+    height: 16px;
+    width: 3px;
+  }
+
+  .ball {
+    width: 14px;
+    height: 14px;
+  }
+
+  .concentrationLabel {
+    font-size: 15px;
+    padding: 5px 12px;
+  }
+
+  .timeBar {
+    padding: 8px 16px;
+  }
+
+  .timeLabel {
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+
+  .timeValues {
+    gap: 10px;
+  }
+
+  .timeValue {
+    font-size: 16px;
+    padding: 7px;
+  }
+
+  .controlsRow {
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .resetButton,
+  .startButton {
+    padding: 10px 20px;
+    font-size: 14px;
+    min-width: 90px;
+  }
+
+  .startButton {
+    min-width: 110px;
+  }
+
+  .scaleLabel {
+    font-size: 8px;
+  }
+}
+
 @media (max-width: 1024px) {
   .beakersRow {
     gap: 12px;
     padding: 16px;
   }
 
+  .beakerContainer {
+    padding-top: 35px;
+  }
+
   .beaker {
     width: 70px;
     height: 250px;
+  }
+
+  .clipperRing {
+    width: 26px;
+    height: 26px;
+    border-width: 3px;
+  }
+
+  .clipperHook {
+    height: 18px;
+    width: 3px;
   }
 
   .concentrationLabel {
@@ -366,10 +527,30 @@
     min-height: 280px;
   }
 
+  .beakerContainer {
+    padding-top: 30px;
+  }
+
   .beaker {
     width: 60px;
     height: 220px;
     border-width: 2px;
+  }
+
+  .clipperRing {
+    width: 22px;
+    height: 22px;
+    border-width: 3px;
+  }
+
+  .clipperRing::before {
+    width: 12px;
+    height: 12px;
+  }
+
+  .clipperHook {
+    height: 15px;
+    width: 3px;
   }
 
   .ball {

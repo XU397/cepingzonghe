@@ -16,12 +16,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
 import { useDataLogger } from '../hooks/useDataLogger';
 import IntegratedExperimentPanel from '../components/experiment/IntegratedExperimentPanel';
+import PageLayout from '../components/layout/PageLayout.jsx';
 import { calculateFallTime } from '../utils/physicsModel';
-import { WATER_CONTENT_OPTIONS, TEMPERATURE_OPTIONS } from '../config';
+import { WATER_CONTENT_OPTIONS, TEMPERATURE_OPTIONS, PAGE_MAPPING } from '../config';
 import styles from '../styles/Page10_Experiment.module.css';
 
 const Page10_Experiment = () => {
   const {
+    session,
     logOperation,
     collectAnswer,
     clearOperations,
@@ -131,7 +133,9 @@ const Page10_Experiment = () => {
       });
 
       // 构建并提交MarkObject
-      const markObject = buildMarkObject('8', '模拟实验');
+      // 从session获取当前页码而不是硬编码
+      const pageInfo = PAGE_MAPPING[session.currentPage];
+      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '模拟实验');
       const success = await submitPageData(markObject);
 
       if (success) {
@@ -145,11 +149,12 @@ const Page10_Experiment = () => {
       alert(error.message || '页面跳转失败，请重试');
       setIsNavigating(false);
     }
-  }, [experimentHistory, isNavigating, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage]);
+  }, [experimentHistory, isNavigating, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage, session]);
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.pageTitle}>蜂蜜黏度: 模拟实验</h1>
+    <PageLayout showNavigation={true} showTimer={true}>
+      <div className={styles.container}>
+        <h1 className={styles.pageTitle}>蜂蜜黏度: 模拟实验</h1>
 
       <div className={styles.contentLayout}>
         {/* 左侧:说明面板 */}
@@ -172,15 +177,7 @@ const Page10_Experiment = () => {
             <li>单击&quot;重置&quot;可以清空时间记录重新开始。</li>
           </ul>
 
-          <div className={styles.hintBox}>
-            <div className={styles.hintIcon}>💡</div>
-            <div className={styles.hintContent}>
-              <strong>提示：</strong>
-              <p>含水量越高,黏度越低,小球下落越快</p>
-              <p>温度越高,黏度越低,小球下落越快</p>
-              <p>请至少进行一次实验才能进入下一页</p>
-            </div>
-          </div>
+          {/* 删除了黄色提示框 hintBox */}
         </div>
 
         {/* 右侧:集成实验面板 */}
@@ -230,7 +227,8 @@ const Page10_Experiment = () => {
             : '请先完成至少一次实验'}
         </button>
       </div>
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

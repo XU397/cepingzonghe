@@ -7,8 +7,10 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* 🔧 负margin抵消PageLayout的padding-top (64px)，重新控制对齐 */
+  margin-top: -64px;
+  padding: 20px 24px 20px 24px; /* 减小上下padding优化垂直空间 */
+  background-color: #f5f7fa;
 }
 
 /* ============================================================================
@@ -19,8 +21,9 @@
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  gap: 28px; /* 从32px减少到28px，节省垂直空间 */
   overflow-y: auto;
+  margin-top: 16px; /* 顶部边距适当缩小 */
 }
 
 /* Image Section */
@@ -36,10 +39,10 @@
   width: 100%;
   max-width: 500px;
   aspect-ratio: 1 / 1;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .kidsImage {
@@ -79,11 +82,16 @@
 
 .textCard {
   background: #ffffff;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 32px; /* 从40px减少到32px，节省垂直空间 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   width: 100%;
   max-width: 600px;
+  transition: box-shadow 0.3s ease;
+}
+
+.textCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 /* Title Container */
@@ -130,7 +138,7 @@
 .encouragement {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px; /* 从20px减少到16px，节省垂直空间 */
 }
 
 .mainText {
@@ -212,15 +220,58 @@
    ============================================================================ */
 
 .footer {
-  margin-top: 24px;
+  margin-top: 16px; /* 从24px减少到16px */
   display: flex;
   justify-content: center;
-  padding-top: 16px;
+  padding-top: 12px; /* 从16px减少到12px */
+  padding-bottom: 8px; /* 添加底部padding确保按钮不贴边 */
 }
 
 /* ============================================================================
    Responsive Design
    ============================================================================ */
+
+/* 🎯 800p优化：针对1280×800分辨率的紧凑布局 */
+@media (max-height: 800px) {
+  .pageContainer {
+    margin-top: -64px; /* 保持负margin抵消 */
+    padding: 12px 24px 12px 24px; /* 进一步减小上下padding */
+  }
+
+  .content {
+    gap: 20px; /* 进一步缩小gap */
+    margin-top: 12px;
+  }
+
+  .textCard {
+    padding: 24px; /* 更紧凑的内边距 */
+  }
+
+  .encouragement {
+    gap: 12px; /* 更紧凑的间距 */
+  }
+
+  .tipsContainer {
+    padding: 16px; /* 从20px减少到16px */
+  }
+
+  .tipsList {
+    gap: 8px; /* 从12px减少到8px */
+  }
+
+  .footer {
+    margin-top: 12px;
+    padding-top: 8px;
+  }
+
+  .titleContainer {
+    margin-bottom: 16px; /* 从20px减少到16px */
+  }
+
+  .divider {
+    margin-bottom: 16px; /* 从24px减少到16px */
+  }
+}
 
 @media (max-width: 1366px) {
   .content {

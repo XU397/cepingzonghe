@@ -1,0 +1,258 @@
+/**
+ * QuestionTable Styles
+ * 问卷表格布局样式（根据附件图设计）
+ */
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+}
+
+.questionTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  table-layout: fixed;
+}
+
+/* ============================================================================
+   表头样式
+   ============================================================================ */
+
+.questionTable thead {
+  background: linear-gradient(180deg, #5b9bd5 0%, #4a8bc2 100%);
+}
+
+.questionTable thead th {
+  padding: 12px 10px; /* 从16px 12px减少到12px 10px */
+  font-size: 14px; /* 从15px减少到14px */
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  vertical-align: middle;
+}
+
+.questionTable thead th:last-child {
+  border-right: none;
+}
+
+/* 问题列（左侧第一列） */
+.questionColumn {
+  width: 45%;
+  text-align: left !important;
+}
+
+/* 选项列（右侧列） */
+.optionColumn {
+  width: 13.75%; /* (100% - 45%) / 4 = 13.75% */
+}
+
+/* ============================================================================
+   表格主体行样式
+   ============================================================================ */
+
+.questionRow {
+  transition: background-color 0.2s ease;
+}
+
+.questionRow:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.questionRow:hover {
+  background-color: #f0f4f8;
+}
+
+/* ============================================================================
+   单元格样式
+   ============================================================================ */
+
+.questionCell {
+  padding: 10px 16px; /* 从14px 20px减少到10px 16px */
+  font-size: 14px; /* 从15px减少到14px */
+  line-height: 1.5; /* 从1.6减少到1.5 */
+  color: #1f2937;
+  text-align: left;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+.optionCell {
+  padding: 10px; /* 从12px减少到10px */
+  text-align: center;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+.optionCell:last-child {
+  border-right: none;
+}
+
+.questionRow:last-child .questionCell,
+.questionRow:last-child .optionCell {
+  border-bottom: none;
+}
+
+/* ============================================================================
+   单选按钮样式
+   ============================================================================ */
+
+.radioWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.radioInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.radioCustom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #9ca3af;
+  border-radius: 50%;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.radioInput:checked + .radioCustom {
+  border-color: #3b82f6;
+  background: #3b82f6;
+}
+
+.radioInner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+}
+
+.radioWrapper:hover .radioCustom {
+  border-color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.radioInput:focus-visible + .radioCustom {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   响应式设计
+   ============================================================================ */
+
+/* 800p紧凑模式 - 滚动表格 */
+@media (max-height: 800px) {
+  .tableWrapper {
+    max-height: 480px; /* 从450px增加到480px，给表格更多空间 */
+    overflow-y: auto;
+    overflow-x: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 固定表头 */
+  .questionTable thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .questionTable thead th {
+    padding: 10px 8px; /* 从12px 10px减少到10px 8px */
+    font-size: 13px; /* 从14px减少到13px */
+  }
+
+  /* 紧凑表格行 */
+  .questionCell {
+    padding: 8px 12px; /* 从10px 16px减少到8px 12px */
+    font-size: 13px; /* 从14px减少到13px */
+    line-height: 1.4; /* 从1.5减少到1.4 */
+  }
+
+  .optionCell {
+    padding: 6px; /* 从8px减少到6px */
+  }
+
+  /* 缩小单选按钮 */
+  .radioCustom {
+    width: 18px; /* 从20px减少到18px */
+    height: 18px;
+    border-width: 2px; /* 明确设置边框宽度 */
+  }
+
+  .radioInner {
+    width: 7px; /* 从8px减少到7px */
+    height: 7px;
+  }
+
+  .radioWrapper {
+    padding: 5px; /* 从6px减少到5px */
+  }
+}
+
+@media (max-width: 1200px) {
+  .questionColumn {
+    width: 40%;
+  }
+
+  .optionColumn {
+    width: 15%; /* (100% - 40%) / 4 = 15% */
+  }
+
+  .questionCell {
+    font-size: 14px;
+    padding: 12px 16px;
+  }
+
+  .questionTable thead th {
+    font-size: 14px;
+    padding: 14px 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .questionColumn {
+    width: 100%;
+  }
+
+  .optionColumn {
+    width: 25%; /* 4列平分 */
+  }
+
+  .questionCell {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .questionTable thead th {
+    font-size: 13px;
+    padding: 12px 8px;
+  }
+
+  .radioCustom {
+    width: 20px;
+    height: 20px;
+  }
+
+  .radioInner {
+    width: 8px;
+    height: 8px;
+  }
+}

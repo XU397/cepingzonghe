@@ -15,8 +15,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTrackingContext } from '../context/TrackingContext.jsx';
 import { useDataLogger } from '../hooks/useDataLogger';
+import { PAGE_MAPPING } from '../config.js';
 import Button from '../components/ui/Button.jsx';
 import TextArea from '../components/ui/TextArea.jsx';
+import PageLayout from '../components/layout/PageLayout.jsx';
 import styles from '../styles/Page08_Evaluation.module.css';
 
 // 引入实验方法图片
@@ -24,10 +26,11 @@ import styles from '../styles/Page08_Evaluation.module.css';
 // import ballFallImg from '../assets/images/method-ballfall.png'; // T104: 使用占位符替代
 // import flowRateImg from '../assets/images/method-flowrate.png'; // T104: 使用占位符替代
 
-const MIN_FILLED_FIELDS = 3; // 至少填写3个输入框
+const MIN_FILLED_FIELDS = 6; // 所有6个输入框都必须填写
 
 const Page08_Evaluation = () => {
   const {
+    session,
     logOperation,
     collectAnswer,
     clearOperations,
@@ -51,7 +54,8 @@ const Page08_Evaluation = () => {
     return count + (method.advantage.trim() ? 1 : 0) + (method.disadvantage.trim() ? 1 : 0);
   }, 0);
 
-  const canNavigate = filledFieldsCount >= MIN_FILLED_FIELDS;
+  // 必须所有6个输入框都填写才能导航
+  const canNavigate = filledFieldsCount === MIN_FILLED_FIELDS;
 
   // 页面进入日志
   useEffect(() => {
@@ -148,12 +152,14 @@ const Page08_Evaluation = () => {
       });
 
       // 构建并提交MarkObject
-      const markObject = buildMarkObject('8', '方案评估');
+      // 从session获取当前页码而不是硬编码
+      const pageInfo = PAGE_MAPPING[session.currentPage];
+      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '方案评估');
       const success = await submitPageData(markObject);
 
       if (success) {
         clearOperations();
-        await navigateToPage(9);
+        await navigateToPage(7);
       } else {
         throw new Error('数据提交失败');
       }
@@ -162,7 +168,7 @@ const Page08_Evaluation = () => {
       alert(error.message || '页面跳转失败，请重试');
       setIsNavigating(false);
     }
-  }, [isNavigating, canNavigate, filledFieldsCount, evaluations, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage]);
+  }, [isNavigating, canNavigate, filledFieldsCount, evaluations, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage, session]);
 
   // 实验方法配置
   const methods = [
@@ -190,13 +196,14 @@ const Page08_Evaluation = () => {
   ];
 
   return (
-    <div className={styles.pageContainer}>
-      {/* 页面标题 */}
-      <div className={styles.header}>
-        <h1 className={styles.title}>评估实验方案</h1>
+    <PageLayout showNavigation={true} showTimer={true}>
+      <div className={styles.pageContainer}>
+        {/* 页面标题 */}
+        <div className={styles.header}>
+          <h1 className={styles.title}>评估实验方案</h1>
         <p className={styles.subtitle}>
           以下是3种常用的黏度测量方法，请分析每种方法的优点和缺点。
-          至少完成 <strong>{MIN_FILLED_FIELDS}</strong> 个输入框才能进入下一页。
+          需完成所有 <strong>{MIN_FILLED_FIELDS}</strong> 个输入框才能进入下一页。
         </p>
       </div>
 
@@ -305,7 +312,8 @@ const Page08_Evaluation = () => {
           下一页
         </Button>
       </div>
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

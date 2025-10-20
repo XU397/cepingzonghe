@@ -143,6 +143,21 @@ const IntegratedExperimentPanel = ({
 };
 
 /**
+ * 根据含水量计算蜂蜜颜色（渐变）
+ * 含水量越高，黏度越低，颜色越浅
+ * 使用更明亮的黄色系
+ */
+const getHoneyColor = (waterContent) => {
+  const colorMap = {
+    15: 'linear-gradient(180deg, #F0C05A 0%, #E5A839 100%)', // 明亮深金黄色
+    17: 'linear-gradient(180deg, #F5D76E 0%, #EFBC47 100%)', // 明亮中深金黄色
+    19: 'linear-gradient(180deg, #FFE082 0%, #FFD54F 100%)', // 明亮中浅金黄色
+    21: 'linear-gradient(180deg, #FFEB99 0%, #FFE066 100%)'  // 明亮浅金黄色
+  };
+  return colorMap[waterContent] || 'linear-gradient(180deg, #F5D76E 0%, #EFBC47 100%)';
+};
+
+/**
  * 带小球的量筒组件
  */
 const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) => {
@@ -150,8 +165,8 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
 
   useEffect(() => {
     if (isAnimating && fallTime > 0) {
-      // 重置小球位置
-      setBallPosition(0);
+      // 小球从量筒外部（-10%）开始下落到底部（94%）
+      setBallPosition(-10);
 
       // 启动动画
       const startTime = Date.now();
@@ -160,7 +175,8 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
       const animate = () => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        setBallPosition(progress * 100);
+        // 从 -10% 到 94%
+        setBallPosition(-10 + progress * 104);
 
         if (progress < 1) {
           requestAnimationFrame(animate);
@@ -171,8 +187,21 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
     }
   }, [isAnimating, fallTime]);
 
+  // 重置或初始状态时，确保小球位于量筒外部上方（被夹子夹着）
+  useEffect(() => {
+    if (!isAnimating && !hasCompleted) {
+      setBallPosition(-10); // 小球在量筒外部上方
+    }
+  }, [isAnimating, hasCompleted]);
+
   return (
     <div className={styles.beakerContainer}>
+      {/* 夹子（圆环）- 始终显示在量筒上方 */}
+      <div className={styles.clipper}>
+        <div className={styles.clipperRing}></div>
+        <div className={styles.clipperHook}></div>
+      </div>
+
       {/* 量筒外框 */}
       <div className={styles.beaker}>
         {/* 刻度线 */}
@@ -184,24 +213,23 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
           ))}
         </div>
 
-        {/* 蜂蜜液体 */}
+        {/* 蜂蜜液体 - 填满整个量筒，根据含水量显示不同深度的黄色 */}
         <div
           className={styles.honeyLiquid}
           style={{
-            height: `${(waterContent / 21) * 60}%` // 按比例显示液体高度
+            height: '100%',
+            background: getHoneyColor(waterContent)
           }}
         />
 
-        {/* 小球 */}
-        {(isAnimating || hasCompleted) && (
-          <div
-            className={styles.ball}
-            style={{
-              top: `${ballPosition}%`,
-              transition: isAnimating ? 'none' : 'top 0.3s ease'
-            }}
-          />
-        )}
+        {/* 小球：初始在量筒外部上方（被夹子夹着），计时开始后下落 */}
+        <div
+          className={styles.ball}
+          style={{
+            top: `${ballPosition}%`,
+            transition: isAnimating ? 'none' : 'top 0.3s ease'
+          }}
+        />
       </div>
 
       {/* 浓度标签 */}

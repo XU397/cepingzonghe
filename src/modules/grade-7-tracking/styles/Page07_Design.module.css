@@ -7,7 +7,9 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 24px;
+  /* 负margin抵消PageLayout的60px padding-top，节省垂直空间 */
+  margin-top: -60px;
+  padding: 20px 24px 24px 24px; /* 减少顶部padding */
   background-color: #f5f7fa;
 }
 
@@ -16,22 +18,22 @@
    ============================================================================ */
 
 .header {
-  margin-bottom: 24px;
+  margin-bottom: 16px; /* 减少间距以适应3列布局 */
   text-align: center;
 }
 
 .title {
-  font-size: 28px;
+  font-size: 24px; /* 缩小以节省空间 */
   font-weight: 600;
   color: #1a1a1a;
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0;
 }
 
 .subtitle {
-  font-size: 16px;
+  font-size: 14px; /* 缩小以节省空间 */
   color: #555555;
-  line-height: 1.6;
-  max-width: 800px;
+  line-height: 1.5;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -47,9 +49,25 @@
 .content {
   flex: 1;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  /* 默认使用3列网格布局，确保一行显示所有方案 */
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+}
+
+/* 三个想法卡片占第一行 */
+.ideaCard:nth-child(1),
+.ideaCard:nth-child(2),
+.ideaCard:nth-child(3) {
+  grid-row: 1;
+}
+
+/* 提示卡片和成功卡片跨三列占第二行 */
+.hintCard,
+.successCard {
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 /* Idea Card */
@@ -57,38 +75,46 @@
 .ideaCard {
   background: #ffffff;
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px; /* 减少内边距以适应3列布局 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .ideaCard:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
+/* 控制TextArea高度，适应3列布局 */
+.ideaCard textarea {
+  min-height: 100px; /* 设置合适的最小高度 */
+  font-size: 14px;
+}
+
 .ideaHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 8px; /* 减少间距 */
+  margin-bottom: 12px; /* 减少底部间距 */
 }
 
 .ideaNumber {
-  width: 32px;
-  height: 32px;
+  width: 28px; /* 缩小数字徽章 */
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #ffffff;
-  font-size: 18px;
+  font-size: 16px; /* 缩小字体 */
   font-weight: 600;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .ideaTitle {
-  font-size: 20px;
+  font-size: 17px; /* 缩小标题 */
   font-weight: 600;
   color: #2c3e50;
   margin: 0;
@@ -96,9 +122,9 @@
 }
 
 .charCountBadge {
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 13px;
+  padding: 4px 10px; /* 减少内边距 */
+  border-radius: 12px;
+  font-size: 12px; /* 缩小字体 */
   font-weight: 500;
   background-color: #f0f0f0;
 }
@@ -115,22 +141,22 @@
 
 .hintCard {
   background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px; /* 缩小圆角 */
+  padding: 14px; /* 减少内边距 */
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px; /* 减少间距 */
   box-shadow: 0 2px 8px rgba(253, 203, 110, 0.3);
 }
 
 .hintIcon {
-  font-size: 32px;
+  font-size: 24px; /* 缩小图标 */
   flex-shrink: 0;
 }
 
 .hintText {
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 13px; /* 缩小字体 */
+  line-height: 1.5;
   color: #2c3e50;
   margin: 0;
 }
@@ -144,31 +170,31 @@
 
 .successCard {
   background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px; /* 缩小圆角 */
+  padding: 14px; /* 减少内边距 */
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px; /* 减少间距 */
   box-shadow: 0 2px 8px rgba(0, 184, 148, 0.3);
 }
 
 .successIcon {
-  width: 32px;
-  height: 32px;
+  width: 28px; /* 缩小图标 */
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #ffffff;
   color: #00b894;
-  font-size: 20px;
+  font-size: 18px; /* 缩小字体 */
   font-weight: 600;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .successText {
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 13px; /* 缩小字体 */
+  line-height: 1.5;
   color: #ffffff;
   margin: 0;
 }
@@ -178,16 +204,179 @@
    ============================================================================ */
 
 .footer {
-  margin-top: 24px;
+  margin-top: 16px; /* 减少间距 */
   display: flex;
   justify-content: center;
-  padding-top: 16px;
+  padding-top: 12px; /* 减少间距 */
   border-top: 1px solid #e0e0e0;
 }
 
 /* ============================================================================
    Responsive Design
    ============================================================================ */
+
+/* 800p紧凑模式 - 3列网格布局（一行显示所有方案） */
+@media (max-height: 800px) and (min-width: 1024px) {
+  .pageContainer {
+    margin-top: -60px; /* 强化负margin抵消 */
+    padding: 12px 16px 16px 16px; /* 进一步压缩顶部空间 */
+  }
+
+  .header {
+    margin-bottom: 12px; /* 减少标题间距 */
+  }
+
+  .title {
+    font-size: 22px; /* 缩小标题 */
+    margin: 0 0 6px 0;
+  }
+
+  .subtitle {
+    font-size: 13px; /* 缩小副标题 */
+    line-height: 1.4;
+  }
+
+  /* 内容区使用3列网格 - 一行显示所有想法 */
+  .content {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* 3列均分 */
+    grid-template-rows: auto auto; /* 第一行3个想法，第二行提示/成功卡片 */
+    gap: 10px; /* 减少间距 */
+    overflow-y: auto;
+  }
+
+  /* 三个想法占第一行 */
+  .ideaCard:nth-child(1),
+  .ideaCard:nth-child(2),
+  .ideaCard:nth-child(3) {
+    grid-row: 1;
+  }
+
+  /* 提示卡片和成功卡片跨三列占第二行 */
+  .hintCard,
+  .successCard {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  /* 紧凑卡片样式 */
+  .ideaCard {
+    padding: 14px; /* 减少内边距 */
+    border-radius: 8px;
+  }
+
+  .ideaHeader {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .ideaNumber {
+    width: 26px;
+    height: 26px;
+    font-size: 15px;
+  }
+
+  .ideaTitle {
+    font-size: 16px; /* 缩小标题 */
+  }
+
+  .charCountBadge {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+
+  /* 缩小TextArea行数以适应一屏 */
+  .ideaCard textarea {
+    min-height: 75px; /* 约2.5行 */
+    font-size: 13px; /* 缩小字体 */
+    padding: 10px;
+  }
+
+  /* 紧凑提示卡片 */
+  .hintCard,
+  .successCard {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 8px;
+  }
+
+  .hintIcon {
+    font-size: 20px;
+  }
+
+  .successIcon {
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+  }
+
+  .hintText,
+  .successText {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  /* 紧凑底部 */
+  .footer {
+    margin-top: 10px; /* 减少间距 */
+    padding-top: 10px;
+  }
+}
+
+/* 针对1280×800分辨率的额外优化 */
+@media (max-height: 800px) {
+  .pageContainer {
+    margin-top: -60px; /* 确保负margin应用 */
+    padding: 12px 20px 20px 20px;
+  }
+
+  .header {
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-size: 22px;
+    margin: 0 0 6px 0;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  /* 3列布局 */
+  .content {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .ideaCard:nth-child(1),
+  .ideaCard:nth-child(2),
+  .ideaCard:nth-child(3) {
+    grid-row: 1;
+  }
+
+  .hintCard,
+  .successCard {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .ideaCard {
+    padding: 14px;
+  }
+
+  .ideaCard textarea {
+    min-height: 75px;
+    font-size: 13px;
+  }
+
+  .footer {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+}
 
 @media (max-width: 1366px) {
   .pageContainer {

@@ -61,7 +61,7 @@ const FALL_TIME_DATA = {
  *
  * @param {number} waterContent - 含水量百分比(15, 17, 19, 21)
  * @param {number} temperature - 温度(摄氏度, 25-45)
- * @returns {number} 下落时间(秒, 保留1位小数)
+ * @returns {number} 下落时间(秒)
  */
 export function calculateFallTime(waterContent, temperature) {
   // 验证参数
@@ -75,15 +75,8 @@ export function calculateFallTime(waterContent, temperature) {
     return 5.0; // 返回默认值
   }
 
-  // 获取基准时间
-  const baseTime = FALL_TIME_DATA[waterContent][temperature];
-
-  // 添加±3%的随机波动(模拟真实实验的测量误差)
-  const randomVariation = 0.97 + Math.random() * 0.06; // 0.97-1.03
-
-  // 返回最终时间(保留1位小数)
-  const fallTime = baseTime * randomVariation;
-  return parseFloat(fallTime.toFixed(1));
+  // 直接返回数据表中的精确值，不添加任何波动
+  return FALL_TIME_DATA[waterContent][temperature];
 }
 
 /**
@@ -132,14 +125,14 @@ export function calculateExpectedRange(waterContent, temperature) {
     };
   }
 
-  // 获取基准时间
-  const avgTime = FALL_TIME_DATA[waterContent][temperature];
+  // 获取精确时间（无波动）
+  const exactTime = FALL_TIME_DATA[waterContent][temperature];
 
-  // 计算范围(±3%波动)
+  // 返回精确值（min、max、avg都相同）
   return {
-    min: parseFloat((avgTime * 0.97).toFixed(1)),
-    max: parseFloat((avgTime * 1.03).toFixed(1)),
-    avg: parseFloat(avgTime.toFixed(1))
+    min: exactTime,
+    max: exactTime,
+    avg: exactTime
   };
 }
 
