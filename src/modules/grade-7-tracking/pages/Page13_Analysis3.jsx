@@ -110,7 +110,7 @@ const Page13_Analysis3 = () => {
       logOperation({
         action: '点击',
         target: '下一页按钮',
-        value: '查看数据可视化',
+        value: '下一页',
         time: new Date().toISOString()
       });
 
@@ -189,15 +189,6 @@ const Page13_Analysis3 = () => {
                   </label>
                 ))}
               </div>
-
-              {selectedAnswer && (
-                <div className={styles.answerHint}>
-                  <div className={styles.hintIcon}>💡</div>
-                  <div className={styles.hintText}>
-                    提示:含水量越低(黏度越高),温度的影响越小
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

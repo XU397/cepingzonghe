@@ -48,7 +48,10 @@ const AppContent = () => {
     questionnaireAnswers,
     isQuestionnaireCompleted,
     logOperation,
-    collectAnswer
+    collectAnswer,
+    // 暴露给模块路由器的登出与清理
+    handleLogout,
+    clearAllCache
   } = useAppContext();
 
   // 用于防止重复日志输出
@@ -155,7 +158,10 @@ const AppContent = () => {
       questionnaireAnswers,
       isQuestionnaireCompleted,
       logOperation,
-      collectAnswer
+      collectAnswer,
+      // 暴露登出与清理能力给模块
+      handleLogout,
+      clearAllCache
     };
     
     // 认证信息

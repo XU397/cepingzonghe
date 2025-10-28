@@ -74,7 +74,12 @@ const LeftNavigation = ({ currentPage, totalPages, navigationMode }) => {
       </div>
 
       {/* 导航项列表 - 问卷模式下添加questionnaire类名 */}
-      <div className={`${styles.navigationItems} ${navigationMode === 'questionnaire' ? styles.questionnaire : ''}`}>
+      <div
+        className={`${styles.navigationItems} ${navigationMode === 'questionnaire' ? styles.questionnaire : ''}`}
+        style={navigationMode === 'questionnaire' && totalPages > 1 ? {
+          '--questionnaire-line-height': `${(totalPages - 2) * 44}px`
+        } : {}}
+      >
         {navigationItems.map((item, index) => {
           const stepNumber = item.pageNumber;
           const isHighlighted = stepNumber === currentStepNumber;
@@ -171,7 +176,11 @@ const PageLayout = ({ children, showNavigation = true, showTimer = true }) => {
         )}
 
         {/* 页面内容包装器 */}
-        <div className={`${styles.contentWrapper} ${!showTimer ? styles.noTimer : ''}`}>{children}</div>
+        <div className={`${styles.contentWrapper} ${!showTimer ? styles.noTimer : ''}`}>
+          <div className={styles.contentFrame}>
+            {children}
+          </div>
+        </div>
       </div>
     </div>
   );

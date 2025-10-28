@@ -13,7 +13,7 @@ import PageLayout from '../components/layout/PageLayout';
 import styles from '../styles/Page23_Completion.module.css';
 
 const Page23_Completion = () => {
-  const { logOperation } = useTrackingContext();
+  const { logOperation, userContext } = useTrackingContext();
 
   // 记录页面进入
   useEffect(() => {
@@ -43,9 +43,50 @@ const Page23_Completion = () => {
       time: new Date().toISOString(),
     });
 
-    // 跳转到登录页面
-    window.location.href = '/';
-  }, [logOperation]);
+    try {
+      // 优先使用上层提供的登出能力，确保清理状态与缓存
+      if (userContext && typeof userContext.handleLogout === 'function') {
+        userContext.handleLogout();
+        return; // App 会自动渲染登录页
+      }
+
+      // 兜底：手动清理关键缓存并刷新
+      const keysToRemove = [
+        'isAuthenticated',
+        'currentUser',
+        'batchCode',
+        'examNo',
+        'pageNum',
+        'isTaskFinished',
+        'taskStartTime',
+        'remainingTime',
+        'currentPageId',
+        'isQuestionnaireCompleted',
+        'questionnaireAnswers',
+        'isQuestionnaireStarted',
+        'questionnaireStartTime',
+        'questionnaireRemainingTime',
+        'moduleUrl',
+        'lastUserId',
+        'lastSessionEndTime',
+        'shouldClearOnNextSession',
+        'cacheCleared',
+        'lastClearTime',
+        // 追踪测评（grade-7-tracking）本地持久化：确保再次进入时从首屏开始
+        'tracking_sessionId',
+        'tracking_session',
+        'tracking_experimentTrials',
+        'tracking_chartData',
+        'tracking_textResponses',
+        'tracking_questionnaireAnswers'
+      ];
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      window.location.href = '/';
+    } catch (e) {
+      // 最终兜底：强制刷新
+      window.location.reload();
+    }
+  }, [logOperation, userContext]);
 
   return (
     <PageLayout showNavigation={false} showTimer={false}>

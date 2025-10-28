@@ -1,6 +1,9 @@
 ﻿import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { loginUser } from '../shared/services/apiService';
 import '../styles/LoginPage.css';
+import logoImage from '../assets/images/img_logo.png';
+import demoImage from '../assets/images/logoinback.png';
 
 const LoginPage = () => {
   const [userId, setUserId] = useState('');
@@ -9,7 +12,7 @@ const LoginPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const { handleLoginSuccess } = useAppContext();
 
-  const assetBase = import.meta.env.BASE_URL || '/';
+  // Images are bundled via Vite asset imports
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,23 +25,14 @@ const LoginPage = () => {
         return;
       }
 
-      const response = await fetch('/stu/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ examNo: userId, pwd: password })
-      });
-
-      const result = await response.json();
-      if (result.code !== 200) {
-        setErrorMessage(result.msg || '登录失败');
+      const result = await loginUser({ userId, password });
+      if (!result || result.code !== 200 || !result.obj) {
+        setErrorMessage(result?.msg || '登录失败');
         return;
       }
 
       const userData = result.obj;
       await handleLoginSuccess(userData);
-      localStorage.setItem('moduleUrl', userData.url || '/four-grade');
-      localStorage.setItem('modulePageNum', userData.pageNum || '0.1');
-      window.location.reload();
     } catch (err) {
       setErrorMessage(err?.message || '登录失败');
     } finally {
@@ -51,7 +45,7 @@ const LoginPage = () => {
       <header className="login-header">
         <div className="login-logo-container">
           <img
-            src={`${assetBase}logo.svg`}
+            src={logoImage}
             alt="Logo"
             className="login-header-logo"
             onError={(e) => { e.target.style.display = 'none'; }}
@@ -68,7 +62,7 @@ const LoginPage = () => {
             <p className="login-product-subtitle">数据驱动的监测与分析平台</p>
             <div className="login-product-demo">
               <img
-                src={`${assetBase}demo-image.png`}
+                src={demoImage}
                 alt="平台演示"
                 className="login-demo-image"
                 onError={(e) => {

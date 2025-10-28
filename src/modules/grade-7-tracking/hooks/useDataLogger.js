@@ -1,4 +1,7 @@
 import { useState, useCallback } from 'react';
+import { submitPageMarkData } from '@shared/services/apiService.js';
+import { createMarkObject } from '@shared/services/dataLogger.js';
+import { useTrackingContext } from '../context/TrackingProvider.jsx';
 
 /**
  * Data Logger Hook for Grade 7 Tracking Module
@@ -16,6 +19,7 @@ import { useState, useCallback } from 'react';
 export function useDataLogger() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastError, setLastError] = useState(null);
+  const { session } = useTrackingContext();
 
   /**
    * Handle 401 Unauthorized error - session expired
@@ -79,38 +83,20 @@ export function useDataLogger() {
           operationCount: markObject.operationList?.length || 0,
           answerCount: markObject.answerList?.length || 0
         });
+        
+        // Build payload using official API helper contract
+        // 使用 shared 的 createMarkObject 进行标准化（与7年级测评完全一致）
+        const normalized = createMarkObject(markObject);
+        const payload = {
+          batchCode: session?.batchCode || '',
+          examNo: session?.examNo || '',
+          mark: normalized,
+        };
 
-        // Prepare FormData (as per API contract)
-        const formData = new FormData();
-        formData.append('jsonStr', JSON.stringify(markObject));
+        const result = await submitPageMarkData(payload);
 
-        // Submit to backend
-        const response = await fetch('/stu/saveHcMark', {
-          method: 'POST',
-          body: formData,
-          // Let browser set Content-Type with boundary for FormData
-          credentials: 'same-origin' // Include cookies for session management
-        });
-
-        // Check for 401 status BEFORE parsing response
-        if (response.status === 401) {
-          console.error('[useDataLogger] ❌ 检测到401状态码，会话已过期');
-          setIsSubmitting(false);
-          handleSessionExpired();
-          return false; // Don't retry, user will be redirected
-        }
-
-        // Parse response
-        let result;
-        try {
-          result = await response.json();
-        } catch (parseError) {
-          console.error('[useDataLogger] ❌ JSON解析失败:', parseError);
-          throw new Error('服务器返回了无效的响应格式');
-        }
-
-        // Check for success
-        if (response.ok && result.code === 200) {
+        // Success
+        if (result && result.code === 200) {
           console.log('[useDataLogger] ✅ 数据提交成功:', {
             pageNumber: markObject.pageNumber,
             pageDesc: markObject.pageDesc
@@ -120,7 +106,7 @@ export function useDataLogger() {
         }
 
         // Handle business-level 401 error (in JSON response)
-        if (result.code === 401) {
+        if (result && result.code === 401) {
           console.error('[useDataLogger] ❌ 业务层401错误，会话已失效:', result.msg);
           setIsSubmitting(false);
           handleSessionExpired();
@@ -128,7 +114,7 @@ export function useDataLogger() {
         }
 
         // Other business errors - log and continue to retry
-        const errorMsg = result.msg || `业务错误 ${result.code}`;
+        const errorMsg = (result && (result.msg || `业务错误 ${result.code}`)) || '未知错误';
         console.warn(`[useDataLogger] ⚠️ 提交失败 (尝试 ${attempt + 1}/${MAX_RETRIES}):`, errorMsg);
 
         // If this was the last attempt, throw the error

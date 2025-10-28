@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useTrackingContext } from '../context/TrackingContext.jsx';
+import { useTrackingContext } from '../context/TrackingProvider.jsx';
 import { useDataLogger } from '../hooks/useDataLogger.js';
 import { PAGE_MAPPING } from '../config.js';
 import Button from '../components/ui/Button.jsx';

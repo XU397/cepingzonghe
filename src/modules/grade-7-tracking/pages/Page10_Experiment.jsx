@@ -189,28 +189,6 @@ const Page10_Experiment = () => {
             onExperimentComplete={handleExperimentComplete}
             onReset={handleReset}
           />
-
-          {/* 实验历史记录 */}
-          {experimentHistory.length > 0 && (
-            <div className={styles.historySection}>
-              <h4 className={styles.historySectionTitle}>
-                实验记录 ({experimentHistory.length})
-              </h4>
-              <div className={styles.historyList}>
-                {experimentHistory.map((record, index) => (
-                  <div key={record.id} className={styles.historyItem}>
-                    <span className={styles.historyIndex}>#{index + 1}</span>
-                    <span className={styles.historyDetails}>
-                      时间: {record.timestamp.split('T')[1].substring(0, 8)}
-                    </span>
-                    <span className={styles.historyTime}>
-                      {record.data.length} 组数据
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

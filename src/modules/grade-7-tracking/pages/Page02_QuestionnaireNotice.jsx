@@ -2,10 +2,12 @@
  * Page02_QuestionnaireNotice - 问卷说明页 (页码 13)
  *
  * 功能:
- * - 显示问卷说明标题
- * - 恭喜完成实验的语句
- * - 4条说明要点
- * - "开始作答"按钮
+ * - 显示问卷说明标题 (带剪贴板图标)
+ * - 蓝色提示框: 恭喜完成实验
+ * - 4条带复选标记的说明要点
+ * - 感谢语句
+ * - 2秒倒计时提示 (黄色背景)
+ * - "开始作答"按钮 (倒计时期间禁用)
  * - T099: 启动10分钟问卷计时器
  */
 
@@ -15,6 +17,8 @@ import { useDataLogger } from '../hooks/useDataLogger';
 import PageLayout from '../components/layout/PageLayout';
 import Button from '../components/ui/Button';
 import styles from '../styles/Page02_QuestionnaireNotice.module.css';
+
+const READING_TIME_SECONDS = 2; // 2秒倒计时
 
 const Page02_QuestionnaireNotice = () => {
   const {
@@ -27,6 +31,8 @@ const Page02_QuestionnaireNotice = () => {
 
   const { submitPageData } = useDataLogger();
   const [pageStartTime] = useState(() => new Date());
+  const [countdown, setCountdown] = useState(READING_TIME_SECONDS);
+  const [canProceed, setCanProceed] = useState(false);
 
   // 记录页面进入
   useEffect(() => {
@@ -47,8 +53,30 @@ const Page02_QuestionnaireNotice = () => {
     };
   }, [logOperation]);
 
+  // 倒计时逻辑
+  useEffect(() => {
+    if (countdown <= 0) {
+      setCanProceed(true);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        const newValue = prev - 1;
+        if (newValue <= 0) {
+          setCanProceed(true);
+        }
+        return newValue;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [countdown]);
+
   // 处理"开始作答"点击
   const handleStartClick = useCallback(async () => {
+    if (!canProceed) return;
+
     logOperation({
       action: 'button_click',
       target: 'start_questionnaire_button',
@@ -66,7 +94,7 @@ const Page02_QuestionnaireNotice = () => {
           targetElement: op.target,
           eventType: op.action,
           value: op.value || '',
-          time: op.time || new Date(op.timestamp).toISOString(),
+          time: formatDateTime(new Date(op.time || op.timestamp)),
         })),
         answerList: [
           {
@@ -103,6 +131,7 @@ const Page02_QuestionnaireNotice = () => {
       alert(error.message || '页面跳转失败，请重试');
     }
   }, [
+    canProceed,
     currentPageOperations,
     pageStartTime,
     logOperation,
@@ -114,62 +143,79 @@ const Page02_QuestionnaireNotice = () => {
 
   return (
     <PageLayout showNavigation={false} showTimer={true}>
-      <div className={styles.noticeContainer}>
-        <div className={styles.congratsSection}>
-          <div className={styles.congratsIcon}>
-            <svg
-              width="64"
-              height="64"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      <div className={styles.pageContainer}>
+        {/* 标题区域 - 剪贴板图标 + 调查问卷说明 */}
+        <div className={styles.titleSection}>
+          <div className={styles.clipboardIcon}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <h1 className={styles.congratsTitle}>恭喜你完成了实验部分!</h1>
-          <p className={styles.congratsSubtitle}>接下来请完成以下问卷调查</p>
+          <h1 className={styles.pageTitle}>调查问卷说明</h1>
         </div>
 
-        <div className={styles.instructionsSection}>
-          <h2 className={styles.instructionsTitle}>问卷说明</h2>
+        {/* 内容容器 */}
+        <div className={styles.contentContainer}>
+          {/* 蓝色提示框 */}
+          <div className={styles.congratsBox}>
+            <p className={styles.congratsText}>
+              恭喜完成探究任务!接下来,你将进入问卷调查部分<strong>(10分钟)</strong>。
+            </p>
+          </div>
 
-          <ul className={styles.instructionsList}>
-            <li className={styles.instructionItem}>
-              <span className={styles.itemNumber}>1</span>
-              <span className={styles.itemText}>
-                本问卷共有<strong>27道题目</strong>，分为<strong>8个页面</strong>，预计需要<strong>10-15分钟</strong>完成。
-              </span>
-            </li>
-            <li className={styles.instructionItem}>
-              <span className={styles.itemNumber}>2</span>
-              <span className={styles.itemText}>
-                所有题目均为<strong>必答题</strong>，请根据你的真实想法选择最符合的选项。
-              </span>
-            </li>
-            <li className={styles.instructionItem}>
-              <span className={styles.itemNumber}>3</span>
-              <span className={styles.itemText}>
-                每个页面完成所有问题后，才能点击&quot;下一页&quot;按钮继续作答。
-              </span>
-            </li>
-            <li className={styles.instructionItem}>
-              <span className={styles.itemNumber}>4</span>
-              <span className={styles.itemText}>
-                问卷没有对错之分，请<strong>如实填写</strong>，你的答案将被严格保密。
-              </span>
-            </li>
-          </ul>
-        </div>
+          {/* 说明列表 - 带复选标记 */}
+          <div className={styles.instructionsBox}>
+            <ul className={styles.checkList}>
+              <li className={styles.checkItem}>
+                <span className={styles.checkIcon}>✓</span>
+                <span className={styles.checkText}>
+                  在本问卷中, 回答没有正确或错误之分，你只需要根据自己的真实情况填写即可。如有不明白的地方或不确定如何作答，可以提问。
+                </span>
+              </li>
+              <li className={styles.checkItem}>
+                <span className={styles.checkIcon}>✓</span>
+                <span className={styles.checkText}>
+                  你可以使用屏幕右下角的下一页按钮来回答下一个问题。
+                </span>
+              </li>
+              <li className={styles.checkItem}>
+                <span className={styles.checkIcon}>✓</span>
+                <span className={styles.checkText}>
+                  你和其他人的答案将会合并计算成总数和平均数，我们不会辨别个别参加者。
+                </span>
+              </li>
+              <li className={styles.checkItem}>
+                <span className={styles.checkIcon}>✓</span>
+                <span className={styles.checkText}>
+                  你提供的答案会绝对保密。
+                </span>
+              </li>
+            </ul>
 
-        <div className={styles.buttonContainer}>
-          <Button variant="primary" size="large" onClick={handleStartClick}>
-            开始作答
-          </Button>
+            {/* 感谢语 */}
+            <p className={styles.thankYouText}>感谢你的配合！</p>
+          </div>
+
+          {/* 倒计时提示 (黄色背景) */}
+          {!canProceed && (
+            <div className={styles.countdownBox}>
+              <p className={styles.countdownText}>
+                请仔细阅读说明，<span className={styles.countdownNumber}>{countdown}</span>秒后可开始作答...
+              </p>
+            </div>
+          )}
+
+          {/* 开始作答按钮 */}
+          <div className={styles.buttonContainer}>
+            <Button
+              variant="primary"
+              size="large"
+              onClick={handleStartClick}
+              disabled={!canProceed}
+            >
+              开始作答
+            </Button>
+          </div>
         </div>
       </div>
     </PageLayout>

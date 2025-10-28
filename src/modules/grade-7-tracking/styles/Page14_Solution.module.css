@@ -6,40 +6,41 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* 从16px减少到12px */
-  /* 🔧 负margin抵消PageLayout的padding-top (64px)，重新控制对齐 */
-  margin-top: -64px;
-  padding: 8px 20px 8px 20px; /* 进一步优化padding节省垂直空间 */
-  min-height: 100%;
+  gap: 6px; /* 从8px减少到6px */
+  /* 取消负 margin，遵从固定内容外框 1200×800 居中规范 */
+  margin-top: 0;
+  padding: 2px 20px 4px 20px; /* 顶部从4px减少到2px */
 }
 
 .pageTitle {
   text-align: center;
-  margin-top: 6px; /* 从12px减少到6px，标题更靠上 */
-  padding-bottom: 6px; /* 从10px减少到6px */
+  margin-top: 0; /* 从2px减少到0，完全贴近顶部 */
+  padding-bottom: 3px; /* 从4px减少到3px */
   border-bottom: 2px solid #e8e8e8;
 }
 
 .pageTitle h2 {
-  font-size: 22px; /* 从24px减少到22px */
+  font-size: 24px; /* 从24px减少到22px */
   font-weight: 700;
   color: #262626;
-  margin: 0 0 4px 0; /* 从6px减少到4px */
+  margin: 0 0 2px 0; /* 从4px减少到2px */
 }
 
 .subtitle {
-  font-size: 13px; /* 从14px减少到13px */
+  font-size: 18px; /* 从14px减少到13px */
   color: #595959; /* 从#8c8c8c调深，提高可读性 */
   margin: 0;
   line-height: 1.5; /* 添加行高，提高多行文本可读性 */
+  text-align: left;  /* 文本左对齐 */
+  text-indent: 2em;  /* 首行缩进两个字符 */
 }
 
 /* 左右分栏布局 */
 .contentLayout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px; /* 从18px减少到14px */
-  flex: 1;
+  gap: 10px; /* 从14px减少到10px */
+  /* 不再强制撑满高度，随内容自适应，在 contentFrame 内部滚动 */
 }
 
 @media (max-width: 1200px) {
@@ -58,7 +59,7 @@
 .rightPanel {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* 从14px减少到10px，缩小卡片间距 */
+  gap: 8px; /* 从10px减少到8px，进一步缩小卡片间距 */
 }
 
 /* 表格卡片 */
@@ -371,8 +372,8 @@
 .navigationFooter {
   display: flex;
   justify-content: center;
-  padding-top: 10px; /* 从16px减少到10px */
-  padding-bottom: 10px; /* 从8px增加到10px，确保按钮完整显示 */
+  padding-top: 6px; /* 从10px减少到6px */
+  padding-bottom: 6px; /* 从10px减少到6px */
   border-top: 2px solid #e8e8e8;
 }
 

@@ -182,7 +182,7 @@ const Page04_Resource = () => {
           targetElement: op.target,
           eventType: op.action,
           value: op.value || '',
-          time: op.time || new Date(op.timestamp).toISOString()
+          time: formatDateTime(new Date(op.time || op.timestamp))
         })),
         answerList: [
           {

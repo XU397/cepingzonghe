@@ -64,7 +64,7 @@ const PageLoadingFallback = () => (
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    height: '100vh',
+    minHeight: '100vh',
     backgroundColor: '#f5f5f5'
   }}>
     <Spinner size="large" message="页面加载中..." />

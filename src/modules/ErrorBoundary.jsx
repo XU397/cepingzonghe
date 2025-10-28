@@ -77,6 +77,8 @@ class ModuleErrorBoundary extends React.Component {
       // 清除模块系统标志
       localStorage.removeItem('useModuleSystem');
       localStorage.removeItem('moduleUrl');
+      // 统一键名：优先清理 pageNum，兼容清理旧的 modulePageNum
+      localStorage.removeItem('pageNum');
       localStorage.removeItem('modulePageNum');
       
       // 刷新页面以加载传统模式

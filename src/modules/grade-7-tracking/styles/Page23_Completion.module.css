@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100%;
   overflow: hidden;
   padding: 20px;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
@@ -111,7 +111,7 @@
 @media (max-height: 800px) {
   .completionContainer {
     padding: 20px;
-    height: 100vh;
+    min-height: 100%;
     overflow: hidden;
   }
 

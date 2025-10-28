@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useTrackingContext } from '../context/TrackingContext.jsx';
+import { useTrackingContext } from '../context/TrackingProvider.jsx';
 import { useDataLogger } from '../hooks/useDataLogger';
 import { PAGE_MAPPING } from '../config.js';
 import Button from '../components/ui/Button.jsx';
@@ -202,8 +202,7 @@ const Page08_Evaluation = () => {
         <div className={styles.header}>
           <h1 className={styles.title}>评估实验方案</h1>
         <p className={styles.subtitle}>
-          以下是3种常用的黏度测量方法，请分析每种方法的优点和缺点。
-          需完成所有 <strong>{MIN_FILLED_FIELDS}</strong> 个输入框才能进入下一页。
+        小明提出了以下三种比较蜂蜜黏度的方法。请分析三种方法的优缺点，并写在相应的方框内。需完成所有 <strong>{MIN_FILLED_FIELDS}</strong> 个输入框才能进入下一页。
         </p>
       </div>
 

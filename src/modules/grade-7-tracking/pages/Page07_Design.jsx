@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useTrackingContext } from '../context/TrackingContext.jsx';
+import { useTrackingContext } from '../context/TrackingProvider.jsx';
 import { useDataLogger } from '../hooks/useDataLogger';
 import { PAGE_MAPPING } from '../config.js';
 import Button from '../components/ui/Button.jsx';
@@ -207,8 +207,7 @@ const Page07_Design = () => {
         <div className={styles.header}>
           <h1 className={styles.title}>设计实验方案</h1>
         <p className={styles.subtitle}>
-          请根据提出的假设，设计3种不同的实验方案来验证蜂蜜黏度与温度、含水量的关系。
-          每个想法至少填写 <strong>{MIN_CHAR_COUNT}</strong> 个字符。
+        为验证小明的猜想，首先要确定评估蜂蜜黏度的方法。假设有两瓶蜂蜜，请你帮小明想一想，有哪些可以比较两瓶蜂蜜黏度的方法。请提出三个可能的想法，将其简要陈述在下方方框内。每个想法至少填写 <strong>{MIN_CHAR_COUNT}</strong> 个字符。
         </p>
       </div>
 

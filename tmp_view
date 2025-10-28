@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PageLayout 样式 - 7年级追踪测评模块
  * 提供统一的页面布局样式，包括左侧导航和主内容区
  */
@@ -10,7 +10,7 @@
 .pageLayout {
   display: flex;
   width: 100%;
-  min-height: 100vh; /* 替换 height: 100vh，避免链式拉�?*/
+  height: 100vh;
   background-color: #f9f9f9;
   overflow: hidden;
 }
@@ -26,7 +26,8 @@
   background-color: #ffffff;
   border-right: 3px solid var(--cartoon-border);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* 左侧导航容器 */
@@ -37,9 +38,6 @@
   padding: 15px 10px;
   background-color: var(--cartoon-light);
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   box-sizing: border-box;
   width: 100%;
   position: relative;
@@ -59,7 +57,7 @@
   z-index: 2;
 }
 
-/* 导航标题 - 隐藏不使�?*/
+/* 导航标题 - 隐藏不使�?*/
 .navTitle {
   display: none;
 }
@@ -79,7 +77,7 @@
   position: relative;
 }
 
-/* 导航项列表容�?*/
+/* 导航项列表容�?*/
 .navigationItems {
   list-style: none;
   padding: 0;
@@ -93,13 +91,13 @@
   justify-content: flex-start;
 }
 
-/* 问卷模式：添加连续竖线背景（精确控制高度，从�?个导航项中心到倒数�?个导航项中心�?*/
+/* 问卷模式：添加连续竖线背景（精确控制高度，从�?个导航项中心到倒数�?个导航项中心�?*/
 .navigationItems.questionnaire::before {
   content: '';
   position: absolute;
-  top: 20px; /* �?个导航项的中心位置（40px高度的一半） */
+  top: 20px; /* �?个导航项的中心位置（40px高度的一半） */
   left: 50%;
-  height: var(--questionnaire-line-height, 264px); /* 动态高度，默认264px（适用�?个导航项�?*/
+  height: var(--questionnaire-line-height, 264px); /* 动态高度，默认264px（适用�?个导航项�?*/
   width: 4px;
   background-color: var(--cartoon-border);
   transform: translateX(-50%);
@@ -134,7 +132,7 @@
   box-shadow: 0 3px 8px var(--cartoon-shadow);
   cursor: default;
   flex-shrink: 0;
-  margin-bottom: 4px; /* �?px减少�?px，紧凑导航间�?*/
+  margin-bottom: 4px; /* �?px减少�?px，紧凑导航间�?*/
 }
 
 .navItem:hover {
@@ -164,35 +162,30 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* 已完成样�?*/
+/* 已完成样�?*/
 .navItem.completed {
   background-color: var(--cartoon-green);
   color: white;
   border-color: #5cbb9f;
 }
 
-/* 连接�?- 仅在实验模式下显�?*/
+/* 连接�?- 仅在实验模式下显�?*/
 .navConnector {
   width: 3px;
-  height: 4px; /* �?px减少�?px，进一步压缩间�?*/
+  height: 4px; /* �?px减少�?px，进一步压缩间�?*/
   background-color: var(--cartoon-border);
   border-radius: 2px;
-  margin: 1px 0; /* �?px减少�?px */
+  margin: 1px 0; /* �?px减少�?px */
   z-index: 0;
 }
 
-/* 问卷模式下隐藏单独的连接�?因为有连续竖�? */
+/* 问卷模式下隐藏单独的连接�?因为有连续竖�? */
 .navigationItems.questionnaire .navConnector {
   display: none;
 }
 
-/* 问卷模式下增加导航项之间的间距，与实验模式（有连接线）的视觉间距保持一致 */
-.navigationItems.questionnaire .navItem {
-  margin-bottom: 14px; /* 4px(原始) + 2*(4px连接线 + 1px margin) = 14px，总间距约44px */
-}
-
 /* ============================================================================
-   主内容区域
+   主内容区�?
    ============================================================================ */
 
 .mainContent {
@@ -201,12 +194,9 @@
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  align-items: center;     /* 水平居中 contentWrapper */
-  justify-content: flex-start; /* 顶部对齐，不浪费空间 */
-  padding-top: 5px;        /* 只留5px顶部间距 */
 }
 
-/* 计时器容�?右上�? - 与Grade 4 GlobalTimer样式保持一�?*/
+/* 计时器容�?右上�? - 与Grade 4 GlobalTimer样式保持一�?*/
 .timerContainer {
   position: fixed;
   top: 55px;
@@ -224,7 +214,6 @@
   font-weight: bold;
   border: 2px solid #ffb347;
   transition: all 0.3s ease;
-  white-space: nowrap; /* 禁止换行，保持单�?*/
 }
 
 /* 时钟图标样式 */
@@ -234,7 +223,7 @@
   flex-shrink: 0;
 }
 
-/* 计时器文本容�?*/
+/* 计时器文本容�?*/
 .timerText {
   display: flex;
   flex-direction: column;
@@ -256,60 +245,25 @@
   letter-spacing: 1px;
 }
 
-/* 页面内容包装器 */
+/* 页面内容包装�?*/
 .contentWrapper {
-  flex: 0 0 auto; /* 不伸缩，让容器自适应 */
-  padding: 0 40px 5px 40px; /* 顶部0，底部5px */
+  flex: 1;
+  padding: 80px 40px 40px 40px; /* 顶部留出计时器空�?*/
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
 }
 
-/* 无计时器时保持相同padding */
+/* 无计时器时减少顶部padding */
 .contentWrapper.noTimer {
-  padding: 0 40px 5px 40px;
-}
-
-/* 统一内容外框（白�?+ 圆角 + 阴影）：固定宽高 + 居中 + 内部滚动 */
-.contentFrame {
-  width: 1200px;
-  max-width: 100%;
-  height: 800px;                      /* 固定内容高度标准�?*/
-  max-height: calc(100vh - 120px);    /* 极小屏兜底上�?*/
-  background: #fff;                    /* 白底 */
-  border-radius: 12px;                 /* 圆角 */
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); /* 阴影 */
-  overflow: auto;                      /* 内容滚动 */
-  box-sizing: border-box;
-  padding: 5px 5px;                  /* 统一内边�?*/
-}
-
-/* 非侵入式兜底：当未添�?.contentFrame 包裹时，直接作用于第一个子元素 */
-.contentWrapper > :first-child {
-  width: 1200px;
-  max-width: 100%;
-  height: 800px;
-  max-height: calc(100vh - 120px);
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  overflow: auto;
-  box-sizing: border-box;
-  padding: 5px 5px;
-}
-
-/* 超小屏兜底：保持单行与固定内边距，仅缩小字体 */
-@media (max-width: 360px) {
-  .timerContainer {
-    font-size: 16px;
-  }
+  padding-top: 40px;
 }
 
 /* ============================================================================
-   响应式设�?
+   响应式设�?
    ============================================================================ */
 
-/* 800p紧凑模式优化 - 针对1280x800分辨�?*/
+/* 800p紧凑模式优化 - 针对1280x800分辨�?*/
 @media (max-height: 800px) {
   /* 优化左侧导航间距 */
   .leftNavigation {
@@ -322,23 +276,23 @@
   }
 
   .progressIndicator {
-    margin-top: 24px; /* �?8px减少�?4px */
-    margin-bottom: 10px; /* �?2px减少�?0px */
-    padding: 7px 4px; /* �?px减少�?px */
+    margin-top: 24px; /* �?8px减少�?4px */
+    margin-bottom: 10px; /* �?2px减少�?0px */
+    padding: 7px 4px; /* �?px减少�?px */
     font-size: 0.9em;
   }
 
   .navItem {
-    width: 34px; /* �?6px减少�?4px */
-    height: 34px; /* �?6px减少�?4px */
-    font-size: 0.85em; /* �?.9em减少�?.85em */
-    margin-bottom: 3px; /* �?px减少�?px */
+    width: 34px; /* �?6px减少�?4px */
+    height: 34px; /* �?6px减少�?4px */
+    font-size: 0.85em; /* �?.9em减少�?.85em */
+    margin-bottom: 3px; /* �?px减少�?px */
     border-width: 2px; /* 减少边框宽度 */
   }
 
   .navConnector {
-    height: 3px; /* �?px减少�?px */
-    margin: 0.5px 0; /* �?px减少�?.5px */
+    height: 3px; /* �?px减少�?px */
+    margin: 0.5px 0; /* �?px减少�?.5px */
   }
 
   .navItem.highlighted::after {
@@ -348,15 +302,10 @@
     right: -3px;
   }
 
-  /* 问卷模式背景线 - 800p优化（导航项34px + 12px margin = 46px间距） */
+  /* 问卷模式背景�?- 800p优化（导航项34px + 3px margin = 37px间距�?*/
   .navigationItems.questionnaire::before {
-    top: 17px; /* 34px高度的一半 */
-    height: calc(var(--questionnaire-line-height, 264px) * 46 / 44); /* 按比例调整 */
-  }
-
-  /* 问卷模式下保持合理的导航项间距 */
-  .navigationItems.questionnaire .navItem {
-    margin-bottom: 12px; /* 调整为12px以保持与实验模式相似的视觉间距 */
+    top: 17px; /* 34px高度的一�?*/
+    height: calc(var(--questionnaire-line-height, 264px) * 37 / 44); /* 按比例调�?*/
   }
 
   /* 优化计时器位置和尺寸 */
@@ -378,15 +327,15 @@
 
   /* 减少内容包装器padding - 关键优化 */
   .contentWrapper {
-    padding: 0 30px 5px 30px; /* 顶部0，让白色容器紧贴顶部 */
+    padding: 60px 30px 30px 30px;
   }
 
   .contentWrapper.noTimer {
-    padding: 0 30px 5px 30px;
+    padding-top: 30px;
   }
 }
 
-/* 响应式设�?- 针对720p高度优化 */
+/* 响应式设�?- 针对720p高度优化 */
 @media (max-height: 720px) {
   .leftNavigation {
     padding: 6px 4px;
@@ -398,10 +347,10 @@
   }
 
   .progressIndicator {
-    margin-top: 18px; /* �?0px减少�?8px */
-    margin-bottom: 6px; /* �?px减少�?px */
+    margin-top: 18px; /* �?0px减少�?8px */
+    margin-bottom: 6px; /* �?px减少�?px */
     padding: 4px 3px;
-    font-size: 0.75em; /* �?.8em减少�?.75em */
+    font-size: 0.75em; /* �?.8em减少�?.75em */
   }
 
   .navigationItems {
@@ -409,17 +358,17 @@
   }
 
   .navItem {
-    width: 26px; /* �?8px减少�?6px */
-    height: 26px; /* �?8px减少�?6px */
-    font-size: 0.7em; /* �?.75em减少�?.7em */
+    width: 26px; /* �?8px减少�?6px */
+    height: 26px; /* �?8px减少�?6px */
+    font-size: 0.7em; /* �?.75em减少�?.7em */
     margin-bottom: 2px; /* 添加margin控制间距 */
     border-width: 2px; /* 减少边框宽度 */
   }
 
   .navConnector {
-    height: 2px; /* �?2px大幅减少�?px */
-    margin: 0.5px 0; /* �?px减少�?.5px */
-    width: 2px; /* �?px减少�?px */
+    height: 2px; /* �?2px大幅减少�?px */
+    margin: 0.5px 0; /* �?px减少�?.5px */
+    width: 2px; /* �?px减少�?px */
   }
 
   .navItem.highlighted::after {
@@ -429,15 +378,10 @@
     right: -2px;
   }
 
-  /* 问卷模式背景线 - 720p优化（导航项26px + 9px margin = 35px间距） */
+  /* 问卷模式背景�?- 720p优化（导航项26px + 2px margin = 28px间距�?*/
   .navigationItems.questionnaire::before {
-    top: 13px; /* 26px高度的一半 */
-    height: calc(var(--questionnaire-line-height, 264px) * 35 / 44); /* 按比例调整 */
-  }
-
-  /* 问卷模式下保持合理的导航项间距 */
-  .navigationItems.questionnaire .navItem {
-    margin-bottom: 9px; /* 调整为9px以保持与实验模式相似的视觉间距 */
+    top: 13px; /* 26px高度的一�?*/
+    height: calc(var(--questionnaire-line-height, 264px) * 28 / 44); /* 按比例调�?*/
   }
 
   .timerContainer {
@@ -456,11 +400,7 @@
   }
 
   .contentWrapper {
-    padding: 0 25px 5px 25px; /* 顶部0，让白色容器紧贴顶部 */
-  }
-
-  .contentWrapper.noTimer {
-    padding: 0 25px 5px 25px;
+    padding: 60px 25px 25px 25px;
   }
 }
 
@@ -504,11 +444,7 @@
   }
 
   .contentWrapper {
-    padding: 0 20px 5px 20px; /* 顶部0，让白色容器紧贴顶部 */
-  }
-
-  .contentWrapper.noTimer {
-    padding: 0 20px 5px 20px;
+    padding: 50px 20px 20px 20px;
   }
 }
 
@@ -523,20 +459,3 @@
   }
 }
 
-
-/* 高屏（≥900px）：内容垂直居中，减少顶部 padding，避免出现大块留白 */
-@media (min-height: 900px) {
-  .contentWrapper {
-    padding-top: 0; /* 改为0，计时器可以浮动覆盖 */
-  }
-}
-
-/* 矮屏（<900px）：内容顶部对齐，适当增大顶部 padding 防止与计时器重叠 */
-@media (max-height: 899px) {
-  .mainContent {
-    justify-content: flex-start; /* 顶部对齐，避免小屏出现大块留白 */
-  }
-  .contentWrapper {
-    padding-top: 0; /* 改为0，计时器可以浮动覆盖 */
-  }
-}

@@ -1,140 +1,189 @@
 /**
  * Page02_QuestionnaireNotice Styles
- * 问卷说明页样式
+ * 问卷说明页样式 - 参考截图设计
  */
 
 /* ============================================================================
-   Notice Container
+   Page Container
    ============================================================================ */
 
-.noticeContainer {
+.pageContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: auto; /* 改为auto避免撑满 */
-  padding: 0 24px; /* 移除顶部padding */
-  max-width: 800px;
+  justify-content: flex-start;
+  min-height: 100%;
+  padding: 40px 24px 24px;
+  max-width: 1000px;
   margin: 0 auto;
+}
+
+/* ============================================================================
+   Title Section (剪贴板图标 + 标题)
+   ============================================================================ */
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 32px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.clipboardIcon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  color: #d97706;
+}
+
+.clipboardIcon svg {
+  width: 100%;
   height: 100%;
 }
 
-/* ============================================================================
-   Congratulations Section
-   ============================================================================ */
-
-.congratsSection {
-  text-align: center;
-  margin-top: 0; /* 移除顶部margin */
-  margin-bottom: 32px; /* 减小底部间距 48px -> 32px */
-}
-
-.congratsIcon {
-  display: inline-block;
-  color: #10b981;
-  margin-bottom: 20px;
-  animation: scaleIn 0.5s ease-out;
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.congratsTitle {
+.pageTitle {
   font-size: 32px;
   font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 12px;
-  line-height: 1.3;
-}
-
-.congratsSubtitle {
-  font-size: 18px;
-  color: #6b7280;
-  font-weight: 400;
+  color: #78350f;
+  margin: 0;
+  line-height: 1.2;
 }
 
 /* ============================================================================
-   Instructions Section
+   Content Container
    ============================================================================ */
 
-.instructionsSection {
+.contentContainer {
   width: 100%;
-  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ============================================================================
+   Congrats Box (蓝色提示框)
+   ============================================================================ */
+
+.congratsBox {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  padding: 24px 32px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.congratsText {
+  font-size: 20px;
+  line-height: 1.6;
+  color: #1e40af;
+  margin: 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.congratsText strong {
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+/* ============================================================================
+   Instructions Box (说明列表)
+   ============================================================================ */
+
+.instructionsBox {
+  background: #ffffff;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
-  padding: 24px; /* 减小padding 32px -> 24px */
-  margin-bottom: 24px; /* 减小底部间距 32px -> 24px */
+  padding: 32px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.instructionsTitle {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 24px;
-  text-align: center;
-  border-bottom: 2px solid #3b82f6;
-  padding-bottom: 12px;
-}
-
-.instructionsList {
+.checkList {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 0 24px 0;
 }
 
-.instructionItem {
+.checkItem {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  padding: 16px;
-  margin-bottom: 12px;
-  background-color: #f9fafb;
-  border-radius: 8px;
-  transition: background-color 0.2s ease;
+  padding: 16px 0;
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.instructionItem:hover {
-  background-color: #f3f4f6;
+.checkItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
-.instructionItem:last-child {
-  margin-bottom: 0;
-}
-
-.itemNumber {
+.checkIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  background-color: #3b82f6;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
 }
 
-.itemText {
-  font-size: 16px;
-  line-height: 1.6;
+.checkText {
+  font-size: 17px;
+  line-height: 1.7;
   color: #374151;
   flex: 1;
+  padding-top: 2px;
 }
 
-.itemText strong {
-  color: #1f2937;
-  font-weight: 600;
+.thankYouText {
+  font-size: 20px;
+  font-weight: 700;
+  color: #dc2626;
+  text-align: center;
+  margin: 16px 0 0 0;
+  padding-top: 20px;
+  border-top: 2px solid #f3f4f6;
+}
+
+/* ============================================================================
+   Countdown Box (黄色倒计时提示)
+   ============================================================================ */
+
+.countdownBox {
+  background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
+  border: 2px solid #eab308;
+  border-radius: 12px;
+  padding: 20px 32px;
+  box-shadow: 0 2px 8px rgba(234, 179, 8, 0.2);
+}
+
+.countdownText {
+  font-size: 18px;
+  line-height: 1.6;
+  color: #713f12;
+  margin: 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.countdownNumber {
+  font-size: 24px;
+  font-weight: 700;
+  color: #dc2626;
+  font-variant-numeric: tabular-nums;
+  padding: 0 4px;
 }
 
 /* ============================================================================
@@ -145,7 +194,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 /* ============================================================================
@@ -154,96 +203,149 @@
 
 /* 800p紧凑模式 */
 @media (max-height: 800px) {
-  .congratsSection {
+  .pageContainer {
+    padding: 24px 20px 20px;
+  }
+
+  .titleSection {
+    padding: 16px 24px;
+    gap: 12px;
     margin-bottom: 24px;
   }
 
-  .congratsIcon {
-    margin-bottom: 12px;
+  .clipboardIcon {
+    width: 40px;
+    height: 40px;
   }
 
-  .congratsIcon svg {
-    width: 48px;
-    height: 48px;
-  }
-
-  .congratsTitle {
+  .pageTitle {
     font-size: 26px;
-    margin-bottom: 8px;
   }
 
-  .congratsSubtitle {
-    font-size: 16px;
+  .contentContainer {
+    gap: 20px;
   }
 
-  .instructionsSection {
-    padding: 20px;
-    margin-bottom: 20px;
+  .congratsBox {
+    padding: 18px 24px;
   }
 
-  .instructionsTitle {
-    font-size: 20px;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
+  .congratsText {
+    font-size: 17px;
   }
 
-  .instructionItem {
-    padding: 12px;
-    margin-bottom: 10px;
+  .instructionsBox {
+    padding: 24px;
+  }
+
+  .checkItem {
+    padding: 12px 0;
     gap: 12px;
   }
 
-  .itemNumber {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    font-size: 14px;
+  .checkIcon {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    font-size: 16px;
   }
 
-  .itemText {
-    font-size: 14px;
-    line-height: 1.5;
+  .checkText {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .thankYouText {
+    font-size: 18px;
+    margin: 12px 0 0 0;
+    padding-top: 16px;
+  }
+
+  .countdownBox {
+    padding: 16px 24px;
+  }
+
+  .countdownText {
+    font-size: 16px;
+  }
+
+  .countdownNumber {
+    font-size: 20px;
   }
 
   .buttonContainer {
-    margin-top: 12px;
+    margin-top: 4px;
   }
 }
 
 @media (max-width: 768px) {
-  .noticeContainer {
-    padding: 24px 16px;
+  .pageContainer {
+    padding: 20px 16px;
   }
 
-  .congratsTitle {
-    font-size: 26px;
+  .titleSection {
+    padding: 14px 20px;
+    gap: 10px;
+    margin-bottom: 20px;
   }
 
-  .congratsSubtitle {
+  .clipboardIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+  }
+
+  .contentContainer {
+    gap: 16px;
+  }
+
+  .congratsBox {
+    padding: 16px 20px;
+  }
+
+  .congratsText {
     font-size: 16px;
   }
 
-  .instructionsSection {
-    padding: 24px 20px;
+  .instructionsBox {
+    padding: 20px;
   }
 
-  .instructionsTitle {
-    font-size: 20px;
+  .checkItem {
+    padding: 10px 0;
+    gap: 10px;
   }
 
-  .instructionItem {
-    gap: 12px;
-    padding: 12px;
-  }
-
-  .itemNumber {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
+  .checkIcon {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
     font-size: 14px;
   }
 
-  .itemText {
+  .checkText {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .thankYouText {
+    font-size: 17px;
+    margin: 10px 0 0 0;
+    padding-top: 14px;
+  }
+
+  .countdownBox {
+    padding: 14px 20px;
+  }
+
+  .countdownText {
     font-size: 15px;
+  }
+
+  .countdownNumber {
+    font-size: 18px;
   }
 }

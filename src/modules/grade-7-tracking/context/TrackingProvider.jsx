@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useContext } from 'react';
 import TrackingContext from './TrackingContext';
 import { PAGE_MAPPING } from '../config';
+import { getQuestionnairePageData } from '../utils/questionnaireLoader';
 
 /**
  * TrackingProvider - 7年级追踪测评模块的状态管理提供者
@@ -36,8 +37,14 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       return storedSessionId;
     }
 
-    // 生成新的UUID v4
-    const newSessionId = crypto.randomUUID();
+    // 生成新的UUID v4（兼容不支持 crypto.randomUUID 的环境）
+    const newSessionId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+      ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
     localStorage.setItem('tracking_sessionId', newSessionId);
     console.log('[TrackingProvider] 生成新sessionId:', newSessionId);
     return newSessionId;
@@ -45,18 +52,47 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
 
   /**
    * 初始化会话状态
+   * 优先从localStorage恢复currentPage，实现刷新后停留在当前页
    */
   const initializeSession = useCallback(() => {
     const now = Date.now();
 
-    // 从userContext提取学生信息
+    // 优先从localStorage恢复currentPage和navigationMode（刷新恢复功能）
+    let restoredCurrentPage = null;
+    let restoredNavigationMode = null;
+    try {
+      const savedSession = localStorage.getItem('tracking_session');
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        restoredCurrentPage = parsed.currentPage;
+        restoredNavigationMode = parsed.navigationMode;
+        console.log('[TrackingProvider] 🔄 从localStorage恢复页面状态:', {
+          currentPage: restoredCurrentPage,
+          navigationMode: restoredNavigationMode
+        });
+      }
+    } catch (e) {
+      console.warn('[TrackingProvider] 读取localStorage失败:', e);
+    }
+
+    // 确定currentPage: 优先使用localStorage的值，否则使用initialPageId计算
+    const currentPage = restoredCurrentPage !== null
+      ? restoredCurrentPage
+      : determinePageNumber(initialPageId);
+
+    // 确定navigationMode: 优先使用localStorage的值，否则使用initialPageId计算
+    const navigationMode = restoredNavigationMode !== null
+      ? restoredNavigationMode
+      : determineNavigationMode(initialPageId);
+
+    // 从userContext提取学生信息（ModuleRouter 提供为顶层字段）
     const session = {
       // 学生身份信息 (从登录API获取)
-      studentCode: userContext?.user?.examNo || '',
-      studentName: userContext?.user?.studentName || '',
-      examNo: userContext?.user?.examNo || '',
-      batchCode: userContext?.session?.batchCode || '',
-      schoolCode: userContext?.user?.schoolCode || userContext?.user?.schoolName || '',
+      studentCode: userContext?.examNo || '',
+      studentName: userContext?.studentName || '',
+      examNo: userContext?.examNo || '',
+      batchCode: userContext?.batchCode || '',
+      schoolCode: userContext?.schoolCode || userContext?.schoolName || '',
 
       // 会话管理
       sessionId: initializeSessionId(),
@@ -64,9 +100,9 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       lastHeartbeatTime: now,
       isSessionValid: true,
 
-      // 导航状态 (根据initialPageId确定)
-      currentPage: determinePageNumber(initialPageId),
-      navigationMode: determineNavigationMode(initialPageId),
+      // 导航状态 (优先使用localStorage恢复的值)
+      currentPage,
+      navigationMode,
 
       // 计时器状态
       experimentTimerStarted: false,
@@ -109,6 +145,64 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
   const [operationLog, setOperationLog] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [pageStartTime, setPageStartTime] = useState(Date.now());
+
+  // ============================================================================
+  // 2.1 首次挂载时从 localStorage 恢复其他状态
+  // 注意：currentPage 和 navigationMode 已经在 initializeSession 中同步恢复
+  // ============================================================================
+  useEffect(() => {
+    try {
+      const savedSession = localStorage.getItem('tracking_session');
+      const savedTrials = localStorage.getItem('tracking_experimentTrials');
+      const savedChart = localStorage.getItem('tracking_chartData');
+      const savedText = localStorage.getItem('tracking_textResponses');
+      const savedQA = localStorage.getItem('tracking_questionnaireAnswers');
+
+      // 恢复session中的其他字段（除了currentPage和navigationMode，它们已在初始化时恢复）
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        // 只恢复计时器相关的字段，不覆盖currentPage和navigationMode
+        const timerFields = {
+          taskTimeRemaining: parsed.taskTimeRemaining,
+          taskTimerActive: parsed.taskTimerActive,
+          questionnaireTimeRemaining: parsed.questionnaireTimeRemaining,
+          questionnaireTimerActive: parsed.questionnaireTimerActive,
+          experimentTimerStarted: parsed.experimentTimerStarted,
+          questionnaireTimerStarted: parsed.questionnaireTimerStarted,
+          experimentStartTime: parsed.experimentStartTime,
+          questionnaireStartTime: parsed.questionnaireStartTime,
+        };
+        setSession(prev => ({ ...prev, ...timerFields }));
+        console.log('[TrackingProvider] 🔄 恢复计时器状态成功');
+      }
+
+      if (savedTrials) {
+        const parsedTrials = JSON.parse(savedTrials);
+        Array.isArray(parsedTrials) && setExperimentTrials(parsedTrials);
+        console.log('[TrackingProvider] 🔄 恢复实验试验数据成功');
+      }
+
+      if (savedChart) {
+        const parsedChart = JSON.parse(savedChart);
+        parsedChart && setChartData(prev => ({ ...prev, ...parsedChart }));
+        console.log('[TrackingProvider] 🔄 恢复图表数据成功');
+      }
+
+      if (savedText) {
+        const parsedText = JSON.parse(savedText);
+        Array.isArray(parsedText) && setTextResponses(parsedText);
+        console.log('[TrackingProvider] 🔄 恢复文本回答成功');
+      }
+
+      if (savedQA) {
+        const parsedQA = JSON.parse(savedQA);
+        parsedQA && setQuestionnaireAnswers(parsedQA);
+        console.log('[TrackingProvider] 🔄 恢复问卷答案成功');
+      }
+    } catch (e) {
+      console.warn('[TrackingProvider] 恢复本地持久化状态失败:', e);
+    }
+  }, []);
 
   // ============================================================================
   // 3. 辅助函数
@@ -414,20 +508,43 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @param {string} pageDesc - 页面描述
    * @returns {Object} MarkObject
    */
-  const buildMarkObject = useCallback((pageNumber, pageDesc) => {
+  const buildMarkObject = useCallback((pageNumber, pageDesc, options = {}) => {
+    const pn = typeof pageNumber === 'string' ? parseFloat(pageNumber) : pageNumber;
+
+    // 统一操作列表规范化
+    const opList = operationLog.map(op => ({
+      targetElement: op.target,
+      eventType: op.action,
+      value: String(op.value || ''),
+      time: formatDateTime(new Date(op.time || op.timestamp))
+    }));
+
+    // 构造答案列表：问卷页(14-21)从 questionnaireAnswers 构建；其余沿用 answers 收集
+    let ansList;
+    if (pn >= 14 && pn <= 21) {
+      const pageData = getQuestionnairePageData(pn);
+      const missingLabel = options.missingLabel || '未回答';
+
+      ansList = (pageData?.questions || []).map((q, idx) => {
+        const selected = questionnaireAnswers?.[q.id]?.selectedOption;
+        const label = (q.options || []).find(opt => opt.value === selected)?.label;
+        return {
+          targetElement: `P${pn}_问题${idx + 1}`,
+          value: String(label || missingLabel)
+        };
+      });
+    } else {
+      ansList = answers.map(ans => ({
+        targetElement: ans.targetElement,
+        value: String(ans.value || '')
+      }));
+    }
+
     const markObject = {
       pageNumber: String(pageNumber),
       pageDesc: pageDesc,
-      operationList: operationLog.map(op => ({
-        targetElement: op.target,
-        eventType: op.action,
-        value: String(op.value || ''),
-        time: op.time || new Date(op.timestamp).toISOString()
-      })),
-      answerList: answers.map(ans => ({
-        targetElement: ans.targetElement,
-        value: String(ans.value || '')
-      })),
+      operationList: opList,
+      answerList: ansList,
       beginTime: formatDateTime(pageStartTime),
       endTime: formatDateTime(new Date()),
       imgList: []
@@ -441,7 +558,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     });
 
     return markObject;
-  }, [operationLog, answers, pageStartTime, formatDateTime]);
+  }, [operationLog, answers, pageStartTime, formatDateTime, questionnaireAnswers]);
 
   // ============================================================================
   // 9. 页面导航
@@ -670,7 +787,8 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       const pageInfo = PAGE_MAPPING[session.currentPage];
       const markObject = buildMarkObject(
         session.currentPage,
-        pageInfo?.pageDesc || '问卷调查'
+        pageInfo?.pageDesc || '问卷调查',
+        { missingLabel: '超时未回答' }
       );
 
       // 提交数据

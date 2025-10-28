@@ -163,7 +163,7 @@ const Page14_Solution = () => {
             <LineChart
               temperatureRange={TEMPERATURE_OPTIONS}
               waterContentOptions={WATER_CONTENT_OPTIONS}
-              height={450}
+              height={320}
               showLegend
               showGrid
             />

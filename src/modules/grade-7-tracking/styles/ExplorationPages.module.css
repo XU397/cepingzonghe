@@ -10,9 +10,8 @@
 .pageContainer {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 80px);
   /* 负margin抵消PageLayout的60px padding-top，节省垂直空间 */
-  margin-top: -60px;
+  margin-top: 0;
   padding: 24px 40px 40px 40px; /* 减少顶部padding */
   background: #f5f7fa;
 }
@@ -408,7 +407,7 @@
 /* 针对1280×800分辨率的垂直空间优化 */
 @media (max-height: 800px) {
   .pageContainer {
-    margin-top: -60px; /* 强化负margin抵消 */
+    margin-top: 0; /* 取消负margin，遵从固定内容外框 */
     padding: 16px 40px 24px 40px; /* 进一步压缩顶部空间 */
     gap: 12px;
   }

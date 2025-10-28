@@ -246,7 +246,7 @@ BeakerWithBall.propTypes = {
 };
 
 /**
- * 温度选择器组件 (温度计样式)
+ * 温度选择器组件 (上下按钮控制样式 - 仿照蒸馒头实验)
  */
 const TemperatureSelector = ({
   selectedTemperature,
@@ -254,52 +254,52 @@ const TemperatureSelector = ({
   onTemperatureChange,
   disabled
 }) => {
-  const [showOptions, setShowOptions] = useState(false);
-
-  const handleToggle = () => {
-    if (!disabled) {
-      setShowOptions(!showOptions);
+  const handleDecreaseTemperature = () => {
+    const currentIndex = temperatureOptions.indexOf(selectedTemperature);
+    if (currentIndex > 0) {
+      onTemperatureChange(temperatureOptions[currentIndex - 1]);
     }
   };
 
-  const handleSelect = (temp) => {
-    onTemperatureChange(temp);
-    setShowOptions(false);
+  const handleIncreaseTemperature = () => {
+    const currentIndex = temperatureOptions.indexOf(selectedTemperature);
+    if (currentIndex < temperatureOptions.length - 1) {
+      onTemperatureChange(temperatureOptions[currentIndex + 1]);
+    }
   };
+
+  const isMinTemperature = selectedTemperature <= temperatureOptions[0];
+  const isMaxTemperature = selectedTemperature >= temperatureOptions[temperatureOptions.length - 1];
 
   return (
     <div className={styles.temperatureSelector}>
       <button
         type="button"
-        className={styles.temperatureButton}
-        onClick={handleToggle}
-        disabled={disabled}
+        className={styles.temperatureAdjustButton}
+        onClick={handleDecreaseTemperature}
+        disabled={disabled || isMinTemperature}
+        aria-label="降低温度"
       >
-        <div className={styles.thermometerIcon}>
+        -
+      </button>
+      <span className={styles.temperatureDisplay}>
+        <span className={styles.thermometerIcon}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <rect x="10" y="3" width="4" height="12" rx="2" />
             <circle cx="12" cy="18" r="3" />
           </svg>
-        </div>
-        <span className={styles.temperatureValue}>{selectedTemperature}°C</span>
+        </span>
+        {selectedTemperature}°C
+      </span>
+      <button
+        type="button"
+        className={styles.temperatureAdjustButton}
+        onClick={handleIncreaseTemperature}
+        disabled={disabled || isMaxTemperature}
+        aria-label="升高温度"
+      >
+        +
       </button>
-
-      {showOptions && !disabled && (
-        <div className={styles.temperatureOptions}>
-          {temperatureOptions.map(temp => (
-            <button
-              key={temp}
-              type="button"
-              className={`${styles.temperatureOption} ${
-                temp === selectedTemperature ? styles.active : ''
-              }`}
-              onClick={() => handleSelect(temp)}
-            >
-              {temp}°C
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

@@ -20,7 +20,8 @@ const Page02_Intro = () => {
     clearOperations,
     currentPageOperations,
     navigateToPage,
-    startTaskTimer
+    startTaskTimer,
+    formatDateTime,
   } = useTrackingContext();
 
   const { submitPageData } = useDataLogger();
@@ -67,7 +68,7 @@ const Page02_Intro = () => {
           targetElement: op.target,
           eventType: op.action,
           value: op.value || '',
-          time: op.time || new Date(op.timestamp).toISOString()
+          time: formatDateTime(new Date(op.time || op.timestamp))
         })),
         answerList: [],
         beginTime: formatDateTime(pageStartTime),
@@ -112,16 +113,5 @@ const Page02_Intro = () => {
     </PageLayout>
   );
 };
-
-// 辅助函数: 格式化日期时间
-function formatDateTime(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hour = String(date.getHours()).padStart(2, '0');
-  const minute = String(date.getMinutes()).padStart(2, '0');
-  const second = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-}
 
 export default Page02_Intro;

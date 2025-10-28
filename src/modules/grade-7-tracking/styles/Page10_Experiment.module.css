@@ -32,7 +32,8 @@
   grid-template-columns: 1fr 2fr;
   gap: 14px; /* 进一步减小gap */
   align-items: flex-start;
-  overflow-y: auto;
+  /* 移除overflow和max-height，让外层PageLayout.contentFrame统一管理滚动 */
+  min-height: 0;
 }
 
 /* ====================
@@ -300,12 +301,14 @@
    底部导航
    ==================== */
 .navigationFooter {
-  margin-top: 16px; /* 从24px减少到16px */
+  margin-top: 20px; /* 增加顶部间距,防止上方内容溢出遮挡按钮 */
   display: flex;
   justify-content: center;
-  padding-top: 12px; /* 从16px减少到12px */
-  padding-bottom: 8px; /* 添加底部padding确保按钮不贴边 */
+  padding-top: 16px; /* 增加内边距 */
+  padding-bottom: 12px; /* 增加底部padding确保按钮不贴边 */
   border-top: 1px solid #e0e0e0;
+  background-color: #ffffff; /* 添加白色背景,避免与上方实验区域背景混合 */
+  flex-shrink: 0; /* 防止被压缩 */
 }
 
 .nextButton {

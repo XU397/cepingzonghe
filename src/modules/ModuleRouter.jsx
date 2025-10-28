@@ -66,7 +66,9 @@ const constructModuleUserContext = (globalContext, authInfo) => {
   // 操作方法（来自全局上下文）
   const contextMethods = globalContext ? {
     logOperation: globalContext.logOperation,
-    collectAnswer: globalContext.collectAnswer
+    collectAnswer: globalContext.collectAnswer,
+    handleLogout: globalContext.handleLogout,
+    clearAllCache: globalContext.clearAllCache,
   } : {};
 
   const moduleUserContext = {

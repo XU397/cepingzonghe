@@ -12,7 +12,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { useTrackingContext } from '../../context/TrackingContext';
+import { useTrackingContext } from '../../context/TrackingProvider.jsx';
 import { useQuestionnaire } from '../../hooks/useQuestionnaire';
 import { useDataLogger } from '../../hooks/useDataLogger';
 import PageLayout from '../layout/PageLayout';
@@ -108,7 +108,7 @@ const BaseQuestionnairePage = ({ pageNumber }) => {
     if (!canProceed) {
       setShowIncompleteWarning(true);
       logOperation({
-        action: 'validation_failed',
+        action: 'click_blocked',
         target: 'next_button',
         value: '未完成所有必答题',
         time: new Date().toISOString(),
@@ -117,7 +117,7 @@ const BaseQuestionnairePage = ({ pageNumber }) => {
     }
 
     logOperation({
-      action: 'button_click',
+      action: 'click',
       target: isLastPage ? 'submit_questionnaire_button' : 'next_page_button',
       value: isLastPage ? '提交问卷' : '下一页',
       time: new Date().toISOString(),
@@ -127,11 +127,16 @@ const BaseQuestionnairePage = ({ pageNumber }) => {
       // 构建MarkObject
       const pageEndTime = new Date();
 
-      // 收集当前页面的答案
-      const answerList = pageData.questions.map((q) => ({
-        targetElement: `question_${q.id}`,
-        value: answers[`q${q.id}`] || '',
-      }));
+      // 收集当前页面的答案（将选项值映射为标签文本，未作答按规范填“未回答”）
+      const answerList = pageData.questions.map((q, idx) => {
+        const selected = answers[`q${q.id}`];
+        const label = (q.options || []).find((opt) => opt.value === selected)?.label || null;
+        return {
+          // 统一命名：P{pageNumber}_问题{序号}
+          targetElement: `P${pageNumber}_问题${idx + 1}`,
+          value: label || '未回答',
+        };
+      });
 
       const markObject = {
         pageNumber: String(pageNumber),
@@ -140,7 +145,7 @@ const BaseQuestionnairePage = ({ pageNumber }) => {
           targetElement: op.target,
           eventType: op.action,
           value: op.value || '',
-          time: op.time || new Date(op.timestamp).toISOString(),
+          time: formatDateTime(new Date(op.time || op.timestamp)),
         })),
         answerList,
         beginTime: formatDateTime(pageStartTime),

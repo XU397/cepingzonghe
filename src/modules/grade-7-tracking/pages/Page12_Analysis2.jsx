@@ -189,15 +189,6 @@ const Page12_Analysis2 = () => {
                   </label>
                 ))}
               </div>
-
-              {selectedAnswer && (
-                <div className={styles.answerHint}>
-                  <div className={styles.hintIcon}>💡</div>
-                  <div className={styles.hintText}>
-                    提示:温度越高,黏度越低,小球下落越快
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

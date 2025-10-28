@@ -6,7 +6,7 @@
 .container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* ✅ 移除 height: 100% 链式高度，允许内容自适应 */
   /* 🔧 负margin抵消PageLayout的padding-top (64px)，重新控制对齐 */
   margin-top: -64px;
   padding: 12px 20px 12px 20px; /* 优化上下padding节省垂直空间 */

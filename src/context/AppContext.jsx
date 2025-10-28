@@ -97,13 +97,14 @@ export const AppProvider = ({ children }) => {
   // 页面加载时从localStorage恢复状态
   useEffect(() => {
     const savedModuleUrl = localStorage.getItem('moduleUrl');
-    const savedModulePageNum = localStorage.getItem('modulePageNum');
+    // 统一使用 pageNum 作为持久化键名；兼容读取旧的 modulePageNum
+    const savedPageNum = localStorage.getItem('pageNum') || localStorage.getItem('modulePageNum');
     const savedBatchCode = localStorage.getItem('batchCode');
     const savedExamNo = localStorage.getItem('examNo');
     
     console.log('[AppContext] 🔄 从localStorage恢复状态', {
       moduleUrl: savedModuleUrl,
-      modulePageNum: savedModulePageNum,
+      pageNum: savedPageNum,
       batchCode: savedBatchCode,
       examNo: savedExamNo
     });
@@ -112,8 +113,12 @@ export const AppProvider = ({ children }) => {
       setModuleUrl(savedModuleUrl);
     }
     
-    if (savedModulePageNum) {
-      setPageNum(savedModulePageNum);
+    if (savedPageNum) {
+      setPageNum(savedPageNum);
+      // 迁移：清理旧键名以避免歧义
+      if (localStorage.getItem('modulePageNum')) {
+        localStorage.removeItem('modulePageNum');
+      }
     }
     
     if (savedBatchCode) {
@@ -288,6 +293,7 @@ export const AppProvider = ({ children }) => {
     setIsTimeUp(false);
     setCurrentPageData({ operationList: [], answerList: [] });
     setPageEnterTime(null);
+    setModuleUrl('');
     
     // 清除问卷相关状态
     setIsQuestionnaireCompleted(false);
@@ -318,7 +324,14 @@ export const AppProvider = ({ children }) => {
       'lastSessionEndTime', // 清除会话结束时间
       'shouldClearOnNextSession', // 清除旧的缓存清除标志
       'cacheCleared', // 清除旧的缓存清除标志
-      'lastClearTime' // 清除旧的缓存清除标志
+      'lastClearTime', // 清除旧的缓存清除标志
+      // 追踪测评（grade-7-tracking）持久化键，确保重新进入为全新会话
+      'tracking_sessionId',
+      'tracking_session',
+      'tracking_experimentTrials',
+      'tracking_chartData',
+      'tracking_textResponses',
+      'tracking_questionnaireAnswers'
     ];
     
     keysToRemove.forEach(key => {

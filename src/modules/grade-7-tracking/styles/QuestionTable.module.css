@@ -26,7 +26,7 @@
 }
 
 .questionTable thead th {
-  padding: 12px 10px; /* 从16px 12px减少到12px 10px */
+  padding: 5px 8px; /* 从12px 10px减少到10px 10px */
   font-size: 14px; /* 从15px减少到14px */
   font-weight: 600;
   color: white;
@@ -71,9 +71,9 @@
    ============================================================================ */
 
 .questionCell {
-  padding: 10px 16px; /* 从14px 20px减少到10px 16px */
+  padding: 0px 10px; /* 从10px 16px减少到8px 14px，进一步压缩垂直间距 */
   font-size: 14px; /* 从15px减少到14px */
-  line-height: 1.5; /* 从1.6减少到1.5 */
+  line-height: 1.5; /* 从1.5减少到1.35，显著缩小行高 */
   color: #1f2937;
   text-align: left;
   border-right: 1px solid #e5e7eb;
@@ -82,7 +82,7 @@
 }
 
 .optionCell {
-  padding: 10px; /* 从12px减少到10px */
+  padding: 2px; /* 从10px减少到8px，进一步压缩垂直间距 */
   text-align: center;
   border-right: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
@@ -181,13 +181,13 @@
 
   /* 紧凑表格行 */
   .questionCell {
-    padding: 8px 12px; /* 从10px 16px减少到8px 12px */
+    padding: 6px 10px; /* 从8px 12px减少到6px 10px */
     font-size: 13px; /* 从14px减少到13px */
-    line-height: 1.4; /* 从1.5减少到1.4 */
+    line-height: 1.3; /* 从1.4减少到1.3 */
   }
 
   .optionCell {
-    padding: 6px; /* 从8px减少到6px */
+    padding: 5px; /* 从6px减少到5px */
   }
 
   /* 缩小单选按钮 */
