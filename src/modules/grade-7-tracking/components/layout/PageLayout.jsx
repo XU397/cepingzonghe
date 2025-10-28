@@ -77,7 +77,7 @@ const LeftNavigation = ({ currentPage, totalPages, navigationMode }) => {
       <div
         className={`${styles.navigationItems} ${navigationMode === 'questionnaire' ? styles.questionnaire : ''}`}
         style={navigationMode === 'questionnaire' && totalPages > 1 ? {
-          '--questionnaire-line-height': `${(totalPages - 2) * 44}px`
+          '--questionnaire-line-height': `${(totalPages - 1) * 54}px`
         } : {}}
       >
         {navigationItems.map((item, index) => {
