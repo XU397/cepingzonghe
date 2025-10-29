@@ -86,86 +86,47 @@ const Page06_Hypothesis = () => {
       <div className={styles.pageContainer}>
         {/* 页面标题 */}
         <div className={styles.header}>
-          <h1 className={styles.title}>提出假设</h1>
+          <h1 className={styles.title}>蜂蜜变稀</h1>
         </div>
 
-      {/* 主内容区域 */}
-      <div className={styles.content}>
-        {/* 左侧: 假设陈述文本 */}
-        <div className={styles.hypothesisSection}>
-          <div className={styles.hypothesisCard}>
-            <div className={styles.hypothesisIcon}>💡</div>
-            <h2 className={styles.hypothesisTitle}>科学假设</h2>
-            <p className={styles.hypothesisText}>
-              根据收集的资料和影响因素分析，我们提出以下假设：
+        {/* 主内容区域 - 单列布局 */}
+        <div className={styles.content}>
+          {/* 假设陈述文本 */}
+          <div className={styles.hypothesisText}>
+            <p>
+              蜂蜜黏度受多种因素影响。小明分析认为，蜂蜜变稀可能与其存放于橱柜、暴露在成都高温多雨的环境有关（当月天气见下图）。他进而提出假设：环境温度和水分含量是影响蜂蜜黏度变化的关键因素。
             </p>
-            <div className={styles.hypothesisStatement}>
-              <p className={styles.statementHighlight}>
-                环境温度和水分含量是影响蜂蜜黏度变化的关键因素。
-              </p>
-              <ul className={styles.statementDetails}>
-                <li>
-                  <strong>温度因素：</strong>
-                  环境温度越高，蜂蜜的黏度越低，流动性越好。
-                </li>
-                <li>
-                  <strong>含水量因素：</strong>
-                  蜂蜜含水量越高，黏度越低，更容易流动。
-                </li>
-                <li>
-                  <strong>综合影响：</strong>
-                  温度和含水量共同作用，影响蜂蜜的黏度特性。
-                </li>
-              </ul>
-            </div>
+          </div>
+
+          {/* 天气图片 */}
+          <div className={styles.weatherImageContainer}>
+            <img
+              src="/src/assets/images/天气图片.png"
+              alt="成都当月天气情况"
+              className={styles.weatherImage}
+            />
+          </div>
+
+          {/* 引导文字 */}
+          <div className={styles.guideText}>
+            <p>
+              接下来，请你通过实验，探究小明的假设是否正确吧！
+            </p>
           </div>
         </div>
 
-        {/* 右侧: 成都天气图 */}
-        <div className={styles.weatherSection}>
-          <div className={styles.weatherCard}>
-            <h2 className={styles.weatherTitle}>成都当月天气情况</h2>
-            <div className={styles.weatherImageContainer}>
-              <img
-                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E" // T104: SVG占位符
-                alt="成都天气图"
-                className={styles.weatherImage}
-                onError={(e) => {
-                  // 图片加载失败时显示占位符
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <div className={styles.weatherPlaceholder}>
-                <div className={styles.placeholderIcon}>📊</div>
-                <p className={styles.placeholderText}>成都天气数据图表</p>
-                <p className={styles.placeholderDetails}>
-                  显示温度、湿度、降雨量等气象信息
-                </p>
-              </div>
-            </div>
-            <div className={styles.weatherDescription}>
-              <p>
-                成都地处盆地，气候湿润，年平均相对湿度约为82%，
-                这可能是影响蜂蜜含水量的重要环境因素。
-              </p>
-            </div>
-          </div>
+        {/* 底部按钮区域 */}
+        <div className={styles.footer}>
+          <Button
+            onClick={handleNextPage}
+            disabled={isNavigating}
+            loading={isNavigating}
+            variant="primary"
+            ariaLabel="进入下一页"
+          >
+            下一页
+          </Button>
         </div>
-      </div>
-
-      {/* 底部按钮区域 */}
-      <div className={styles.footer}>
-        <Button
-          onClick={handleNextPage}
-          disabled={isNavigating}
-          loading={isNavigating}
-          variant="primary"
-          ariaLabel="进入下一页"
-        >
-          下一页
-        </Button>
-      </div>
       </div>
     </PageLayout>
   );

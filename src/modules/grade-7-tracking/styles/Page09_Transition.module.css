@@ -1,58 +1,78 @@
 /**
  * Page09_Transition Styles
- * 过渡页面样式
+ * 过渡页面样式 - 小明介绍页
  */
 
 .pageContainer {
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* 🔧 负margin抵消PageLayout的padding-top (64px)，重新控制对齐 */
-  margin-top: -64px;
-  padding: 20px 24px 20px 24px; /* 减小上下padding优化垂直空间 */
+  padding: 32px 24px 24px 24px;
   background-color: #f5f7fa;
 }
 
+/* 标题 */
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-align: center;
+  margin: 0 0 32px 0;
+}
+
 /* ============================================================================
-   Content Section
+   Content Section - 主内容区域
    ============================================================================ */
 
 .content {
   flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px; /* 从32px减少到28px，节省垂直空间 */
-  overflow-y: auto;
-  margin-top: 16px; /* 顶部边距适当缩小 */
-}
-
-/* Image Section */
-
-.imageSection {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 32px;
+  overflow-y: auto;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 对话区域 - 小明和气泡横向排列 */
+.dialogSection {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+}
+
+/* 角色区域 - 小明图片和名字 */
+.characterSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .imageContainer {
   position: relative;
-  width: 100%;
-  max-width: 500px;
-  aspect-ratio: 1 / 1;
+  width: 200px;
+  height: 200px;
   background-color: #f8f9fa;
-  border-radius: 12px;
+  border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.kidsImage {
+.characterImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
 .imagePlaceholder {
-  display: none; /* 默认隐藏 */
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -61,158 +81,58 @@
 }
 
 .placeholderIcon {
-  font-size: 120px;
-  margin-bottom: 20px;
+  font-size: 80px;
 }
 
-.placeholderText {
-  font-size: 24px;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0;
-}
-
-/* Text Section */
-
-.textSection {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.textCard {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 32px; /* 从40px减少到32px，节省垂直空间 */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  width: 100%;
-  max-width: 600px;
-  transition: box-shadow 0.3s ease;
-}
-
-.textCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-/* Title Container */
-
-.titleContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.checkmark {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
-  color: #ffffff;
-  font-size: 28px;
-  font-weight: 600;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.title {
-  font-size: 32px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin: 0;
-}
-
-/* Divider */
-
-.divider {
-  height: 2px;
-  background: linear-gradient(to right, transparent, #e0e0e0, transparent);
-  margin-bottom: 24px;
-}
-
-/* Encouragement Section */
-
-.encouragement {
-  display: flex;
-  flex-direction: column;
-  gap: 16px; /* 从20px减少到16px，节省垂直空间 */
-}
-
-.mainText {
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.6;
-  color: #2c3e50;
-  margin: 0;
-}
-
-.subText {
-  font-size: 16px;
-  line-height: 1.6;
-  color: #555555;
-  margin: 0;
-}
-
-/* Tips Container */
-
-.tipsContainer {
-  background: linear-gradient(135deg, #e8f4f8 0%, #d4ebf5 100%);
-  border-radius: 12px;
-  padding: 20px;
-  border-left: 4px solid #3498db;
-}
-
-.tipsTitle {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin: 0 0 16px 0;
-}
-
-.tipsList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.tipsList li {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #2c3e50;
-}
-
-.tipIcon {
-  color: #3498db;
-  font-weight: 600;
+.characterName {
   font-size: 20px;
-  flex-shrink: 0;
-}
-
-/* Motivation */
-
-.motivation {
-  background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(253, 203, 110, 0.4);
-}
-
-.motivationText {
-  font-size: 16px;
   font-weight: 600;
-  line-height: 1.6;
   color: #2c3e50;
   margin: 0;
+}
+
+/* 对话气泡 */
+.speechBubble {
+  position: relative;
+  background: #e3f2fd; /* 浅蓝色背景 */
+  border-radius: 24px;
+  padding: 32px 40px; /* 增加内边距 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex: 1;
+}
+
+/* 气泡尖角指向左边的小明 */
+.speechBubble::before {
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+  border-right: 15px solid #e3f2fd; /* 浅蓝色 */
+  filter: drop-shadow(-2px 0 2px rgba(0, 0, 0, 0.05));
+}
+
+.bubbleText {
+  font-size: 22px; /* 从18px增加到22px */
+  line-height: 1.7;
+  color: #2c3e50;
+  text-align: center;
+  margin: 0;
+}
+
+/* 引导文字 */
+.guideText {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: #e74c3c;
+  text-align: center;
+  margin: 0;
+  width: 100%;
 }
 
 /* ============================================================================
@@ -220,93 +140,84 @@
    ============================================================================ */
 
 .footer {
-  margin-top: 16px; /* 从24px减少到16px */
+  margin-top: 24px;
   display: flex;
   justify-content: center;
-  padding-top: 12px; /* 从16px减少到12px */
-  padding-bottom: 8px; /* 添加底部padding确保按钮不贴边 */
+  padding-top: 16px;
+  padding-bottom: 8px;
 }
 
 /* ============================================================================
    Responsive Design
    ============================================================================ */
 
-/* 🎯 800p优化：针对1280×800分辨率的紧凑布局 */
+/* 800p优化 */
 @media (max-height: 800px) {
   .pageContainer {
-    margin-top: -64px; /* 保持负margin抵消 */
-    padding: 12px 24px 12px 24px; /* 进一步减小上下padding */
+    padding: 24px 24px 20px 24px;
+  }
+
+  .title {
+    font-size: 24px;
+    margin-bottom: 24px;
   }
 
   .content {
-    gap: 20px; /* 进一步缩小gap */
-    margin-top: 12px;
-  }
-
-  .textCard {
-    padding: 24px; /* 更紧凑的内边距 */
-  }
-
-  .encouragement {
-    gap: 12px; /* 更紧凑的间距 */
-  }
-
-  .tipsContainer {
-    padding: 16px; /* 从20px减少到16px */
-  }
-
-  .tipsList {
-    gap: 8px; /* 从12px减少到8px */
-  }
-
-  .footer {
-    margin-top: 12px;
-    padding-top: 8px;
-  }
-
-  .titleContainer {
-    margin-bottom: 16px; /* 从20px减少到16px */
-  }
-
-  .divider {
-    margin-bottom: 16px; /* 从24px减少到16px */
-  }
-}
-
-@media (max-width: 1366px) {
-  .content {
-    grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 20px;
   }
 
   .imageContainer {
-    max-width: 400px;
+    width: 160px;
+    height: 160px;
   }
 
-  .textCard {
-    padding: 32px;
+  .characterName {
+    font-size: 18px;
+  }
+
+  .speechBubble {
+    padding: 20px 28px;
+  }
+
+  .bubbleText {
+    font-size: 16px;
+  }
+
+  .guideText {
+    font-size: 18px;
+    margin-top: 12px;
+  }
+
+  .footer {
+    margin-top: 16px;
+    padding-top: 12px;
   }
 }
 
 @media (max-width: 1024px) {
   .pageContainer {
-    padding: 16px;
+    padding: 24px 20px 20px 20px;
   }
 
   .title {
-    font-size: 28px;
-  }
-
-  .mainText {
-    font-size: 16px;
-  }
-
-  .textCard {
-    padding: 24px;
+    font-size: 24px;
   }
 
   .imageContainer {
-    max-width: 350px;
+    width: 180px;
+    height: 180px;
+  }
+
+  .speechBubble {
+    padding: 20px 24px;
+  }
+
+  .bubbleText {
+    font-size: 16px;
+  }
+
+  .guideText {
+    font-size: 18px;
   }
 }
 

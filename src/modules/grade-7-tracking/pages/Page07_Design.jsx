@@ -205,122 +205,58 @@ const Page07_Design = () => {
       <div className={styles.pageContainer}>
         {/* 页面标题 */}
         <div className={styles.header}>
-          <h1 className={styles.title}>设计实验方案</h1>
-        <p className={styles.subtitle}>
-        为验证小明的猜想，首先要确定评估蜂蜜黏度的方法。假设有两瓶蜂蜜，请你帮小明想一想，有哪些可以比较两瓶蜂蜜黏度的方法。请提出三个可能的想法，将其简要陈述在下方方框内。每个想法至少填写 <strong>{MIN_CHAR_COUNT}</strong> 个字符。
-        </p>
-      </div>
-
-      {/* 主内容区域 */}
-      <div className={styles.content}>
-        {/* 想法1 */}
-        <div className={styles.ideaCard}>
-          <div className={styles.ideaHeader}>
-            <div className={styles.ideaNumber}>1</div>
-            <h2 className={styles.ideaTitle}>想法一</h2>
-            <div className={styles.charCountBadge}>
-              <span
-                className={
-                  idea1.trim().length >= MIN_CHAR_COUNT
-                    ? styles.charCountValid
-                    : styles.charCountInvalid
-                }
-              >
-                {idea1.trim().length}/{MIN_CHAR_COUNT} 字符
-              </span>
-            </div>
-          </div>
-          <TextArea
-            id="idea-1"
-            value={idea1}
-            onChange={handleIdea1Change}
-            placeholder="请描述你的第一个实验方案想法，包括实验目的、方法、需要控制的变量等..."
-            maxLength={500}
-            showCharCount={true}
-            rows={5}
-            ariaLabel="实验方案想法一输入框"
-          />
+          <h1 className={styles.title}>蜂蜜变稀：方案设计</h1>
+          <p className={styles.subtitle}>
+            为验证小明的猜想，首先要确定评估蜂蜜黏度的方法。假设有两瓶蜂蜜，请你帮小明想一想，有哪些可以比较两瓶蜂蜜黏度的方法。请提出三个可能的想法，将其简要陈述在下方方框内。
+          </p>
         </div>
 
-        {/* 想法2 */}
-        <div className={styles.ideaCard}>
-          <div className={styles.ideaHeader}>
-            <div className={styles.ideaNumber}>2</div>
-            <h2 className={styles.ideaTitle}>想法二</h2>
-            <div className={styles.charCountBadge}>
-              <span
-                className={
-                  idea2.trim().length >= MIN_CHAR_COUNT
-                    ? styles.charCountValid
-                    : styles.charCountInvalid
-                }
-              >
-                {idea2.trim().length}/{MIN_CHAR_COUNT} 字符
-              </span>
-            </div>
+        {/* 主内容区域 - 单列布局 */}
+        <div className={styles.content}>
+          {/* 想法1 */}
+          <div className={styles.ideaRow}>
+            <label className={styles.ideaLabel}>1. 想法一：</label>
+            <TextArea
+              id="idea-1"
+              value={idea1}
+              onChange={handleIdea1Change}
+              placeholder="请输入你的想法..."
+              maxLength={500}
+              showCharCount={false}
+              rows={2}
+              ariaLabel="实验方案想法一输入框"
+            />
           </div>
-          <TextArea
-            id="idea-2"
-            value={idea2}
-            onChange={handleIdea2Change}
-            placeholder="请描述你的第二个实验方案想法，可以从不同角度或使用不同方法进行实验..."
-            maxLength={500}
-            showCharCount={true}
-            rows={5}
-            ariaLabel="实验方案想法二输入框"
-          />
-        </div>
 
-        {/* 想法3 */}
-        <div className={styles.ideaCard}>
-          <div className={styles.ideaHeader}>
-            <div className={styles.ideaNumber}>3</div>
-            <h2 className={styles.ideaTitle}>想法三</h2>
-            <div className={styles.charCountBadge}>
-              <span
-                className={
-                  idea3.trim().length >= MIN_CHAR_COUNT
-                    ? styles.charCountValid
-                    : styles.charCountInvalid
-                }
-              >
-                {idea3.trim().length}/{MIN_CHAR_COUNT} 字符
-              </span>
-            </div>
+          {/* 想法2 */}
+          <div className={styles.ideaRow}>
+            <label className={styles.ideaLabel}>2. 想法二：</label>
+            <TextArea
+              id="idea-2"
+              value={idea2}
+              onChange={handleIdea2Change}
+              placeholder="请输入你的想法..."
+              maxLength={500}
+              showCharCount={false}
+              rows={2}
+              ariaLabel="实验方案想法二输入框"
+            />
           </div>
-          <TextArea
-            id="idea-3"
-            value={idea3}
-            onChange={handleIdea3Change}
-            placeholder="请描述你的第三个实验方案想法，思考如何让实验结果更加准确可靠..."
-            maxLength={500}
-            showCharCount={true}
-            rows={5}
-            ariaLabel="实验方案想法三输入框"
-          />
-        </div>
 
-        {/* 提示信息 */}
-        {!canNavigate && (
-          <div className={styles.hintCard}>
-            <div className={styles.hintIcon}>💡</div>
-            <p className={styles.hintText}>
-              请确保所有3个想法都至少填写了 <strong>{MIN_CHAR_COUNT}</strong> 个字符才能进入下一页。
-              {idea1.trim().length < MIN_CHAR_COUNT && ' 想法一还需 ' + (MIN_CHAR_COUNT - idea1.trim().length) + ' 字符。'}
-              {idea2.trim().length < MIN_CHAR_COUNT && ' 想法二还需 ' + (MIN_CHAR_COUNT - idea2.trim().length) + ' 字符。'}
-              {idea3.trim().length < MIN_CHAR_COUNT && ' 想法三还需 ' + (MIN_CHAR_COUNT - idea3.trim().length) + ' 字符。'}
-            </p>
+          {/* 想法3 */}
+          <div className={styles.ideaRow}>
+            <label className={styles.ideaLabel}>3. 想法三：</label>
+            <TextArea
+              id="idea-3"
+              value={idea3}
+              onChange={handleIdea3Change}
+              placeholder="请输入你的想法..."
+              maxLength={500}
+              showCharCount={false}
+              rows={2}
+              ariaLabel="实验方案想法三输入框"
+            />
           </div>
-        )}
-
-        {canNavigate && (
-          <div className={styles.successCard}>
-            <div className={styles.successIcon}>✓</div>
-            <p className={styles.successText}>
-              很好！所有想法都已填写完成，点击&quot;下一页&quot;继续。
-            </p>
-          </div>
-        )}
       </div>
 
       {/* 底部按钮区域 */}

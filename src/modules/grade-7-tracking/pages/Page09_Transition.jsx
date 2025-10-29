@@ -84,94 +84,58 @@ const Page09_Transition = () => {
   return (
     <PageLayout showNavigation={true} showTimer={true}>
       <div className={styles.pageContainer}>
+        {/* 标题 */}
+        <h1 className={styles.title}>蜂蜜变稀</h1>
+
         {/* 主内容区域 */}
         <div className={styles.content}>
-        {/* 图片区域 */}
-        <div className={styles.imageSection}>
-          <div className={styles.imageContainer}>
-            <img
-              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3C/svg%3E" // T104: SVG占位符
-              alt="小明和小伙伴准备开始实验"
-              className={styles.kidsImage}
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-            <div className={styles.imagePlaceholder}>
-              <div className={styles.placeholderIcon}>👦👧</div>
-              <p className={styles.placeholderText}>小明和小伙伴</p>
+          {/* 小明和对话气泡的横向布局 */}
+          <div className={styles.dialogSection}>
+            {/* 小明图片和名字 */}
+            <div className={styles.characterSection}>
+              <div className={styles.imageContainer}>
+                <img
+                  src="/src/assets/images/小明.png"
+                  alt="小明"
+                  className={styles.characterImage}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className={styles.imagePlaceholder}>
+                  <div className={styles.placeholderIcon}>👦</div>
+                </div>
+              </div>
+              <p className={styles.characterName}>小明</p>
+            </div>
+
+            {/* 对话气泡 */}
+            <div className={styles.speechBubble}>
+              <p className={styles.bubbleText}>
+                我想利用落球法测量蜂蜜的黏度，探究温度、含水量与落球时间的关系。
+              </p>
             </div>
           </div>
+
+          {/* 引导文字 */}
+          <p className={styles.guideText}>
+            接下来，就让我们一起加入小明的实验，开启科学探索之旅吧！
+          </p>
         </div>
 
-        {/* 文字内容区域 */}
-        <div className={styles.textSection}>
-          <div className={styles.textCard}>
-            {/* 标题 */}
-            <div className={styles.titleContainer}>
-              <div className={styles.checkmark}>✓</div>
-              <h1 className={styles.title}>实验准备完成!</h1>
-            </div>
-
-            {/* 分隔线 */}
-            <div className={styles.divider}></div>
-
-            {/* 鼓励文字 */}
-            <div className={styles.encouragement}>
-              <p className={styles.mainText}>
-                太棒了！你已经完成了实验设计和方案评估的所有准备工作。
-              </p>
-              <p className={styles.subText}>
-                现在，让我们一起进入实验阶段，通过模拟实验来验证我们的假设吧！
-              </p>
-
-              {/* 提示要点 */}
-              <div className={styles.tipsContainer}>
-                <h2 className={styles.tipsTitle}>🔬 实验阶段提示：</h2>
-                <ul className={styles.tipsList}>
-                  <li>
-                    <span className={styles.tipIcon}>•</span>
-                    <span>仔细选择实验参数（含水量和温度）</span>
-                  </li>
-                  <li>
-                    <span className={styles.tipIcon}>•</span>
-                    <span>观察并记录小球下落的时间</span>
-                  </li>
-                  <li>
-                    <span className={styles.tipIcon}>•</span>
-                    <span>可以多次进行实验来验证你的发现</span>
-                  </li>
-                  <li>
-                    <span className={styles.tipIcon}>•</span>
-                    <span>思考实验数据与假设是否一致</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* 激励语 */}
-              <div className={styles.motivation}>
-                <p className={styles.motivationText}>
-                  🌟 开启科学探索之旅吧！相信你一定能发现蜂蜜黏度的秘密！
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* 底部按钮区域 */}
+        <div className={styles.footer}>
+          <Button
+            onClick={handleStartExperiment}
+            disabled={isNavigating}
+            loading={isNavigating}
+            variant="primary"
+            ariaLabel="下一页"
+          >
+            下一页
+          </Button>
         </div>
-      </div>
-
-      {/* 底部按钮区域 */}
-      <div className={styles.footer}>
-        <Button
-          onClick={handleStartExperiment}
-          disabled={isNavigating}
-          loading={isNavigating}
-          variant="primary"
-          ariaLabel="开始模拟实验"
-        >
-          开始实验
-        </Button>
-      </div>
       </div>
     </PageLayout>
   );

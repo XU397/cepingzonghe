@@ -1,14 +1,13 @@
 /**
  * Page06_Hypothesis Styles
- * 假设陈述页面样式
+ * 假设陈述页面样式 - 单列布局
  */
 
 .pageContainer {
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* 移除负margin，改用正常padding以确保标题完整显示 */
-  padding: 20px 24px 24px 24px;
+  padding: 20px 40px 24px 40px;
   background-color: #f5f7fa;
 }
 
@@ -17,188 +16,88 @@
    ============================================================================ */
 
 .header {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
   text-align: center;
 }
 
 .title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 32px;
+  font-weight: 700;
+  color: #2c3e50;
   margin: 0;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 12px;
+  display: inline-block;
 }
 
 /* ============================================================================
-   Content Section
+   Content Section - 单列布局
    ============================================================================ */
 
 .content {
   flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
   overflow-y: auto;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-/* Left Side: Hypothesis Statement */
-
-.hypothesisSection {
-  display: flex;
-  flex-direction: column;
-}
-
-.hypothesisCard {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  height: 100%;
-}
-
-.hypothesisIcon {
-  font-size: 48px;
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-.hypothesisTitle {
-  font-size: 22px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
+/* 假设陈述文本 */
 .hypothesisText {
-  font-size: 16px;
-  color: #555555;
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-
-.hypothesisStatement {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 8px;
-  padding: 24px;
-  color: #ffffff;
-}
-
-.statementHighlight {
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  text-align: center;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-}
-
-.statementDetails {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.statementDetails li {
-  font-size: 15px;
-  line-height: 1.8;
-  margin-bottom: 12px;
-  padding-left: 20px;
-  position: relative;
-}
-
-.statementDetails li::before {
-  content: '▸';
-  position: absolute;
-  left: 0;
-  color: #ffd700;
-  font-weight: bold;
-}
-
-.statementDetails strong {
-  font-weight: 600;
-  color: #ffd700;
-}
-
-/* Right Side: Weather Chart */
-
-.weatherSection {
-  display: flex;
-  flex-direction: column;
-}
-
-.weatherCard {
+  width: 100%;
   background: #ffffff;
   border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  padding: 32px 40px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.weatherTitle {
-  font-size: 22px;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 20px;
-  text-align: center;
+.hypothesisText p {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #333;
+  margin: 0;
+  text-align: justify;
 }
 
+/* 天气图片容器 */
 .weatherImageContainer {
-  flex: 1;
-  position: relative;
-  min-height: 300px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 16px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .weatherImage {
+  max-width: 70%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: block;
+}
+
+/* 引导文字 */
+.guideText {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 28px 40px;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  text-align: center;
 }
 
-.weatherPlaceholder {
-  display: none; /* 默认隐藏,图片加载失败时显示 */
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #999999;
-}
-
-.placeholderIcon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-.placeholderText {
-  font-size: 18px;
+.guideText p {
+  font-size: 20px;
   font-weight: 600;
-  margin-bottom: 8px;
-  color: #666666;
-}
-
-.placeholderDetails {
-  font-size: 14px;
-  color: #999999;
-}
-
-.weatherDescription {
-  padding: 16px;
-  background-color: #e8f4f8;
-  border-radius: 6px;
-  border-left: 4px solid #3498db;
-}
-
-.weatherDescription p {
-  font-size: 14px;
   line-height: 1.6;
-  color: #2c3e50;
+  color: #ffffff;
   margin: 0;
 }
 
@@ -210,7 +109,7 @@
   margin-top: 24px;
   display: flex;
   justify-content: center;
-  padding-top: 16px;
+  padding-top: 20px;
   border-top: 1px solid #e0e0e0;
 }
 
@@ -219,165 +118,104 @@
    ============================================================================ */
 
 /* 800p紧凑模式 */
-@media (max-height: 800px) and (min-width: 1024px) {
+@media (max-height: 800px) {
   .pageContainer {
-    /* 移除负margin，保持正常padding */
-    padding: 12px 16px 16px 16px;
+    padding: 16px 32px 20px 32px;
   }
 
   .header {
-    margin-bottom: 12px; /* 减少标题间距 */
+    margin-bottom: 20px;
   }
 
   .title {
-    font-size: 22px; /* 进一步缩小标题 */
+    font-size: 26px;
+    padding-bottom: 8px;
   }
 
-  /* 保持2列布局但缩小间距 */
   .content {
-    gap: 12px; /* 减少列间距 */
-  }
-
-  /* 紧凑卡片 */
-  .hypothesisCard,
-  .weatherCard {
-    padding: 20px;
-    border-radius: 10px;
-  }
-
-  .hypothesisIcon {
-    font-size: 36px;
-    margin-bottom: 12px;
-  }
-
-  .hypothesisTitle,
-  .weatherTitle {
-    font-size: 18px;
-    margin-bottom: 12px;
+    gap: 20px;
   }
 
   .hypothesisText {
-    font-size: 14px;
-    line-height: 1.5;
-    margin-bottom: 14px;
+    padding: 24px 32px;
   }
 
-  /* 紧凑假设陈述 */
-  .hypothesisStatement {
-    padding: 16px;
-    border-radius: 6px;
-  }
-
-  .statementHighlight {
+  .hypothesisText p {
     font-size: 16px;
-    line-height: 1.5;
-    margin-bottom: 14px;
-    padding: 10px;
-  }
-
-  .statementDetails li {
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 8px;
-    padding-left: 16px;
-  }
-
-  /* 缩小天气图片 */
-  .weatherImageContainer {
-    min-height: 200px;
-    margin-bottom: 12px;
-  }
-
-  .placeholderIcon {
-    font-size: 48px;
-    margin-bottom: 12px;
-  }
-
-  .placeholderText {
-    font-size: 16px;
-  }
-
-  .placeholderDetails {
-    font-size: 13px;
-  }
-
-  .weatherDescription {
-    padding: 12px;
-  }
-
-  .weatherDescription p {
-    font-size: 13px;
-    line-height: 1.5;
-  }
-
-  /* 紧凑底部 */
-  .footer {
-    margin-top: 8px; /* 进一步减少底部间距 */
-    padding-top: 8px;
-  }
-}
-
-/* 针对1280×800分辨率的额外优化 */
-@media (max-height: 800px) {
-  .pageContainer {
-    /* 移除负margin，保持正常padding */
-    padding: 12px 20px 20px 20px;
-  }
-
-  .header {
-    margin-bottom: 12px;
-  }
-
-  .title {
-    font-size: 22px;
-  }
-
-  .content {
-    gap: 12px;
-  }
-
-  .hypothesisCard,
-  .weatherCard {
-    padding: 18px;
-  }
-
-  .footer {
-    margin-top: 8px;
-    padding-top: 8px;
-  }
-}
-
-@media (max-width: 1366px) {
-  .content {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .hypothesisCard,
-  .weatherCard {
-    padding: 24px;
+    line-height: 1.7;
   }
 
   .weatherImageContainer {
-    min-height: 250px;
+    padding: 20px;
+  }
+
+  .guideText {
+    padding: 20px 32px;
+  }
+
+  .guideText p {
+    font-size: 18px;
+  }
+
+  .footer {
+    margin-top: 16px;
+    padding-top: 12px;
   }
 }
 
 @media (max-width: 1024px) {
   .pageContainer {
-    padding: 16px;
+    padding: 16px 24px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .hypothesisText {
+    padding: 24px 28px;
+  }
+
+  .hypothesisText p {
+    font-size: 16px;
+  }
+
+  .guideText p {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 16px 20px;
   }
 
   .title {
     font-size: 24px;
   }
 
-  .hypothesisTitle,
-  .weatherTitle {
-    font-size: 20px;
+  .content {
+    gap: 16px;
   }
 
-  .statementHighlight {
+  .hypothesisText {
+    padding: 20px 24px;
+  }
+
+  .hypothesisText p {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .weatherImageContainer {
+    padding: 16px;
+  }
+
+  .guideText {
+    padding: 16px 24px;
+  }
+
+  .guideText p {
     font-size: 16px;
   }
 }

@@ -34,13 +34,12 @@
 }
 
 .subtitle {
-  font-size: 20px; /* 缩小副标题 */
+  font-size: 20px;
   color: #555555;
-  line-height: 1.5;
+  line-height: 1.6;
   max-width: 900px;
   margin: 0 auto;
-  text-align: left;  /* 文本左对齐 */
-  text-indent: 2em;  /* 首行缩进两个字符 */
+  text-align: justify;
 }
 
 .subtitle strong {
@@ -103,12 +102,61 @@
   padding-bottom: 8px;
   border-bottom: 2px solid #f0f0f0;
   text-align: center;
+  min-height: 220px; /* 设置最小高度以统一分界线位置 */
+}
+
+/* 横向布局：标题单独一行居中，下面文字和图片并列 */
+.methodHeaderHorizontal {
+  display: flex;
+  flex-direction: column; /* 垂直布局：标题在上，内容在下 */
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f0f0f0;
+  min-height: 220px; /* 设置最小高度以统一分界线位置 */
+}
+
+/* 标题在横向布局中居中显示 */
+.methodHeaderHorizontal .methodName {
+  text-align: center;
+  margin: 0 0 8px 0;
+}
+
+/* 横向内容区：文字描述和图片并列 */
+.horizontalContent {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.horizontalContent .methodInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.horizontalContent .methodDescription {
+  text-align: left; /* 描述文字左对齐 */
+}
+
+.horizontalContent .methodImageContainer {
+  width: 150px; /* 固定宽度 */
+  max-height: 200px; /* 限制最大高度 */
+  flex-shrink: 0;
+}
+
+.horizontalContent .methodImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 保持比例完整显示 */
 }
 
 .methodImageContainer {
   position: relative;
-  width: 200px; /* 调整为200×150像素 */
-  height: 150px;
+  width: 100%;
+  height: auto;
   flex-shrink: 0;
   background-color: #f8f9fa;
   border-radius: 8px;
@@ -117,16 +165,20 @@
 
 .methodImage {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: none; /* 3列布局下隐藏实际图片，只显示emoji */
+  height: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .methodPlaceholder {
-  display: flex !important; /* 默认显示emoji占位符 */
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 100%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }

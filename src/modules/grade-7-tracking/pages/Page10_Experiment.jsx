@@ -154,27 +154,25 @@ const Page10_Experiment = () => {
   return (
     <PageLayout showNavigation={true} showTimer={true}>
       <div className={styles.container}>
-        <h1 className={styles.pageTitle}>蜂蜜黏度: 模拟实验</h1>
+        <h1 className={styles.pageTitle}>蜂蜜变稀：模拟实验</h1>
 
       <div className={styles.contentLayout}>
         {/* 左侧:说明面板 */}
         <div className={styles.instructionsPanel}>
           <h2 className={styles.instructionsTitle}>模拟实验步骤如下：</h2>
           <ol className={styles.stepsList}>
-            <li>准备4个量筒,分别装有不同含水量的蜂蜜(15%、17%、19%、21%)；</li>
-            <li>准备5个恒温箱,分别设其温度为 25°C、30°C、35°C、40°C、45°C；</li>
-            <li>调节温度后,点击&quot;计时开始&quot;,小钢球会同时在4个量筒中下落,记录各量筒中小球从顶部落到底部的时间。</li>
+            <li>取含水量为15%, 17%, 19%, 21%的蜂蜜各200ml，分别放入4个量筒中；</li>
+            <li>将量筒放入恒温箱中，恒温箱温度可设为25℃, 30℃, 35℃, 40℃, 45℃；</li>
+            <li>释放量筒上方的小钢球，记录小钢球下落至量筒底部的总用时。</li>
           </ol>
 
           <hr className={styles.divider} />
 
           <h3 className={styles.instructionsSectionTitle}>【说明】右侧为实验互动界面:</h3>
           <ul className={styles.instructionsList}>
-            <li>4个量筒对应不同的蜂蜜含水量:15%、17%、19%、21%。</li>
-            <li>点击温度计图标可以调节环境温度(25°C-45°C,共5档)。</li>
-            <li>设置完温度后,单击&quot;计时开始&quot;按钮,小球会在所有量筒中同时下落。</li>
-            <li>下落结束后,绿色横条显示每个量筒中小球的下落时间。</li>
-            <li>单击&quot;重置&quot;可以清空时间记录重新开始。</li>
+            <li>单击【-】【+】可调整温度。</li>
+            <li>设好温度后，单击【计时开始】，小钢球会下落至量筒底部，量筒下方时间框显示下落总用时。</li>
+            <li>单击【重置】可重新开始。</li>
           </ul>
 
           {/* 删除了黄色提示框 hintBox */}

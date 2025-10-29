@@ -9,9 +9,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* 🔧 负margin抵消PageLayout的padding-top (64px)，重新控制对齐 */
-  margin-top: -64px;
-  padding: 8px 20px 12px 20px; /* 进一步优化padding */
+  padding: 20px 20px 12px 20px;
   background-color: #f5f7fa;
 }
 
@@ -19,9 +17,9 @@
 .pageTitle {
   text-align: center;
   color: #1a1a1a;
-  margin-top: 10px; /* 标题更靠上 */
-  margin-bottom: 12px; /* 减少底部间距 */
-  font-size: 26px; /* 稍微减小字体 */
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 28px;
   font-weight: 600;
 }
 

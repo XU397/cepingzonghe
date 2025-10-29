@@ -174,23 +174,24 @@ const Page08_Evaluation = () => {
   const methods = [
     {
       id: 'observation',
-      name: '观察法',
-      description: '通过肉眼观察蜂蜜的流动速度来判断黏度',
-      image: null, // T104: 使用占位符替代图片
+      name: '方法一：观察法',
+      description: '从两瓶蜂蜜中各取一滴，分别滴在纸上，观察形状。',
+      image: '/src/assets/images/纸上蜂蜜.png',
       imagePlaceholder: '👁️',
     },
     {
       id: 'ballFall',
-      name: '落球法',
-      description: '测量小球在蜂蜜中下落的时间来计算黏度',
-      image: null, // T104: 使用占位符替代图片
+      name: '方法二：落球法',
+      description: '从两瓶蜂蜜中各取200ml，分别装入两个量筒中。将小钢球分别垂直落入两个量筒，测量小球落至量筒底部的时间。',
+      image: '/src/assets/images/量筒+钢球.png',
       imagePlaceholder: '⚽',
+      layoutType: 'horizontal', // 标记为横向布局
     },
     {
       id: 'flowRate',
-      name: '流速法',
-      description: '测量蜂蜜在管道中的流动速率来判断黏度',
-      image: null, // T104: 使用占位符替代图片
+      name: '方法三：流速法',
+      description: '用滴管从两瓶蜂蜜中各取一滴，滴到倾斜角度相同的试管内壁上，观察蜂蜜流到试管底部的时间。',
+      image: '/src/assets/images/试管蜂蜜.png',
       imagePlaceholder: '🌊',
     },
   ];
@@ -200,38 +201,66 @@ const Page08_Evaluation = () => {
       <div className={styles.pageContainer}>
         {/* 页面标题 */}
         <div className={styles.header}>
-          <h1 className={styles.title}>评估实验方案</h1>
-        <p className={styles.subtitle}>
-        小明提出了以下三种比较蜂蜜黏度的方法。请分析三种方法的优缺点，并写在相应的方框内。需完成所有 <strong>{MIN_FILLED_FIELDS}</strong> 个输入框才能进入下一页。
-        </p>
-      </div>
+          <h1 className={styles.title}>蜂蜜变稀：方案评估</h1>
+          <p className={styles.subtitle}>
+            小明提出了以下三种比较蜂蜜黏度的方法。请分析三种方法的优缺点，并写在相应的方框内。
+          </p>
+        </div>
 
       {/* 主内容区域 */}
       <div className={styles.content}>
         {methods.map((method) => (
           <div key={method.id} className={styles.methodCard}>
             {/* 方法展示区 */}
-            <div className={styles.methodHeader}>
-              <div className={styles.methodImageContainer}>
-                <img
-                  src={method.image}
-                  alt={method.name}
-                  className={styles.methodImage}
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
-                <div className={styles.methodPlaceholder}>
-                  <div className={styles.placeholderIcon}>{method.imagePlaceholder}</div>
-                  <p className={styles.placeholderText}>{method.name}</p>
+            {method.layoutType === 'horizontal' ? (
+              // 横向布局：标题单独一行居中，下面文字和图片并列
+              <div className={styles.methodHeaderHorizontal}>
+                <h2 className={styles.methodName}>{method.name}</h2>
+                <div className={styles.horizontalContent}>
+                  <div className={styles.methodInfo}>
+                    <p className={styles.methodDescription}>{method.description}</p>
+                  </div>
+                  <div className={styles.methodImageContainer}>
+                    <img
+                      src={method.image}
+                      alt={method.name}
+                      className={styles.methodImage}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div className={styles.methodPlaceholder}>
+                      <div className={styles.placeholderIcon}>{method.imagePlaceholder}</div>
+                      <p className={styles.placeholderText}>{method.name}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className={styles.methodInfo}>
-                <h2 className={styles.methodName}>{method.name}</h2>
-                <p className={styles.methodDescription}>{method.description}</p>
+            ) : (
+              // 纵向布局：文字在上，图片在下
+              <div className={styles.methodHeader}>
+                <div className={styles.methodInfo}>
+                  <h2 className={styles.methodName}>{method.name}</h2>
+                  <p className={styles.methodDescription}>{method.description}</p>
+                </div>
+                <div className={styles.methodImageContainer}>
+                  <img
+                    src={method.image}
+                    alt={method.name}
+                    className={styles.methodImage}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  <div className={styles.methodPlaceholder}>
+                    <div className={styles.placeholderIcon}>{method.imagePlaceholder}</div>
+                    <p className={styles.placeholderText}>{method.name}</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* 评估输入区 */}
             <div className={styles.evaluationInputs}>

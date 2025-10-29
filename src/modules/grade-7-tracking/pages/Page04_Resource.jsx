@@ -17,57 +17,28 @@ import styles from '../styles/ExplorationPages.module.css';
 const RESOURCE_DATA = {
   brewing: {
     title: '蜂蜜酿造流程',
-    content: `蜜蜂采集花蜜后，会在体内将花蜜中的蔗糖分解成葡萄糖和果糖。回到蜂巢后，工蜂将花蜜吐入巢房，并通过反复扇风降低水分含量。
-
-当蜂蜜中的含水量降至约18%-20%时，工蜂就会用蜂蜡将巢房封盖，标志着蜂蜜成熟。成熟的蜂蜜质地浓稠，不易变质。
-
-未完全成熟的蜂蜜含水量较高，黏度较低，容易发酵变质。`
+    content: null, // 使用图片代替文字
+    image: '/src/assets/images/蜂蜜酿造流程.png'
   },
   viscosity: {
     title: '黏度原理揭秘',
-    content: `黏度是液体流动时分子间摩擦力的体现。黏度越大，液体流动越困难。
-
-温度是影响液体黏度的重要因素：
-- 温度升高时，分子运动加剧，分子间作用力减弱，黏度降低
-- 温度降低时，分子运动减缓，分子间作用力增强，黏度升高
-
-对于蜂蜜这样的高糖溶液，温度变化对黏度的影响尤其显著。同时，蜂蜜中的含水量也会影响其黏度——含水量越高，黏度越低。`
+    content: null, // 使用图片代替文字
+    image: '/src/assets/images/黏度原理揭秘.png'
   },
   qa: {
     title: '蜂蜜知识问答',
-    content: `Q: 为什么冬天蜂蜜会结晶？
-A: 蜂蜜中的葡萄糖在低温下容易析出形成结晶核，导致蜂蜜结晶。这是自然现象，不影响蜂蜜品质。
-
-Q: 蜂蜜可以加热吗？
-A: 可以适当加热，但温度不宜超过60℃，否则会破坏蜂蜜中的活性酶和营养成分。
-
-Q: 如何判断蜂蜜是否变质？
-A: 变质的蜂蜜会产生酸味或酒精味，表面出现大量气泡，质地变稀。`
+    content: null, // 使用图片代替文字
+    image: '/src/assets/images/蜂蜜知识问答.png'
   },
   storage: {
     title: '蜂蜜储存说明',
-    content: `正确的储存方法：
-1. 密封保存：避免吸收空气中的水分
-2. 避光储存：防止光照破坏营养成分
-3. 常温保存：理想温度为10-20℃
-4. 使用干燥勺子：避免带入水分和细菌
-
-储存不当的影响：
-- 吸收水分后含水量升高，黏度下降
-- 高温环境下营养成分流失
-- 潮湿环境易导致发酵变质`
+    content: null, // 使用图片代替文字
+    image: '/src/assets/images/蜂蜜存储说明.png'
   },
   adulteration: {
     title: '掺假蜂蜜探析',
-    content: `常见的蜂蜜掺假方式：
-1. 掺入糖浆：降低成本，但营养价值大幅降低
-2. 掺入水分：增加重量，但易变质
-3. 喂糖蜂蜜：蜜蜂被喂食糖浆产出的"蜂蜜"
-
-鉴别方法：
-- 观察结晶：天然蜂蜜结晶细腻，掺假蜂蜜结晶粗糙
-- 滴纸测试：天然蜂蜜滴在纸上不易渗透
-- 加水摇晃：天然蜂蜜会产生丰富泡沫且持久不消`
+    content: null, // 使用图片代替文字
+    image: '/src/assets/images/掺假蜂蜜探析.png'
   }
 };
 
@@ -227,16 +198,16 @@ const Page04_Resource = () => {
                 蜂蜜酿造流程
               </button>
               <button
-                onClick={() => handleOpenResource('viscosity')}
-                className={styles.infoButton}
-              >
-                黏度原理揭秘
-              </button>
-              <button
                 onClick={() => handleOpenResource('qa')}
                 className={styles.infoButton}
               >
                 蜂蜜知识问答
+              </button>
+              <button
+                onClick={() => handleOpenResource('viscosity')}
+                className={styles.infoButton}
+              >
+                黏度原理揭秘
               </button>
               <button
                 onClick={() => handleOpenResource('storage')}
@@ -258,7 +229,7 @@ const Page04_Resource = () => {
             <div className={styles.taskSection}>
               <h3 className={styles.taskTitle}>任务</h3>
               <p className={styles.taskDescription}>
-                请点击并查看资料，思考蜂蜜黏度可能与以下哪些因素有关？
+                为探究影响蜂蜜黏度的因素，小明搜集了左侧的五条资料。请点击并查看资料，思考蜂蜜黏度可能与以下哪些因素有关？单击选择你认为可能的选项，再次点击可取消选择（可多选）。
               </p>
               <div className={styles.checkboxGroup}>
                 {OPTIONS.map(option => (
@@ -302,9 +273,17 @@ const Page04_Resource = () => {
               </button>
             </div>
             <div className={styles.modalBody}>
-              {RESOURCE_DATA[currentModal].content.split('\n\n').map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
+              {RESOURCE_DATA[currentModal].image ? (
+                <img
+                  src={RESOURCE_DATA[currentModal].image}
+                  alt={RESOURCE_DATA[currentModal].title}
+                  className={styles.modalImage}
+                />
+              ) : (
+                RESOURCE_DATA[currentModal].content.split('\n\n').map((paragraph, index) => (
+                  <p key={index}>{paragraph}</p>
+                ))
+              )}
             </div>
           </div>
         </div>
