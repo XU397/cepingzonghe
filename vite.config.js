@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
               schoolName: '开发环境（Mock）',
               studentCode: 'M001',
               studentName: '本地模拟用户',
-              url: '/grade-7-tracking'
+              url: '/four-grade'
             }
           }))
           return

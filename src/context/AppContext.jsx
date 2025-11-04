@@ -16,6 +16,13 @@ const AppContext = createContext();
  */
 const TOTAL_TASK_DURATION = 40 * 60;
 
+/**
+ * 默认问卷时长（秒）
+ * 10分钟 = 600秒
+ * 注意：这是全局默认值，模块可以通过 startQuestionnaireTimer(customDuration) 传入自定义时长
+ */
+const DEFAULT_QUESTIONNAIRE_DURATION = 10 * 60;
+
 // 辅助函数：格式化日期时间为 "YYYY-MM-DD HH:mm:ss"
 const internalFormatDateTime = (date) => {
   if (!date) return '';
@@ -80,7 +87,7 @@ export const AppProvider = ({ children }) => {
 
   // 问卷相关状态
   const [questionnaireStartTime, setQuestionnaireStartTime] = useState(null);
-  const [questionnaireRemainingTime, setQuestionnaireRemainingTime] = useState(10 * 60); // 10分钟
+  const [questionnaireRemainingTime, setQuestionnaireRemainingTime] = useState(DEFAULT_QUESTIONNAIRE_DURATION);
   const [isQuestionnaireStarted, setIsQuestionnaireStarted] = useState(false);
   const [isQuestionnaireTimeUp, setIsQuestionnaireTimeUp] = useState(false);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState({});
@@ -300,7 +307,7 @@ export const AppProvider = ({ children }) => {
     setQuestionnaireAnswers({});
     setIsQuestionnaireStarted(false);
     setIsQuestionnaireTimeUp(false);
-    setQuestionnaireRemainingTime(10 * 60);
+    setQuestionnaireRemainingTime(DEFAULT_QUESTIONNAIRE_DURATION);
     setQuestionnaireStartTime(null);
     
     // 清除本地存储 - 完整清除所有缓存数据
@@ -373,6 +380,35 @@ export const AppProvider = ({ children }) => {
     }
   }, [handleLogout]);
 
+  /**
+   * 集中式Session过期处理函数
+   * 当检测到session过期时，执行完整的清理和重定向流程
+   */
+  const handleSessionExpired = useCallback(() => {
+    console.log('[AppContext] 🚫 Session已过期，执行完整清理和重定向...');
+
+    // 记录session过期事件
+    try {
+      logOperation({
+        targetElement: '系统操作',
+        eventType: '会话过期',
+        value: `当前页面: ${currentPageId}, Session过期自动登出`
+      });
+    } catch (err) {
+      console.warn('[AppContext] 无法记录session过期操作:', err);
+    }
+
+    // 提示用户
+    alert('登录会话已过期，请重新登录');
+
+    // 调用handleLogout清除所有状态和localStorage
+    handleLogout();
+
+    // 强制重定向到根路径（显示登录页）
+    console.log('[AppContext] 重定向到登录页...');
+    window.location.href = '/';
+  }, [handleLogout, logOperation, currentPageId]);
+
   // 使用浏览器关闭监听Hook
   const { clearCache } = useBrowserCloseHandler(clearAllCache);
 
@@ -387,18 +423,31 @@ export const AppProvider = ({ children }) => {
     let markData;
     
     if (customData) {
-      // 使用传入的自定义数据构建提交数据
-      const pageDetails = pageInfoMapping[currentPageId] || { number: '0', desc: '未知页面' };
-      
-      markData = {
-        pageNumber: pageDetails.number,
-        pageDesc: pageDetails.desc,
-        operationList: customData.operationList || [],
-        answerList: customData.answerList || [],
-        beginTime: pageEnterTime ? formatDateTime(pageEnterTime) : formatDateTime(new Date()),
-        endTime: formatDateTime(new Date()),
-        imgList: [], // 通常为空
-      };
+      // 优先支持模块传入的完整 markObject（对齐多模块场景）
+      const hasCompleteMark = customData.pageNumber && customData.pageDesc;
+      if (hasCompleteMark) {
+        markData = {
+          pageNumber: String(customData.pageNumber),
+          pageDesc: String(customData.pageDesc),
+          operationList: Array.isArray(customData.operationList) ? customData.operationList : [],
+          answerList: Array.isArray(customData.answerList) ? customData.answerList : [],
+          beginTime: customData.beginTime || (pageEnterTime ? formatDateTime(pageEnterTime) : formatDateTime(new Date())),
+          endTime: customData.endTime || formatDateTime(new Date()),
+          imgList: Array.isArray(customData.imgList) ? customData.imgList : [],
+        };
+      } else {
+        // 兼容旧路径：用当前 AppContext 页面映射来构建（蒸馒头模块）
+        const pageDetails = pageInfoMapping[currentPageId] || { number: '0', desc: '未知页面' };
+        markData = {
+          pageNumber: pageDetails.number,
+          pageDesc: pageDetails.desc,
+          operationList: customData.operationList || [],
+          answerList: customData.answerList || [],
+          beginTime: pageEnterTime ? formatDateTime(pageEnterTime) : formatDateTime(new Date()),
+          endTime: formatDateTime(new Date()),
+          imgList: [], // 通常为空
+        };
+      }
     } else {
       // 使用当前状态数据
       markData = preparePageSubmissionData();
@@ -440,40 +489,30 @@ export const AppProvider = ({ children }) => {
       console.log("[AppContext] 🔍 刚才提交的operationList详情:", markData.operationList);
       console.log("[AppContext] 🔍 operationList中的事件类型:", markData.operationList.map(op => `${op.targetElement} → ${op.eventType}`));
       
-      logOperation({ 
+      logOperation({
         targetElement: '系统操作',
         eventType: '页面数据提交成功',
         value: `Page: ${currentPageId}, Response: ${JSON.stringify(response)}`
       });
-      
+
+      // 更新session活动时间戳（数据提交成功）
+      localStorage.setItem('lastSessionEndTime', Date.now().toString());
+
       return true;
     } catch (error) {
       console.error("[AppContext] submitPageData: Error submitting page data:", error);
       
       // 检查是否是session过期错误
       if (error.isSessionExpired || error.code === 401 || (error.message && (
-        error.message.includes('401') || 
+        error.message.includes('401') ||
         error.message.includes('session已过期') ||
         error.message.includes('请重新登录')
       ))) {
-        console.log("[AppContext] 检测到session过期，清除登录状态");
-        
-        logOperation({ 
-          targetElement: '系统操作',
-          eventType: '会话过期',
-          value: `Page: ${currentPageId}, Error: ${error.message}`
-        });
-        
-        // 清除认证状态但保留页面数据
-        setIsAuthenticated(false);
-        setIsLoggedIn(false);
-        
-        // 提示用户session过期
-        alert('登录会话已过期，请重新登录以继续使用');
-        
-        // 跳转到登录页，但不清除任务数据
-        setCurrentPageIdInternal('Page_Login');
-        
+        console.log("[AppContext] 检测到session过期，调用集中式处理函数");
+
+        // 使用集中式session过期处理函数
+        handleSessionExpired();
+
         return false;
       }
       
@@ -488,7 +527,7 @@ export const AppProvider = ({ children }) => {
       
       return false;
     }
-  }, [preparePageSubmissionData, logOperation, currentPageId, setIsAuthenticated, setIsLoggedIn, setCurrentPageIdInternal, pageEnterTime, formatDateTime]);
+  }, [preparePageSubmissionData, logOperation, currentPageId, handleSessionExpired, pageEnterTime, formatDateTime]);
 
   /**
    * 提交当前页面的数据
@@ -575,6 +614,29 @@ export const AppProvider = ({ children }) => {
 
     // 新的统一认证状态恢复逻辑
     try {
+      // 首先检查session有效期（基于时间）
+      const lastSessionEndTime = localStorage.getItem('lastSessionEndTime');
+      const SESSION_EXPIRY_HOURS = 24; // Session有效期：24小时
+
+      if (lastSessionEndTime) {
+        const sessionEndTimeMillis = parseInt(lastSessionEndTime, 10);
+        const hoursSinceLastSession = (Date.now() - sessionEndTimeMillis) / (1000 * 60 * 60);
+
+        console.log('[AppContext] Session年龄检查:', {
+          lastSessionEndTime: new Date(sessionEndTimeMillis).toLocaleString(),
+          hoursSinceLastSession: hoursSinceLastSession.toFixed(2),
+          expiryThreshold: SESSION_EXPIRY_HOURS
+        });
+
+        if (hoursSinceLastSession > SESSION_EXPIRY_HOURS) {
+          console.log('[AppContext] ⏰ Session已过期（超过24小时），清除所有认证数据');
+          // 清除所有localStorage数据
+          handleLogout();
+          // 不再继续恢复状态
+          return;
+        }
+      }
+
       const savedAuth = localStorage.getItem('isAuthenticated');
       const savedUser = localStorage.getItem('currentUser');
       const savedBatchCode = localStorage.getItem('batchCode');
@@ -605,23 +667,23 @@ export const AppProvider = ({ children }) => {
         const lastSessionEndTime = localStorage.getItem('lastSessionEndTime');
         
         let actualQuestionnaireRemainingTime;
-        
+
         if (lastSessionEndTime) {
           const sessionEndTimeMillis = parseInt(lastSessionEndTime);
           const offlineTimeSeconds = Math.floor((now - sessionEndTimeMillis) / 1000);
-          
+
           console.log('[AppContext] 计算问卷倒计时恢复:', {
             storedQuestionnaireRemainingTime: parsedQuestionnaireRemainingTime,
             offlineTimeSeconds,
             lastSessionEndTime: new Date(sessionEndTimeMillis).toLocaleString()
           });
-          
+
           actualQuestionnaireRemainingTime = Math.max(0, parsedQuestionnaireRemainingTime - offlineTimeSeconds);
         } else {
-          // 使用传统的开始时间计算方法
-          const questionnaireStartTimeMillis = questionnaireStartTimeObj.getTime();
-          const expectedQuestionnaireEndTimeMillis = questionnaireStartTimeMillis + 10 * 60 * 1000; // 10分钟
-          actualQuestionnaireRemainingTime = Math.max(0, Math.floor((expectedQuestionnaireEndTimeMillis - now) / 1000));
+          // 直接使用保存的剩余时间，不重新计算
+          // 这样可以保持模块自定义的倒计时时长（如 grade-7-tracking 的60秒）
+          actualQuestionnaireRemainingTime = parsedQuestionnaireRemainingTime;
+          console.log('[AppContext] 使用保存的问卷剩余时间:', actualQuestionnaireRemainingTime, '秒');
         }
         
         if (actualQuestionnaireRemainingTime <= 0) {
@@ -809,31 +871,22 @@ export const AppProvider = ({ children }) => {
           const newTime = prevTime - 1;
           if (newTime <= 0) {
             clearInterval(timerId);
+            console.log('[AppContext] 🔴 设置 isTimeUp = true');
             setIsTimeUp(true); // Set time up flag
-            
+
             // 直接调用logOperation，不从依赖中获取
             try {
               logOperation({ pageId: currentPage, targetElement: '系统事件', eventType: '任务超时' });
             } catch (error) {
               console.error('[AppContext] 记录超时操作失败:', error);
             }
-            
+
             // 清除持久化的计时器数据
             localStorage.removeItem('remainingTime');
-            console.log('[AppContext] ⏰ 测评计时器到达0，任务超时，准备跳转到任务完成页面');
-            
-            // 测评倒计时为0时，跳转到任务完成页面（P19）
-            setTimeout(() => {
-              try {
-                console.log('[AppContext] 🔄 测评超时，自动跳转到P19任务完成页面');
-                // 直接使用navigate函数跳转，不使用依赖
-                setCurrentPageIdInternal('Page_19_Task_Completion');
-                setPageEnterTime(new Date());
-                setCurrentPageData({ operationList: [], answerList: [] });
-              } catch (error) {
-                console.error('[AppContext] 超时跳转失败:', error);
-              }
-            }, 1000); // 延迟1秒执行跳转，确保状态更新完成
+            console.log('[AppContext] ⏰ 测评计时器到达0，任务超时');
+
+            // 注意：不再在AppContext中执行页面跳转
+            // 模块内部会监听 isTimeUp 状态并执行自己的跳转逻辑
             
             return 0;
           }
@@ -881,62 +934,65 @@ export const AppProvider = ({ children }) => {
   // 问卷计时器
   useEffect(() => {
     let questionnaireTimerId;
-    
-    if (isQuestionnaireStarted && questionnaireRemainingTime > 0 && !isQuestionnaireTimeUp) {
+
+    if (isQuestionnaireStarted && !isQuestionnaireTimeUp) {
+      console.log('[AppContext] 问卷计时器 useEffect 触发，准备启动倒计时');
+
       questionnaireTimerId = setInterval(() => {
         setQuestionnaireRemainingTime(prevTime => {
+          if (prevTime <= 0) {
+            console.log('[AppContext] 问卷计时器已到0，停止倒计时');
+            return 0;
+          }
+
           const newTime = prevTime - 1;
+
           if (newTime <= 0) {
             clearInterval(questionnaireTimerId);
+            console.log('[AppContext] 🔴 设置 isQuestionnaireTimeUp = true');
             setIsQuestionnaireTimeUp(true);
-            logOperation({ 
-              targetElement: '问卷计时器', 
+            logOperation({
+              targetElement: '问卷计时器',
               eventType: '问卷超时',
               value: '问卷作答时间已结束'
             });
-            
-            // 清除问卷计时器的持久化数据
-            localStorage.removeItem('questionnaireRemainingTime');
-            
-            console.log('[AppContext] ⏰ 问卷计时器到达0，准备跳转到最后页面');
-            
-            // 问卷倒计时为0时，自动跳转到最后的问卷页面（P28）
-            setTimeout(() => {
-              try {
-                console.log('[AppContext] 🔄 问卷超时，自动跳转到P28问卷完成页面');
-                // 如果当前不在P28页面，则跳转到P28
-                setCurrentPageIdInternal(currentId => {
-                  if (currentId !== 'Page_28_Effort_Submit') {
-                    setPageEnterTime(new Date());
-                    setCurrentPageData({ operationList: [], answerList: [] });
-                    return 'Page_28_Effort_Submit';
-                  }
-                  return currentId; // 如果已经在P28，不做改变
-                });
-              } catch (error) {
-                console.error('[AppContext] 问卷超时跳转失败:', error);
-              }
-            }, 1000); // 延迟1秒执行跳转，确保状态更新完成
-            
+
+            // 保存倒计时为0（而不是删除），确保页面刷新时能正确恢复
+            localStorage.setItem('questionnaireRemainingTime', '0');
+
+            console.log('[AppContext] ⏰ 问卷计时器到达0');
+
+            // 注意：不再在AppContext中执行页面跳转
+            // 模块内部会监听 isQuestionnaireTimeUp 状态并执行自己的跳转逻辑
+
             return 0;
           }
-          
+
           // 持久化问卷剩余时间（每5秒更新一次以减少写入频率）
           if (newTime % 5 === 0) {
             localStorage.setItem('questionnaireRemainingTime', newTime.toString());
           }
-          
+
           return newTime;
         });
       }, 1000);
+
+      console.log('[AppContext] 问卷计时器已启动，interval ID:', questionnaireTimerId);
+    } else {
+      console.log('[AppContext] 问卷计时器条件不满足:', {
+        isQuestionnaireStarted,
+        isQuestionnaireTimeUp,
+        questionnaireRemainingTime
+      });
     }
 
     return () => {
       if (questionnaireTimerId) {
+        console.log('[AppContext] 清理问卷计时器 interval');
         clearInterval(questionnaireTimerId);
       }
     };
-  }, [isQuestionnaireStarted, questionnaireRemainingTime, isQuestionnaireTimeUp, logOperation]); 
+  }, [isQuestionnaireStarted, isQuestionnaireTimeUp, logOperation]); 
 
   /**
    * 设置登录信息并标记为已登录
@@ -958,7 +1014,7 @@ export const AppProvider = ({ children }) => {
     setQuestionnaireAnswers({});
     setIsQuestionnaireStarted(false);
     setIsQuestionnaireTimeUp(false);
-    setQuestionnaireRemainingTime(10 * 60);
+    setQuestionnaireRemainingTime(DEFAULT_QUESTIONNAIRE_DURATION);
     
     localStorage.removeItem('isTaskFinished');
     localStorage.removeItem('taskStartTime');
@@ -994,22 +1050,32 @@ export const AppProvider = ({ children }) => {
   /**
    * 启动问卷计时
    * 在用户进入问卷说明页面点击"开始作答"时调用
+   *
+   * @param {number} [duration] - 可选的自定义问卷时长（秒），如果不传则使用默认值10分钟
    */
-  const startQuestionnaireTimer = useCallback(() => {
+  const startQuestionnaireTimer = useCallback((duration) => {
     if (!isQuestionnaireStarted && isLoggedIn) {
+      // 使用传入的时长，如果没有传入则使用默认值
+      const questionnaireDuration = duration !== undefined ? duration : DEFAULT_QUESTIONNAIRE_DURATION;
+
       const now = new Date();
       setQuestionnaireStartTime(now);
-      setQuestionnaireRemainingTime(10 * 60); // 重置为10分钟
+      setQuestionnaireRemainingTime(questionnaireDuration);
       setIsQuestionnaireStarted(true);
       setIsQuestionnaireTimeUp(false);
-      
-      logOperation({ 
-        targetElement: '问卷计时器', 
+
+      // 立即持久化到 localStorage
+      localStorage.setItem('isQuestionnaireStarted', 'true');
+      localStorage.setItem('questionnaireStartTime', now.toISOString());
+      localStorage.setItem('questionnaireRemainingTime', String(questionnaireDuration));
+
+      logOperation({
+        targetElement: '问卷计时器',
         eventType: '问卷开始',
-        value: '用户开始作答问卷' 
+        value: '用户开始作答问卷'
       });
-      
-      console.log('[AppContext] 问卷计时器已启动');
+
+      console.log('[AppContext] 问卷计时器已启动并持久化到 localStorage');
     }
   }, [isQuestionnaireStarted, isLoggedIn, logOperation]);
 
@@ -1261,10 +1327,36 @@ export const AppProvider = ({ children }) => {
       localStorage.setItem('currentUser', JSON.stringify(userData));
       localStorage.setItem('batchCode', userData.batchCode);
       localStorage.setItem('examNo', userData.examNo);
+
+      // 🔧 修复：无论 pageNum 是什么值，都要正确处理
       if (userData.pageNum !== undefined && userData.pageNum !== null) {
         localStorage.setItem('pageNum', userData.pageNum);
+      } else {
+        // pageNum 为 null 或 undefined 时，清除 localStorage 中的旧值
+        // 这样模块的 getInitialPage 会收到 null，返回默认页面
+        localStorage.removeItem('pageNum');
+        localStorage.removeItem('hci-pageNum');
+        console.log('[AppContext] pageNum 为空，已清除 localStorage 中的旧值');
       }
-      
+
+      // 更新session活动时间戳
+      localStorage.setItem('lastSessionEndTime', Date.now().toString());
+      console.log('[AppContext] Session时间戳已更新（登录成功）');
+
+      // 清除tracking模块的缓存（防止旧账号数据污染）
+      const trackingKeys = [
+        'tracking_sessionId',
+        'tracking_session',
+        'tracking_experimentTrials',
+        'tracking_chartData',
+        'tracking_textResponses',
+        'tracking_questionnaireAnswers'
+      ];
+      trackingKeys.forEach(key => {
+        localStorage.removeItem(key);
+      });
+      console.log('[AppContext] 已清除tracking模块缓存，确保新账号从正确页面开始');
+
       console.log('[AppContext] 登录状态判断:', {
         existingTaskStartTime: !!existingTaskStartTime,
         existingCurrentPageId,
@@ -1313,7 +1405,7 @@ export const AppProvider = ({ children }) => {
     // 持久化问卷完成状态
     localStorage.setItem('isQuestionnaireCompleted', 'true');
     console.log('[AppContext] 问卷已完成，状态已持久化到localStorage');
-    
+
     // 在此可以考虑停止问卷计时器，如果它还在运行的话
     // 也可以清除 questionnaireAnswers，如果不再需要
     // localStorage.removeItem('questionnaireAnswers');
@@ -1322,6 +1414,25 @@ export const AppProvider = ({ children }) => {
     // localStorage.removeItem('questionnaireStartTime');
     logOperation({targetElement: 'System', eventType: 'questionnaire_marked_complete'});
   }, [logOperation]);
+
+  /**
+   * 更新当前页面编号
+   * 用于模块内部页面导航时同步更新页面状态，确保刷新后能恢复到正确页面
+   * @param {string|number} newPageNum - 新的页面编号
+   */
+  const handleUpdatePageNum = useCallback((newPageNum) => {
+    const pageNumStr = String(newPageNum);
+    console.log('[AppContext] 更新 pageNum:', pageNumStr);
+
+    // 更新状态
+    setPageNum(pageNumStr);
+
+    // 持久化到 localStorage
+    localStorage.setItem('hci-pageNum', pageNumStr);
+    localStorage.setItem('pageNum', pageNumStr); // 兼容旧的 key
+
+    console.log('[AppContext] ✅ pageNum 已更新并持久化:', pageNumStr);
+  }, []);
 
   const contextValue = {
     currentPageId,
@@ -1333,6 +1444,7 @@ export const AppProvider = ({ children }) => {
     batchCode,
     examNo,
     pageNum,
+    handleUpdatePageNum, // 新增：更新页面编号的函数
     currentPageData,
     setCurrentPageData, //确保暴露
     pageEnterTime,

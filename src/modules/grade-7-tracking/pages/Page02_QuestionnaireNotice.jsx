@@ -6,19 +6,18 @@
  * - 蓝色提示框: 恭喜完成实验
  * - 4条带复选标记的说明要点
  * - 感谢语句
- * - 2秒倒计时提示 (黄色背景)
+ * - 30秒倒计时提示 (黄色背景)
  * - "开始作答"按钮 (倒计时期间禁用)
  * - T099: 启动10分钟问卷计时器
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
 import PageLayout from '../components/layout/PageLayout';
 import Button from '../components/ui/Button';
 import styles from '../styles/Page02_QuestionnaireNotice.module.css';
 
-const READING_TIME_SECONDS = 2; // 2秒倒计时
+const READING_TIME_SECONDS = 10; // 30秒倒计时
 
 const Page02_QuestionnaireNotice = () => {
   const {
@@ -26,10 +25,10 @@ const Page02_QuestionnaireNotice = () => {
     clearOperations,
     navigateToPage,
     currentPageOperations,
-    userContext
+    userContext,
+    submitPageData
   } = useTrackingContext();
 
-  const { submitPageData } = useDataLogger();
   const [pageStartTime] = useState(() => new Date());
   const [countdown, setCountdown] = useState(READING_TIME_SECONDS);
   const [canProceed, setCanProceed] = useState(false);
@@ -114,14 +113,9 @@ const Page02_QuestionnaireNotice = () => {
         // 清空操作记录
         clearOperations();
 
-        // T099: 启动10分钟问卷计时器
-        if (userContext?.helpers?.startTaskTimer) {
-          const tenMinutes = 10 * 60; // 秒
-          userContext.helpers.startTaskTimer(tenMinutes);
-          console.log('[Page02_QuestionnaireNotice] 已启动10分钟问卷计时器');
-        } else {
-          console.warn('[Page02_QuestionnaireNotice] startTaskTimer helper 不可用');
-        }
+        // T099: 不在此页启动计时器，将在问卷第一页启动
+        // 计时器会在进入问卷第一页时自动启动
+        console.log('[Page02_QuestionnaireNotice] 准备进入问卷，计时器将在问卷第一页启动');
 
         // 导航到第一个问卷页面 (页码14)
         await navigateToPage(14);
@@ -142,7 +136,7 @@ const Page02_QuestionnaireNotice = () => {
   ]);
 
   return (
-    <PageLayout showNavigation={false} showTimer={true}>
+    <PageLayout showNavigation={false} showTimer={false}>
       <div className={styles.pageContainer}>
         {/* 标题区域 - 剪贴板图标 + 调查问卷说明 */}
         <div className={styles.titleSection}>
@@ -175,7 +169,7 @@ const Page02_QuestionnaireNotice = () => {
               <li className={styles.checkItem}>
                 <span className={styles.checkIcon}>✓</span>
                 <span className={styles.checkText}>
-                  你可以使用屏幕右下角的下一页按钮来回答下一个问题。
+                  你可以使用屏幕下方的"下一页"按钮来回答下一个问题。
                 </span>
               </li>
               <li className={styles.checkItem}>

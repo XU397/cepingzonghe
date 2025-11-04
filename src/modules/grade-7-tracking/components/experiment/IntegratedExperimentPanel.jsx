@@ -85,6 +85,9 @@ const IntegratedExperimentPanel = ({
     <div className={styles.container}>
       {/* 4个量筒横向排列 */}
       <div className={styles.beakersRow}>
+        {/* 横向管子 - 贯穿所有量筒上方 */}
+        <div className={styles.horizontalBar}></div>
+
         {beakerStates.map((beaker) => (
           <BeakerWithBall
             key={beaker.waterContent}
@@ -165,8 +168,8 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
 
   useEffect(() => {
     if (isAnimating && fallTime > 0) {
-      // 小球从量筒外部（-10%）开始下落到底部（94%）
-      setBallPosition(-10);
+      // 小球从量筒顶部（1%）开始下落到底部（94%）
+      setBallPosition(1);
 
       // 启动动画
       const startTime = Date.now();
@@ -175,8 +178,8 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
       const animate = () => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        // 从 -10% 到 94%
-        setBallPosition(-10 + progress * 104);
+        // 从 1% 到 94%
+        setBallPosition(1 + progress * 93);
 
         if (progress < 1) {
           requestAnimationFrame(animate);
@@ -187,37 +190,36 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
     }
   }, [isAnimating, fallTime]);
 
-  // 重置或初始状态时，确保小球位于量筒外部上方（被夹子夹着）
+  // 重置或初始状态时，确保小球位于量筒顶部，清晰可见
   useEffect(() => {
     if (!isAnimating && !hasCompleted) {
-      setBallPosition(-10); // 小球在量筒外部上方
+      setBallPosition(1); // 小球在量筒顶部（1%），避免负数被裁剪
     }
   }, [isAnimating, hasCompleted]);
 
   return (
     <div className={styles.beakerContainer}>
-      {/* 夹子（圆环）- 始终显示在量筒上方 */}
+      {/* 夹子 - 挂在横管上，夹着小球 */}
       <div className={styles.clipper}>
-        <div className={styles.clipperRing}></div>
-        <div className={styles.clipperHook}></div>
+        <div className={styles.clipperBody}></div>
       </div>
 
       {/* 量筒外框 */}
       <div className={styles.beaker}>
         {/* 刻度线 */}
         <div className={styles.scales}>
-          {[250, 200, 150, 100, 50].map(mark => (
+          {[200, 150, 100, 50].map(mark => (
             <div key={mark} className={styles.scaleLine}>
               <span className={styles.scaleLabel}>{mark}</span>
             </div>
           ))}
         </div>
 
-        {/* 蜂蜜液体 - 填满整个量筒，根据含水量显示不同深度的黄色 */}
+        {/* 蜂蜜液体 - 200ml (90%高度,与200ml刻度线齐平在top:10%)，根据含水量显示不同深度的黄色 */}
         <div
           className={styles.honeyLiquid}
           style={{
-            height: '100%',
+            height: '90%',
             background: getHoneyColor(waterContent)
           }}
         />
@@ -226,7 +228,9 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
         <div
           className={styles.ball}
           style={{
-            top: `${ballPosition}%`,
+            top: (!isAnimating && !hasCompleted)
+              ? `calc(${ballPosition}% - var(--ball-offset, 44px) + var(--ball-seat, 6px))`
+              : `${ballPosition}%`,
             transition: isAnimating ? 'none' : 'top 0.3s ease'
           }}
         />

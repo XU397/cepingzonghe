@@ -72,7 +72,7 @@
 
 .questionCell {
   padding: 0px 10px; /* 从10px 16px减少到8px 14px，进一步压缩垂直间距 */
-  font-size: 14px; /* 从15px减少到14px */
+  font-size: 16px; /* 增加到16px */
   line-height: 1.5; /* 从1.5减少到1.35，显著缩小行高 */
   color: #1f2937;
   text-align: left;
@@ -182,7 +182,7 @@
   /* 紧凑表格行 */
   .questionCell {
     padding: 6px 10px; /* 从8px 12px减少到6px 10px */
-    font-size: 13px; /* 从14px减少到13px */
+    font-size: 14px; /* 保持14px以确保可读性 */
     line-height: 1.3; /* 从1.4减少到1.3 */
   }
 

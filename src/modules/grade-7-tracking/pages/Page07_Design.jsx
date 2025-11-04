@@ -14,7 +14,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useTrackingContext } from '../context/TrackingProvider.jsx';
-import { useDataLogger } from '../hooks/useDataLogger';
 import { PAGE_MAPPING } from '../config.js';
 import Button from '../components/ui/Button.jsx';
 import TextArea from '../components/ui/TextArea.jsx';
@@ -30,10 +29,10 @@ const Page07_Design = () => {
     collectAnswer,
     clearOperations,
     buildMarkObject,
-    navigateToPage
+    navigateToPage,
+    submitPageData
   } = useTrackingContext();
 
-  const { submitPageData } = useDataLogger();
   const [pageStartTime] = useState(() => Date.now());
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -92,7 +91,7 @@ const Page07_Design = () => {
     logOperation({
       action: '文本域输入',
       target: '实验想法输入框1',
-      value: `字符数: ${value.trim().length}`,
+      value: `字符数：${value.trim().length}`,
       time: new Date().toISOString(),
     });
   }, [editStartTime.idea1, logOperation]);
@@ -114,7 +113,7 @@ const Page07_Design = () => {
     logOperation({
       action: '文本域输入',
       target: '实验想法输入框2',
-      value: `字符数: ${value.trim().length}`,
+      value: `字符数：${value.trim().length}`,
       time: new Date().toISOString(),
     });
   }, [editStartTime.idea2, logOperation]);
@@ -136,7 +135,7 @@ const Page07_Design = () => {
     logOperation({
       action: '文本域输入',
       target: '实验想法输入框3',
-      value: `字符数: ${value.trim().length}`,
+      value: `字符数：${value.trim().length}`,
       time: new Date().toISOString(),
     });
   }, [editStartTime.idea3, logOperation]);
@@ -167,24 +166,21 @@ const Page07_Design = () => {
         time: new Date().toISOString(),
       });
 
-      // 收集答案
-      collectAnswer({
-        targetElement: '实验想法1',
-        value: idea1.trim()
-      });
-      collectAnswer({
-        targetElement: '实验想法2',
-        value: idea2.trim()
-      });
-      collectAnswer({
-        targetElement: '实验想法3',
-        value: idea3.trim()
-      });
+      // 同步构建答案列表，避免依赖异步的 collectAnswer 状态
+      const answerList = [
+        { targetElement: '实验想法1', value: idea1.trim() },
+        { targetElement: '实验想法2', value: idea2.trim() },
+        { targetElement: '实验想法3', value: idea3.trim() },
+      ];
 
       // 构建并提交MarkObject
       // 从session获取当前页码而不是硬编码
       const pageInfo = PAGE_MAPPING[session.currentPage];
-      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '方案设计');
+      const markObject = buildMarkObject(
+        String(session.currentPage),
+        pageInfo?.desc || '方案设计',
+        { answerList }
+      );
       const success = await submitPageData(markObject);
 
       if (success) {
@@ -198,7 +194,7 @@ const Page07_Design = () => {
       alert(error.message || '页面跳转失败，请重试');
       setIsNavigating(false);
     }
-  }, [isNavigating, canNavigate, idea1, idea2, idea3, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage, session]);
+  }, [isNavigating, canNavigate, idea1, idea2, idea3, logOperation, buildMarkObject, submitPageData, clearOperations, navigateToPage, session]);
 
   return (
     <PageLayout showNavigation={true} showTimer={true}>
@@ -207,7 +203,10 @@ const Page07_Design = () => {
         <div className={styles.header}>
           <h1 className={styles.title}>蜂蜜变稀：方案设计</h1>
           <p className={styles.subtitle}>
-            为验证小明的猜想，首先要确定评估蜂蜜黏度的方法。假设有两瓶蜂蜜，请你帮小明想一想，有哪些可以比较两瓶蜂蜜黏度的方法。请提出三个可能的想法，将其简要陈述在下方方框内。
+            为验证小明的猜想，首先要确定评估蜂蜜黏度的方法。
+          </p>
+          <p className={styles.subtitle}>
+            <strong>假设有两瓶蜂蜜，请你帮小明想一想，有哪些可以比较两瓶蜂蜜黏度的方法。</strong>请提出三个可能的想法，将其简要陈述在下方方框内。
           </p>
         </div>
 
@@ -223,7 +222,7 @@ const Page07_Design = () => {
               placeholder="请输入你的想法..."
               maxLength={500}
               showCharCount={false}
-              rows={2}
+              rows={8}
               ariaLabel="实验方案想法一输入框"
             />
           </div>
@@ -238,7 +237,7 @@ const Page07_Design = () => {
               placeholder="请输入你的想法..."
               maxLength={500}
               showCharCount={false}
-              rows={2}
+              rows={8}
               ariaLabel="实验方案想法二输入框"
             />
           </div>
@@ -253,7 +252,7 @@ const Page07_Design = () => {
               placeholder="请输入你的想法..."
               maxLength={500}
               showCharCount={false}
-              rows={2}
+              rows={8}
               ariaLabel="实验方案想法三输入框"
             />
           </div>

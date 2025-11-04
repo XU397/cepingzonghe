@@ -4,6 +4,7 @@ import { loginUser } from '../shared/services/apiService';
 import '../styles/LoginPage.css';
 import logoImage from '../assets/images/img_logo.png';
 import demoImage from '../assets/images/logoinback.png';
+import DevModuleSelector from '../components/dev/DevModuleSelector';
 
 const LoginPage = () => {
   const [userId, setUserId] = useState('');
@@ -11,6 +12,9 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const { handleLoginSuccess } = useAppContext();
+
+  // 检测是否为开发环境
+  const isDevelopment = import.meta.env.DEV;
 
   // Images are bundled via Vite asset imports
 
@@ -36,6 +40,20 @@ const LoginPage = () => {
     } catch (err) {
       setErrorMessage(err?.message || '登录失败');
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 处理开发环境模块选择
+  const handleDevModuleSelect = async (mockUserData) => {
+    console.log('[LoginPage] 开发模式快速登录:', mockUserData);
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      await handleLoginSuccess(mockUserData);
+    } catch (err) {
+      setErrorMessage(err?.message || '模块加载失败');
       setIsLoading(false);
     }
   };
@@ -73,8 +91,15 @@ const LoginPage = () => {
           </section>
 
           <section className="login-form-container">
+            {/* 开发环境：显示模块选择器 */}
+            {isDevelopment && (
+              <DevModuleSelector onModuleSelect={handleDevModuleSelect} />
+            )}
+
             <div className="login-welcome-section">
-              <h2 className="login-welcome-title">请登录，开启你的思维探究之旅</h2>
+              <h2 className="login-welcome-title">
+                {isDevelopment ? '传统登录方式' : '请登录，开启你的思维探究之旅'}
+              </h2>
             </div>
 
             {errorMessage && (

@@ -31,7 +31,12 @@ const DragDropTimelineDemo = ({ isPlaying, onComplete }) => {
 
   // --- 核心动画逻辑 ---
   useEffect(() => {
-    if (!isPlaying || animationPhase >= 5) return; // 如果不在播放或动画已完成，则停止
+    if (!isPlaying || animationPhase >= 5) {
+      console.log('[DragDropTimelineDemo] 动画停止条件:', { isPlaying, animationPhase });
+      return; // 如果不在播放或动画已完成，则停止
+    }
+
+    console.log('[DragDropTimelineDemo] 动画阶段:', animationPhase);
 
     // 定义动画的执行顺序
     const animationSequence = ['task1', 'task2', 'task5', 'task3', 'task4'];
@@ -39,7 +44,9 @@ const DragDropTimelineDemo = ({ isPlaying, onComplete }) => {
     const timer = setTimeout(() => {
       const taskIdToPlace = animationSequence[animationPhase];
       const taskData = tasks.find(t => t.id === taskIdToPlace);
-      
+
+      console.log('[DragDropTimelineDemo] 放置任务:', taskIdToPlace);
+
       // --- 动态位置计算 ---
       // 这是解决问题的关键：根据已放置的任务，计算新任务的位置
       let newPosition = { top: 60, left: 20 }; // 默认起始位置
@@ -63,20 +70,35 @@ const DragDropTimelineDemo = ({ isPlaying, onComplete }) => {
 
       // 更新状态，添加新任务到演示区，并进入下一动画阶段
       setPlacedTasks(prev => [...prev, { ...taskData, ...newPosition }]);
-      setAnimationPhase(prev => prev + 1);
+      setAnimationPhase(prev => {
+        const nextPhase = prev + 1;
+        console.log('[DragDropTimelineDemo] 动画阶段更新:', prev, '→', nextPhase);
+        return nextPhase;
+      });
 
     }, animationPhase === 0 ? 100 : 800); // 设置动画间隔
 
     return () => clearTimeout(timer);
-  }, [isPlaying, animationPhase]);
+  }, [isPlaying, animationPhase]); // 移除 placedTasks 依赖，避免竞态条件
 
   // 动画全部执行完毕后，调用onComplete
   useEffect(() => {
+    console.log('[DragDropTimelineDemo] onComplete effect触发, animationPhase:', animationPhase);
+
     if (animationPhase === 5) {
+      console.log('[DragDropTimelineDemo] 动画完成，1.5秒后调用 onComplete');
+
       const finalTimer = setTimeout(() => {
-        onComplete();
+        console.log('[DragDropTimelineDemo] 调用 onComplete 回调');
+        if (onComplete) {
+          onComplete();
+        }
       }, 1500);
-      return () => clearTimeout(finalTimer);
+
+      return () => {
+        console.log('[DragDropTimelineDemo] 清理 onComplete timer');
+        clearTimeout(finalTimer);
+      };
     }
   }, [animationPhase, onComplete]);
 

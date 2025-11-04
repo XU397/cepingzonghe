@@ -12,6 +12,7 @@ import styles from './06-TimelinePlanningPage.module.css';
 const TimelinePlanningPage = () => {
   const { logOperation, navigateToPage, setNavigationStep } = useGrade4Context();
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // 更新左侧步骤高亮（第6步）
   useEffect(() => {
@@ -30,34 +31,51 @@ const TimelinePlanningPage = () => {
   };
 
   const handleDemoComplete = () => {
+    console.log('[TimelinePlanningPage] handleDemoComplete 被调用');
     setIsDemoPlaying(false);
-    
+
     // 记录演示完成
     logOperation({
       targetElement: '动画演示',
       eventType: 'demo_complete',
       value: '拖拽演示动画播放完成'
     });
+
+    console.log('[TimelinePlanningPage] 动画状态已重置，isDemoPlaying = false');
   };
 
-  const handleNextClick = () => {
+  const handleNextClick = async () => {
     console.log('[TimelinePlanningPage] 🔘 下一页按钮被点击');
+    console.log('[TimelinePlanningPage] 当前状态:', { isDemoPlaying, isNavigating });
+
+    // 防止重复点击
+    if (isNavigating) {
+      console.log('[TimelinePlanningPage] ⏸️ 正在导航中，忽略重复点击');
+      return;
+    }
+
+    setIsNavigating(true);
+    console.log('[TimelinePlanningPage] 设置 isNavigating = true');
+
     logOperation({
       targetElement: '下一页按钮',
       eventType: 'button_click',
       value: '进入用户方案设计页面'
     });
-    
+
     // 在开发环境中跳过数据提交检查，解决导航阻止问题（Vite 环境）
     const isDevelopment = import.meta.env.DEV;
     console.log('[TimelinePlanningPage] 🔧 开发环境:', isDevelopment);
     console.log('[TimelinePlanningPage] 📍 准备导航到用户方案设计页面, skipSubmit:', isDevelopment);
-    
+
     try {
-      navigateToPage('user-solution-design', { skipSubmit: isDevelopment });
-      console.log('[TimelinePlanningPage] ✅ navigateToPage 调用完成');
+      // ✅ 添加 await，等待导航完成
+      await navigateToPage('user-solution-design', { skipSubmit: isDevelopment });
+      console.log('[TimelinePlanningPage] ✅ 页面导航完成');
     } catch (error) {
-      console.error('[TimelinePlanningPage] ❌ navigateToPage 调用失败:', error);
+      console.error('[TimelinePlanningPage] ❌ 页面导航失败:', error);
+      // 导航失败时重置状态，允许用户重试
+      setIsNavigating(false);
     }
   };
 
@@ -111,11 +129,12 @@ const TimelinePlanningPage = () => {
 
       {/* 下一页按钮 */}
       <div className={styles.navigationSection}>
-        <button 
+        <button
           className={styles.nextButton}
           onClick={handleNextClick}
+          disabled={isNavigating}
         >
-          下一页
+          {isNavigating ? '加载中...' : '下一页'}
         </button>
       </div>
     </AssessmentPageLayout>

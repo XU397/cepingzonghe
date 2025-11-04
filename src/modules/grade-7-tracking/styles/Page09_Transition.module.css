@@ -13,12 +13,18 @@
 
 /* 标题 */
 .title {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 700;
   color: #2c3e50;
+  margin: 0 0 16px 0;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 12px;
+  display: inline-block;
   text-align: center;
-  margin: 0 0 32px 0;
+  width: 200px;
+  margin: 0 auto;
 }
+
 
 /* ============================================================================
    Content Section - 主内容区域
@@ -120,8 +126,19 @@
   font-size: 22px; /* 从18px增加到22px */
   line-height: 1.7;
   color: #2c3e50;
-  text-align: center;
+  text-align: left;  /* 文本左对齐 */
+  text-indent: 2em;  /* 首行缩进两个字符 */
   margin: 0;
+}
+
+/* 底部区域 - 引导文字和量筒横向布局 */
+.bottomSection {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  width: 100%;
 }
 
 /* 引导文字 */
@@ -130,9 +147,47 @@
   font-weight: 600;
   line-height: 1.6;
   color: #e74c3c;
-  text-align: center;
+  text-align: left;
   margin: 0;
+  flex: 1;
+}
+
+/* 量筒容器 */
+.beakerContainer {
+  flex-shrink: 0;
+  width: 180px;
+  height: 270px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.beakerSvg {
   width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.beaker {
+  transition: transform 0.3s ease;
+}
+
+.beakerContainer:hover .beaker {
+  transform: scale(1.05);
+}
+
+/* 电子计时器样式 */
+.timer text {
+  animation: digitBlink 1.5s ease-in-out infinite;
+}
+
+@keyframes digitBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* ============================================================================
@@ -183,9 +238,17 @@
     font-size: 16px;
   }
 
+  .bottomSection {
+    gap: 24px;
+  }
+
   .guideText {
     font-size: 18px;
-    margin-top: 12px;
+  }
+
+  .beakerContainer {
+    width: 140px;
+    height: 210px;
   }
 
   .footer {
@@ -216,8 +279,17 @@
     font-size: 16px;
   }
 
+  .bottomSection {
+    gap: 32px;
+  }
+
   .guideText {
     font-size: 18px;
+  }
+
+  .beakerContainer {
+    width: 150px;
+    height: 225px;
   }
 }
 

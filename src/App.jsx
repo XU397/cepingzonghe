@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { AppProvider, useAppContext } from './context/AppContext';
 import Timer from './components/common/Timer';
 import QuestionnaireTimer from './components/questionnaire/QuestionnaireTimer';
@@ -19,12 +19,12 @@ const ModuleRouter = React.lazy(() => import('./modules/ModuleRouter.jsx'));
  * 根据登录状态和任务状态渲染不同内容
  */
 const AppContent = () => {
-  const { 
+  const {
     isLoggedIn,
-    isAuthenticated, 
-    currentPageId, 
-    isTimeUp, 
-    isTaskFinished, 
+    isAuthenticated,
+    currentPageId,
+    isTimeUp,
+    isTaskFinished,
     setCurrentPageId,
     setIsTaskFinished,
     startTaskTimer,
@@ -33,6 +33,12 @@ const AppContent = () => {
     submitPageData,
     questionnaireRemainingTime,
     isQuestionnaireTimeUp,
+    isQuestionnaireStarted,
+    questionnaireStartTime,
+    startQuestionnaireTimer,
+    saveQuestionnaireAnswer,
+    getQuestionnaireAnswer,
+    completeQuestionnaire,
     taskStartTime,
     currentUser,
     batchCode,
@@ -49,6 +55,8 @@ const AppContent = () => {
     isQuestionnaireCompleted,
     logOperation,
     collectAnswer,
+    // 提交相关能力（提供给模块）
+    submitPageDataWithInfo,
     // 暴露给模块路由器的登出与清理
     handleLogout,
     clearAllCache
@@ -56,6 +64,101 @@ const AppContent = () => {
 
   // 用于防止重复日志输出
   const moduleLoggedRef = useRef(false);
+
+  // 🚀 性能优化：提前声明 useMemo，避免 Hook 顺序问题
+  // 必须在所有条件语句之前调用，符合 React Hooks 规则
+  const globalContext = useMemo(() => {
+    // 如果不使用模块系统，返回 null
+    if (!moduleUrl || !isAuthenticated) {
+      return null;
+    }
+
+    return {
+      currentPageId,
+      remainingTime,
+      taskStartTime,
+      batchCode,
+      examNo,
+      pageNum,
+      currentPageData,
+      pageEnterTime,
+      isLoggedIn,
+      isAuthenticated,
+      authToken,
+      currentUser,
+      moduleUrl,
+      isTaskFinished,
+      isTimeUp,
+      // 问卷相关状态和函数
+      questionnaireData,
+      questionnaireAnswers,
+      isQuestionnaireCompleted,
+      questionnaireRemainingTime,
+      isQuestionnaireTimeUp,
+      isQuestionnaireStarted,
+      questionnaireStartTime,
+      startQuestionnaireTimer,
+      saveQuestionnaireAnswer,
+      getQuestionnaireAnswer,
+      completeQuestionnaire,
+      logOperation,
+      collectAnswer,
+      // 数据提交（模块调用）
+      submitPageData,
+      submitPageDataWithInfo,
+      // 暴露登出与清理能力给模块
+      handleLogout,
+      clearAllCache
+    };
+  }, [
+    // 只依赖真正重要的状态变化
+    moduleUrl,
+    isAuthenticated,
+    currentPageId,
+    // remainingTime 故意省略 - 计时器更新不应触发模块重新渲染
+    taskStartTime,
+    batchCode,
+    examNo,
+    pageNum,
+    currentPageData,
+    pageEnterTime,
+    isLoggedIn,
+    authToken,
+    currentUser,
+    isTaskFinished,
+    isTimeUp,
+    questionnaireData,
+    questionnaireAnswers,
+    isQuestionnaireCompleted,
+    questionnaireRemainingTime,
+    isQuestionnaireTimeUp,
+    isQuestionnaireStarted,
+    questionnaireStartTime,
+    // 函数引用通常是稳定的，但为了安全起见也包含
+    startQuestionnaireTimer,
+    saveQuestionnaireAnswer,
+    getQuestionnaireAnswer,
+    completeQuestionnaire,
+    logOperation,
+    collectAnswer,
+    submitPageData,
+    submitPageDataWithInfo,
+    handleLogout,
+    clearAllCache
+  ]);
+
+  // 🚀 性能优化：使用useMemo缓存authInfo
+  const authInfo = useMemo(() => {
+    if (!moduleUrl || !isAuthenticated) {
+      return null;
+    }
+    return {
+      url: moduleUrl,
+      pageNum: pageNum,
+      examNo: examNo,
+      batchCode: batchCode
+    };
+  }, [moduleUrl, pageNum, examNo, batchCode, isAuthenticated]);
 
   useEffect(() => {
     if (isTimeUp && !isTaskFinished && currentPageId !== 'Page_19_Task_Completion') {
@@ -130,47 +233,13 @@ const AppContent = () => {
 
 
   // 如果有模块URL，使用模块路由器
-  if (moduleUrl) {
+  // 但必须确保用户已认证（双重检查，防止localStorage残留导致的问题）
+  if (moduleUrl && isAuthenticated) {
     // 只在第一次或moduleUrl变化时输出日志
     if (process.env.NODE_ENV === 'development' && !moduleLoggedRef.current) {
       console.log('[App] 📦 渲染模块系统界面');
       moduleLoggedRef.current = true;
     }
-    
-    // 构造全局上下文（从 AppContext 获取）
-    const globalContext = {
-      currentPageId,
-      remainingTime,
-      taskStartTime,
-      batchCode,
-      examNo,
-      pageNum,
-      currentPageData,
-      pageEnterTime,
-      isLoggedIn,
-      isAuthenticated,
-      authToken,
-      currentUser,
-      moduleUrl,
-      isTaskFinished,
-      isTimeUp,
-      questionnaireData,
-      questionnaireAnswers,
-      isQuestionnaireCompleted,
-      logOperation,
-      collectAnswer,
-      // 暴露登出与清理能力给模块
-      handleLogout,
-      clearAllCache
-    };
-    
-    // 认证信息
-    const authInfo = {
-      url: moduleUrl,
-      pageNum: pageNum,
-      examNo: examNo,
-      batchCode: batchCode
-    };
     
     return (
       <div className="app-container">

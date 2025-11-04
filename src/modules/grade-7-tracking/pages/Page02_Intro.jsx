@@ -10,21 +10,20 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
 import PageLayout from '../components/layout/PageLayout';
 import styles from '../styles/Page02_Intro.module.css';
+import { PAGE_MAPPING } from '../config.js';
 
 const Page02_Intro = () => {
   const {
+    session,
     logOperation,
     clearOperations,
-    currentPageOperations,
     navigateToPage,
     startTaskTimer,
-    formatDateTime,
+    buildMarkObject,
+    submitPageData
   } = useTrackingContext();
-
-  const { submitPageData } = useDataLogger();
   const [pageStartTime] = useState(() => new Date());
 
   // 记录页面进入/退出 + 启动40分钟计时器
@@ -60,21 +59,8 @@ const Page02_Intro = () => {
     });
 
     try {
-      const pageEndTime = new Date();
-      const markObject = {
-        pageNumber: '1',
-        pageDesc: '蜂蜜的奥秘',
-        operationList: currentPageOperations.map(op => ({
-          targetElement: op.target,
-          eventType: op.action,
-          value: op.value || '',
-          time: formatDateTime(new Date(op.time || op.timestamp))
-        })),
-        answerList: [],
-        beginTime: formatDateTime(pageStartTime),
-        endTime: formatDateTime(pageEndTime),
-        imgList: []
-      };
+      const pageInfo = PAGE_MAPPING[session.currentPage];
+      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '蜂蜜的奥秘');
 
       const success = await submitPageData(markObject);
       if (success) {
@@ -85,7 +71,7 @@ const Page02_Intro = () => {
       console.error('[Page02_Intro] 导航失败:', error);
       alert(error.message || '页面跳转失败，请重试');
     }
-  }, [currentPageOperations, pageStartTime, logOperation, submitPageData, clearOperations, navigateToPage]);
+  }, [session, logOperation, submitPageData, clearOperations, navigateToPage, buildMarkObject]);
 
   return (
     <PageLayout showNavigation={true} showTimer={true}>

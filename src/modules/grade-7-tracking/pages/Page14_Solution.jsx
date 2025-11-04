@@ -4,7 +4,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
 import LineChart from '../components/visualizations/LineChart';
 import PageLayout from '../components/layout/PageLayout.jsx';
 import { WATER_CONTENT_OPTIONS, TEMPERATURE_OPTIONS, PAGE_MAPPING } from '../config';
@@ -17,10 +16,10 @@ const Page14_Solution = () => {
     collectAnswer,
     clearOperations,
     buildMarkObject,
-    navigateToPage
+    navigateToPage,
+    submitPageData
   } = useTrackingContext();
 
-  const { submitPageData } = useDataLogger();
   const [isNavigating, setIsNavigating] = useState(false);
 
   // 动态表格数据（每行包含: id, temperature, waterContent, isBest）
@@ -81,25 +80,24 @@ const Page14_Solution = () => {
     logOperation({ action: '文本域输入', target: '理由输入框', value, time: new Date().toISOString() });
   }, [logOperation]);
 
-  // 切换最佳方案标记
+  // 切换最佳方案标记（单选模式：只能选择一个最佳方案）
   const handleToggleBest = useCallback((rowId) => {
     setTableRows(prev => prev.map(row =>
-      row.id === rowId ? { ...row, isBest: !row.isBest } : row
+      // 点击的行设为最佳方案，其他所有行取消标记
+      row.id === rowId ? { ...row, isBest: true } : { ...row, isBest: false }
     ));
-    const row = tableRows.find(r => r.id === rowId);
-    const newStatus = !row?.isBest;
     logOperation({
       action: '点击',
       target: `最佳方案星标_${rowId}`,
-      value: newStatus ? '标记为最佳' : '取消标记',
+      value: '标记为最佳',
       time: new Date().toISOString()
     });
-  }, [tableRows, logOperation]);
+  }, [logOperation]);
 
   // 是否可以提交
   const canSubmit = useCallback(() => {
     const hasValidRow = tableRows.some(row => row.temperature !== null && row.waterContent !== null);
-    const hasValidReason = reasonText.trim().length >= 10;
+    const hasValidReason = reasonText.trim().length >= 4;
     return hasValidRow && hasValidReason;
   }, [tableRows, reasonText]);
 
@@ -119,17 +117,24 @@ const Page14_Solution = () => {
           isBest: row.isBest
         }));
 
-      collectAnswer({ targetElement: 'solution_combinations', value: JSON.stringify(validCombinations) });
-      collectAnswer({ targetElement: 'solution_reason', value: reasonText.trim() });
-
+      // 同步构建答案列表，避免依赖异步的 collectAnswer 状态
+      const answerList = [
+        { targetElement: 'solution_combinations', value: JSON.stringify(validCombinations) },
+        { targetElement: 'solution_reason', value: reasonText.trim() },
+      ];
       // 单独记录被标记为最佳的方案
       const bestSolutions = validCombinations.filter(c => c.isBest);
       if (bestSolutions.length > 0) {
-        collectAnswer({ targetElement: 'best_solutions', value: JSON.stringify(bestSolutions) });
+        answerList.push({ targetElement: 'best_solutions', value: JSON.stringify(bestSolutions) });
       }
 
       const pageInfo = PAGE_MAPPING[session.currentPage];
-      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '方案选择');
+      // 传入同步构建的 answerList，确保提交时 answerList 不为空
+      const markObject = buildMarkObject(
+        String(session.currentPage),
+        pageInfo?.desc || '方案选择',
+        { answerList }
+      );
       const success = await submitPageData(markObject);
 
       if (success) {
@@ -173,7 +178,7 @@ const Page14_Solution = () => {
           <div className={styles.rightPanel}>
             <div className={styles.tableCard}>
               <h3 className={styles.tableTitle}>方案选择</h3>
-              <p className={styles.tableHint}>点击“新增”按钮可以添加多个方案进行对比</p>
+              <p className={styles.tableHint}>点击"新增"按钮可以添加多个方案进行对比</p>
 
               <div className={styles.tableContainer}>
                 <table className={styles.dynamicTable}>
@@ -257,21 +262,20 @@ const Page14_Solution = () => {
 
             <div className={styles.reasonCard}>
               <h4 className={styles.reasonTitle}>说明理由</h4>
-              <p className={styles.reasonHint}>请解释你为什么选择这些温度和含水量组合（至少10个字）</p>
+              <p className={styles.reasonHint}>请解释你为什么选择这些温度和含水量组合（至少4个字）</p>
               <textarea
                 value={reasonText}
                 onChange={handleReasonChange}
                 className={styles.reasonTextarea}
-                placeholder="例如：我选择40°C、21%含水量，因为在这个条件下小球下落时间最短，说明蜂蜜黏度最低。"
-                rows={4}
+                rows={2}
                 maxLength={500}
               />
               <div className={styles.characterCount}>
-                <span className={reasonText.length >= 10 ? styles.valid : styles.invalid}>
+                <span className={reasonText.length >= 4 ? styles.valid : styles.invalid}>
                   {reasonText.length}/500 字符
                 </span>
-                {reasonText.length < 10 && (
-                  <span className={styles.countHint}>(至少10个字)</span>
+                {reasonText.length < 4 && (
+                  <span className={styles.countHint}>(至少4个字)</span>
                 )}
               </div>
             </div>
@@ -294,4 +298,3 @@ const Page14_Solution = () => {
 };
 
 export default Page14_Solution;
-

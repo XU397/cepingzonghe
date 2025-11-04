@@ -9,36 +9,43 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
 import PageLayout from '../components/layout/PageLayout';
 import styles from '../styles/ExplorationPages.module.css';
+import { PAGE_MAPPING } from '../config.js';
+
+// 引入资料图片
+import brewingImage from '../../../assets/images/蜂蜜酿造流程.png';
+import viscosityImage from '../../../assets/images/黏度原理揭秘.png';
+import qaImage from '../../../assets/images/蜂蜜知识问答.png';
+import storageImage from '../../../assets/images/蜂蜜存储说明.png';
+import adulterationImage from '../../../assets/images/掺假蜂蜜探析.png';
 
 // 资料内容数据
 const RESOURCE_DATA = {
   brewing: {
     title: '蜂蜜酿造流程',
     content: null, // 使用图片代替文字
-    image: '/src/assets/images/蜂蜜酿造流程.png'
+    image: brewingImage
   },
   viscosity: {
     title: '黏度原理揭秘',
     content: null, // 使用图片代替文字
-    image: '/src/assets/images/黏度原理揭秘.png'
+    image: viscosityImage
   },
   qa: {
     title: '蜂蜜知识问答',
     content: null, // 使用图片代替文字
-    image: '/src/assets/images/蜂蜜知识问答.png'
+    image: qaImage
   },
   storage: {
     title: '蜂蜜储存说明',
     content: null, // 使用图片代替文字
-    image: '/src/assets/images/蜂蜜存储说明.png'
+    image: storageImage
   },
   adulteration: {
     title: '掺假蜂蜜探析',
     content: null, // 使用图片代替文字
-    image: '/src/assets/images/掺假蜂蜜探析.png'
+    image: adulterationImage
   }
 };
 
@@ -54,13 +61,14 @@ const OPTIONS = [
 
 const Page04_Resource = () => {
   const {
+    session,
     logOperation,
     clearOperations,
-    currentPageOperations,
-    navigateToPage
+    navigateToPage,
+    collectAnswer,
+    buildMarkObject,
+    submitPageData
   } = useTrackingContext();
-
-  const { submitPageData } = useDataLogger();
   const [pageStartTime] = useState(() => new Date());
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [currentModal, setCurrentModal] = useState(null);
@@ -145,30 +153,18 @@ const Page04_Resource = () => {
     });
 
     try {
-      const pageEndTime = new Date();
-      const markObject = {
-        pageNumber: '3',
-        pageDesc: '资料阅读',
-        operationList: currentPageOperations.map(op => ({
-          targetElement: op.target,
-          eventType: op.action,
-          value: op.value || '',
-          time: formatDateTime(new Date(op.time || op.timestamp))
-        })),
-        answerList: [
-          {
-            targetElement: 'factors_selection',
-            value: selectedOptions.join(', ')
-          },
-          {
-            targetElement: 'viewed_resources',
-            value: viewedResources.join(', ')
-          }
-        ],
-        beginTime: formatDateTime(pageStartTime),
-        endTime: formatDateTime(pageEndTime),
-        imgList: []
-      };
+      // 将多选结果逐项写入 answerList（每个选项各占一项）
+      const factorAnswers = selectedOptions.map((id) => ({
+        targetElement: `factor_${id}`,
+        value: (OPTIONS.find(o => o.id === id)?.label) || id
+      }));
+
+      const pageInfo = PAGE_MAPPING[session.currentPage];
+      const markObject = buildMarkObject(
+        String(session.currentPage),
+        pageInfo?.desc || '资料阅读',
+        { answerList: factorAnswers }
+      );
 
       const success = await submitPageData(markObject);
       if (success) {
@@ -179,7 +175,7 @@ const Page04_Resource = () => {
       console.error('[Page04_Resource] 导航失败:', error);
       alert(error.message || '页面跳转失败，请重试');
     }
-  }, [selectedOptions, viewedResources, currentPageOperations, pageStartTime, logOperation, submitPageData, clearOperations, navigateToPage]);
+  }, [session, selectedOptions, viewedResources, logOperation, submitPageData, clearOperations, navigateToPage, collectAnswer, buildMarkObject]);
 
   const canGoNext = selectedOptions.length > 0;
 
@@ -195,31 +191,36 @@ const Page04_Resource = () => {
                 onClick={() => handleOpenResource('brewing')}
                 className={styles.infoButton}
               >
-                蜂蜜酿造流程
+                <span className={styles.buttonIcon}>🐝</span>
+                <span className={styles.buttonText}>蜂蜜酿造流程</span>
               </button>
               <button
                 onClick={() => handleOpenResource('qa')}
                 className={styles.infoButton}
               >
-                蜂蜜知识问答
+                <span className={styles.buttonIcon}>💬</span>
+                <span className={styles.buttonText}>蜂蜜知识问答</span>
               </button>
               <button
                 onClick={() => handleOpenResource('viscosity')}
                 className={styles.infoButton}
               >
-                黏度原理揭秘
+                <span className={styles.buttonIcon}>🔬</span>
+                <span className={styles.buttonText}>黏度原理揭秘</span>
               </button>
               <button
                 onClick={() => handleOpenResource('storage')}
                 className={styles.infoButton}
               >
-                蜂蜜储存说明
+                <span className={styles.buttonIcon}>📦</span>
+                <span className={styles.buttonText}>蜂蜜储存说明</span>
               </button>
               <button
                 onClick={() => handleOpenResource('adulteration')}
                 className={styles.infoButton}
               >
-                掺假蜂蜜探析
+                <span className={styles.buttonIcon}>🔍</span>
+                <span className={styles.buttonText}>掺假蜂蜜探析</span>
               </button>
             </div>
           </div>
@@ -227,7 +228,6 @@ const Page04_Resource = () => {
           {/* 右侧: 任务和选项 */}
           <div className={styles.rightPanel}>
             <div className={styles.taskSection}>
-              <h3 className={styles.taskTitle}>任务</h3>
               <p className={styles.taskDescription}>
                 为探究影响蜂蜜黏度的因素，小明搜集了左侧的五条资料。请点击并查看资料，思考蜂蜜黏度可能与以下哪些因素有关？单击选择你认为可能的选项，再次点击可取消选择（可多选）。
               </p>
@@ -292,15 +292,6 @@ const Page04_Resource = () => {
   );
 };
 
-// 辅助函数: 格式化日期时间
-function formatDateTime(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hour = String(date.getHours()).padStart(2, '0');
-  const minute = String(date.getMinutes()).padStart(2, '0');
-  const second = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-}
+// 统一改为由 Provider 进行时间与结构标准化
 
 export default Page04_Resource;

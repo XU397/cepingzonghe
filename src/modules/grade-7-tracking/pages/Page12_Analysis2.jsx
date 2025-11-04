@@ -12,7 +12,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
 import IntegratedExperimentPanel from '../components/experiment/IntegratedExperimentPanel';
 import PageLayout from '../components/layout/PageLayout.jsx';
 import { calculateFallTime } from '../utils/physicsModel';
@@ -26,10 +25,10 @@ const Page12_Analysis2 = () => {
     collectAnswer,
     clearOperations,
     buildMarkObject,
-    navigateToPage
+    navigateToPage,
+    submitPageData
   } = useTrackingContext();
 
-  const { submitPageData } = useDataLogger();
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -93,7 +92,7 @@ const Page12_Analysis2 = () => {
 
     logOperation({
       action: '单选',
-      target: '实验分析题2',
+      target: '实验分析',
       value: answer,
       time: new Date().toISOString()
     });
@@ -110,20 +109,24 @@ const Page12_Analysis2 = () => {
       logOperation({
         action: '点击',
         target: '下一页按钮',
-        value: '下一题',
+        value: '下一页',
         time: new Date().toISOString()
       });
 
-      // 收集答案
-      collectAnswer({
-        targetElement: 'analysis_q2',
-        value: selectedAnswer
-      });
+      // 同步构建答案列表，避免依赖异步的 collectAnswer 状态
+      const answerList = [
+        { targetElement: 'analysis_q2', value: selectedAnswer }
+      ];
 
       // 构建并提交MarkObject
       // 从session获取当前页码而不是硬编码
       const pageInfo = PAGE_MAPPING[session.currentPage];
-      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '实验分析2');
+      // 传入同步构建的 answerList，确保提交时 answerList 不为空
+      const markObject = buildMarkObject(
+        String(session.currentPage),
+        pageInfo?.desc || '实验分析2',
+        { answerList }
+      );
       const success = await submitPageData(markObject);
 
       if (success) {
@@ -201,7 +204,7 @@ const Page12_Analysis2 = () => {
           onClick={handleNextPage}
           disabled={!selectedAnswer || isNavigating}
         >
-          {selectedAnswer ? (isNavigating ? '跳转中...' : '下一题') : '请先回答问题'}
+          {selectedAnswer ? (isNavigating ? '跳转中...' : '下一页') : '请先回答问题'}
         </button>
       </div>
       </div>

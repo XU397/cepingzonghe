@@ -18,6 +18,7 @@ import PropTypes from 'prop-types';
 import { useTrackingContext } from '../../context/TrackingContext';
 import { useAppContext } from '../../../../context/AppContext';
 import { getRelativePageInfo } from '../../utils/pageMapping';
+import { EXPERIMENT_DURATION, QUESTIONNAIRE_DURATION } from '../../config';
 import styles from '../../styles/PageLayout.module.css';
 
 // ============================================================================
@@ -139,15 +140,15 @@ const PageLayout = ({ children, showNavigation = true, showTimer = true }) => {
   // 根据当前导航模式选择计时来源
   const remainingTime = useMemo(() => {
     if (session.navigationMode === 'experiment') {
-      // 实验阶段: 使用40分钟计时器
-      return session.taskTimeRemaining ?? appContext.remainingTime ?? 2400;
+      // 实验阶段: 使用实验计时器
+      return session.taskTimeRemaining ?? appContext.remainingTime ?? EXPERIMENT_DURATION;
     } else if (session.navigationMode === 'questionnaire') {
-      // 问卷阶段: 使用10分钟计时器
-      return session.questionnaireTimeRemaining ?? 600;
+      // 问卷阶段: 直接从 appContext 获取问卷计时器
+      return appContext.questionnaireRemainingTime ?? QUESTIONNAIRE_DURATION;
     }
-    // 其他情况(如hidden): 兜底使用40分钟
-    return appContext.remainingTime ?? 2400;
-  }, [session.navigationMode, session.taskTimeRemaining, session.questionnaireTimeRemaining, appContext.remainingTime]);
+    // 其他情况(如hidden): 兜底使用实验计时器
+    return appContext.remainingTime ?? EXPERIMENT_DURATION;
+  }, [session.navigationMode, session.taskTimeRemaining, appContext.remainingTime, appContext.questionnaireRemainingTime]);
 
   return (
     <div className={styles.pageLayout}>

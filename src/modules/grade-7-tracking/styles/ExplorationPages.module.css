@@ -28,7 +28,7 @@
 .rightPanel {
   background: #ffffff;
   border-radius: 12px;
-  padding: 32px;
+  padding: 24px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   overflow-y: auto;
 }
@@ -38,26 +38,28 @@
  * ========================================================================== */
 
 .sectionTitle {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: #2c3e50;
-  margin: 0 0 24px 0;
+  margin: 0 0 20px 0;
   border-bottom: 3px solid #3498db;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
 }
 
 .taskTitle {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   color: #34495e;
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
 }
 
 .taskDescription {
-  font-size: 18px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 2;
   color: #555;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  text-align: left;  /* 文本左对齐 */
+  text-indent: 2em;  /* 首行缩进两个字符 */
 }
 
 .textContent {
@@ -167,14 +169,14 @@
 .checkboxGroup {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .checkboxOption {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 10px 14px;
   background: #f8f9fa;
   border-radius: 8px;
   cursor: pointer;
@@ -194,7 +196,7 @@
 }
 
 .checkboxOption label {
-  font-size: 16px;
+  font-size: 15px;
   color: #333;
   cursor: pointer;
   flex: 1;
@@ -207,23 +209,26 @@
 .infoCenter {
   background: #e8d5f5;
   border-radius: 16px;
-  padding: 24px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .infoButton {
   background: #ffffff;
   border: none;
   border-radius: 8px;
-  padding: 16px 20px;
-  font-size: 16px;
+  padding: 14px 18px;
+  font-size: 15px;
   font-weight: 500;
   color: #333;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .infoButton:hover {
@@ -234,6 +239,19 @@
 
 .infoButton:active {
   transform: translateY(0);
+}
+
+.buttonIcon {
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.buttonText {
+  flex: 1;
+  text-align: left;
 }
 
 /* ============================================================================
@@ -275,13 +293,13 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
   color: #ffffff;
 }
 
 .nextButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
 
 .nextButton:active {
@@ -297,7 +315,7 @@
 }
 
 .nextButton.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
   color: #ffffff;
 }
 
@@ -416,61 +434,71 @@
 @media (max-height: 800px) {
   .pageContainer {
     margin-top: 0; /* 取消负margin，遵从固定内容外框 */
-    padding: 16px 40px 24px 40px; /* 进一步压缩顶部空间 */
-    gap: 12px;
+    padding: 12px 40px 20px 40px; /* 进一步压缩顶部空间 */
+    gap: 10px;
   }
 
   .splitLayout {
-    gap: 24px; /* 减少左右面板间距 */
-    margin-bottom: 20px; /* 减少底部间距 */
+    gap: 20px; /* 减少左右面板间距 */
+    margin-bottom: 16px; /* 减少底部间距 */
   }
 
   .leftPanel,
   .rightPanel {
-    padding: 24px; /* 减少面板内边距 */
+    padding: 20px; /* 减少面板内边距 */
   }
 
   .sectionTitle {
-    font-size: 24px; /* 缩小标题 */
-    margin-bottom: 16px;
+    font-size: 22px; /* 缩小标题 */
+    margin-bottom: 14px;
     padding-bottom: 8px;
   }
 
   .taskTitle {
-    font-size: 20px;
-    margin-bottom: 12px;
+    font-size: 18px;
+    margin-bottom: 10px;
   }
 
   .taskDescription {
     font-size: 16px;
-    margin-bottom: 16px;
+    line-height: 2;
+    margin-bottom: 12px;
   }
 
   .checkboxGroup {
-    gap: 12px; /* 减少复选框间距 */
+    gap: 8px; /* 减少复选框间距 */
   }
 
   .checkboxOption {
-    padding: 10px 14px; /* 减少复选框内边距 */
+    padding: 8px 12px; /* 减少复选框内边距 */
+  }
+
+  .checkboxOption label {
+    font-size: 14px;
   }
 
   .infoCenter {
-    padding: 20px; /* 减少信息中心内边距 */
-    gap: 14px; /* 减少按钮间距 */
+    padding: 16px; /* 减少信息中心内边距 */
+    gap: 12px; /* 减少按钮间距 */
   }
 
   .infoButton {
-    padding: 14px 18px; /* 减少按钮内边距 */
-    font-size: 15px;
+    padding: 12px 16px; /* 减少按钮内边距 */
+    font-size: 14px;
+    gap: 10px; /* 减少图标和文字间距 */
+  }
+
+  .buttonIcon {
+    font-size: 20px; /* 在小屏幕上略微缩小图标 */
   }
 
   .buttonContainer {
-    padding: 16px 0; /* 减少按钮容器内边距 */
+    padding: 12px 0; /* 减少按钮容器内边距 */
   }
 
   .nextButton {
-    padding: 14px 56px;
-    font-size: 18px;
+    padding: 12px 48px;
+    font-size: 17px;
   }
 }
 
@@ -507,6 +535,7 @@
   .taskDescription,
   .textContent {
     font-size: 16px;
+    line-height: 2;
   }
 
   .nextButton {

@@ -4,25 +4,25 @@
  * 功能:
  * - 显示小明和爸爸的对话气泡
  * - 提供文本输入框让学生输入问题
- * - 输入内容后才能点击"下一页"
+ * - 输入内容后才能点击下一页
  */
 
 import { useEffect, useCallback, useState } from 'react';
-import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
+import { useTrackingContext } from '../context/TrackingProvider.jsx';
 import PageLayout from '../components/layout/PageLayout';
 import styles from '../styles/Page03_Question.module.css';
 import dialogueImage from '../../../assets/images/小明和爸爸对话.png';
+import { PAGE_MAPPING } from '../config.js';
 
 const Page03_Question = () => {
   const {
+    session,
     logOperation,
     clearOperations,
-    currentPageOperations,
-    navigateToPage
+    navigateToPage,
+    buildMarkObject,
+    submitPageData
   } = useTrackingContext();
-
-  const { submitPageData } = useDataLogger();
   const [pageStartTime] = useState(() => new Date());
   const [questionText, setQuestionText] = useState('');
   const [hasStartedTyping, setHasStartedTyping] = useState(false);
@@ -84,26 +84,14 @@ const Page03_Question = () => {
     });
 
     try {
-      const pageEndTime = new Date();
-      const markObject = {
-        pageNumber: '2',
-        pageDesc: '提出问题',
-        operationList: currentPageOperations.map(op => ({
-          targetElement: op.target,
-          eventType: op.action,
-          value: op.value || '',
-          time: formatDateTime(new Date(op.time || op.timestamp))
-        })),
-        answerList: [
-          {
-            targetElement: 'question_input',
-            value: questionText.trim()
-          }
-        ],
-        beginTime: formatDateTime(pageStartTime),
-        endTime: formatDateTime(pageEndTime),
-        imgList: []
-      };
+      // 收集最终答案
+      // 统一由 Provider 构建提交对象
+      const pageInfo = PAGE_MAPPING[session.currentPage];
+      const markObject = buildMarkObject(
+        String(session.currentPage),
+        pageInfo?.desc || '提出问题',
+        { answerList: [{ targetElement: 'question_input', value: questionText.trim() }] }
+      );
 
       const success = await submitPageData(markObject);
       if (success) {
@@ -114,7 +102,7 @@ const Page03_Question = () => {
       console.error('[Page03_Question] 导航失败:', error);
       alert(error.message || '页面跳转失败，请重试');
     }
-  }, [questionText, currentPageOperations, pageStartTime, logOperation, submitPageData, clearOperations, navigateToPage]);
+  }, [session, questionText, logOperation, submitPageData, clearOperations, navigateToPage, buildMarkObject]);
 
   const canGoNext = questionText.trim().length > 0;
 
@@ -138,14 +126,13 @@ const Page03_Question = () => {
           {/* 右侧: 任务描述和输入框 */}
           <div className={styles.rightPanel}>
             <div className={styles.taskSection}>
-              <h3 className={styles.taskTitle}>任务</h3>
               <p className={styles.taskDescription}>
                 根据左侧对话，请写出接下来小明要探究的科学问题？
               </p>
               <textarea
                 value={questionText}
                 onChange={handleTextChange}
-                placeholder="请在此输入您的问题..."
+                placeholder="请在此输入你的问题..."
                 className={styles.textArea}
                 rows={8}
               />
@@ -168,15 +155,10 @@ const Page03_Question = () => {
   );
 };
 
-// 辅助函数: 格式化日期时间
-function formatDateTime(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hour = String(date.getHours()).padStart(2, '0');
-  const minute = String(date.getMinutes()).padStart(2, '0');
-  const second = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-}
+// 统一改为由 Provider 进行时间与结构标准化
 
 export default Page03_Question;
+
+
+
+

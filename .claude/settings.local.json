@@ -33,7 +33,18 @@
       "mcp__chrome-devtools__wait_for",
       "mcp__chrome-devtools__fill_form",
       "mcp__chrome-devtools__click",
-      "mcp__chrome-devtools__resize_page"
+      "mcp__chrome-devtools__resize_page",
+      "Read(//d/**)",
+      "Bash(cd:*)",
+      "Bash(dir:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run build:*)",
+      "Bash(git checkout:*)",
+      "Bash(for file in Page01_Notice.jsx Page02_Intro.jsx Page02_QuestionnaireNotice.jsx Page03_Question.jsx Page04_Resource.jsx Page06_Hypothesis.jsx Page07_Design.jsx Page08_Evaluation.jsx Page09_Transition.jsx Page10_Experiment.jsx Page13_Summary.jsx Page14_Solution.jsx)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)",
+      "Bash(for file in Page02_QuestionnaireNotice.jsx Page06_Hypothesis.jsx Page07_Design.jsx Page08_Evaluation.jsx Page09_Transition.jsx Page10_Experiment.jsx Page13_Summary.jsx Page14_Solution.jsx)",
+      "Bash(head:*)"
     ],
     "deny": [],
     "ask": []

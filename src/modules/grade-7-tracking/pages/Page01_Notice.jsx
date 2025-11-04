@@ -5,12 +5,11 @@
  * - 显示4条注意事项
  * - 提供复选框确认阅读
  * - 40秒倒计时
- * - 复选框勾选或倒计时结束后激活"下一页"按钮
+ * - 复选框勾选或倒计时结束后激活下一页按钮
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
 import PageLayout from '../components/layout/PageLayout';
 import styles from '../styles/Page01_Notice.module.css';
 
@@ -22,10 +21,9 @@ const Page01_Notice = () => {
     collectAnswer,
     clearOperations,
     buildMarkObject,
-    navigateToPage
+    navigateToPage,
+    submitPageData
   } = useTrackingContext();
-
-  const { submitPageData } = useDataLogger();
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
   const [countdown, setCountdown] = useState(COUNTDOWN_DURATION);
   const [isTimerComplete, setIsTimerComplete] = useState(false);
@@ -36,7 +34,7 @@ const Page01_Notice = () => {
     logOperation({
       action: 'page_enter',
       target: 'Page_00_1_Precautions',
-      value: '注意事项页',
+      value: '注意事项',
       time: new Date().toISOString()
     });
 
@@ -44,13 +42,13 @@ const Page01_Notice = () => {
       logOperation({
         action: 'page_exit',
         target: 'Page_00_1_Precautions',
-        value: '注意事项页',
+        value: '注意事项',
         time: new Date().toISOString()
       });
     };
   }, [logOperation]);
 
-  // 倒计时逻辑 - 必须倒计时完成
+  // 倒计时逻辑 - 必须倒计时完毕
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => {
@@ -102,7 +100,7 @@ const Page01_Notice = () => {
     logOperation({
       action: 'button_click',
       target: '下一页按钮',
-      value: '前往情景引入页',
+      value: '前往情景引入',
       time: new Date().toISOString()
     });
 
@@ -144,7 +142,7 @@ const Page01_Notice = () => {
           <div className={styles.alertBox}>
             <ul className={styles.noticeList}>
               <li className={styles.noticeItem}>
-                作答时间共<strong>50分钟</strong>(其中测评时间40分钟，问卷调查<strong>10分钟</strong>)，时间结束后，系统将自动退出答题界面。
+                作答时间：<strong>50分钟</strong>(探究任务<strong>40分钟</strong> + 问卷调查<strong>10分钟</strong>)，时间结束后，系统将自动退出答题界面。
               </li>
               <li className={styles.noticeItem}>
                 请按顺序回答每页问题，<strong>上一页题目未完成作答，将无法点击进入下一页。</strong>
@@ -172,7 +170,7 @@ const Page01_Notice = () => {
 
             {!isTimerComplete && (
               <div className={styles.countdownText}>
-                请仔细阅读注意事项，{countdown} 秒后可继续进入...
+                请仔细阅读注意事项，{countdown} 秒后可继续进行...
               </div>
             )}
           </div>
@@ -191,3 +189,4 @@ const Page01_Notice = () => {
 };
 
 export default Page01_Notice;
+

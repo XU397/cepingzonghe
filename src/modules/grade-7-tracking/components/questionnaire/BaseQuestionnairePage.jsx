@@ -19,6 +19,7 @@ import PageLayout from '../layout/PageLayout';
 import QuestionTable from './QuestionTable';
 import Button from '../ui/Button';
 import { getQuestionnairePageData, isLastQuestionnairePage } from '../../utils/questionnaireLoader';
+import { QUESTIONNAIRE_DURATION } from '../../config'; // 导入问卷时长配置
 import styles from '../../styles/QuestionnairePage.module.css';
 
 /**
@@ -33,6 +34,8 @@ const BaseQuestionnairePage = ({ pageNumber }) => {
     clearOperations,
     navigateToPage,
     currentPageOperations,
+    startQuestionnaireTimerInternal,
+    userContext,
   } = useTrackingContext();
 
   const {
@@ -85,6 +88,40 @@ const BaseQuestionnairePage = ({ pageNumber }) => {
       });
     };
   }, [pageNumber, pageData, logOperation]);
+
+  // T099: 在问卷第一页启动10分钟计时器
+  useEffect(() => {
+    console.log('[BaseQuestionnairePage] 计时器 useEffect 触发', {
+      pageNumber,
+      hasStartQuestionnaireTimer: !!userContext?.startQuestionnaireTimer,
+      isQuestionnaireStarted: userContext?.isQuestionnaireStarted,
+      questionnaireRemainingTime: userContext?.questionnaireRemainingTime,
+      userContextKeys: userContext ? Object.keys(userContext).filter(k => k.includes('questionnaire') || k.includes('Timer')) : []
+    });
+
+    // 仅在问卷第一页(页码14)且计时器未启动时执行
+    if (pageNumber === 14) {
+      if (!userContext?.startQuestionnaireTimer) {
+        console.error('[BaseQuestionnairePage] ❌ startQuestionnaireTimer 函数不存在！');
+        return;
+      }
+
+      if (userContext?.isQuestionnaireStarted) {
+        console.log('[BaseQuestionnairePage] ℹ️ 计时器已经启动过了，跳过');
+        return;
+      }
+
+      console.log(`[BaseQuestionnairePage] ✅ 问卷第一页已加载，准备启动${QUESTIONNAIRE_DURATION}秒倒计时（内部）`);
+
+      // 启动 AppContext 的问卷计时器（用于页面显示）
+      userContext.startQuestionnaireTimer(QUESTIONNAIRE_DURATION);
+
+      // 启动 TrackingProvider 内部的问卷计时器（用于超时跳转）
+      startQuestionnaireTimerInternal();
+
+      console.log('[BaseQuestionnairePage] ✅ 已调用内部问卷计时器，时长:', QUESTIONNAIRE_DURATION);
+    }
+  }, [pageNumber, userContext, startQuestionnaireTimerInternal]);
 
   // 处理答案变化
   const handleAnswerChange = useCallback(

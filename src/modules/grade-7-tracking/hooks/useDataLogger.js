@@ -23,7 +23,7 @@ export function useDataLogger() {
 
   /**
    * Handle 401 Unauthorized error - session expired
-   * Clears local storage and redirects to login page
+   * Clears local storage and reloads page to show login
    */
   const handleSessionExpired = useCallback(() => {
     console.error('[useDataLogger] 🚫 会话已过期 (401)，执行自动登出');
@@ -39,13 +39,15 @@ export function useDataLogger() {
       console.error('[useDataLogger] 清除本地存储失败:', error);
     }
 
-    // Redirect to login page
+    // Reload the page to trigger login screen
+    // The app will detect no authentication and show LoginPage
     try {
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('[useDataLogger] 跳转登录页失败:', error);
-      // Fallback: try reload
+      console.log('[useDataLogger] 重新加载页面以返回登录界面');
       window.location.reload();
+    } catch (error) {
+      console.error('[useDataLogger] 页面重新加载失败:', error);
+      // If reload fails, try to redirect to root
+      window.location.href = '/';
     }
   }, []);
 
@@ -123,6 +125,19 @@ export function useDataLogger() {
         }
 
       } catch (error) {
+        // Check if this is a session expired error (401)
+        if (error.isSessionExpired || error.code === 401 ||
+            (error.message && (
+              error.message.includes('401') ||
+              error.message.includes('session已过期') ||
+              error.message.includes('请重新登录')
+            ))) {
+          console.error('[useDataLogger] ❌ 检测到会话过期错误，停止重试并执行登出');
+          setIsSubmitting(false);
+          handleSessionExpired();
+          return false; // Don't retry on session expiration
+        }
+
         // Log network or other errors
         console.warn(`[useDataLogger] ⚠️ 网络或其他错误 (尝试 ${attempt + 1}/${MAX_RETRIES}):`, error.message);
 

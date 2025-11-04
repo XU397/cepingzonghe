@@ -14,18 +14,16 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useTrackingContext } from '../context/TrackingProvider.jsx';
-import { useDataLogger } from '../hooks/useDataLogger.js';
 import { PAGE_MAPPING } from '../config.js';
 import Button from '../components/ui/Button.jsx';
 import PageLayout from '../components/layout/PageLayout.jsx';
 import styles from '../styles/Page06_Hypothesis.module.css';
 
-// 引入天气图 (假设路径)
-// import weatherChartImg from '../assets/images/weather-chart.jpg'; // T104: 使用占位符替代
+// 引入天气图片
+import weatherImage from '../../../assets/images/天气图片.png';
 
 const Page06_Hypothesis = () => {
-  const { session, logOperation, clearOperations, buildMarkObject, navigateToPage } = useTrackingContext();
-  const { submitPageData } = useDataLogger();
+  const { session, logOperation, clearOperations, buildMarkObject, navigateToPage, submitPageData } = useTrackingContext();
   const [isNavigating, setIsNavigating] = useState(false);
 
   // 页面进入日志
@@ -89,29 +87,34 @@ const Page06_Hypothesis = () => {
           <h1 className={styles.title}>蜂蜜变稀</h1>
         </div>
 
-        {/* 主内容区域 - 单列布局 */}
+        {/* 主内容区域 - 左右并列布局 */}
         <div className={styles.content}>
-          {/* 假设陈述文本 */}
-          <div className={styles.hypothesisText}>
-            <p>
-              蜂蜜黏度受多种因素影响。小明分析认为，蜂蜜变稀可能与其存放于橱柜、暴露在成都高温多雨的环境有关（当月天气见下图）。他进而提出假设：环境温度和水分含量是影响蜂蜜黏度变化的关键因素。
-            </p>
+          {/* 左侧：文字区域 */}
+          <div className={styles.leftPanel}>
+            {/* 假设陈述文本 */}
+            <div className={styles.hypothesisText}>
+              <p>
+                蜂蜜黏度受多种因素影响。小明分析认为，蜂蜜变稀可能与其存放于橱柜、暴露在成都高温多雨的环境有关（当月天气见右图）。他进而提出假设：环境温度和水分含量是影响蜂蜜黏度变化的关键因素。
+              </p>
+            </div>
+
+            {/* 引导文字 */}
+            <div className={styles.guideText}>
+              <p>
+                接下来，请你通过实验，探究小明的假设是否正确吧！
+              </p>
+            </div>
           </div>
 
-          {/* 天气图片 */}
-          <div className={styles.weatherImageContainer}>
-            <img
-              src="/src/assets/images/天气图片.png"
-              alt="成都当月天气情况"
-              className={styles.weatherImage}
-            />
-          </div>
-
-          {/* 引导文字 */}
-          <div className={styles.guideText}>
-            <p>
-              接下来，请你通过实验，探究小明的假设是否正确吧！
-            </p>
+          {/* 右侧：天气图片 */}
+          <div className={styles.rightPanel}>
+            <div className={styles.weatherImageContainer}>
+              <img
+                src={weatherImage}
+                alt="成都当月天气情况"
+                className={styles.weatherImage}
+              />
+            </div>
           </div>
         </div>
 

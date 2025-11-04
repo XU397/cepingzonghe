@@ -3,7 +3,7 @@
  *
  * 功能:
  * - 保留左侧实验区(允许继续实验)
- * - 右侧显示单选题:"在40℃条件下,含水量为多少时下落时间最短?"
+ * - 右侧显示单选题:"在40℃条件下,含水量为多少时下落时间最长?"
  * - 选项:15%, 17%, 19%, 21%
  * - FR-028, FR-029, FR-032
  *
@@ -12,7 +12,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
 import IntegratedExperimentPanel from '../components/experiment/IntegratedExperimentPanel';
 import PageLayout from '../components/layout/PageLayout.jsx';
 import { calculateFallTime } from '../utils/physicsModel';
@@ -26,10 +25,10 @@ const Page11_Analysis1 = () => {
     collectAnswer,
     clearOperations,
     buildMarkObject,
-    navigateToPage
+    navigateToPage,
+    submitPageData
   } = useTrackingContext();
 
-  const { submitPageData } = useDataLogger();
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
 
@@ -93,7 +92,7 @@ const Page11_Analysis1 = () => {
 
     logOperation({
       action: '单选',
-      target: '实验分析题1',
+      target: '实验分析',
       value: answer,
       time: new Date().toISOString()
     });
@@ -111,20 +110,24 @@ const Page11_Analysis1 = () => {
       logOperation({
         action: '点击',
         target: '下一页按钮',
-        value: '下一题',
+        value: '下一页',
         time: new Date().toISOString()
       });
 
-      // 收集答案
-      collectAnswer({
-        targetElement: 'analysis_q1',
-        value: selectedAnswer
-      });
+      // 同步构建答案列表，避免依赖异步的 collectAnswer 状态
+      const answerList = [
+        { targetElement: 'analysis_q1', value: selectedAnswer }
+      ];
 
       // 构建并提交MarkObject
       // 从session获取当前页码而不是硬编码
       const pageInfo = PAGE_MAPPING[session.currentPage];
-      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '实验分析1');
+      // 传入同步构建的 answerList，确保提交时 answerList 不为空
+      const markObject = buildMarkObject(
+        String(session.currentPage),
+        pageInfo?.desc || '实验分析1',
+        { answerList }
+      );
       const success = await submitPageData(markObject);
 
       if (success) {
@@ -168,7 +171,7 @@ const Page11_Analysis1 = () => {
 
             <div className={styles.questionBody}>
               <p className={styles.questionText}>
-                模拟实验表明,在<strong>40℃</strong>条件下,蜂蜜的含水量为多少时,小钢球的下落时间<strong>最短</strong>?
+                模拟实验表明,在<strong>40℃</strong>条件下,蜂蜜的含水量为多少时,小钢球的下落时间<strong>最长</strong>?
               </p>
 
               <div className={styles.optionsGroup} role="radiogroup">
@@ -203,7 +206,7 @@ const Page11_Analysis1 = () => {
           onClick={handleNextPage}
           disabled={!selectedAnswer || isNavigating}
         >
-          {selectedAnswer ? (isNavigating ? '跳转中...' : '下一题') : '请先回答问题'}
+          {selectedAnswer ? (isNavigating ? '跳转中...' : '下一页') : '请先回答问题'}
         </button>
       </div>
       </div>

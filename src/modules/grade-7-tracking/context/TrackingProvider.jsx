@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useContext } from 'react';
 import TrackingContext from './TrackingContext';
-import { PAGE_MAPPING } from '../config';
+import { PAGE_MAPPING, EXPERIMENT_DURATION, QUESTIONNAIRE_DURATION } from '../config';
 import { getQuestionnairePageData } from '../utils/questionnaireLoader';
 
 /**
@@ -64,12 +64,41 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       const savedSession = localStorage.getItem('tracking_session');
       if (savedSession) {
         const parsed = JSON.parse(savedSession);
-        restoredCurrentPage = parsed.currentPage;
-        restoredNavigationMode = parsed.navigationMode;
-        console.log('[TrackingProvider] 🔄 从localStorage恢复页面状态:', {
-          currentPage: restoredCurrentPage,
-          navigationMode: restoredNavigationMode
-        });
+
+        // 校验用户身份，防止账号切换时使用旧数据
+        const savedExamNo = parsed.examNo;
+        const currentExamNo = userContext?.examNo;
+
+        if (savedExamNo === currentExamNo) {
+          // 同一用户，恢复页面状态
+          restoredCurrentPage = parsed.currentPage;
+          restoredNavigationMode = parsed.navigationMode;
+          console.log('[TrackingProvider] ✅ 同一用户会话，恢复页面状态:', {
+            currentPage: restoredCurrentPage,
+            navigationMode: restoredNavigationMode,
+            examNo: currentExamNo
+          });
+        } else {
+          // 不同用户，清除旧数据
+          console.log('[TrackingProvider] ⚠️ 检测到用户切换，清除旧会话数据', {
+            savedExamNo,
+            currentExamNo
+          });
+          // 清除所有tracking相关localStorage
+          const trackingKeys = [
+            'tracking_sessionId',
+            'tracking_session',
+            'tracking_experimentTrials',
+            'tracking_chartData',
+            'tracking_textResponses',
+            'tracking_questionnaireAnswers'
+          ];
+          trackingKeys.forEach(key => localStorage.removeItem(key));
+
+          // 🔧 关键修复：重置恢复变量，确保使用 initialPageId
+          restoredCurrentPage = null;
+          restoredNavigationMode = null;
+        }
       }
     } catch (e) {
       console.warn('[TrackingProvider] 读取localStorage失败:', e);
@@ -111,11 +140,11 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       questionnaireStartTime: null,
 
       // T097: 40分钟探究任务计时器(秒)
-      taskTimeRemaining: 40 * 60, // 2400秒 = 40分钟
+      taskTimeRemaining: EXPERIMENT_DURATION, // 从配置导入
       taskTimerActive: false,
 
       // T099: 10分钟问卷计时器(秒)
-      questionnaireTimeRemaining: 10 * 60, // 600秒 = 10分钟
+      questionnaireTimeRemaining: QUESTIONNAIRE_DURATION, // 从配置导入
       questionnaireTimerActive: false,
     };
 
@@ -214,6 +243,12 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @returns {number} 页面编号 (如 1, 0.1, 0.2)
    */
   function determinePageNumber(pageId) {
+    // 如果 pageId 为 null 或 undefined，返回注意事项页
+    if (!pageId) {
+      console.log('[TrackingProvider] pageId 为空，返回注意事项页 (0.1)');
+      return 0.1;
+    }
+
     // 遍历PAGE_MAPPING查找匹配的pageId
     for (const [pageNum, pageInfo] of Object.entries(PAGE_MAPPING)) {
       if (pageInfo.pageId === pageId) {
@@ -221,9 +256,9 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       }
     }
 
-    // 默认返回1（首页）
-    console.warn('[TrackingProvider] 未找到pageId对应的页面编号:', pageId);
-    return 1;
+    // 默认返回注意事项页（修复：之前错误地返回1）
+    console.warn('[TrackingProvider] 未找到pageId对应的页面编号:', pageId, '，返回注意事项页');
+    return 0.1;
   }
 
   /**
@@ -509,17 +544,62 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @returns {Object} MarkObject
    */
   const buildMarkObject = useCallback((pageNumber, pageDesc, options = {}) => {
+    const mapEventType = (action, value) => {
+      if (!action) return '';
+      switch (action) {
+        case '点击':
+        case 'button_click':
+        case 'click':
+        case 'click_next':
+        case 'click_start_experiment':
+          return 'click';
+        case 'page_enter':
+          return 'page_enter';
+        case 'page_exit':
+          return 'page_exit';
+        case '文本域输入':
+        case 'text_input':
+          return 'input';
+        case 'input_blur':
+          return 'input_blur';
+        case 'checkbox_toggle':
+          return (typeof value === 'string' && value.includes('取消')) ? 'checkbox_uncheck' : 'checkbox_check';
+        case '单选':
+          return 'radio_select';
+        case 'modal_open':
+          return 'modal_open';
+        case 'modal_close':
+          return 'modal_close';
+        case 'resource_view':
+          return 'view_material';
+        case '计时开始':
+        case 'timer_start':
+          return 'timer_start';
+        case 'timer_complete':
+        case 'timer_stop':
+          return 'timer_stop';
+        case '完成':
+        case 'simulation_operation':
+          return 'simulation_operation';
+        case 'questionnaire_answer':
+          return 'questionnaire_answer';
+        default:
+          return String(action);
+      }
+    };
     const pn = typeof pageNumber === 'string' ? parseFloat(pageNumber) : pageNumber;
 
     // 统一操作列表规范化
     const opList = operationLog.map(op => ({
       targetElement: op.target,
-      eventType: op.action,
+      eventType: mapEventType(op.action, op.value),
       value: String(op.value || ''),
       time: formatDateTime(new Date(op.time || op.timestamp))
     }));
 
-    // 构造答案列表：问卷页(14-21)从 questionnaireAnswers 构建；其余沿用 answers 收集
+    // 构造答案列表：
+    // - 问卷页(14-21)：从 questionnaireAnswers 构建
+    // - 其他页：优先使用 options.answerList（若提供），否则沿用内部 answers 收集
     let ansList;
     if (pn >= 14 && pn <= 21) {
       const pageData = getQuestionnairePageData(pn);
@@ -534,10 +614,17 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
         };
       });
     } else {
-      ansList = answers.map(ans => ({
-        targetElement: ans.targetElement,
-        value: String(ans.value || '')
-      }));
+      if (Array.isArray(options.answerList)) {
+        ansList = options.answerList.map((ans, index) => ({
+          targetElement: String(ans.targetElement || ('A' + (index + 1))),
+          value: String(ans.value || '')
+        }));
+      } else {
+        ansList = answers.map(ans => ({
+          targetElement: ans.targetElement,
+          value: String(ans.value || '')
+        }));
+      }
     }
 
     const markObject = {
@@ -623,23 +710,22 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     try {
       console.log('[TrackingProvider] 准备提交页面数据:', markObject);
 
-      // 使用userContext中的helpers提交数据
-      if (userContext?.helpers?.submitPageMarkData) {
-        const payload = {
-          batchCode: session.batchCode,
-          examNo: session.examNo,
-          mark: JSON.stringify(markObject)
-        };
-
-        const response = await userContext.helpers.submitPageMarkData(payload);
+      // 使用userContext中的submitPageDataWithInfo提交数据
+      // submitPageDataWithInfo签名: (batchCode, examNo, customData)
+      if (userContext?.submitPageDataWithInfo) {
+        const response = await userContext.submitPageDataWithInfo(
+          session.batchCode,
+          session.examNo,
+          markObject  // 直接传入markObject对象，不需要JSON.stringify
+        );
         console.log('[TrackingProvider] 数据提交成功:', response);
 
         // 提交成功后清除操作日志
         clearOperations();
 
-        return true;
+        return response;
       } else {
-        console.error('[TrackingProvider] submitPageMarkData helper不可用');
+        console.error('[TrackingProvider] submitPageDataWithInfo 不可用');
         return false;
       }
     } catch (error) {
@@ -689,14 +775,27 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     if (!session.taskTimerActive) {
       updateSession({
         taskTimerActive: true,
-        taskTimeRemaining: 40 * 60 // 重置为40分钟
+        taskTimeRemaining: EXPERIMENT_DURATION // 重置为配置的时长
       });
-      console.log('[TrackingProvider] 40分钟探究任务计时器已启动');
+      console.log('[TrackingProvider] 探究任务计时器已启动');
     }
   }, [session.taskTimerActive, updateSession]);
 
   /**
-   * T097: 计时器倒计时逻辑 (每秒递减)
+   * 启动问卷计时器（内部版本）
+   */
+  const startQuestionnaireTimerInternal = useCallback(() => {
+    if (!session.questionnaireTimerActive) {
+      updateSession({
+        questionnaireTimerActive: true,
+        questionnaireTimeRemaining: QUESTIONNAIRE_DURATION // 重置为配置的时长
+      });
+      console.log('[TrackingProvider] 问卷计时器已启动（内部）, 时长:', QUESTIONNAIRE_DURATION);
+    }
+  }, [session.questionnaireTimerActive, updateSession]);
+
+  /**
+   * T097: 实验计时器倒计时逻辑 (每秒递减)
    */
   useEffect(() => {
     if (!session.taskTimerActive || session.taskTimeRemaining <= 0) {
@@ -716,102 +815,33 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     return () => clearInterval(timerId);
   }, [session.taskTimerActive, session.taskTimeRemaining]);
 
+  /**
+   * T099: 问卷计时器倒计时逻辑 (每秒递减)
+   */
+  useEffect(() => {
+    if (!session.questionnaireTimerActive || session.questionnaireTimeRemaining <= 0) {
+      return;
+    }
+
+    const timerId = setInterval(() => {
+      setSession(prev => {
+        const newTimeRemaining = Math.max(0, prev.questionnaireTimeRemaining - 1);
+        return {
+          ...prev,
+          questionnaireTimeRemaining: newTimeRemaining
+        };
+      });
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, [session.questionnaireTimerActive, session.questionnaireTimeRemaining]);
+
   // ============================================================================
   // 13. T098 & T100: 计时器监听和自动跳转逻辑
   // ============================================================================
-
-  /**
-   * T098: 监听40分钟探究任务计时器到期
-   * 自动保存数据并跳转到问卷说明页 (页码 0.2 / 页面编号 13)
-   */
-  useEffect(() => {
-    const taskTimeRemaining = session.taskTimeRemaining;
-
-    // 仅在探究阶段 (navigationMode === 'experiment') 监听,且计时器为0
-    if (
-      session.navigationMode === 'experiment' &&
-      session.taskTimerActive &&
-      taskTimeRemaining === 0
-    ) {
-      console.log('[TrackingProvider] 40分钟探究任务时间到，自动跳转到问卷说明页');
-
-      // 停止计时器
-      updateSession({ taskTimerActive: false });
-
-      // 构建当前页面的 MarkObject
-      const pageInfo = PAGE_MAPPING[session.currentPage];
-      const markObject = buildMarkObject(
-        session.currentPage,
-        pageInfo?.pageDesc || '当前页面'
-      );
-
-      // 提交数据
-      submitPageData(markObject).then((success) => {
-        if (success) {
-          console.log('[TrackingProvider] 探究任务数据提交成功，跳转到问卷说明页');
-          // 跳转到问卷说明页 (页码 13 = Page02_QuestionnaireNotice)
-          navigateToPage(13);
-        } else {
-          console.error('[TrackingProvider] 探究任务数据提交失败，无法跳转');
-          alert('数据提交失败，请检查网络连接后重试');
-        }
-      });
-    }
-  }, [
-    session.taskTimeRemaining,
-    session.taskTimerActive,
-    session.navigationMode,
-    session.currentPage,
-    buildMarkObject,
-    submitPageData,
-    navigateToPage,
-    updateSession
-  ]);
-
-  /**
-   * T100: 监听10分钟问卷计时器到期
-   * 自动提交所有问卷数据并跳转到完成页 (页码 22)
-   */
-  useEffect(() => {
-    const questionnaireTimeRemaining = userContext?.session?.questionnaireRemainingTime;
-
-    // 仅在问卷阶段 (navigationMode === 'questionnaire') 监听
-    if (
-      session.navigationMode === 'questionnaire' &&
-      questionnaireTimeRemaining !== undefined &&
-      questionnaireTimeRemaining === 0
-    ) {
-      console.log('[TrackingProvider] 10分钟问卷时间到，自动提交问卷数据');
-
-      // 构建当前页面的 MarkObject
-      const pageInfo = PAGE_MAPPING[session.currentPage];
-      const markObject = buildMarkObject(
-        session.currentPage,
-        pageInfo?.pageDesc || '问卷调查',
-        { missingLabel: '超时未回答' }
-      );
-
-      // 提交数据
-      submitPageData(markObject).then((success) => {
-        if (success) {
-          console.log('[TrackingProvider] 问卷数据提交成功，跳转到完成页');
-          // 跳转到完成页 (页码 22 = Page23_Completion)
-          navigateToPage(22);
-        } else {
-          console.error('[TrackingProvider] 问卷数据提交失败，无法跳转');
-          alert('数据提交失败，请检查网络连接后重试');
-        }
-      });
-    }
-  }, [
-    userContext?.session?.questionnaireRemainingTime,
-    session.navigationMode,
-    session.currentPage,
-    buildMarkObject,
-    submitPageData,
-    navigateToPage
-  ]);
-
+  // 注意：旧的超时监听器已删除
+  // 现在使用新的监听器（基于userContext.isTimeUp和isQuestionnaireTimeUp）
+  // 避免重复提交数据和多个跳转冲突
   // ============================================================================
   // 13. 持久化到localStorage (可选)
   // ============================================================================
@@ -828,6 +858,88 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       console.warn('[TrackingProvider] localStorage持久化失败:', error);
     }
   }, [session, experimentTrials, chartData, textResponses, questionnaireAnswers]);
+
+  // ============================================================================
+  // 13.5 监听计时器到期事件并执行自动跳转 (T098, T100)
+  // ============================================================================
+
+  /**
+   * 监听实验倒计时到期（40分钟）
+   * 当 taskTimeRemaining 到0时，自动跳转到页面13（任务总结页）
+   */
+  useEffect(() => {
+    const taskTimeRemaining = session.taskTimeRemaining;
+    const taskTimerActive = session.taskTimerActive;
+    const isExperimentMode = session.navigationMode === 'experiment';
+
+    // 添加调试日志
+    console.log('[TrackingProvider] 实验超时监听器触发:', {
+      taskTimeRemaining,
+      taskTimerActive,
+      isExperimentMode,
+      currentPage: session.currentPage,
+      shouldJump: taskTimeRemaining === 0 && taskTimerActive && isExperimentMode && session.currentPage < 13
+    });
+
+    // 仅在实验模式下，计时器活跃，且倒计时为0时触发
+    if (taskTimeRemaining === 0 && taskTimerActive && isExperimentMode && session.currentPage < 13) {
+      console.log('[TrackingProvider] 🚨 实验时间已到，自动跳转到页面13（任务总结）');
+
+      // 停止计时器
+      updateSession({ taskTimerActive: false });
+
+      // 记录超时事件
+      logOperation({
+        targetElement: '系统事件',
+        eventType: '实验超时',
+        value: '40分钟倒计时结束，自动跳转到任务总结页'
+      });
+
+      // 延迟跳转，确保日志记录完成
+      setTimeout(() => {
+        navigateToPage(13); // 跳转到任务总结页（Page_13_Summary）
+      }, 500);
+    }
+  }, [session.taskTimeRemaining, session.taskTimerActive, session.navigationMode, session.currentPage, navigateToPage, logOperation, updateSession]);
+
+  /**
+   * 监听问卷倒计时到期（基于内部状态）
+   * 当 session.questionnaireTimeRemaining 到0时，自动跳转到页面22（问卷完成页）
+   */
+  useEffect(() => {
+    const questionnaireTimeRemaining = session.questionnaireTimeRemaining;
+    const questionnaireTimerActive = session.questionnaireTimerActive;
+    const isQuestionnaireMode = session.navigationMode === 'questionnaire';
+
+    // 添加调试日志
+    console.log('[TrackingProvider] 问卷超时监听器触发:', {
+      questionnaireTimeRemaining,
+      questionnaireTimerActive,
+      isQuestionnaireMode,
+      currentPage: session.currentPage,
+      shouldJump: questionnaireTimeRemaining === 0 && questionnaireTimerActive && isQuestionnaireMode && session.currentPage >= 14 && session.currentPage < 22
+    });
+
+    // 仅在问卷模式下，计时器活跃，且倒计时为0时触发
+    if (questionnaireTimeRemaining === 0 && questionnaireTimerActive && isQuestionnaireMode && session.currentPage >= 14 && session.currentPage < 22) {
+      console.log('[TrackingProvider] 🚨 问卷时间已到，自动跳转到页面22（问卷完成）');
+
+      // 停止计时器
+      updateSession({ questionnaireTimerActive: false });
+
+      // 记录超时事件
+      logOperation({
+        targetElement: '系统事件',
+        eventType: '问卷超时',
+        value: '问卷倒计时结束，自动跳转到问卷完成页'
+      });
+
+      // 延迟跳转，确保日志记录完成
+      setTimeout(() => {
+        navigateToPage(22); // 跳转到问卷完成页（Page_22_Completion）
+      }, 500);
+    }
+  }, [session.questionnaireTimeRemaining, session.questionnaireTimerActive, session.navigationMode, session.currentPage, navigateToPage, logOperation, updateSession]);
 
   // ============================================================================
   // 14. Context Value
@@ -871,8 +983,9 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     // 数据提交
     submitPageData,
 
-    // 计时器管理 (T097)
+    // 计时器管理 (T097, T099)
     startTaskTimer,
+    startQuestionnaireTimerInternal,
 
     // 工具函数
     formatDateTime,
@@ -905,6 +1018,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     getCurrentNavigationMode,
     submitPageData,
     startTaskTimer,
+    startQuestionnaireTimerInternal,
     formatDateTime,
     userContext,
   ]);

@@ -554,7 +554,7 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
   // 页面导航函数 - 修改为自动提交机制 (类似7年级模块)
   const navigateToPage = useCallback(async (pageId, options = {}) => {
     const { skipSubmit = false } = options;
-    
+
     const pageMapping = {
       'notices': 1,
       'scenario-intro': 2,
@@ -569,22 +569,24 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
       'ticket-pricing': 11,
       'task-completion': 12,
     };
-    
+
     const pageNumber = pageMapping[pageId] || 1;
     const currentPageNumber = state.currentPage;
-    
+
     console.log(`[Grade4Context] 🔄 开始导航: 从页面${currentPageNumber} → 页面${pageNumber} (${pageId})`);
-    
+
     let canNavigate = true;
-    
+    let submissionFailed = false;
+
     try {
       // 自动提交当前页面数据（除非明确跳过）；开发环境或缺少认证信息时跳过提交
       const isDev = import.meta && import.meta.env && import.meta.env.DEV;
       const hasAuthInfo = !!(state.authInfo?.batchCode && state.authInfo?.examNo);
       const shouldAttemptSubmit = !skipSubmit && currentPageNumber && state.operations.length > 0 && hasAuthInfo;
+
       if (shouldAttemptSubmit) {
         console.log(`[Grade4Context] 📤 自动提交当前页面数据，操作记录数量: ${state.operations.length}`);
-        
+
         // 添加页面退出操作记录
         const exitOperation = {
           code: state.operations.length + 1,
@@ -593,21 +595,34 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
           value: `离开页面${currentPageNumber}`,
           time: formatTimestamp()
         };
-        
+
         // 创建包含退出记录的完整操作列表
         const completeOperationList = [...state.operations, exitOperation];
-        
+
         // 提交数据
         const submissionSuccess = await submitPageDataInternal(completeOperationList);
-        
+
         if (!submissionSuccess) {
-          console.warn(`[Grade4Context] ❌ 页面数据提交失败，阻止导航`);
-          canNavigate = false;
+          console.warn(`[Grade4Context] ❌ 页面数据提交失败`);
+          submissionFailed = true;
+
+          // 在开发环境中，即使提交失败也允许导航
+          if (isDev) {
+            console.log(`[Grade4Context] 🔧 开发环境：忽略提交失败，允许导航`);
+            canNavigate = true;
+          } else {
+            // 在生产环境中，询问用户是否继续
+            const userChoice = window.confirm('数据提交失败，可能是网络问题。是否继续导航到下一页？\n\n点击"确定"继续，点击"取消"留在当前页面。');
+            canNavigate = userChoice;
+            console.log(`[Grade4Context] 用户选择: ${userChoice ? '继续导航' : '留在当前页'}`);
+          }
         } else {
           console.log(`[Grade4Context] ✅ 页面数据提交成功`);
         }
+      } else {
+        console.log(`[Grade4Context] ⏭️ 跳过数据提交 (skipSubmit=${skipSubmit}, hasAuthInfo=${hasAuthInfo}, operations=${state.operations.length})`);
       }
-      
+
       if (canNavigate) {
         // 记录导航操作
         logOperation({
@@ -615,21 +630,30 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
           eventType: 'page_navigate',
           value: `从页面${currentPageNumber}导航到页面${pageNumber}`
         });
-        
+
         // 切换页面
         setCurrentPage(pageNumber);
-        
+
+        // ✅ 关键修复：同步更新 localStorage 中的 pageNum
+        // 这样刷新页面后能正确恢复到当前页面
+        // 注意：不更新 AppContext 的 state，避免触发模块重新挂载
+        localStorage.setItem('hci-pageNum', String(pageNumber));
+        localStorage.setItem('pageNum', String(pageNumber));
+        console.log(`[Grade4Context] 📍 已更新 localStorage pageNum: ${pageNumber}`);
+
         // 清空操作记录为新页面做准备
         dispatch({ type: ACTION_TYPES.CLEAR_OPERATIONS });
-        
+
         // 记录新页面进入事件
         logOperation({
           targetElement: '页面',
           eventType: 'page_enter',
           value: `进入页面${pageNumber} (${pageId})`
         });
-        
+
         console.log(`[Grade4Context] ✅ 成功导航到页面: ${pageId} (页面${pageNumber})`);
+      } else {
+        console.log(`[Grade4Context] ⛔ 导航被取消，留在页面${currentPageNumber}`);
       }
     } catch (error) {
       console.error('[Grade4Context] ❌ 页面导航过程中出错:', error);

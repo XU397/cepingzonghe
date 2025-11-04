@@ -4,7 +4,7 @@
  */
 
 // Import React for JSX
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Grade4Provider, useGrade4Context } from './context/Grade4Context';
 import NoticesPage from './pages/00-NoticesPage';
 import ScenarioIntroPage from './pages/01-ScenarioIntroPage';
@@ -103,14 +103,25 @@ const Grade4PageRouter = () => {
  * @param {string} props.initialPageId - 初始页面ID（用于页面恢复）
  */
 const Grade4Module = ({ userContext, initialPageId }) => {
-  // 与模块路由器接口对齐：从 userContext 推导所需上下文与认证信息
+  // 🚀 性能优化：derivedGlobalContext直接使用userContext（已在ModuleRouter中缓存）
   const derivedGlobalContext = userContext || null;
-  const derivedAuthInfo = userContext ? {
-    batchCode: userContext.batchCode,
-    examNo: userContext.examNo,
-    url: userContext.url,
-    pageNum: userContext.pageNum
-  } : null;
+
+  // 🚀 性能优化：使用useMemo缓存derivedAuthInfo，避免每次都创建新对象
+  // 只有当认证字段真正变化时才重新创建
+  const derivedAuthInfo = useMemo(() => {
+    if (!userContext) return null;
+    return {
+      batchCode: userContext.batchCode,
+      examNo: userContext.examNo,
+      url: userContext.url,
+      pageNum: userContext.pageNum
+    };
+  }, [
+    userContext?.batchCode,
+    userContext?.examNo,
+    userContext?.url,
+    userContext?.pageNum
+  ]);
 
   console.log('[Grade4Module] 🎯 4年级模块初始化', {
     hasUserContext: !!userContext,
@@ -133,8 +144,8 @@ const Grade4Module = ({ userContext, initialPageId }) => {
 
   return (
     <div className={layoutStyles.moduleContainer}>
-      <Grade4Provider 
-        globalContext={derivedGlobalContext} 
+      <Grade4Provider
+        globalContext={derivedGlobalContext}
         authInfo={derivedAuthInfo}
         initialPageId={initialPageId}
       >

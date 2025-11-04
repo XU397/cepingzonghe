@@ -61,7 +61,7 @@
 
 .stepsList {
   padding-left: 20px;
-  font-size: 14px; /* 从15px减少到14px */
+  font-size: 16px; /* 从15px减少到14px */
   line-height: 1.6; /* 从1.8减少到1.6 */
   color: #555555;
   margin-bottom: 0;
@@ -87,7 +87,7 @@
 
 .instructionsList {
   padding-left: 20px;
-  font-size: 14px; /* 从15px减少到14px */
+  font-size: 16px; /* 从15px减少到14px */
   line-height: 1.6; /* 从1.7减少到1.6 */
   color: #555555;
   list-style-type: disc;
@@ -95,6 +95,23 @@
 
 .instructionsList li {
   margin-bottom: 6px; /* 从8px减少到6px */
+}
+
+/* 内联图片样式 */
+.inlineIcon {
+  height: 1.2em;
+  width: auto;
+  vertical-align: middle;
+  margin: 0 2px;
+  display: inline-block;
+}
+
+.inlineButton {
+  height: 1.8em;
+  width: auto;
+  vertical-align: middle;
+  margin: 0 4px;
+  display: inline-block;
 }
 
 /* 提示框 */
@@ -299,19 +316,20 @@
    底部导航
    ==================== */
 .navigationFooter {
-  margin-top: 20px; /* 增加顶部间距,防止上方内容溢出遮挡按钮 */
+  margin-top: 8px; /* 减少顶部间距 */
   display: flex;
   justify-content: center;
-  padding-top: 16px; /* 增加内边距 */
-  padding-bottom: 12px; /* 增加底部padding确保按钮不贴边 */
+  padding-top: 8px; /* 减少内边距 */
+  padding-bottom: 8px; /* 减少底部padding */
   border-top: 1px solid #e0e0e0;
   background-color: #ffffff; /* 添加白色背景,避免与上方实验区域背景混合 */
   flex-shrink: 0; /* 防止被压缩 */
+  min-height: 48px; /* 固定最小高度 */
 }
 
 .nextButton {
-  padding: 14px 32px;
-  font-size: 16px;
+  padding: 8px 24px; /* 减少padding降低按钮高度 */
+  font-size: 15px; /* 稍微缩小字号 */
   font-weight: 600;
   background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
   color: white;
@@ -370,7 +388,6 @@
 
   .stepsList,
   .instructionsList {
-    font-size: 13px;
     line-height: 1.5;
   }
 
@@ -390,12 +407,15 @@
   }
 
   .navigationFooter {
-    margin-top: 10px;
-    padding-top: 6px;
+    margin-top: 6px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    min-height: 40px;
   }
 
   .nextButton {
-    padding: 10px 24px; /* 缩小按钮 */
+    padding: 6px 20px; /* 进一步缩小按钮 */
+    font-size: 14px;
   }
 }
 

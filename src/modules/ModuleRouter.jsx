@@ -30,7 +30,10 @@ const constructModuleUserContext = (globalContext, authInfo) => {
   
   console.log('[ModuleRouter] 🔧 构造模块用户上下文', {
     globalContext: globalContext ? 'present' : 'missing',
-    authInfo: authInfo ? 'present' : 'missing'
+    authInfo: authInfo ? 'present' : 'missing',
+    hasStartQuestionnaireTimer: !!globalContext?.startQuestionnaireTimer,
+    hasIsQuestionnaireStarted: globalContext?.isQuestionnaireStarted !== undefined,
+    globalContextKeys: globalContext ? Object.keys(globalContext).filter(k => k.includes('questionnaire') || k.includes('Timer')) : []
   });
 
   // 基础用户信息（来自认证）
@@ -38,7 +41,9 @@ const constructModuleUserContext = (globalContext, authInfo) => {
     examNo: authInfo?.examNo || '',
     batchCode: authInfo?.batchCode || '',
     url: authInfo?.url || '',
-    pageNum: authInfo?.pageNum || '1'
+    // 🔧 修复：保留 null 值，不提供默认值
+    // 这样模块的 getInitialPage 可以收到 null 并返回默认页面
+    pageNum: authInfo?.pageNum ?? null
   };
 
   // 应用状态信息（来自全局上下文）
@@ -60,7 +65,10 @@ const constructModuleUserContext = (globalContext, authInfo) => {
   const questionnaireInfo = globalContext ? {
     questionnaireData: globalContext.questionnaireData,
     questionnaireAnswers: globalContext.questionnaireAnswers,
-    isQuestionnaireCompleted: globalContext.isQuestionnaireCompleted
+    isQuestionnaireCompleted: globalContext.isQuestionnaireCompleted,
+    questionnaireRemainingTime: globalContext.questionnaireRemainingTime,
+    isQuestionnaireStarted: globalContext.isQuestionnaireStarted,
+    isQuestionnaireTimeUp: globalContext.isQuestionnaireTimeUp,
   } : {};
 
   // 操作方法（来自全局上下文）
@@ -69,6 +77,12 @@ const constructModuleUserContext = (globalContext, authInfo) => {
     collectAnswer: globalContext.collectAnswer,
     handleLogout: globalContext.handleLogout,
     clearAllCache: globalContext.clearAllCache,
+    startQuestionnaireTimer: globalContext.startQuestionnaireTimer,
+    saveQuestionnaireAnswer: globalContext.saveQuestionnaireAnswer,
+    getQuestionnaireAnswer: globalContext.getQuestionnaireAnswer,
+    completeQuestionnaire: globalContext.completeQuestionnaire,
+    submitPageData: globalContext.submitPageData,
+    submitPageDataWithInfo: globalContext.submitPageDataWithInfo,
   } : {};
 
   const moduleUserContext = {
@@ -127,17 +141,34 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
 
   // 性能优化：记忆化用户上下文 - 使用更稳定的依赖
   const moduleUserContext = useMemo(() => {
+    console.log('[ModuleRouter] 🔄 useMemo重新计算moduleUserContext:', {
+      isTimeUp: globalContext?.isTimeUp,
+      isQuestionnaireTimeUp: globalContext?.isQuestionnaireTimeUp,
+      currentPageId: globalContext?.currentPageId
+    });
+
     const context = constructModuleUserContext(globalContext, authInfo);
+
+    console.log('[ModuleRouter] 📦 构造的context包含:', {
+      hasIsTimeUp: 'isTimeUp' in (context || {}),
+      isTimeUpValue: context?.isTimeUp,
+      hasIsQuestionnaireTimeUp: 'isQuestionnaireTimeUp' in (context || {}),
+      isQuestionnaireTimeUpValue: context?.isQuestionnaireTimeUp
+    });
+
     moduleUserContextRef.current = context; // 保存到ref中
     return context;
   }, [
     // 只依赖真正会变化的关键字段
     authInfo?.examNo,
-    authInfo?.batchCode, 
+    authInfo?.batchCode,
     authInfo?.url,
     authInfo?.pageNum,
     globalContext?.currentPageId,
-    globalContext?.isAuthenticated
+    globalContext?.isAuthenticated,
+    globalContext?.isTimeUp,                     // 监听实验倒计时状态
+    globalContext?.isQuestionnaireTimeUp,        // 监听问卷超时标志
+    globalContext?.questionnaireRemainingTime    // 监听问卷剩余时间变化
   ]);
 
   /**
@@ -225,18 +256,17 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
       });
 
       // 获取初始页面ID（用于页面恢复）
+      // 🔧 修复：即使 pageNum 为 null，也要调用 getInitialPage 让模块决定默认页
       let pageId = null;
-      if (currentContext.pageNum) {
-        try {
-          pageId = module.getInitialPage(currentContext.pageNum);
-          console.log('[ModuleRouter] 🔄 页面恢复:', {
-            pageNum: currentContext.pageNum,
-            initialPageId: pageId
-          });
-        } catch (err) {
-          console.warn('[ModuleRouter] ⚠️ 页面恢复失败，使用默认页面:', err.message);
-          pageId = null;
-        }
+      try {
+        pageId = module.getInitialPage(currentContext.pageNum);
+        console.log('[ModuleRouter] 🔄 页面初始化:', {
+          pageNum: currentContext.pageNum,
+          initialPageId: pageId
+        });
+      } catch (err) {
+        console.warn('[ModuleRouter] ⚠️ 页面初始化失败，使用null:', err.message);
+        pageId = null;
       }
 
       // 🚀 优化：模块初始化改为异步并行

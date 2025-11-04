@@ -8,20 +8,21 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
 import PageLayout from '../components/layout/PageLayout';
 import styles from '../styles/ExplorationPages.module.css';
 import summaryStyles from '../styles/Page13_Summary.module.css';
+import { PAGE_MAPPING } from '../config.js';
 
 const Page13_Summary = () => {
   const {
+    session,
     logOperation,
     clearOperations,
-    currentPageOperations,
-    navigateToPage
+    navigateToPage,
+    buildMarkObject,
+    submitPageData
   } = useTrackingContext();
 
-  const { submitPageData } = useDataLogger();
   const [pageStartTime] = useState(() => new Date());
 
   // 记录页面进入/退出
@@ -53,21 +54,8 @@ const Page13_Summary = () => {
     });
 
     try {
-      const pageEndTime = new Date();
-      const markObject = {
-        pageNumber: '13',
-        pageDesc: '任务总结',
-        operationList: currentPageOperations.map(op => ({
-          targetElement: op.target,
-          eventType: op.action,
-          value: op.value || '',
-          time: formatDateTime(new Date(op.time || op.timestamp))
-        })),
-        answerList: [],
-        beginTime: formatDateTime(pageStartTime),
-        endTime: formatDateTime(pageEndTime),
-        imgList: []
-      };
+      const pageInfo = PAGE_MAPPING[session.currentPage];
+      const markObject = buildMarkObject(String(session.currentPage), pageInfo?.desc || '任务总结');
 
       const success = await submitPageData(markObject);
       if (success) {
@@ -78,7 +66,7 @@ const Page13_Summary = () => {
       console.error('[Page13_Summary] 导航失败:', error);
       alert(error.message || '页面跳转失败，请重试');
     }
-  }, [currentPageOperations, pageStartTime, logOperation, submitPageData, clearOperations, navigateToPage]);
+  }, [session, logOperation, submitPageData, clearOperations, navigateToPage, buildMarkObject]);
 
   return (
     <PageLayout showNavigation={true} showTimer={true}>
@@ -103,11 +91,7 @@ const Page13_Summary = () => {
               </div>
 
               <p className={summaryStyles.conclusionText}>
-                实验数据显示，小明家28℃环境下蜂蜜的含水量约为19%。通过改变温度，蜂蜜的黏度确实发生了变化。同时，蜂蜜含水量的增加也会导致黏度下降。
-              </p>
-
-              <p className={summaryStyles.conclusionText}>
-                结合成都夏季平均温度和湿度数据，可以推测小明家蜂蜜变稀的现象，确实可能与成都多雨的高湿度环境有关。
+              根据实验数据，结合小明家蜂蜜常储于 28℃的情况，推断变稀后的蜂蜜含水量约为 19%，但所购蜂蜜原始成分表标注的含水量为 15%。由此，小明得出结论：蜂蜜变稀是因含水量增加，这可能确实与成都降水多，湿度高有关。
               </p>
 
               <div className={summaryStyles.congratsBox}>
@@ -133,15 +117,6 @@ const Page13_Summary = () => {
   );
 };
 
-// 辅助函数: 格式化日期时间
-function formatDateTime(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hour = String(date.getHours()).padStart(2, '0');
-  const minute = String(date.getMinutes()).padStart(2, '0');
-  const second = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-}
+// 统一改为由 Provider 进行时间与结构标准化
 
 export default Page13_Summary;

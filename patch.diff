@@ -1,0 +1,33 @@
+*** Begin Patch
+*** Update File: src/modules/grade-7-tracking/context/TrackingProvider.jsx
+@@
+-    // 构造答案列表：问卷页(14-21)从 questionnaireAnswers 构建；其余沿用 answers 收集
+-    let ansList;
++    // 构造答案列表：
++    // - 问卷页(14-21)：从 questionnaireAnswers 构建
++    // - 其他页：优先使用 options.answerList（若提供），否则沿用内部 answers 收集
++    let ansList;
+     if (pn >= 14 && pn <= 21) {
+       const pageData = getQuestionnairePageData(pn);
+       const missingLabel = options.missingLabel || '未回答';
+@@
+-    } else {
+-      ansList = answers.map(ans => ({
+-        targetElement: ans.targetElement,
+-        value: String(ans.value || '')
+-      }));
+-    }
++    } else {
++      if (Array.isArray(options.answerList)) {
++        ansList = options.answerList.map((ans, index) => ({
++          targetElement: String(ans.targetElement || `A${index + 1}`),
++          value: String(ans.value || '')
++        }));
++      } else {
++        ansList = answers.map(ans => ({
++          targetElement: ans.targetElement,
++          value: String(ans.value || '')
++        }));
++      }
++    }
+*** End Patch

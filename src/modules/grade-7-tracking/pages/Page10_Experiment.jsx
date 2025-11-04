@@ -5,7 +5,7 @@
  * - 左右分栏布局:左侧实验操作区,右侧说明区
  * - 集成BeakerSelector、TemperatureControl、BallDropAnimation、TimerDisplay
  * - 实验控制逻辑:"开始实验"/"重置实验"按钮
- * - 实验历史记录(最多3次)
+ * - 实验历史记录(最多10次)
  * - 支持实验参数的实时验证
  *
  * T045a/b/c - Page10_Experiment页面(3个子任务)
@@ -14,12 +14,16 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
-import { useDataLogger } from '../hooks/useDataLogger';
 import IntegratedExperimentPanel from '../components/experiment/IntegratedExperimentPanel';
 import PageLayout from '../components/layout/PageLayout.jsx';
 import { calculateFallTime } from '../utils/physicsModel';
 import { WATER_CONTENT_OPTIONS, TEMPERATURE_OPTIONS, PAGE_MAPPING } from '../config';
 import styles from '../styles/Page10_Experiment.module.css';
+import jianhaoImg from '../../../assets/images/jianhao71.png';
+import jiahaoImg from '../../../assets/images/jiahao71.png';
+import jishikaishiImg from '../../../assets/images/jishikaishi71.png';
+import chongzhiImg from '../../../assets/images/chongzhi71.png';
+import jishikuangImg from '../../../assets/images/jishikuang71.png';
 
 const Page10_Experiment = () => {
   const {
@@ -28,10 +32,10 @@ const Page10_Experiment = () => {
     collectAnswer,
     clearOperations,
     buildMarkObject,
-    navigateToPage
+    navigateToPage,
+    submitPageData
   } = useTrackingContext();
 
-  const { submitPageData } = useDataLogger();
   const [isNavigating, setIsNavigating] = useState(false);
   const [experimentHistory, setExperimentHistory] = useState([]);
 
@@ -163,16 +167,16 @@ const Page10_Experiment = () => {
           <ol className={styles.stepsList}>
             <li>取含水量为15%, 17%, 19%, 21%的蜂蜜各200ml，分别放入4个量筒中；</li>
             <li>将量筒放入恒温箱中，恒温箱温度可设为25℃, 30℃, 35℃, 40℃, 45℃；</li>
-            <li>释放量筒上方的小钢球，记录小钢球下落至量筒底部的总用时。</li>
+            <li>释放量筒上方的小钢球，记录小钢球下落至量筒底部的总用时；</li>
           </ol>
 
           <hr className={styles.divider} />
 
           <h3 className={styles.instructionsSectionTitle}>【说明】右侧为实验互动界面:</h3>
           <ul className={styles.instructionsList}>
-            <li>单击【-】【+】可调整温度。</li>
-            <li>设好温度后，单击【计时开始】，小钢球会下落至量筒底部，量筒下方时间框显示下落总用时。</li>
-            <li>单击【重置】可重新开始。</li>
+            <li>单击<img src={jianhaoImg} alt="-" className={styles.inlineIcon} /><img src={jiahaoImg} alt="+" className={styles.inlineIcon} />可调整温度；</li>
+            <li>设好温度后，单击<img src={jishikaishiImg} alt="计时开始" className={styles.inlineButton} />，小钢球会下落至量筒底部，量筒下方时间框<img src={jishikuangImg} alt="时间框" className={styles.inlineIcon} />显示下落总用时；</li>
+            <li>单击<img src={chongzhiImg} alt="重置" className={styles.inlineButton} />可重新开始。</li>
           </ul>
 
           {/* 删除了黄色提示框 hintBox */}

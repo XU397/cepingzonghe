@@ -1,6 +1,6 @@
 /**
  * QuestionnairePage Shared Styles
- * 问卷页面共享样式（表格布局版本�?
+ * 问卷页面共享样式（表格布局版本�?
  */
 
 /* ============================================================================
@@ -11,29 +11,30 @@
   display: flex;
   flex-direction: column;
   /* 🔧 负margin抵消PageLayout的contentWrapper padding-top (80px) */
-  padding: 20px 40px 28px 40px; /* �?2px 48px 40px 48px减少�?0px 40px 28px 40px */
+  padding: 20px 40px 28px 40px; /* �?2px 48px 40px 48px减少�?0px 40px 28px 40px */
   max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
-  gap: 20px; /* �?2px减少�?0px */
+  gap: 20px; /* �?2px减少�?0px */
 }
 
 /* ============================================================================
-   Instruction Box (橙色边框说明�?
+   Instruction Box (橙色边框说明�?
    ============================================================================ */
 
 .instructionBox {
-  padding: 14px 20px; /* �?0px 24px减少�?4px 20px */
+  padding: 14px 20px; /* �?0px 24px减少�?4px 20px */
   background-color: #fffbf0;
   border: 2px dashed #ffa500;
   border-radius: 8px;
-  margin-bottom: 6px; /* �?px减少�?px */
+  margin-bottom: 6px; /* �?px减少�?px */
 }
 
 .instructions {
-  font-size: 15px; /* �?6px减少�?5px */
+  font-size: 18px; /* 增加到18px */
+  font-weight: 700; /* 加粗 */
   color: #333;
-  line-height: 1.5; /* �?.6减少�?.5 */
+  line-height: 1.5; /* �?.6减少�?.5 */
   margin: 0;
   text-align: center;
 }
@@ -44,7 +45,7 @@
 
 .tableSection {
   
-  margin-bottom: 16px; /* �?4px减少�?6px */
+  margin-bottom: 16px; /* �?4px减少�?6px */
 }
 
 /* ============================================================================
@@ -55,15 +56,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px; /* �?6px减少�?2px */
-  padding-top: 16px; /* �?2px减少�?6px */
+  gap: 8px; /* 从12px减少到8px */
+  padding-top: 8px; /* 从16px减少到8px，拉近按钮与表格的距离 */
   padding-bottom: 12px; /* 添加底部padding确保按钮完整可见 */
 }
 
 .nextButton {
   min-width: 200px;
-  padding: 13px 44px; /* �?4px 48px减少�?3px 44px */
-  font-size: 16px; /* �?7px减少�?6px */
+  padding: 13px 44px; /* �?4px 48px减少�?3px 44px */
+  font-size: 16px; /* �?7px减少�?6px */
   font-weight: 600;
   background-color: #c0c0c0;
   color: #333;
@@ -111,7 +112,7 @@
 }
 
 /* ============================================================================
-   响应式设�?
+   响应式设�?
    ============================================================================ */
 
 /* 800p紧凑模式 */
@@ -119,42 +120,43 @@
   .pageContainer {
     /* 保持负margin抵消 */
     padding: 12px 28px 20px 28px; /* 进一步压缩padding */
-    gap: 12px; /* �?6px减少�?2px */
+    gap: 12px; /* �?6px减少�?2px */
     }
 
-  /* 紧凑说明�?*/
+  /* 紧凑说明�?*/
   .instructionBox {
-    padding: 10px 16px; /* �?4px 20px减少�?0px 16px */
-    margin-bottom: 4px; /* �?px减少�?px */
+    padding: 10px 16px; /* �?4px 20px减少�?0px 16px */
+    margin-bottom: 4px; /* �?px减少�?px */
   }
 
   .instructions {
-    font-size: 13px; /* �?4px减少�?3px */
-    line-height: 1.4; /* �?.5减少�?.4 */
+    font-size: 16px; /* 保持相对较大的字号 */
+    font-weight: 700; /* 加粗 */
+    line-height: 1.4; /* �?.5减少�?.4 */
   }
 
   /* 表格区域不需要底部margin，让表格自己滚动 */
   .tableSection {
     
-    margin-bottom: 10px; /* �?2px减少�?0px */
+    margin-bottom: 10px; /* �?2px减少�?0px */
   }
 
   /* 紧凑底部 */
   .footer {
-    gap: 10px; /* �?2px减少�?0px */
-    padding-top: 12px; /* �?6px减少�?2px */
+    gap: 10px; /* �?2px减少�?0px */
+    padding-top: 12px; /* �?6px减少�?2px */
     padding-bottom: 10px; /* 确保按钮完整可见 */
   }
 
   .nextButton {
     min-width: 180px;
-    padding: 11px 38px; /* �?2px 40px减少�?1px 38px */
-    font-size: 15px; /* �?6px减少�?5px */
+    padding: 11px 38px; /* �?2px 40px减少�?1px 38px */
+    font-size: 15px; /* �?6px减少�?5px */
   }
 
   .warningMessage {
-    padding: 8px 16px; /* �?0px 18px减少�?px 16px */
-    font-size: 12px; /* �?3px减少�?2px */
+    padding: 8px 16px; /* �?0px 18px减少�?px 16px */
+    font-size: 12px; /* �?3px减少�?2px */
   }
 }
 
