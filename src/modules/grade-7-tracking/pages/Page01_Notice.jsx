@@ -142,7 +142,7 @@ const Page01_Notice = () => {
           <div className={styles.alertBox}>
             <ul className={styles.noticeList}>
               <li className={styles.noticeItem}>
-                作答时间：<strong>50分钟</strong>(探究任务<strong>40分钟</strong> + 问卷调查<strong>10分钟</strong>)，时间结束后，系统将自动退出答题界面。
+                作答时间：<strong>50分钟</strong>（探究任务<strong>40分钟</strong> + 问卷调查<strong>10分钟</strong>），时间结束后，系统将自动退出答题界面。
               </li>
               <li className={styles.noticeItem}>
                 请按顺序回答每页问题，<strong>上一页题目未完成作答，将无法点击进入下一页。</strong>

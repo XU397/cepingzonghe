@@ -616,20 +616,20 @@ export const AppProvider = ({ children }) => {
     try {
       // 首先检查session有效期（基于时间）
       const lastSessionEndTime = localStorage.getItem('lastSessionEndTime');
-      const SESSION_EXPIRY_HOURS = 24; // Session有效期：24小时
+      const SESSION_EXPIRY_MINUTES = 90; // Session有效期：90分钟
 
       if (lastSessionEndTime) {
         const sessionEndTimeMillis = parseInt(lastSessionEndTime, 10);
-        const hoursSinceLastSession = (Date.now() - sessionEndTimeMillis) / (1000 * 60 * 60);
+        const minutesSinceLastSession = (Date.now() - sessionEndTimeMillis) / (1000 * 60);
 
         console.log('[AppContext] Session年龄检查:', {
           lastSessionEndTime: new Date(sessionEndTimeMillis).toLocaleString(),
-          hoursSinceLastSession: hoursSinceLastSession.toFixed(2),
-          expiryThreshold: SESSION_EXPIRY_HOURS
+          minutesSinceLastSession: minutesSinceLastSession.toFixed(2),
+          expiryThreshold: SESSION_EXPIRY_MINUTES
         });
 
-        if (hoursSinceLastSession > SESSION_EXPIRY_HOURS) {
-          console.log('[AppContext] ⏰ Session已过期（超过24小时），清除所有认证数据');
+        if (minutesSinceLastSession > SESSION_EXPIRY_MINUTES) {
+          console.log('[AppContext] ⏰ Session已过期（超过90分钟），清除所有认证数据');
           // 清除所有localStorage数据
           handleLogout();
           // 不再继续恢复状态

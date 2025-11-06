@@ -53,10 +53,11 @@ const Page13_Analysis3 = () => {
 
   // 处理实验开始 - 计算所有量筒的下落时间
   const handleExperimentStart = useCallback((waterContent, temperature) => {
+    // 🔧 修改：使用 simulation_timing_started eventType 以匹配7年级蒸馒头模块
     logOperation({
-      action: '点击',
+      action: 'simulation_timing_started',
       target: '计时开始按钮_分析页3',
-      value: JSON.stringify({ waterContent, temperature }),
+      value: `温度${temperature}°C`,
       time: new Date().toISOString()
     });
 
@@ -68,10 +69,26 @@ const Page13_Analysis3 = () => {
   // 处理实验完成
   const handleExperimentComplete = useCallback((experimentData) => {
     // experimentData 是一个数组，包含所有量筒的数据
+    // [{waterContent: 15, temperature: 30, fallTime: 16.5}, ...]
+
+    // 🔧 修改：构建符合7年级蒸馒头模块格式的 simulation_run_result
+    const temperature = experimentData[0]?.temperature || 25; // 获取当前实验的温度
+    const runId = `Analysis3_${Date.now()}`;
+
+    // 构建结果数组，格式与蒸馒头模块类似
+    const resultsForLog = experimentData.map(item => ({
+      WaterContent: item.waterContent, // 含水量
+      FallTime: item.fallTime          // 下落时间
+    }));
+
     logOperation({
-      action: '完成',
-      target: '实验动画_分析页3',
-      value: JSON.stringify(experimentData),
+      action: 'simulation_run_result',
+      target: '模拟实验运行结果',
+      value: {
+        Run_ID: `run_Page_13_Analysis3_${runId}`,
+        Set_Temperature: temperature,  // 设定温度
+        Results: resultsForLog
+      },
       time: new Date().toISOString()
     });
   }, [logOperation]);

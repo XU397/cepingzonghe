@@ -44,7 +44,8 @@
       "Bash(do echo \"=== $file ===\")",
       "Bash(done)",
       "Bash(for file in Page02_QuestionnaireNotice.jsx Page06_Hypothesis.jsx Page07_Design.jsx Page08_Evaluation.jsx Page09_Transition.jsx Page10_Experiment.jsx Page13_Summary.jsx Page14_Solution.jsx)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

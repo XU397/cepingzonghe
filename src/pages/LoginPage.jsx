@@ -1,6 +1,8 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { loginUser } from '../shared/services/apiService';
+import useFullscreen from '../hooks/useFullscreen';
+import FullscreenPrompt from '../components/FullscreenPrompt';
 import '../styles/LoginPage.css';
 import logoImage from '../assets/images/img_logo.png';
 import demoImage from '../assets/images/logoinback.png';
@@ -12,9 +14,27 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const { handleLoginSuccess } = useAppContext();
+  const { isFullscreen, enterFullscreen } = useFullscreen();
 
   // 检测是否为开发环境
   const isDevelopment = import.meta.env.DEV;
+
+  // 页面挂载时自动请求全屏
+  useEffect(() => {
+    const requestFullscreen = async () => {
+      console.log('[LoginPage] 尝试自动进入全屏模式...');
+      const success = await enterFullscreen();
+
+      if (!success) {
+        console.warn('[LoginPage] 自动进入全屏失败，可能需要用户交互');
+      }
+    };
+
+    // 延迟一小段时间，确保页面完全加载
+    const timer = setTimeout(requestFullscreen, 500);
+
+    return () => clearTimeout(timer);
+  }, [enterFullscreen]);
 
   // Images are bundled via Vite asset imports
 
@@ -60,6 +80,11 @@ const LoginPage = () => {
 
   return (
     <div className="login-page">
+      {/* 全屏提示 - 当用户退出全屏时显示 */}
+      {!isFullscreen && (
+        <FullscreenPrompt onEnterFullscreen={enterFullscreen} />
+      )}
+
       <header className="login-header">
         <div className="login-logo-container">
           <img

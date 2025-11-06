@@ -583,6 +583,11 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
           return 'simulation_operation';
         case 'questionnaire_answer':
           return 'questionnaire_answer';
+        // 🔧 新增：支持7年级蒸馒头模块的实验事件类型
+        case 'simulation_timing_started':
+          return 'simulation_timing_started';
+        case 'simulation_run_result':
+          return 'simulation_run_result';
         default:
           return String(action);
       }
@@ -590,11 +595,14 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     const pn = typeof pageNumber === 'string' ? parseFloat(pageNumber) : pageNumber;
 
     // 统一操作列表规范化
-    const opList = operationLog.map(op => ({
+    // 🔧 修改：添加 code 和 pageId 字段以匹配7年级蒸馒头模块的数据格式
+    const opList = operationLog.map((op, index) => ({
+      code: index + 1, // 操作序号，从1开始
       targetElement: op.target,
       eventType: mapEventType(op.action, op.value),
-      value: String(op.value || ''),
-      time: formatDateTime(new Date(op.time || op.timestamp))
+      value: typeof op.value === 'object' ? op.value : String(op.value || ''),
+      time: formatDateTime(new Date(op.time || op.timestamp)),
+      pageId: op.pageId || `Page_${Math.floor(pn)}` // 页面ID，格式如 "Page_10"
     }));
 
     // 构造答案列表：
@@ -609,6 +617,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
         const selected = questionnaireAnswers?.[q.id]?.selectedOption;
         const label = (q.options || []).find(opt => opt.value === selected)?.label;
         return {
+          code: idx + 1,  // 🔧 添加答案序号，与蒸馒头模块保持一致
           targetElement: `P${pn}_问题${idx + 1}`,
           value: String(label || missingLabel)
         };
@@ -616,11 +625,13 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     } else {
       if (Array.isArray(options.answerList)) {
         ansList = options.answerList.map((ans, index) => ({
+          code: index + 1,  // 🔧 添加答案序号，与蒸馒头模块保持一致
           targetElement: String(ans.targetElement || ('A' + (index + 1))),
           value: String(ans.value || '')
         }));
       } else {
-        ansList = answers.map(ans => ({
+        ansList = answers.map((ans, index) => ({
+          code: index + 1,  // 🔧 添加答案序号，与蒸馒头模块保持一致
           targetElement: ans.targetElement,
           value: String(ans.value || '')
         }));

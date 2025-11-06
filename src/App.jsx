@@ -7,6 +7,8 @@ import StepNavigation from './components/common/StepNavigation';
 import QuestionnaireNavigation from './components/questionnaire/QuestionnaireNavigation';
 import UserInfoBar from './components/common/UserInfoBar';
 import ApiConfigDebug from './components/debug/ApiConfigDebug';
+import useFullscreen from './hooks/useFullscreen';
+import FullscreenPrompt from './components/FullscreenPrompt';
 import { isQuestionnairePage, getQuestionnaireStepNumber, TOTAL_QUESTIONNAIRE_STEPS } from './utils/pageMappings';
 // import { initGlobalErrorHandling } from './utils/errorHandler'; // 可选：启用错误过滤
 import './styles/global.css'; // Ensure global styles are imported
@@ -64,6 +66,9 @@ const AppContent = () => {
 
   // 用于防止重复日志输出
   const moduleLoggedRef = useRef(false);
+
+  // 全屏管理
+  const { isFullscreen, enterFullscreen } = useFullscreen();
 
   // 🚀 性能优化：提前声明 useMemo，避免 Hook 顺序问题
   // 必须在所有条件语句之前调用，符合 React Hooks 规则
@@ -205,6 +210,10 @@ const AppContent = () => {
   if (!isAuthenticated) {
     return (
       <div className="app-container">
+        {/* 全屏提示 - 仅在已登录但未通过认证时显示 */}
+        {isLoggedIn && !isFullscreen && (
+          <FullscreenPrompt onEnterFullscreen={enterFullscreen} />
+        )}
         <div className="task-wrapper">
           <PageRouter />
         </div>
@@ -243,12 +252,17 @@ const AppContent = () => {
     
     return (
       <div className="app-container">
+        {/* 全屏提示 - 当用户退出全屏时显示 */}
+        {!isFullscreen && (
+          <FullscreenPrompt onEnterFullscreen={enterFullscreen} />
+        )}
+
         <UserInfoBar />
         {showTimer && (
           isCurrentPageQuestionnaire ? (
-            <QuestionnaireTimer 
-              remainingTime={questionnaireRemainingTime} 
-              isTimeUp={isQuestionnaireTimeUp} 
+            <QuestionnaireTimer
+              remainingTime={questionnaireRemainingTime}
+              isTimeUp={isQuestionnaireTimeUp}
             />
           ) : (
             <Timer />
@@ -258,17 +272,17 @@ const AppContent = () => {
           {/* 模块系统下不显示全局导航，模块内部有自己的导航系统 */}
           <div className="task-wrapper">
             <React.Suspense fallback={
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 minHeight: '200px',
                 fontSize: '16px'
               }}>
                 🚀 正在加载模块系统...
               </div>
             }>
-              <ModuleRouter 
+              <ModuleRouter
                 globalContext={globalContext}
                 authInfo={authInfo}
               />
@@ -287,14 +301,19 @@ const AppContent = () => {
   // 默认情况：使用传统页面路由器
   return (
     <div className="app-container">
+      {/* 全屏提示 - 当用户退出全屏时显示 */}
+      {!isFullscreen && (
+        <FullscreenPrompt onEnterFullscreen={enterFullscreen} />
+      )}
+
       {/* 用户信息条 */}
       <UserInfoBar />
       {/* 根据当前页面类型显示不同的计时器 */}
       {showTimer && (
         isCurrentPageQuestionnaire ? (
-          <QuestionnaireTimer 
-            remainingTime={questionnaireRemainingTime} 
-            isTimeUp={isQuestionnaireTimeUp} 
+          <QuestionnaireTimer
+            remainingTime={questionnaireRemainingTime}
+            isTimeUp={isQuestionnaireTimeUp}
           />
         ) : (
           <Timer />
@@ -303,9 +322,9 @@ const AppContent = () => {
       <div className="main-content-wrapper">
         {/* 根据当前页面类型显示不同的导航 */}
         {isCurrentPageQuestionnaire ? (
-          <QuestionnaireNavigation 
-            currentQuestionnaireStep={currentQuestionnaireStep} 
-            totalQuestionnaireSteps={TOTAL_QUESTIONNAIRE_STEPS} 
+          <QuestionnaireNavigation
+            currentQuestionnaireStep={currentQuestionnaireStep}
+            totalQuestionnaireSteps={TOTAL_QUESTIONNAIRE_STEPS}
           />
         ) : (
           showStepNavigation && <StepNavigation currentStepNumber={currentStepNumber} totalSteps={totalUserSteps} />

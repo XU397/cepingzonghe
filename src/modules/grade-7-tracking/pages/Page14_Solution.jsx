@@ -168,7 +168,7 @@ const Page14_Solution = () => {
             <LineChart
               temperatureRange={TEMPERATURE_OPTIONS}
               waterContentOptions={WATER_CONTENT_OPTIONS}
-              height={320}
+              height={400}
               showLegend
               showGrid
             />
@@ -178,7 +178,7 @@ const Page14_Solution = () => {
           <div className={styles.rightPanel}>
             <div className={styles.tableCard}>
               <h3 className={styles.tableTitle}>方案选择</h3>
-              <p className={styles.tableHint}>点击"新增"按钮可以添加多个方案进行对比</p>
+              <p className={styles.tableHint}>点击"新增"按钮可以添加多个方案，点击"删除"按钮可以删去该方案</p>
 
               <div className={styles.tableContainer}>
                 <table className={styles.dynamicTable}>

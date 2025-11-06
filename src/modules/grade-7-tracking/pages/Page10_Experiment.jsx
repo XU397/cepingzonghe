@@ -61,13 +61,11 @@ const Page10_Experiment = () => {
   // 处理开始实验 - 计算所有量筒的下落时间
   const handleExperimentStart = useCallback((waterContent, temperature) => {
     // 记录实验开始
+    // 🔧 修改：使用 simulation_timing_started eventType 以匹配7年级蒸馒头模块
     logOperation({
-      action: '点击',
+      action: 'simulation_timing_started',
       target: '计时开始按钮',
-      value: JSON.stringify({
-        waterContent,
-        temperature
-      }),
+      value: `温度${temperature}°C`,
       time: new Date().toISOString()
     });
 
@@ -80,12 +78,26 @@ const Page10_Experiment = () => {
   // 处理实验完成
   const handleExperimentComplete = useCallback((experimentData) => {
     // experimentData 是一个数组，包含所有量筒的数据
-    // [{waterContent: 15, fallTime: 16.5}, {waterContent: 17, fallTime: 5.7}, ...]
+    // [{waterContent: 15, temperature: 30, fallTime: 16.5}, ...]
+
+    // 🔧 修改：构建符合7年级蒸馒头模块格式的 simulation_run_result
+    const runId = experimentHistory.length + 1;
+    const temperature = experimentData[0]?.temperature || 25; // 获取当前实验的温度
+
+    // 构建结果数组，格式与蒸馒头模块类似
+    const resultsForLog = experimentData.map(item => ({
+      WaterContent: item.waterContent, // 含水量 (类似蒸馒头的 Temp)
+      FallTime: item.fallTime          // 下落时间 (类似蒸馒头的 Volume)
+    }));
 
     logOperation({
-      action: '完成',
-      target: '实验动画',
-      value: JSON.stringify(experimentData),
+      action: 'simulation_run_result',
+      target: '模拟实验运行结果',
+      value: {
+        Run_ID: `run_Page_10_Experiment_${runId}`,
+        Set_Temperature: temperature,  // 设定温度
+        Results: resultsForLog
+      },
       time: new Date().toISOString()
     });
 
@@ -98,7 +110,7 @@ const Page10_Experiment = () => {
 
     // 收集实验结果作为答案
     collectAnswer({
-      targetElement: `实验记录_${experimentHistory.length + 1}`,
+      targetElement: `实验记录_${runId}`,
       value: JSON.stringify(experimentData)
     });
   }, [experimentHistory.length, logOperation, collectAnswer]);

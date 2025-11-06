@@ -59,15 +59,9 @@
 }
 
 /* 假设陈述文本 */
-.hypothesisText {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 24px 32px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
 
 .hypothesisText p {
-  font-size: 20px;
+  font-size: 18px;
   line-height: 2;
   color: #333;
   margin: 0;
@@ -80,15 +74,15 @@
 .guideText {
   background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
   border-radius: 12px;
-  padding: 20px 28px;
+  padding: 20px 8px;
   box-shadow: 0 4px 16px rgba(52, 152, 219, 0.3);
   text-align: center;
+  line-height: 2;
 }
 
 .guideText p {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
-  line-height: 1.5;
   color: #ffffff;
   margin: 0;
 }
@@ -155,21 +149,15 @@
     gap: 16px;
   }
 
-  .hypothesisText {
-    padding: 20px 24px;
-  }
 
-  .hypothesisText p {
-    font-size: 15px;
-    line-height: 1.6;
-  }
+
 
   .weatherImageContainer {
     padding: 16px;
   }
 
   .guideText {
-    padding: 16px 24px;
+    padding: 16px 8px;
   }
 
   .guideText p {
@@ -197,17 +185,6 @@
     font-size: 26px;
   }
 
-  .hypothesisText {
-    padding: 20px 24px;
-  }
-
-  .hypothesisText p {
-    font-size: 16px;
-  }
-
-  .guideText p {
-    font-size: 17px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -227,21 +204,13 @@
     gap: 16px;
   }
 
-  .hypothesisText {
-    padding: 18px 20px;
-  }
-
-  .hypothesisText p {
-    font-size: 15px;
-    line-height: 1.6;
-  }
 
   .weatherImageContainer {
     padding: 16px;
   }
 
   .guideText {
-    padding: 16px 20px;
+    padding: 16px 8px;
   }
 
   .guideText p {

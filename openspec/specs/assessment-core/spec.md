@@ -57,21 +57,21 @@
 - THEN 自动导航到问卷完成页，并记录超时与跳转操作
 
 ### Requirement: 标准化 MarkObject 结构（数据提交契约）
-平台 MUST 使用统一的 MarkObject 结构提交页面数据。
+平台 MUST 使用统一的 MarkObject 结构提交页面数据；字段定义与事件类型集合与“数据提交格式规格（Data Format Spec）”保持一致。
 
-#### Scenario: MarkObject 字段
+#### Scenario: MarkObject 字段（与 Data Format Spec 对齐）
 - GIVEN 平台准备提交页面数据
 - THEN MarkObject 包含：
-  - `pageNumber: string`
+  - `pageNumber: string`（允许复合编码）
   - `pageDesc: string`
-  - `operationList: Array<{ code:number, targetElement:string, eventType:string, value:string, time:string }>`
-  - `answerList: Array<{ code:number, targetElement:string, value:string }>`
+  - `operationList: Array<Operation>`（`value` 允许 `string | object`，可选 `pageId`）
+  - `answerList: Array<Answer>`
   - `beginTime: string(YYYY-MM-DD HH:mm:ss)`
   - `endTime: string(YYYY-MM-DD HH:mm:ss)`
   - `imgList: Array<any>`（可为空）
 
 ### Requirement: 操作日志与页面进入/退出记录
-平台 MUST 在页面进入与离开时记录操作日志，以便数据可追溯。
+平台 MUST 在页面进入与离开时记录操作日志；事件类型应符合“数据提交格式规格”的事件集合。
 
 #### Scenario: 页面进入/退出
 - GIVEN 进入页面 `P`
@@ -119,4 +119,3 @@
 ## 合规性与范围说明
 - 本规格为平台统一规则的基线，模块应实现与之对齐。
 - 已知差异：四年级模块当前不具备“计时跨刷新恢复/到期自动跳转/401 回登录”的完整实现，后续通过变更提案接入统一计时与统一提交以对齐本规范。
-

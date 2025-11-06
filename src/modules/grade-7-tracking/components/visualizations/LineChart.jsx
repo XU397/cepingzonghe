@@ -88,7 +88,7 @@ const LineChart = ({
       </div>
 
       <ResponsiveContainer width={width} height={height}>
-        <RechartsLineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+        <RechartsLineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
           {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" />}
 
           <XAxis
@@ -103,21 +103,7 @@ const LineChart = ({
             tick={{ fontSize: 12, fill: '#8c8c8c' }}
             stroke="#d9d9d9"
             domain={[0, 'auto']}
-          />
-
-          {/* 2秒参考线 - 标识目标下落时间 */}
-          <ReferenceLine
-            y={2}
-            stroke="#ff4d4f"
-            strokeWidth={2}
-            strokeDasharray="5 5"
-            label={{
-              value: '目标时间: 2秒',
-              position: 'right',
-              fill: '#ff4d4f',
-              fontSize: 12,
-              fontWeight: 600
-            }}
+            ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]}
           />
 
           <Tooltip content={<CustomTooltip />} />
