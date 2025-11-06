@@ -1,0 +1,156 @@
+/* 全屏提示遮罩层 */
+.fullscreen-prompt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 提示容器 */
+.fullscreen-prompt-container {
+  background: white;
+  border-radius: 16px;
+  padding: 50px 48px;
+  max-width: 540px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 图标 */
+.fullscreen-prompt-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  background: linear-gradient(135deg, #4080ff 0%, #2970ff 100%);
+  border-radius: 50%;
+  color: white;
+  margin-bottom: 28px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* 标题 */
+.fullscreen-prompt-title {
+  font-size: 30px;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 20px 0;
+  letter-spacing: 0.5px;
+}
+
+/* 消息文本 */
+.fullscreen-prompt-message {
+  font-size: 16px;
+  color: #4a5568;
+  line-height: 1.8;
+  margin: 0 0 36px 0;
+  padding: 0 8px;
+}
+
+/* 按钮 */
+.fullscreen-prompt-button {
+  background: linear-gradient(135deg, #4080ff 0%, #2970ff 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 15px 52px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(64, 128, 255, 0.4);
+}
+
+.fullscreen-prompt-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(64, 128, 255, 0.5);
+  background: linear-gradient(135deg, #2970ff 0%, #1960ff 100%);
+}
+
+.fullscreen-prompt-button:active {
+  transform: translateY(0);
+}
+
+.fullscreen-prompt-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(64, 128, 255, 0.3);
+}
+
+/* 提示文字 */
+.fullscreen-prompt-hint {
+  font-size: 13px;
+  color: #a0aec0;
+  margin: 28px 0 0 0;
+  line-height: 1.6;
+}
+
+.fullscreen-prompt-hint kbd {
+  display: inline-block;
+  padding: 3px 8px;
+  font-family: monospace;
+  font-size: 12px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .fullscreen-prompt-container {
+    padding: 36px 24px;
+    width: 95%;
+  }
+
+  .fullscreen-prompt-title {
+    font-size: 24px;
+  }
+
+  .fullscreen-prompt-message {
+    font-size: 14px;
+  }
+
+  .fullscreen-prompt-button {
+    padding: 12px 36px;
+    font-size: 16px;
+  }
+}
