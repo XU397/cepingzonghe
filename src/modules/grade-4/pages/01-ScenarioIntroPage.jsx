@@ -4,70 +4,145 @@
  * 实现与现有7年级模块完全一致的视觉风格
  */
 
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import { AssessmentPageFrame } from '@shared/ui/PageFrame';
 import bgScenario from '../../../assets/images/g4-p1-xx.png';
 import { useGrade4Context } from '../context/Grade4Context';
 import AssessmentPageLayout from '../components/layout/AssessmentPageLayout';
+import { moduleConfig } from '../moduleConfig';
 import styles from './01-ScenarioIntroPage.module.css';
 
+const TOTAL_NAV_STEPS = 11;
+
+const resolvePageMeta = (currentPage) => {
+  const entries = Object.entries(moduleConfig?.pages || {});
+  const match = entries.find(([, cfg]) => Number(cfg.number) === Number(currentPage));
+
+  if (!match) {
+    return {
+      pageId: `grade4-page-${currentPage}`,
+      pageNumber: currentPage,
+      pageDesc: `第${currentPage}页`,
+    };
+  }
+
+  const [pageId, cfg] = match;
+  return {
+    pageId,
+    pageNumber: cfg.number ?? currentPage,
+    pageDesc: cfg.desc ?? `第${currentPage}页`,
+  };
+};
+
 const ScenarioIntroPage = () => {
-  const { 
-    logOperation, 
+  const {
+    logOperation,
     setNavigationStep,
-    navigateToPage
+    navigateToPage,
+    buildMarkForSubmission,
+    getUserContext,
+    currentPage,
+    currentNavigationStep,
+    globalTimer,
+    useUnifiedFrame,
   } = useGrade4Context();
 
   useEffect(() => {
-    // 设置导航栏高亮状态 - "1. 出行方案"
     setNavigationStep('1');
-    
-    // 记录页面进入
+
+    if (useUnifiedFrame) {
+      return undefined;
+    }
+
     logOperation({
       targetElement: '页面',
       eventType: 'page_enter',
-      value: '进入情景介绍页面'
+      value: '进入情景介绍页面',
     });
-  }, [logOperation, setNavigationStep]);
 
-  const handleNextPage = async () => {
+    return () => {
+      logOperation({
+        targetElement: '页面',
+        eventType: 'page_exit',
+        value: '离开情景介绍页面',
+      });
+    };
+  }, [logOperation, setNavigationStep, useUnifiedFrame]);
+
+  const handleNextPage = useCallback(async () => {
     try {
-      // 记录下一页按钮点击
       logOperation({
         targetElement: '下一页按钮',
         eventType: 'button_click',
-        value: '从情景介绍页面导航到问题识别页面'
+        value: '从情景介绍页面导航到问题识别页面',
       });
-      
-      // 使用自动提交导航
+
       await navigateToPage('problem-identification');
-      
+
       console.log('[ScenarioIntroPage] ✅ 成功导航到问题识别页面');
+      return true;
     } catch (error) {
       console.error('[ScenarioIntroPage] 导航失败:', error);
       alert('页面跳转失败，请重试');
+      return false;
     }
-  };
+  }, [logOperation, navigateToPage]);
 
-  return (
-    <AssessmentPageLayout 
-      onNextClick={handleNextPage}
-      isNextButtonEnabled={true} // 此页面默认启用
-      backgroundImage={bgScenario}
-      backgroundStyle={{
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}
-    >
-      {/* 页面标题 */}
+  const currentStep = useMemo(() => {
+    const parsed = parseInt(currentNavigationStep, 10);
+    if (Number.isNaN(parsed) || parsed <= 0) {
+      return 1;
+    }
+    return Math.min(parsed, TOTAL_NAV_STEPS);
+  }, [currentNavigationStep]);
+
+  const showNavigation = useMemo(() => currentPage > 1, [currentPage]);
+  const showTimer = useMemo(() => Boolean(globalTimer?.isActive), [globalTimer?.isActive]);
+  const timerScope = useMemo(
+    () => `module.${moduleConfig?.moduleId || 'grade-4'}.task`,
+    [],
+  );
+  const timerWarningThreshold = moduleConfig?.settings?.warningThresholdSeconds ?? 300;
+  const timerCriticalThreshold = moduleConfig?.settings?.criticalThresholdSeconds ?? 60;
+  const pageMeta = useMemo(() => resolvePageMeta(currentPage), [currentPage]);
+
+  const submissionConfig = useMemo(() => {
+    if (!useUnifiedFrame) {
+      return null;
+    }
+
+    if (typeof buildMarkForSubmission !== 'function' || typeof getUserContext !== 'function') {
+      return null;
+    }
+
+    return {
+      getUserContext,
+      buildMark: () => buildMarkForSubmission(),
+      allowProceedOnFailureInDev: Boolean(import.meta.env?.DEV),
+    };
+  }, [buildMarkForSubmission, getUserContext, useUnifiedFrame]);
+
+  const handleLifecycleEvent = useCallback((operation) => {
+    if (!operation) {
+      return;
+    }
+
+    logOperation({
+      targetElement: operation.targetElement || '页面',
+      eventType: operation.eventType,
+      value: operation.value,
+    });
+  }, [logOperation]);
+
+  const content = (
+    <>
       <div className={`${styles.titleContainer} ${styles.fadeIn}`}>
         <h1 className={styles.pageTitle}>
           情景介绍
         </h1>
       </div>
 
-      {/* 内容区域 - 填满整个可用空间，背景图覆盖整个区域 */}
       <div className={styles.contentArea}>
-        {/* 引言文本 */}
         <div className={`${styles.introTextBox} ${styles.slideInFromBottom}`}>
           <h2 className={styles.introTitle}>
             出行方案规划
@@ -77,7 +152,58 @@ const ScenarioIntroPage = () => {
           </p>
         </div>
       </div>
-    </AssessmentPageLayout>
+    </>
+  );
+
+  if (!useUnifiedFrame) {
+    return (
+      <AssessmentPageLayout
+        onNextClick={handleNextPage}
+        isNextButtonEnabled
+        backgroundImage={bgScenario}
+        backgroundStyle={{
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {content}
+      </AssessmentPageLayout>
+    );
+  }
+
+  return (
+    <AssessmentPageFrame
+      navigationMode="experiment"
+      currentStep={currentStep}
+      totalSteps={TOTAL_NAV_STEPS}
+      navTitle="进度"
+      showNavigation={showNavigation}
+      showTimer={showTimer}
+      timerVariant="task"
+      timerLabel="剩余时间"
+      timerWarningThreshold={timerWarningThreshold}
+      timerCriticalThreshold={timerCriticalThreshold}
+      timerScope={timerScope}
+      nextLabel="下一页"
+      nextEnabled
+      onNext={handleNextPage}
+      pageMeta={pageMeta}
+      submission={submissionConfig || undefined}
+      onLifecycleEvent={useUnifiedFrame ? handleLifecycleEvent : undefined}
+    >
+      <div className={`page-content page-fade-in ${styles.scenarioIntroContainer}`}>
+        <div
+          className={styles.backgroundImage}
+          style={{
+            backgroundImage: `url(${bgScenario})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+          aria-hidden="true"
+        />
+        {content}
+      </div>
+    </AssessmentPageFrame>
   );
 };
 

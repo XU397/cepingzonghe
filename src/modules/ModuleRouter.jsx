@@ -13,21 +13,70 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ModuleFallback from './ModuleFallback';
 import { performanceMonitor } from './config/performance.js';
+import STORAGE_KEYS, { setStorageItem, removeStorageItem } from '@shared/services/storage/storageKeys.js';
+import { createModuleUserContext } from './utils/createModuleUserContext.js';
 
-/**
- * 构造模块专用的用户上下文
- * 基于全局上下文和认证信息，为模块提供所需的上下文数据
- * 
- * @param {Object} globalContext - 全局应用上下文
- * @param {Object} authInfo - 用户认证信息
- * @returns {Object} 模块用户上下文
- */
-const constructModuleUserContext = (globalContext, authInfo) => {
-  // 性能监控：开始上下文构造计时
+// 缓存 ModuleRegistry 动态导入结果，避免重复请求
+let moduleRegistryPromise = null;
+
+const loadModuleRegistryInstance = () => {
+  if (!moduleRegistryPromise) {
+    moduleRegistryPromise = import('./ModuleRegistry.js').then(mod => mod.default);
+  }
+  return moduleRegistryPromise;
+};
+
+const ensureRegistryReady = async (existingRegistry = null) => {
+  const registry = existingRegistry || (await loadModuleRegistryInstance());
+
+  if (typeof registry.initialize === 'function' && !registry.initialized) {
+    await registry.initialize();
+  }
+
+  return registry;
+};
+
+const FLOW_URL_PATTERN = /^\/flow\/.+/;
+
+const buildSerializableFlowContext = (context) => {
+  if (!context) {
+    return null;
+  }
+
+  return {
+    batchCode: context.batchCode || '',
+    examNo: context.examNo || '',
+    url: context.url || context.moduleUrl || '',
+    moduleUrl: context.moduleUrl || context.url || '',
+    pageNum: context.pageNum ?? null,
+    ...(context.studentName ? { studentName: context.studentName } : {}),
+  };
+};
+
+const persistModuleSnapshot = ({ url, pageNum }) => {
+  if (!url) {
+    return;
+  }
+
+  try {
+    setStorageItem(STORAGE_KEYS.CORE_MODULE_URL, url, true);
+
+    if (pageNum === null || pageNum === undefined) {
+      removeStorageItem(STORAGE_KEYS.CORE_PAGE_NUM);
+    } else {
+      setStorageItem(STORAGE_KEYS.CORE_PAGE_NUM, String(pageNum), true);
+    }
+  } catch (err) {
+    console.warn('[ModuleRouter] ⚠️ 无法持久化模块状态:', err);
+  }
+};
+
+const logContextConstruction = (globalContext, authInfo) => {
   performanceMonitor.start('context_construction_time');
-  
+
   console.log('[ModuleRouter] 🔧 构造模块用户上下文', {
     globalContext: globalContext ? 'present' : 'missing',
     authInfo: authInfo ? 'present' : 'missing',
@@ -35,85 +84,60 @@ const constructModuleUserContext = (globalContext, authInfo) => {
     hasIsQuestionnaireStarted: globalContext?.isQuestionnaireStarted !== undefined,
     globalContextKeys: globalContext ? Object.keys(globalContext).filter(k => k.includes('questionnaire') || k.includes('Timer')) : []
   });
+};
 
-  // 基础用户信息（来自认证）
-  const baseUserInfo = {
-    examNo: authInfo?.examNo || '',
-    batchCode: authInfo?.batchCode || '',
-    url: authInfo?.url || '',
-    // 🔧 修复：保留 null 值，不提供默认值
-    // 这样模块的 getInitialPage 可以收到 null 并返回默认页面
-    pageNum: authInfo?.pageNum ?? null
-  };
-
-  // 应用状态信息（来自全局上下文）
-  const appStateInfo = globalContext ? {
-    currentPageId: globalContext.currentPageId,
-    remainingTime: globalContext.remainingTime,
-    taskStartTime: globalContext.taskStartTime,
-    pageEnterTime: globalContext.pageEnterTime,
-    isLoggedIn: globalContext.isLoggedIn,
-    isAuthenticated: globalContext.isAuthenticated,
-    authToken: globalContext.authToken,
-    currentUser: globalContext.currentUser,
-    moduleUrl: globalContext.moduleUrl,
-    isTaskFinished: globalContext.isTaskFinished,
-    isTimeUp: globalContext.isTimeUp
-  } : {};
-
-  // 问卷状态信息（如果存在）
-  const questionnaireInfo = globalContext ? {
-    questionnaireData: globalContext.questionnaireData,
-    questionnaireAnswers: globalContext.questionnaireAnswers,
-    isQuestionnaireCompleted: globalContext.isQuestionnaireCompleted,
-    questionnaireRemainingTime: globalContext.questionnaireRemainingTime,
-    isQuestionnaireStarted: globalContext.isQuestionnaireStarted,
-    isQuestionnaireTimeUp: globalContext.isQuestionnaireTimeUp,
-  } : {};
-
-  // 操作方法（来自全局上下文）
-  const contextMethods = globalContext ? {
-    logOperation: globalContext.logOperation,
-    collectAnswer: globalContext.collectAnswer,
-    handleLogout: globalContext.handleLogout,
-    clearAllCache: globalContext.clearAllCache,
-    startQuestionnaireTimer: globalContext.startQuestionnaireTimer,
-    saveQuestionnaireAnswer: globalContext.saveQuestionnaireAnswer,
-    getQuestionnaireAnswer: globalContext.getQuestionnaireAnswer,
-    completeQuestionnaire: globalContext.completeQuestionnaire,
-    submitPageData: globalContext.submitPageData,
-    submitPageDataWithInfo: globalContext.submitPageDataWithInfo,
-  } : {};
-
-  const moduleUserContext = {
-    ...baseUserInfo,
-    ...appStateInfo,
-    ...questionnaireInfo,
-    ...contextMethods,
-    
-    // 模块特定的元数据
-    _moduleMetadata: {
-      constructedAt: new Date().toISOString(),
-      sourceContext: 'global',
-      hasGlobalContext: !!globalContext,
-      hasAuthInfo: !!authInfo
-    }
-  };
-
-  // 性能监控：结束上下文构造计时
+const logContextConstructionEnd = (moduleUserContext) => {
   const constructionTime = performanceMonitor.end('context_construction_time');
 
   console.log('[ModuleRouter] ✅ 用户上下文构造完成', {
-    examNo: moduleUserContext.examNo,
-    url: moduleUserContext.url,
-    pageNum: moduleUserContext.pageNum,
-    hasLogOperation: typeof moduleUserContext.logOperation === 'function',
-    hasCollectAnswer: typeof moduleUserContext.collectAnswer === 'function',
+    examNo: moduleUserContext?.examNo,
+    url: moduleUserContext?.url,
+    pageNum: moduleUserContext?.pageNum,
+    hasLogOperation: typeof moduleUserContext?.logOperation === 'function',
+    hasCollectAnswer: typeof moduleUserContext?.collectAnswer === 'function',
     constructionTime: `${constructionTime.toFixed(2)}ms`
   });
-
-  return moduleUserContext;
 };
+
+/**
+ * 对外暴露的纯函数解析器，供登录/恢复逻辑直接计算模块与初始页面
+ * @param {{ url: string, pageNum?: string|number|null }} params
+ * @param {Object|null} registryOverride - 已初始化的 ModuleRegistry（可选）
+ * @returns {Promise<{ module: Object, ModuleComponent: React.ComponentType, initialPageId: string|null }>}
+ */
+export async function resolveModuleRoute(params, registryOverride = null) {
+  const { url, pageNum = null } = params || {};
+
+  if (!url) {
+    throw new Error('ModuleRouter.resolve 需要有效的 url');
+  }
+
+  const registry = await ensureRegistryReady(registryOverride);
+  const lookup = typeof registry.getByUrl === 'function'
+    ? registry.getByUrl.bind(registry)
+    : registry.getModuleByUrl.bind(registry);
+  const module = lookup(url);
+
+  if (!module) {
+    throw new Error(`未找到URL对应的模块: ${url}`);
+  }
+
+  let initialPageId = null;
+  try {
+    initialPageId = module.getInitialPage(pageNum ?? null);
+  } catch (err) {
+    console.warn('[ModuleRouter] ⚠️ 解析初始页面失败，返回 null:', err.message);
+    initialPageId = null;
+  }
+
+  persistModuleSnapshot({ url, pageNum });
+
+  return {
+    module,
+    ModuleComponent: module.ModuleComponent,
+    initialPageId,
+  };
+}
 
 /**
  * 模块路由器组件
@@ -133,11 +157,13 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [moduleRegistry, setModuleRegistry] = useState(null);
+  const navigate = useNavigate();
   
   // 性能优化：使用 ref 避免重复初始化
   const initializationRef = useRef(false);
   const moduleCleanupRef = useRef(null);
   const moduleUserContextRef = useRef(null);
+  const flowDelegationRef = useRef(false);
 
   // 性能优化：记忆化用户上下文 - 使用更稳定的依赖
   const moduleUserContext = useMemo(() => {
@@ -147,7 +173,9 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
       currentPageId: globalContext?.currentPageId
     });
 
-    const context = constructModuleUserContext(globalContext, authInfo);
+    logContextConstruction(globalContext, authInfo);
+    const context = createModuleUserContext(globalContext, authInfo);
+    logContextConstructionEnd(context);
 
     console.log('[ModuleRouter] 📦 构造的context包含:', {
       hasIsTimeUp: 'isTimeUp' in (context || {}),
@@ -190,18 +218,7 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
       
       initializationRef.current = true;
       
-      // 🚀 优化：使用动态导入并立即解析Promise
-      const [registryModule] = await Promise.all([
-        import('./ModuleRegistry.js')
-      ]);
-      
-      const registry = registryModule.default;
-      
-      // 🚀 优化：只进行必要的初始化
-      if (typeof registry.initialize === 'function') {
-        await registry.initialize();
-      }
-      
+      const registry = await ensureRegistryReady();
       setModuleRegistry(registry);
       
       // 性能监控：结束初始化计时
@@ -222,12 +239,59 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
     }
   }, []);
 
+  const delegateFlowNavigation = useCallback(async (moduleContext) => {
+    if (!moduleContext?.url) {
+      return;
+    }
+
+    if (flowDelegationRef.current) {
+      return;
+    }
+
+    flowDelegationRef.current = true;
+
+    try {
+      const registry = moduleRegistry || (await ensureRegistryReady());
+      console.log('[ModuleRouter] 🚦 Flow URL detected, delegating to router:', moduleContext.url);
+      const { initialPageId: resolvedInitialPageId } = await resolveModuleRoute(
+        {
+          url: moduleContext.url,
+          pageNum: moduleContext.pageNum,
+        },
+        registry
+      );
+
+      const serializableContext = buildSerializableFlowContext(moduleContext);
+
+      navigate(moduleContext.url, {
+        replace: true,
+        state: {
+          // Only pass serializable fields to satisfy the History API structuredClone contract.
+          userContext: serializableContext,
+          initialPageId: resolvedInitialPageId,
+        },
+      });
+    } catch (err) {
+      console.error('[ModuleRouter] ❌ Flow 路由失败:', err);
+      setError(`Flow 路由失败: ${err.message}`);
+      flowDelegationRef.current = false;
+    } finally {
+      setLoading(false);
+    }
+  }, [moduleRegistry, navigate]);
+
   /**
    * 根据用户上下文加载对应的模块
    */
   const loadModuleForUser = useCallback(async () => {
     const currentContext = moduleUserContextRef.current;
     if (!moduleRegistry || !currentContext) {
+      return;
+    }
+
+    const isFlowUrl = FLOW_URL_PATTERN.test(currentContext.url || '');
+    if (isFlowUrl) {
+      await delegateFlowNavigation(currentContext);
       return;
     }
 
@@ -241,33 +305,21 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
       // 性能监控：开始模块加载计时
       performanceMonitor.start('module_load_time');
 
-      // 根据URL查找对应的模块
-      const module = moduleRegistry.getModuleByUrl(currentContext.url);
-      
-      if (!module) {
-        throw new Error(`未找到URL对应的模块: ${currentContext.url}`);
-      }
+      const { module, initialPageId } = await resolveModuleRoute(
+        {
+          url: currentContext.url,
+          pageNum: currentContext.pageNum,
+        },
+        moduleRegistry
+      );
 
       console.log('[ModuleRouter] 📦 找到对应模块:', {
         moduleId: module.moduleId,
         displayName: module.displayName,
         url: module.url,
-        version: module.version || 'unknown'
+        version: module.version || 'unknown',
+        initialPageId,
       });
-
-      // 获取初始页面ID（用于页面恢复）
-      // 🔧 修复：即使 pageNum 为 null，也要调用 getInitialPage 让模块决定默认页
-      let pageId = null;
-      try {
-        pageId = module.getInitialPage(currentContext.pageNum);
-        console.log('[ModuleRouter] 🔄 页面初始化:', {
-          pageNum: currentContext.pageNum,
-          initialPageId: pageId
-        });
-      } catch (err) {
-        console.warn('[ModuleRouter] ⚠️ 页面初始化失败，使用null:', err.message);
-        pageId = null;
-      }
 
       // 🚀 优化：模块初始化改为异步并行
       const initPromises = [];
@@ -300,7 +352,7 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
 
       // 设置当前模块和初始页面
       setCurrentModule(module);
-      setInitialPageId(pageId);
+      setInitialPageId(initialPageId);
       setError(null);
 
       // 性能监控：结束模块加载计时
@@ -323,7 +375,7 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
     } finally {
       setLoading(false);
     }
-  }, [moduleRegistry]); // 移除moduleUserContext依赖，在函数内直接访问
+  }, [moduleRegistry, delegateFlowNavigation]); // 移除moduleUserContext依赖，在函数内直接访问
 
   /**
    * 清理当前模块
@@ -385,12 +437,22 @@ const ModuleRouter = ({ globalContext, authInfo }) => {
 
   // 模块注册表准备就绪后加载用户模块 - 优化依赖
   useEffect(() => {
-    if (moduleRegistry && moduleUserContextRef.current?.url) {
+    const currentContext = moduleUserContextRef.current;
+    if (!currentContext?.url) {
+      return;
+    }
+
+    if (FLOW_URL_PATTERN.test(currentContext.url)) {
+      delegateFlowNavigation(currentContext);
+      return;
+    }
+
+    if (moduleRegistry) {
       // 🚀 优化：立即设置loading为false，先显示组件再执行加载
       setLoading(false);
       loadModuleForUser();
     }
-  }, [moduleRegistry, authInfo?.url, loadModuleForUser]); // 使用稳定的authInfo.url
+  }, [moduleRegistry, authInfo?.url, loadModuleForUser, delegateFlowNavigation]); // 使用稳定的authInfo.url
 
   // 当模块发生变化时，清理旧模块
   useEffect(() => {

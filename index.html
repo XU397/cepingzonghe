@@ -24,12 +24,12 @@
         overflow: hidden;
       }
       
-      /* 隐藏滚动�?*/
+      /* 隐藏滚动条 */
       ::-webkit-scrollbar {
         display: none;
       }
       
-      /* 禁用选择和拖�?*/
+      /* 禁用选择和拖拽 */
       * {
         -webkit-user-select: none;
         -moz-user-select: none;
@@ -56,9 +56,8 @@
   <body>
     <div id="root"></div>
     <script>
-  document.addEventListener("contextmenu", (e) => e.preventDefault());
-</script>
-    <script type="module" src="src/main.jsx"></script>
+      document.addEventListener("contextmenu", (e) => e.preventDefault());
+    </script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-

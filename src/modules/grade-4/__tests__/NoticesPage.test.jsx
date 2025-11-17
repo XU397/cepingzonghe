@@ -4,14 +4,23 @@
  */
 
 // Test file for NoticesPage component
+import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
 import NoticesPage from '../pages/00-NoticesPage';
+import { AppProvider } from '../../../context/AppContext.jsx';
 import { Grade4Provider } from '../context/Grade4Context';
 
-// Mock 共享服务
-vi.mock('../../../shared/services/dataLogger', () => ({
-  submitPageData: vi.fn().mockResolvedValue({ success: true })
+const submitMock = vi.fn().mockResolvedValue(true);
+const getLastErrorMock = vi.fn();
+
+vi.mock('@shared/services/submission/usePageSubmission.js', () => ({
+  usePageSubmission: vi.fn(() => ({
+    submit: submitMock,
+    isSubmitting: false,
+    lastError: null,
+    getLastError: getLastErrorMock,
+  })),
 }));
 
 // 测试工具组件：提供 Grade4Provider 包装
@@ -22,12 +31,14 @@ const TestWrapper = ({ children, authInfo = null, globalContext = null }) => {
   };
 
   return (
-    <Grade4Provider 
-      authInfo={authInfo || defaultAuthInfo} 
-      globalContext={globalContext}
-    >
-      {children}
-    </Grade4Provider>
+    <AppProvider>
+      <Grade4Provider
+        authInfo={authInfo || defaultAuthInfo}
+        globalContext={globalContext}
+      >
+        {children}
+      </Grade4Provider>
+    </AppProvider>
   );
 };
 
@@ -38,6 +49,13 @@ const renderNoticesPage = (authInfo, globalContext) => {
       <NoticesPage />
     </TestWrapper>
   );
+};
+
+const expectContent = (substring) => {
+  const matches = screen.getAllByText((_, element) => {
+    return element?.textContent?.includes(substring);
+  });
+  expect(matches.length).toBeGreaterThan(0);
 };
 
 describe('NoticesPage', () => {
@@ -59,22 +77,17 @@ describe('NoticesPage', () => {
 
       // 验证页面标题
       expect(screen.getByRole('heading', { name: '注意事项' })).toBeInTheDocument();
-      expect(screen.getByText('四年级火车购票测评')).toBeInTheDocument();
-
-      // 验证主要内容区域存在
-      expect(screen.getByText('测评说明')).toBeInTheDocument();
-      expect(screen.getByText('操作指南')).toBeInTheDocument();
-      expect(screen.getByText('重要提醒')).toBeInTheDocument();
-      expect(screen.getByText('特别注意')).toBeInTheDocument();
+      expect(screen.getByText('请仔细阅读')).toBeInTheDocument();
     });
 
     it('应该显示所有注意事项内容', () => {
       renderNoticesPage();
 
       // 验证关键提示内容
-      expect(screen.getByText(/本次测评时间为35分钟/)).toBeInTheDocument();
-      expect(screen.getByText(/请勿关闭浏览器窗口或刷新页面/)).toBeInTheDocument();
-      expect(screen.getByText(/本测评不是考试，没有标准答案/)).toBeInTheDocument();
+      expectContent('作答时间共40分钟');
+      expectContent('上一页题目未完成作答，将无法点击进入下一页');
+      expectContent('不要提前点击“下一页”');
+      expectContent('遇到系统故障');
     });
   });
 
@@ -88,7 +101,7 @@ describe('NoticesPage', () => {
       expect(checkbox).not.toBeChecked();
 
       // 验证倒计时显示
-      expect(screen.getByText(/我已阅读上述注意事项\(40s\)/)).toBeInTheDocument();
+      expect(screen.getByText(/我已阅读并同意以上注意事项\(40s\)/)).toBeInTheDocument();
 
       // 验证下一页按钮禁用
       const nextButton = screen.getByRole('button', { name: '下一页' });
@@ -98,7 +111,7 @@ describe('NoticesPage', () => {
     it('应该显示倒计时提示信息', () => {
       renderNoticesPage();
 
-      expect(screen.getByText(/请仔细阅读上述内容（剩余 40 秒）/)).toBeInTheDocument();
+      expect(screen.getByText('请仔细阅读')).toBeInTheDocument();
     });
   });
 
@@ -131,7 +144,7 @@ describe('NoticesPage', () => {
       await waitFor(() => {
         expect(checkbox).not.toBeDisabled();
         expect(screen.queryByText(/\d+s/)).not.toBeInTheDocument();
-        expect(screen.getByText('阅读时间已到，请确认已阅读完毕')).toBeInTheDocument();
+        expect(screen.getByText('我已阅读并同意以上注意事项')).toBeInTheDocument();
       });
     });
 
@@ -186,7 +199,6 @@ describe('NoticesPage', () => {
       // 验证下一页按钮被激活
       await waitFor(() => {
         expect(nextButton).not.toBeDisabled();
-        expect(screen.getByText('已确认阅读，可以开始测评')).toBeInTheDocument();
       });
     });
 
@@ -241,8 +253,6 @@ describe('NoticesPage', () => {
     });
 
     it('应该在用户点击下一页时提交数据', async () => {
-      const { submitPageData } = await import('../../../shared/services/dataLogger');
-      
       renderNoticesPage();
 
       const checkbox = screen.getByRole('checkbox');
@@ -268,17 +278,19 @@ describe('NoticesPage', () => {
 
       // 验证数据提交
       await waitFor(() => {
-        expect(submitPageData).toHaveBeenCalledWith(
+        expect(submitMock).toHaveBeenCalledWith(
           expect.objectContaining({
-            batchCode: 'TEST_BATCH_001',
-            examNo: 'TEST_STUDENT_001'
+            userContextOverride: expect.objectContaining({
+              batchCode: 'TEST_BATCH_001',
+              examNo: 'TEST_STUDENT_001',
+            }),
+            markOverride: expect.objectContaining({
+              pageNumber: '1',
+              pageDesc: expect.stringContaining('第1页'),
+              operationList: expect.any(Array),
+              answerList: expect.any(Array),
+            }),
           }),
-          expect.objectContaining({
-            pageNumber: '1',
-            pageDesc: '注意事项页面',
-            operationList: expect.any(Array),
-            answerList: expect.any(Array)
-          })
         );
       });
     });

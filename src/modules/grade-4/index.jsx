@@ -18,8 +18,6 @@ import PlanOptimizationPage from './pages/08-PlanOptimizationPage';
 import TicketFilterPage from './pages/09-TicketFilterPage';
 import TicketPricingPage from './pages/10-TicketPricingPage';
 import TaskCompletionPage from './pages/12-TaskCompletionPage';
-import GlobalTimer from './components/GlobalTimer';
-import LeftNavigation from './components/LeftNavigation';
 import { moduleConfig } from './moduleConfig';
 
 // 引入全局布局样式 - CSS Modules版本
@@ -31,7 +29,7 @@ import layoutStyles from './styles/Grade4Layout.module.css';
  * 注意事项页面不显示左侧导航栏，其他页面显示
  */
 const Grade4PageRouter = () => {
-  const { currentPage, currentNavigationStep } = useGrade4Context();
+  const { currentPage } = useGrade4Context();
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -64,33 +62,9 @@ const Grade4PageRouter = () => {
     }
   };
 
-  // 注意事项页面（第1页）不显示左侧导航栏
-  const isNoticesPage = currentPage === 1;
-
   return (
-    <div className={`${layoutStyles.grade4Module} grade-4-module`}>
-      {/* 全局计时器 */}
-      <GlobalTimer />
-      
-      {isNoticesPage ? (
-        // 注意事项页面：全屏显示，无左侧导航
-        <div className={layoutStyles.fullPageContainer}>
-          {renderCurrentPage()}
-        </div>
-      ) : (
-        // 其他页面：显示左侧导航 + 右侧内容
-        <div className={layoutStyles.moduleLayout}>
-          {/* 左侧导航栏 */}
-          <div className={layoutStyles.leftSidebar}>
-            <LeftNavigation currentStep={currentNavigationStep} />
-          </div>
-          
-          {/* 右侧页面内容区域 */}
-          <div className={layoutStyles.pageContainer}>
-            {renderCurrentPage()}
-          </div>
-        </div>
-      )}
+    <div className="grade-4-module">
+      {renderCurrentPage()}
     </div>
   );
 };
@@ -102,7 +76,7 @@ const Grade4PageRouter = () => {
  * @param {Object} props.authInfo - 认证信息
  * @param {string} props.initialPageId - 初始页面ID（用于页面恢复）
  */
-const Grade4Module = ({ userContext, initialPageId }) => {
+const Grade4Module = ({ userContext, initialPageId, children }) => {
   // 🚀 性能优化：derivedGlobalContext直接使用userContext（已在ModuleRouter中缓存）
   const derivedGlobalContext = userContext || null;
 
@@ -149,6 +123,7 @@ const Grade4Module = ({ userContext, initialPageId }) => {
         authInfo={derivedAuthInfo}
         initialPageId={initialPageId}
       >
+        {children}
         <Grade4PageRouter />
       </Grade4Provider>
     </div>

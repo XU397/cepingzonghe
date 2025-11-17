@@ -33,6 +33,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# MCP (Model Context Protocol) server config - machine-specific paths
+.mcp.json
+
 # Temporary files
 *.tmp
 *.temp

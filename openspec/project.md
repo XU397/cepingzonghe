@@ -65,3 +65,6 @@
 - 键名兼容：读取旧键，写入新键；在两到三个版本后逐步移除旧键。
 - 行为兼容：在模块内部先以包装器适配统一计时与提交，再渐进式替换旧实现。
 
+## 关联规范与政策
+- 数据格式规范：`openspec/specs/data-format/spec.md`（源：`docs/data-format-specifications.md`）
+- 会话与 Cookie 策略：`openspec/specs/security/session-cookie/spec.md`（源：`docs/session-and-cookie-policy.md`）

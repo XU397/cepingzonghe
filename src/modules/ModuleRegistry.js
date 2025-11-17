@@ -12,6 +12,10 @@ class ModuleRegistry {
     this.initialized = false;
   }
 
+  register(module) {
+    return this.registerModule(module);
+  }
+
   /**
    * 注册一个测评模块
    * @param {Object} module - 模块定义对象
@@ -52,16 +56,34 @@ class ModuleRegistry {
 
   /**
    * 根据URL获取模块
-   * @param {string} url - URL路径 (如 "/seven-grade")
+   * @param {string} url - URL路径 (如 "/seven-grade", "/flow/abc123")
    * @returns {Object} 模块定义对象，如果未找到则返回默认回退模块
    */
   getModuleByUrl(url) {
-    const module = this.urlToModuleMap.get(url);
-    if (!module) {
-      console.warn(`[ModuleRegistry] ⚠️ 未找到URL对应的模块: ${url}，返回默认回退模块`);
-      return this.getDefaultFallbackModule();
+    // 首先尝试精确匹配
+    let module = this.urlToModuleMap.get(url);
+    if (module) {
+      return module;
     }
-    return module;
+
+    // 尝试匹配带参数的路由（如 /flow/:flowId）
+    for (const [pattern, mod] of this.urlToModuleMap.entries()) {
+      if (pattern.includes(':')) {
+        // 将 URL 模式转换为正则表达式
+        const regexPattern = pattern.replace(/:[^/]+/g, '[^/]+');
+        const regex = new RegExp(`^${regexPattern}$`);
+        if (regex.test(url)) {
+          return mod;
+        }
+      }
+    }
+
+    console.warn(`[ModuleRegistry] ⚠️ 未找到URL对应的模块: ${url}，返回默认回退模块`);
+    return this.getDefaultFallbackModule();
+  }
+
+  getByUrl(url) {
+    return this.getModuleByUrl(url);
   }
 
   /**
@@ -179,15 +201,19 @@ class ModuleRegistry {
     try {
       // 动态导入并注册7年级模块（包装器）
       const { Grade7Module } = await import('./grade-7/index.jsx');
-      this.registerModule(Grade7Module);
+      this.register(Grade7Module);
 
       // 动态导入并注册4年级模块
       const { Grade4Module_Definition } = await import('./grade-4/index.jsx');
-      this.registerModule(Grade4Module_Definition);
+      this.register(Grade4Module_Definition);
 
       // 动态导入并注册7年级追踪测评模块
       const { Grade7TrackingModule_Definition } = await import('./grade-7-tracking/index.jsx');
-      this.registerModule(Grade7TrackingModule_Definition);
+      this.register(Grade7TrackingModule_Definition);
+
+      // 动态导入并注册 Flow 模块
+      const { FlowModule_Definition } = await import('../flows/FlowModule.jsx');
+      this.register(FlowModule_Definition);
 
       this.initialized = true;
       console.log('[ModuleRegistry] ✅ 模块系统初始化完成');

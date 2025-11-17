@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { AppProvider, useAppContext } from './context/AppContext';
+import { useAppContext } from './context/AppContext';
 import Timer from './components/common/Timer';
 import QuestionnaireTimer from './components/questionnaire/QuestionnaireTimer';
 import PageRouter from './components/PageRouter';
@@ -258,16 +258,7 @@ const AppContent = () => {
         )}
 
         <UserInfoBar />
-        {showTimer && (
-          isCurrentPageQuestionnaire ? (
-            <QuestionnaireTimer
-              remainingTime={questionnaireRemainingTime}
-              isTimeUp={isQuestionnaireTimeUp}
-            />
-          ) : (
-            <Timer />
-          )
-        )}
+        {showTimer && (isCurrentPageQuestionnaire ? <QuestionnaireTimer /> : <Timer />)}
         <div className="main-content-wrapper">
           {/* 模块系统下不显示全局导航，模块内部有自己的导航系统 */}
           <div className="task-wrapper">
@@ -309,16 +300,7 @@ const AppContent = () => {
       {/* 用户信息条 */}
       <UserInfoBar />
       {/* 根据当前页面类型显示不同的计时器 */}
-      {showTimer && (
-        isCurrentPageQuestionnaire ? (
-          <QuestionnaireTimer
-            remainingTime={questionnaireRemainingTime}
-            isTimeUp={isQuestionnaireTimeUp}
-          />
-        ) : (
-          <Timer />
-        )
-      )}
+      {showTimer && (isCurrentPageQuestionnaire ? <QuestionnaireTimer /> : <Timer />)}
       <div className="main-content-wrapper">
         {/* 根据当前页面类型显示不同的导航 */}
         {isCurrentPageQuestionnaire ? (
@@ -346,10 +328,10 @@ function App() {
   const showDebug = new URLSearchParams(window.location.search).get('debug') === 'true';
   
   return (
-    <AppProvider>
+    <>
       <AppContent />
       {showDebug && <ApiConfigDebug />}
-    </AppProvider>
+    </>
   );
 }
 

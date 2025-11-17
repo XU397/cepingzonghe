@@ -1,0 +1,58 @@
+:root {
+  /* 布局 */
+  --page-frame-bg: #f5f7fb;
+  --page-frame-content-bg: #ffffff;
+  --page-frame-border: #e3eaf3;
+  --page-frame-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  --page-frame-radius: 18px;
+  --page-frame-nav-width: 240px;
+  --page-frame-padding-x: 48px;
+  --page-frame-padding-y: 32px;
+  --page-frame-body-gap: 28px;
+  --page-frame-content-max-width: 1280px;
+
+  /* 错误托盘 */
+  --page-frame-error-bg: #fff2eb;
+  --page-frame-error-border: #ffbb96;
+  --page-frame-error-text: #a8071a;
+  --page-frame-error-icon: #fa541c;
+
+  --page-frame-warning-bg: #fffbe6;
+  --page-frame-warning-border: #ffe58f;
+  --page-frame-warning-text: #ad8b00;
+  --page-frame-warning-icon: #d4b106;
+
+  --page-frame-info-bg: #e6f4ff;
+  --page-frame-info-border: #91caff;
+  --page-frame-info-text: #0958d9;
+  --page-frame-info-icon: #1677ff;
+
+  --page-frame-error-action-color: #ff7a45;
+
+  /* 按钮 */
+  --page-frame-button-height: 56px;
+  --page-frame-button-radius: 14px;
+  --page-frame-button-bg: var(--cartoon-primary, #59c1ff);
+  --page-frame-button-bg-disabled: #cfd8dc;
+  --page-frame-button-text: #fff;
+  --page-frame-button-text-disabled: #f5f7fa;
+  --page-frame-button-shadow: 0 8px 20px rgba(89, 193, 255, 0.35);
+
+  /* 过渡动画 */
+  --page-frame-transition: 0.2s ease;
+}
+
+@media (max-width: 1440px) {
+  :root {
+    --page-frame-padding-x: 36px;
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --page-frame-nav-width: 200px;
+    --page-frame-padding-x: 24px;
+    --page-frame-padding-y: 24px;
+    --page-frame-body-gap: 20px;
+  }
+}

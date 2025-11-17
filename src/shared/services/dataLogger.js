@@ -1,76 +1,10 @@
 import { submitPageMarkData } from './apiService.js';
+import {
+  createMarkObject,
+  formatTimestamp,
+} from './submission/createMarkObject.js';
 
-/**
- * 格式化时间戳为后端要求的格式
- * @param {Date} date - 日期对象
- * @returns {string} 格式化的时间字符串 (YYYY-MM-DD HH:mm:ss)
- */
-export const formatTimestamp = (date) => {
-  if (!date || !(date instanceof Date)) {
-    date = new Date();
-  }
-  
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-};
-
-/**
- * 创建标准的 MarkObject 结构
- * @param {Object} options - 页面数据选项
- * @param {string} options.pageNumber - 页面序号
- * @param {string} options.pageDesc - 页面描述
- * @param {Array} options.operationList - 操作记录列表
- * @param {Array} options.answerList - 答案列表
- * @param {Date|string} options.beginTime - 开始时间
- * @param {Date|string} options.endTime - 结束时间
- * @param {Array} [options.imgList=[]] - 图片列表（可选）
- * @returns {Object} 标准化的 MarkObject
- */
-export const createMarkObject = (options) => {
-  const {
-    pageNumber,
-    pageDesc,
-    operationList = [],
-    answerList = [],
-    beginTime,
-    endTime,
-    imgList = []
-  } = options;
-  
-  // 确保时间格式正确
-  const formattedBeginTime = typeof beginTime === 'string' 
-    ? beginTime 
-    : formatTimestamp(beginTime);
-  const formattedEndTime = typeof endTime === 'string' 
-    ? endTime 
-    : formatTimestamp(endTime);
-  
-  return {
-    pageNumber: String(pageNumber),
-    pageDesc: String(pageDesc),
-    operationList: operationList.map((op, index) => ({
-      code: op.code || (index + 1),
-      targetElement: String(op.targetElement || ''),
-      eventType: String(op.eventType || ''),
-      value: String(op.value || ''),
-      time: op.time || formatTimestamp(new Date())
-    })),
-    answerList: answerList.map((answer, index) => ({
-      code: answer.code || (index + 1),
-      targetElement: String(answer.targetElement || ''),
-      value: answer.value !== undefined ? String(answer.value) : ''
-    })),
-    beginTime: formattedBeginTime,
-    endTime: formattedEndTime,
-    imgList: imgList || []
-  };
-};
+export { createMarkObject, formatTimestamp } from './submission/createMarkObject.js';
 
 /**
  * 创建提交载荷对象

@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import STORAGE_KEYS, { removeStorageItem } from '@shared/services/storage/storageKeys.js';
 
 class ModuleErrorBoundary extends React.Component {
   constructor(props) {
@@ -76,11 +77,11 @@ class ModuleErrorBoundary extends React.Component {
     try {
       // 清除模块系统标志
       localStorage.removeItem('useModuleSystem');
-      localStorage.removeItem('moduleUrl');
+      removeStorageItem(STORAGE_KEYS.CORE_MODULE_URL);
       // 统一键名：优先清理 pageNum，兼容清理旧的 modulePageNum
-      localStorage.removeItem('pageNum');
-      localStorage.removeItem('modulePageNum');
-      
+      removeStorageItem(STORAGE_KEYS.CORE_PAGE_NUM);
+      localStorage.removeItem('hci-pageNum');
+
       // 刷新页面以加载传统模式
       window.location.reload();
     } catch (error) {

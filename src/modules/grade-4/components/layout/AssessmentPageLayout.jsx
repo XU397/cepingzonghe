@@ -1,110 +1,179 @@
 /**
  * 四年级测评页面布局组件
- * 实现统一的页面结构和导航，集成现有的视觉风格和CSS变量系统
- * 遵循编码标准规范
+ * 现在使用 shared AssessmentPageFrame + LeftStepperNav 统一布局、计时与下一步按钮。
  */
 
+import { useCallback, useMemo } from 'react';
+import { AssessmentPageFrame } from '@shared/ui/PageFrame';
 import { useGrade4Context } from '../../context/Grade4Context';
+import { moduleConfig } from '../../moduleConfig';
 import '../../../../styles/global.css';
 
-const AssessmentPageLayout = ({ 
-  title, 
-  subtitle,
-  children, 
+const TOTAL_NAV_STEPS = 11;
+
+const resolvePageMeta = (currentPage) => {
+  const entries = Object.entries(moduleConfig?.pages || {});
+  const match = entries.find(([, cfg]) => Number(cfg.number) === Number(currentPage));
+
+  if (!match) {
+    return {
+      pageId: `grade4-page-${currentPage}`,
+      pageNumber: currentPage,
+      pageDesc: `第${currentPage}页`,
+    };
+  }
+
+  const [pageId, cfg] = match;
+  return {
+    pageId,
+    pageNumber: cfg.number ?? currentPage,
+    pageDesc: cfg.desc ?? `第${currentPage}页`,
+  };
+};
+
+const AssessmentPageLayout = ({
+  children,
   showNextButton = true,
-  nextButtonText = "下一页",
+  nextButtonText = '下一页',
   isNextButtonEnabled = true,
   onNextClick,
-  className = "",
-  backgroundImage = null, // 新增背景图片参数
-  backgroundStyle = {} // 新增背景样式参数
+  className = '',
+  backgroundImage = null,
+  backgroundStyle = {},
+  showNavigation,
+  showTimer,
+  navigationMode = 'experiment',
+  navTitle = '进度',
+  timerVariant = 'task',
+  timerLabel = '剩余时间',
+  timerWarningThreshold = moduleConfig?.settings?.warningThresholdSeconds ?? 300,
+  timerCriticalThreshold = moduleConfig?.settings?.criticalThresholdSeconds ?? 60,
 }) => {
-  const { logOperation } = useGrade4Context();
+  const {
+    logOperation,
+    currentPage,
+    currentNavigationStep,
+    globalTimer,
+    buildMarkForSubmission,
+    getUserContext,
+  } = useGrade4Context();
 
-  const handleNextClick = () => {
-    if (!isNextButtonEnabled) return;
-    
-    // 记录导航操作
-    logOperation({
-      targetElement: '下一页按钮',
-      eventType: 'button_click',
-      value: `点击${nextButtonText}按钮`
-    });
-    
-    if (onNextClick) {
-      onNextClick();
+  const pageMeta = useMemo(
+    () => resolvePageMeta(currentPage),
+    [currentPage],
+  );
+
+  const currentStep = useMemo(() => {
+    const parsed = parseInt(currentNavigationStep, 10);
+    if (Number.isNaN(parsed) || parsed <= 0) {
+      return 1;
     }
-  };
+    return Math.min(parsed, TOTAL_NAV_STEPS);
+  }, [currentNavigationStep]);
 
-  const containerStyle = {
-    height: '100%',
-    width: '100%',
-    position: 'relative',
-    minHeight: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    ...(backgroundImage && {
-      backgroundImage: `url(${backgroundImage})`,
-      backgroundSize: 'contain', // 改为contain确保图片完整显示
-      backgroundPosition: 'center top', // 调整位置到顶部中心
-      backgroundRepeat: 'no-repeat',
-      ...backgroundStyle
-    })
-  };
+  const resolvedShowNavigation = typeof showNavigation === 'boolean'
+    ? showNavigation
+    : currentPage > 1;
+
+  const resolvedShowTimer = typeof showTimer === 'boolean'
+    ? showTimer
+    : Boolean(globalTimer?.isActive);
+
+  const containerStyle = useMemo(
+    () => ({
+      height: '100%',
+      width: '100%',
+      position: 'relative',
+      minHeight: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      ...(backgroundImage && {
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'contain',
+        backgroundPosition: 'center top',
+        backgroundRepeat: 'no-repeat',
+        ...backgroundStyle,
+      }),
+    }),
+    [backgroundImage, backgroundStyle],
+  );
+
+  const submissionConfig = useMemo(() => {
+    if (typeof buildMarkForSubmission !== 'function' || typeof getUserContext !== 'function') {
+      return null;
+    }
+    return {
+      getUserContext,
+      buildMark: () => buildMarkForSubmission(),
+      allowProceedOnFailureInDev: Boolean(import.meta.env?.DEV),
+    };
+  }, [buildMarkForSubmission, getUserContext]);
+
+  const timerScope = useMemo(
+    () => `module.${moduleConfig?.moduleId || 'grade-4'}.task`,
+    [],
+  );
+
+  const handleNext = useCallback(
+    async (helpers = {}) => {
+      if (!showNextButton || !isNextButtonEnabled) {
+        return false;
+      }
+
+      logOperation({
+        targetElement: '下一页按钮',
+        eventType: 'button_click',
+        value: `点击${nextButtonText}按钮`,
+      });
+
+      if (typeof onNextClick === 'function') {
+        try {
+          const result = await onNextClick({
+            ...helpers,
+            nextLabel: nextButtonText,
+          });
+          return result !== false;
+        } catch (error) {
+          console.error('[AssessmentPageLayout] onNextClick 执行失败', error);
+          return false;
+        }
+      }
+
+      if (typeof helpers.defaultSubmit === 'function') {
+        return helpers.defaultSubmit();
+      }
+
+      return true;
+    },
+    [isNextButtonEnabled, logOperation, nextButtonText, onNextClick, showNextButton],
+  );
 
   return (
-    <div className={`page-content page-fade-in ${className}`} style={containerStyle}>
-      {/* 直接渲染页面内容，填满整个容器 */}
-      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {children}
-      </div>
-      
-      {/* 下一页按钮 */}
-      {showNextButton && (
-        <div style={{ 
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          zIndex: 1000
-        }}>
-          <button
-            type="button"
-            disabled={!isNextButtonEnabled}
-            onClick={handleNextClick}
-            className={isNextButtonEnabled ? 'btn btn-primary' : 'btn btn-disabled'}
-            style={{ 
-              padding: '14px 32px',
-              fontSize: '18px',
-              fontWeight: '700',
-              borderRadius: '25px',
-              border: '3px solid white',
-              cursor: isNextButtonEnabled ? 'pointer' : 'not-allowed',
-              background: isNextButtonEnabled ? 'var(--cartoon-primary)' : '#e0e0e0',
-              color: isNextButtonEnabled ? 'white' : '#9e9e9e',
-              transition: 'all 0.3s ease',
-              boxShadow: isNextButtonEnabled ? '0 6px 20px rgba(89, 193, 255, 0.5), 0 0 0 3px white' : '0 0 0 3px white',
-              backdropFilter: 'blur(4px)',
-              WebkitBackdropFilter: 'blur(4px)',
-            }}
-            onMouseEnter={(e) => {
-              if (isNextButtonEnabled) {
-                e.target.style.transform = 'translateY(-1px)';
-                e.target.style.boxShadow = '0 8px 25px rgba(89, 193, 255, 0.7), 0 0 0 3px white';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (isNextButtonEnabled) {
-                e.target.style.transform = 'none';
-                e.target.style.boxShadow = '0 6px 20px rgba(89, 193, 255, 0.5), 0 0 0 3px white';
-              }
-            }}
-            title={isNextButtonEnabled ? `点击${nextButtonText}` : '请完成当前页面内容'}
-          >
-            {nextButtonText}
-          </button>
+    <AssessmentPageFrame
+      navigationMode={navigationMode}
+      currentStep={currentStep}
+      totalSteps={TOTAL_NAV_STEPS}
+      navTitle={navTitle}
+      showNavigation={resolvedShowNavigation}
+      showTimer={resolvedShowTimer}
+      timerVariant={timerVariant}
+      timerLabel={timerLabel}
+      timerWarningThreshold={timerWarningThreshold}
+      timerCriticalThreshold={timerCriticalThreshold}
+      timerScope={timerScope}
+      nextLabel={nextButtonText}
+      nextEnabled={isNextButtonEnabled}
+      hideNextButton={!showNextButton}
+      onNext={handleNext}
+      pageMeta={pageMeta}
+      submission={submissionConfig || undefined}
+    >
+      <div className={`page-content page-fade-in ${className}`} style={containerStyle}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {children}
         </div>
-      )}
-    </div>
+      </div>
+    </AssessmentPageFrame>
   );
 };
 

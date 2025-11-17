@@ -4,7 +4,8 @@
  */
 
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import '@testing-library/jest-dom';
 import ErrorBoundary from '../ErrorBoundary';
 
 // 模拟一个会抛出错误的组件
@@ -49,19 +50,12 @@ describe('ErrorBoundary', () => {
   });
 
   it('应该提供刷新页面的按钮', () => {
-    // Mock window.location.reload
-    const mockReload = vi.fn();
-    Object.defineProperty(window, 'location', {
-      value: { reload: mockReload },
-      writable: true
-    });
-
     render(
       <ErrorBoundary>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>
     );
-    
+
     const refreshButton = screen.getByText('刷新页面');
     expect(refreshButton).toBeInTheDocument();
   });

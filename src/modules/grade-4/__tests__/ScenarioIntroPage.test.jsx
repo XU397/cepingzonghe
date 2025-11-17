@@ -18,6 +18,17 @@ const mockGrade4Context = {
   formatTimestamp: vi.fn(() => '2025-07-26 15:35:00'),
 };
 
+const mockAppContext = {
+  batchCode: 'MOCK_BATCH',
+  examNo: 'MOCK_EXAM',
+  moduleUrl: '/mock-module',
+  pageNum: '1',
+};
+
+vi.mock('../../../context/AppContext', () => ({
+  useAppContext: () => mockAppContext,
+}));
+
 // Mock useGrade4Context hook
 vi.mock('../context/Grade4Context', async () => {
   const actual = await vi.importActual('../context/Grade4Context');

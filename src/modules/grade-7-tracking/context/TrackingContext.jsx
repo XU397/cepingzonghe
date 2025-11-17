@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useCallback, useMemo } from 'react';
+import { createContext, useContext, useReducer, useCallback, useMemo, useRef } from 'react';
 
 /**
  * TrackingContext - 7年级追踪测评模块的全局状态管理
@@ -909,6 +909,38 @@ export function useTrackingContext() {
   }
 
   return context;
+}
+
+/**
+ * useTrackingContextSelector - 过渡期 selector（不改变 Provider 结构）
+ * 注意：该版本无法避免 Provider 值变化带来的重渲染，只是提供统一 API 以便后续迁移。
+ * @param {(ctx:any)=>any} selector
+ * @param {(a:any,b:any)=>boolean} [isEqual]
+ */
+export function useTrackingContextSelector(selector, isEqual) {
+  const ctx = useTrackingContext();
+  const lastRef = useRef();
+  const shallowEqual = (a, b) => {
+    if (Object.is(a, b)) return true;
+    if (!a || !b) return false;
+    if (typeof a !== 'object' || typeof b !== 'object') return false;
+    const ak = Object.keys(a);
+    const bk = Object.keys(b);
+    if (ak.length !== bk.length) return false;
+    for (const k of ak) {
+      if (!Object.prototype.hasOwnProperty.call(b, k)) return false;
+      if (!Object.is(a[k], b[k])) return false;
+    }
+    return true;
+  };
+  const cmp = isEqual || shallowEqual;
+  const next = selector(ctx);
+  const prev = lastRef.current;
+  if (prev !== undefined && cmp(prev, next)) {
+    return prev;
+  }
+  lastRef.current = next;
+  return next;
 }
 
 // ============================================================================

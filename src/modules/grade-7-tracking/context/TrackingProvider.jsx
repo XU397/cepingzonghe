@@ -1,7 +1,14 @@
-import { useState, useCallback, useMemo, useEffect, useContext } from 'react';
+import { useState, useCallback, useMemo, useEffect, useContext, useRef, useSyncExternalStore } from 'react';
 import TrackingContext from './TrackingContext';
-import { PAGE_MAPPING, EXPERIMENT_DURATION, QUESTIONNAIRE_DURATION } from '../config';
+import {
+  PAGE_MAPPING,
+  EXPERIMENT_DURATION,
+  QUESTIONNAIRE_DURATION,
+  TASK_TIMER_SCOPE,
+  QUESTIONNAIRE_TIMER_SCOPE,
+} from '../config';
 import { getQuestionnairePageData } from '../utils/questionnaireLoader';
+import { TimerService } from '@shared/services/timers';
 
 /**
  * TrackingProvider - 7年级追踪测评模块的状态管理提供者
@@ -95,6 +102,9 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
           ];
           trackingKeys.forEach(key => localStorage.removeItem(key));
 
+          // 重置共享计时器，避免跨用户串联
+          TimerService.resetAll();
+
           // 🔧 关键修复：重置恢复变量，确保使用 initialPageId
           restoredCurrentPage = null;
           restoredNavigationMode = null;
@@ -174,6 +184,31 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
   const [operationLog, setOperationLog] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [pageStartTime, setPageStartTime] = useState(Date.now());
+
+  // ----------------------------------------------------------------------------
+  // Refs for stable reads (avoid capturing large objects in callbacks)
+  // ----------------------------------------------------------------------------
+  const stateRef = useRef({});
+  const userContextRef = useRef(userContext);
+  const subscribersRef = useRef(new Set());
+
+  // Always keep latest external userContext in a ref to avoid dependency churn
+  useEffect(() => {
+    userContextRef.current = userContext;
+  }, [userContext]);
+
+  // Update composite stateRef on each render (cheap assignment, no re-render)
+  stateRef.current = {
+    session,
+    experimentTrials,
+    chartData,
+    textResponses,
+    questionnaireAnswers,
+    operationLog,
+    answers,
+    pageStartTime,
+    userContext: userContextRef.current,
+  };
 
   // ============================================================================
   // 2.1 首次挂载时从 localStorage 恢复其他状态
@@ -544,6 +579,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @returns {Object} MarkObject
    */
   const buildMarkObject = useCallback((pageNumber, pageDesc, options = {}) => {
+    const { operationLog: opLog, questionnaireAnswers: qa, answers: ans, pageStartTime: pst } = stateRef.current;
     const mapEventType = (action, value) => {
       if (!action) return '';
       switch (action) {
@@ -596,7 +632,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
 
     // 统一操作列表规范化
     // 🔧 修改：添加 code 和 pageId 字段以匹配7年级蒸馒头模块的数据格式
-    const opList = operationLog.map((op, index) => ({
+    const opList = opLog.map((op, index) => ({
       code: index + 1, // 操作序号，从1开始
       targetElement: op.target,
       eventType: mapEventType(op.action, op.value),
@@ -614,7 +650,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       const missingLabel = options.missingLabel || '未回答';
 
       ansList = (pageData?.questions || []).map((q, idx) => {
-        const selected = questionnaireAnswers?.[q.id]?.selectedOption;
+        const selected = qa?.[q.id]?.selectedOption;
         const label = (q.options || []).find(opt => opt.value === selected)?.label;
         return {
           code: idx + 1,  // 🔧 添加答案序号，与蒸馒头模块保持一致
@@ -630,7 +666,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
           value: String(ans.value || '')
         }));
       } else {
-        ansList = answers.map((ans, index) => ({
+        ansList = ans.map((ans, index) => ({
           code: index + 1,  // 🔧 添加答案序号，与蒸馒头模块保持一致
           targetElement: ans.targetElement,
           value: String(ans.value || '')
@@ -643,7 +679,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       pageDesc: pageDesc,
       operationList: opList,
       answerList: ansList,
-      beginTime: formatDateTime(pageStartTime),
+      beginTime: formatDateTime(pst),
       endTime: formatDateTime(new Date()),
       imgList: []
     };
@@ -656,7 +692,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     });
 
     return markObject;
-  }, [operationLog, answers, pageStartTime, formatDateTime, questionnaireAnswers]);
+  }, [formatDateTime]);
 
   // ============================================================================
   // 9. 页面导航
@@ -668,6 +704,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    *
    */
   const navigateToPage = useCallback((pageNum) => {
+    const { session: s } = stateRef.current;
     // 查找对应的 pageId
     const pageInfo = PAGE_MAPPING[pageNum];
     if (!pageInfo) {
@@ -683,7 +720,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       timestamp: Date.now(),
       action: 'page_exit',
       target: '页面',
-      value: session.currentPage,
+      value: s.currentPage,
       time: new Date().toISOString()
     });
 
@@ -706,7 +743,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     });
 
     console.log('[TrackingProvider] 导航至页面:', pageId, '页码:', pageNum);
-  }, [session.currentPage, updateSession, logOperation]);
+  }, [updateSession, logOperation]);
 
   // ============================================================================
   // 10. 数据提交
@@ -723,10 +760,12 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
 
       // 使用userContext中的submitPageDataWithInfo提交数据
       // submitPageDataWithInfo签名: (batchCode, examNo, customData)
-      if (userContext?.submitPageDataWithInfo) {
-        const response = await userContext.submitPageDataWithInfo(
-          session.batchCode,
-          session.examNo,
+      const uc = userContextRef.current;
+      const { session: s } = stateRef.current;
+      if (uc?.submitPageDataWithInfo) {
+        const response = await uc.submitPageDataWithInfo(
+          s.batchCode,
+          s.examNo,
           markObject  // 直接传入markObject对象，不需要JSON.stringify
         );
         console.log('[TrackingProvider] 数据提交成功:', response);
@@ -743,7 +782,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       console.error('[TrackingProvider] 数据提交失败:', error);
       return false;
     }
-  }, [session.batchCode, session.examNo, userContext, clearOperations]);
+  }, [clearOperations]);
 
   // ============================================================================
   // 11. 导航辅助方法
@@ -755,24 +794,25 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    */
   const canNavigateNext = useCallback(() => {
     // 根据当前页面判断导航前置条件
-    const currentPage = session.currentPage;
+    const { session: s, chartData: c } = stateRef.current;
+    const currentPage = s.currentPage;
 
     // 示例：第12页需要至少2个图表数据点才能继续
     if (currentPage === 12) {
-      return chartData.isCompleted;
+      return c.isCompleted;
     }
 
     // 默认允许导航
     return true;
-  }, [session.currentPage, chartData.isCompleted]);
+  }, []);
 
   /**
    * 获取当前导航模式
    * @returns {'hidden' | 'experiment' | 'questionnaire'} 导航模式
    */
   const getCurrentNavigationMode = useCallback(() => {
-    return session.navigationMode;
-  }, [session.navigationMode]);
+    return stateRef.current.session.navigationMode;
+  }, []);
 
   // ============================================================================
   // 12. T097: 40分钟探究任务计时器管理
@@ -783,27 +823,45 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * 应该在Page02_Intro (任务开始页) 调用
    */
   const startTaskTimer = useCallback(() => {
-    if (!session.taskTimerActive) {
+    const { session: s } = stateRef.current;
+    if (!s.taskTimerActive) {
       updateSession({
         taskTimerActive: true,
         taskTimeRemaining: EXPERIMENT_DURATION // 重置为配置的时长
       });
       console.log('[TrackingProvider] 探究任务计时器已启动');
+
+      try {
+        TimerService.getInstance('task').start(EXPERIMENT_DURATION, {
+          scope: TASK_TIMER_SCOPE,
+        });
+      } catch (error) {
+        console.error('[TrackingProvider] 启动统一任务计时器失败', error);
+      }
     }
-  }, [session.taskTimerActive, updateSession]);
+  }, [updateSession]);
 
   /**
    * 启动问卷计时器（内部版本）
    */
   const startQuestionnaireTimerInternal = useCallback(() => {
-    if (!session.questionnaireTimerActive) {
+    const { session: s } = stateRef.current;
+    if (!s.questionnaireTimerActive) {
       updateSession({
         questionnaireTimerActive: true,
         questionnaireTimeRemaining: QUESTIONNAIRE_DURATION // 重置为配置的时长
       });
       console.log('[TrackingProvider] 问卷计时器已启动（内部）, 时长:', QUESTIONNAIRE_DURATION);
+
+      try {
+        TimerService.getInstance('questionnaire').start(QUESTIONNAIRE_DURATION, {
+          scope: QUESTIONNAIRE_TIMER_SCOPE,
+        });
+      } catch (error) {
+        console.error('[TrackingProvider] 启动统一问卷计时器失败', error);
+      }
     }
-  }, [session.questionnaireTimerActive, updateSession]);
+  }, [updateSession]);
 
   /**
    * T097: 实验计时器倒计时逻辑 (每秒递减)
@@ -869,6 +927,13 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       console.warn('[TrackingProvider] localStorage持久化失败:', error);
     }
   }, [session, experimentTrials, chartData, textResponses, questionnaireAnswers]);
+
+  // Notify subscribers when any core state slice changes (for selector hook)
+  useEffect(() => {
+    subscribersRef.current.forEach((fn) => {
+      try { fn(); } catch (e) { /* noop */ }
+    });
+  }, [session, experimentTrials, chartData, textResponses, questionnaireAnswers, operationLog, answers, pageStartTime]);
 
   // ============================================================================
   // 13.5 监听计时器到期事件并执行自动跳转 (T098, T100)
@@ -1006,11 +1071,18 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
 
     // 暴露 userContext 以便页面组件访问
     userContext,
+
+    // 供 selector 订阅/读取（稳定引用）
+    __subscribe: (listener) => {
+      subscribersRef.current.add(listener);
+      return () => subscribersRef.current.delete(listener);
+    },
+    __getStore: () => stateRef.current,
   }), [
     session,
     updateSession,
     updateHeartbeat,
-    experimentTrials,
+    // methods below are stable (callbacks without changing deps)
     addExperimentTrial,
     chartData,
     addChartDataPoint,
@@ -1061,4 +1133,52 @@ export function useTrackingContext() {
   }
 
   return context;
+}
+
+/**
+ * useTrackingContextSelector - 基于 selector 的读取方式（避免订阅整个 Context）
+ *
+ * 注意：这是轻量实现，依赖 Provider 的订阅通知；
+ * 仅当所选字段发生变化时才会产生新快照。
+ *
+ * @param {(store: any) => any} selector - 从内部 store 选取所需字段
+ * @param {(a:any,b:any)=>boolean} [isEqual] - 可选等价比较（默认浅比较）
+ */
+export function useTrackingContextSelector(selector, isEqual) {
+  const ctx = useContext(TrackingContext);
+  if (!ctx) {
+    throw new Error('[useTrackingContextSelector] must be used within TrackingProvider');
+  }
+  const subscribe = ctx.__subscribe;
+  const getStore = ctx.__getStore;
+
+  // 默认浅比较
+  const shallowEqual = (a, b) => {
+    if (Object.is(a, b)) return true;
+    if (!a || !b) return false;
+    if (typeof a !== 'object' || typeof b !== 'object') return false;
+    const ak = Object.keys(a);
+    const bk = Object.keys(b);
+    if (ak.length !== bk.length) return false;
+    for (const k of ak) {
+      if (!Object.prototype.hasOwnProperty.call(b, k)) return false;
+      if (!Object.is(a[k], b[k])) return false;
+    }
+    return true;
+  };
+
+  const cmp = isEqual || shallowEqual;
+  const lastRef = useRef();
+
+  const getSnapshot = () => {
+    const next = selector(getStore());
+    const prev = lastRef.current;
+    if (prev !== undefined && cmp(prev, next)) {
+      return prev;
+    }
+    lastRef.current = next;
+    return next;
+  };
+
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }

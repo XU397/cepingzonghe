@@ -8,8 +8,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useGrade4Context } from '../context/Grade4Context';
 import { moduleConfig } from '../moduleConfig';
 import { useCountdownTimer } from '../hooks/useCountdownTimer';
+import AssessmentPageLayout from '../components/layout/AssessmentPageLayout';
 import styles from './00-NoticesPage.module.css';
-import layoutStyles from '../styles/Grade4Layout.module.css';
 
 // 倒计时时长来源于模块配置，避免魔法数
 const READING_TIME_SECONDS = moduleConfig?.settings?.noticesReadingTime || 40;
@@ -116,7 +116,13 @@ const NoticesPage = () => {
   }, [logOperation, navigateToPage, startGlobalTimer]);
 
   return (
-    <div className={`${styles.noticesPageContainer} page-fade-in`}>
+    <AssessmentPageLayout
+      showNavigation={false}
+      showTimer={false}
+      isNextButtonEnabled={isTimerCompleted && isAcknowledged}
+      onNextClick={handleNextPage}
+      className={styles.noticesPageContainer}
+    >
       <h1 className={`page-title ${styles.noticesPageTitle}`}>注意事项</h1>
       
       <div className={styles.cartoonBox} style={{ 
@@ -231,21 +237,9 @@ const NoticesPage = () => {
         </div>
       </div>
       
-      <div className={styles.navigationArea}>
-        <button
-          type="button"
-          disabled={!isTimerCompleted || !isAcknowledged}
-          onClick={handleNextPage}
-          className={`${styles.nextButton} ${(isTimerCompleted && isAcknowledged) ? styles.enabled : styles.disabled}`}
-          title={(isTimerCompleted && isAcknowledged) ? '点击进入下一页' : '请先阅读完注意事项并确认'}
-        >
-          下一页
-        </button>
-      </div>
-      
       {/* 填充剩余空间的元素 */}
       <div style={{ flex: 1, minHeight: '20px' }}></div>
-    </div>
+    </AssessmentPageLayout>
   );
 };
 

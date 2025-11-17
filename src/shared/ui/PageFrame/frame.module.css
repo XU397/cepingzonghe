@@ -1,0 +1,231 @@
+@import '../../styles/page-frame.css';
+@import '../../styles/nav-tokens.css';
+@import '../../styles/timer-tokens.css';
+
+.frame {
+  display: flex;
+  min-height: 100vh;
+  background: var(--page-frame-bg);
+  color: var(--text-color, #1f2a37);
+}
+
+.navRail {
+  width: var(--page-frame-nav-width);
+  padding: var(--page-frame-padding-y) 20px;
+  background: var(--page-frame-content-bg);
+  border-right: 1px solid var(--page-frame-border);
+  box-shadow: inset -1px 0 0 rgba(15, 23, 42, 0.05);
+  display: flex;
+  justify-content: center;
+}
+
+.navHidden {
+  display: none;
+}
+
+.content {
+  flex: 1;
+  min-height: 100vh;
+  padding: var(--page-frame-padding-y) var(--page-frame-padding-x);
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-frame-body-gap);
+  box-sizing: border-box;
+}
+
+.contentCard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-frame-content-bg);
+  border-radius: var(--page-frame-radius);
+  box-shadow: var(--page-frame-shadow);
+  padding: 32px 36px 28px;
+  max-width: var(--page-frame-content-max-width);
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 64px;
+}
+
+.timerSlot {
+  position: relative;
+  min-height: 64px;
+}
+
+.body {
+  flex: 1;
+  margin-top: 8px;
+}
+
+.bodyStretch {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.footer {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.nextButton {
+  height: var(--page-frame-button-height);
+  min-width: 180px;
+  border: none;
+  border-radius: var(--page-frame-button-radius);
+  background: var(--page-frame-button-bg);
+  box-shadow: var(--page-frame-button-shadow);
+  color: var(--page-frame-button-text);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 32px;
+  transition: transform var(--page-frame-transition), box-shadow var(--page-frame-transition);
+}
+
+.nextButton:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(89, 193, 255, 0.45);
+}
+
+.nextButton:disabled {
+  background: var(--page-frame-button-bg-disabled);
+  color: var(--page-frame-button-text-disabled);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.nextButtonLoading {
+  position: relative;
+  pointer-events: none;
+}
+
+.nextButtonLoading::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  border-top-color: rgba(255, 255, 255, 1);
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: frame-spin 0.8s linear infinite;
+}
+
+@keyframes frame-spin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+.errorTray {
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid var(--page-frame-error-border);
+  background: var(--page-frame-error-bg);
+  color: var(--page-frame-error-text);
+}
+
+.errorWarning {
+  border-color: var(--page-frame-warning-border);
+  background: var(--page-frame-warning-bg);
+  color: var(--page-frame-warning-text);
+}
+
+.errorInfo {
+  border-color: var(--page-frame-info-border);
+  background: var(--page-frame-info-bg);
+  color: var(--page-frame-info-text);
+}
+
+.errorIcon {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.errorContent {
+  flex: 1;
+}
+
+.errorTitle {
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.errorMessage {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.errorActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.errorAction {
+  border: none;
+  background: transparent;
+  color: var(--page-frame-error-action-color);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.errorDismiss {
+  color: inherit;
+}
+
+.slots {
+  width: 100%;
+}
+
+.footerSlot {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .frame {
+    flex-direction: column;
+  }
+
+  .navRail {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--page-frame-border);
+  }
+
+  .contentCard {
+    padding: 24px 20px;
+  }
+
+  .actionRow {
+    justify-content: stretch;
+  }
+
+  .nextButton {
+    width: 100%;
+  }
+}

@@ -1,9 +1,8 @@
 # 评测平台核心规格（Assessment Core Spec）
 
+## Purpose
 本规格定义平台层面的核心行为与数据契约，覆盖登录路由、页面恢复、计时与导航、数据提交、错误处理与问卷处理。用于指导各模块一致实现与跨模块复用。
-
 ## Requirements
-
 ### Requirement: 登录成功后按后端指示进入对应模块与页面
 平台在登录成功后 MUST 根据后端返回的 `url` 与 `pageNum` 选择模块并恢复到目标页面。
 
@@ -59,24 +58,18 @@
 ### Requirement: 标准化 MarkObject 结构（数据提交契约）
 平台 MUST 使用统一的 MarkObject 结构提交页面数据；字段定义与事件类型集合与“数据提交格式规格（Data Format Spec）”保持一致。
 
-#### Scenario: MarkObject 字段（与 Data Format Spec 对齐）
-- GIVEN 平台准备提交页面数据
-- THEN MarkObject 包含：
-  - `pageNumber: string`（允许复合编码）
-  - `pageDesc: string`
-  - `operationList: Array<Operation>`（`value` 允许 `string | object`，可选 `pageId`）
-  - `answerList: Array<Answer>`
-  - `beginTime: string(YYYY-MM-DD HH:mm:ss)`
-  - `endTime: string(YYYY-MM-DD HH:mm:ss)`
-  - `imgList: Array<any>`（可为空）
+#### Scenario: MarkObject 字段（更新）
+- THEN `operationList` 的 `value` 允许为 `string | object`；`Operation` 支持可选 `pageId` 字段；
+- AND 事件类型集合引用 Data Format 规格；
+- AND 时间格式保持 `YYYY-MM-DD HH:mm:ss`。
 
 ### Requirement: 操作日志与页面进入/退出记录
-平台 MUST 在页面进入与离开时记录操作日志；事件类型应符合“数据提交格式规格”的事件集合。
+平台 MUST 按 Data Format 规格维护操作日志与页面进入/退出事件的类型集合，以覆盖实验与问卷阶段的所有行为。
 
-#### Scenario: 页面进入/退出
-- GIVEN 进入页面 `P`
-- WHEN 页面挂载/卸载或导航切换
-- THEN 记录 `page_enter` 与 `page_exit` 操作；`time` 为格式化时间戳
+#### Scenario: 事件类型对齐
+- THEN 操作日志事件类型 SHALL 与 Data Format 规格保持一致，至少包含 `page_enter/page_exit/page_submit_success/page_submit_failed/flow_context` 并区分实验与问卷类别；
+- AND 页面进入/退出事件必须记录在统一的事件集合中；
+- AND 新增或扩展的事件类型 MUST 同步更新 Data Format 规格。
 
 ### Requirement: 问卷页面的答案收集与提交流程
 问卷页 MUST 将所选项映射到 `answerList` 中，并与操作日志一起随 MarkObject 提交。
@@ -103,12 +96,20 @@
 - THEN 清理旧命名空间并用当前账号建立新状态
 
 ### Requirement: 开发模式辅助能力
-平台 SHOULD 在开发模式提供模块选择器与调试浮标；生产模式不暴露。
+平台 SHALL 在开发模式提供模块选择器与调试浮标；生产模式不暴露。
 
 #### Scenario: 开发模块选择器
 - GIVEN 开发环境（`import.meta.env.DEV===true`）
 - WHEN 渲染登录页
 - THEN 显示“开发模块选择器”，可一键注入 `{ url, pageNum }` 并进入对应模块
+
+### Requirement: 页面映射与复合页码解析
+平台 MUST 提供统一的页面映射工具与复合页码解析，以保证各模块行为一致。
+
+#### Scenario: 工具与边界
+- WHEN 根据 `pageNum` 或 `M<stepIndex>:<subPageNum>` 恢复页面
+- THEN 工具函数 SHALL 返回稳定的 `pageId`；
+- AND 越界 SHALL 回落到“注意事项页”作为默认。
 
 ## 默认参数与阈值
 - 主任务计时：40 分钟（2400 秒）

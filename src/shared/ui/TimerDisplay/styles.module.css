@@ -1,0 +1,178 @@
+/**
+ * TimerDisplay 组件样式
+ *
+ * 像素级复用 Grade-7 Tracking CountdownTimer 视觉规范
+ * 支持 CSS 变量覆写 (通过 timer-tokens.css)
+ */
+
+/* 默认计时器容器 */
+.timer {
+  position: fixed;
+  top: var(--timer-top, 55px);
+  right: var(--timer-right, 20px);
+  background-color: var(--timer-bg, var(--cartoon-secondary, #ffeaa7));
+  color: var(--timer-fg, var(--text-color, #2d3436));
+  padding: var(--timer-padding, 12px 20px);
+  border-radius: var(--timer-border-radius, 30px);
+  font-weight: bold;
+  box-shadow: var(--timer-shadow, 0 4px 10px var(--cartoon-shadow, rgba(0, 0, 0, 0.1)));
+  z-index: var(--timer-z-index, 999);
+  font-size: var(--timer-font-size, 18px);
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--timer-border-color, #ffb347);
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+/* Emoji 样式 */
+.emoji {
+  margin-right: 8px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* 时间文本 */
+.timeText {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--timer-fg, var(--text-color, #2d3436));
+  letter-spacing: 1px;
+  transition: color 0.3s ease;
+  line-height: 1;
+}
+
+/* ============ 状态样式 ============ */
+
+/* 警告状态 (< warningThreshold, 默认 300s / 5分钟) */
+.timer.warning {
+  background-color: var(--timer-warning-bg, #ffb347);
+  color: var(--timer-warning-fg, #2d3436);
+  border-color: var(--timer-warning-border, #ff9800);
+  animation: pulse 2s infinite;
+}
+
+.timer.warning .timeText {
+  color: var(--timer-warning-fg, #2d3436);
+}
+
+/* 严重状态 (< criticalThreshold, 默认 60s / 1分钟) */
+.timer.critical {
+  background-color: var(--timer-critical-bg, var(--cartoon-red, #ff6b6b));
+  color: var(--timer-critical-fg, white);
+  border-color: var(--timer-critical-border, #ff6b6b);
+  animation: pulse 1.5s infinite;
+}
+
+.timer.critical .timeText {
+  color: var(--timer-critical-fg, white);
+}
+
+/* 完成状态 (时间到) */
+.timer.complete {
+  background-color: var(--timer-complete-bg, var(--cartoon-red, #ff6b6b));
+  color: var(--timer-complete-fg, white);
+  border-color: var(--timer-complete-border, #ff6b6b);
+  animation: pulse 2s infinite;
+}
+
+.timer.complete .timeText {
+  color: var(--timer-complete-fg, white);
+}
+
+/* ============ 变体样式 ============ */
+
+/* 主任务计时器 (默认) */
+.timer.task {
+  /* 使用默认样式 */
+}
+
+/* 问卷计时器 */
+.timer.questionnaire {
+  top: var(--timer-questionnaire-top, 55px);
+  background-color: var(--timer-questionnaire-bg, #a29bfe);
+  border-color: var(--timer-questionnaire-border, #6c5ce7);
+}
+
+/* 注意事项计时器 */
+.timer.notice {
+  top: var(--timer-notice-top, 55px);
+  background-color: var(--timer-notice-bg, #74b9ff);
+  border-color: var(--timer-notice-border, #0984e3);
+}
+
+/* ============ 动画 ============ */
+
+/* 脉冲动画 (与 global.css 对齐) */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ============ 响应式调整 ============ */
+
+@media (max-width: 768px) {
+  .timer {
+    top: var(--timer-top-mobile, 50px);
+    right: var(--timer-right-mobile, 15px);
+    padding: 10px 16px;
+    font-size: 16px;
+  }
+
+  .emoji {
+    font-size: 18px;
+    margin-right: 6px;
+  }
+
+  .timeText {
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .timer {
+    top: var(--timer-top-small, 45px);
+    right: var(--timer-right-small, 10px);
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+
+  .emoji {
+    font-size: 16px;
+    margin-right: 5px;
+  }
+
+  .timeText {
+    font-size: 14px;
+  }
+}
+
+/* ============ 无障碍支持 ============ */
+
+/* 减少动画 */
+@media (prefers-reduced-motion: reduce) {
+  .timer {
+    transition: none;
+  }
+
+  .timer.warning,
+  .timer.critical,
+  .timer.complete {
+    animation: none;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .timer {
+    border-width: 3px;
+  }
+}

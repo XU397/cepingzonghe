@@ -6,14 +6,18 @@
  * 目标：以最小风险的方式将现有系统集成到模块架构中
  */
 
-import React, { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
-// 导入现有组件 - 保持原有路径不变！
 import PageRouter from '../../components/PageRouter';
-import StepNavigation from '../../components/common/StepNavigation';
-import QuestionnaireNavigation from '../../components/questionnaire/QuestionnaireNavigation';
 import { useAppContext } from '../../context/AppContext';
-import { isQuestionnairePage, getQuestionnaireStepNumber, TOTAL_QUESTIONNAIRE_STEPS } from '../../utils/pageMappings';
+import {
+  isQuestionnairePage,
+  getQuestionnaireStepNumber,
+  TOTAL_QUESTIONNAIRE_STEPS,
+  pageInfoMapping,
+  TOTAL_USER_STEPS,
+} from '../../utils/pageMappings';
+import { AssessmentPageFrame } from '@shared/ui/PageFrame';
 
 /**
  * 7年级包装器组件
@@ -25,9 +29,23 @@ import { isQuestionnairePage, getQuestionnaireStepNumber, TOTAL_QUESTIONNAIRE_ST
  * @param {Object} props.userContext - 用户上下文（包含认证信息等）
  * @param {string} props.initialPageId - 初始页面ID（用于页面恢复）
  */
-export const Grade7Wrapper = ({ userContext, initialPageId }) => {
-  // 获取 AppContext 中的步骤信息（用于导航显示）
-  const { currentStepNumber, totalUserSteps, currentPageId } = useAppContext();
+const TASK_TIMER_SCOPE = 'module.grade-7.task';
+const QUESTIONNAIRE_TIMER_SCOPE = 'module.grade-7.questionnaire';
+const TASK_WARNING_THRESHOLD = 5 * 60;
+const QUESTIONNAIRE_WARNING_THRESHOLD = 3 * 60;
+const CRITICAL_THRESHOLD = 60;
+
+export const Grade7Wrapper = ({ userContext, initialPageId, flowContext }) => {
+  const {
+    currentStepNumber,
+    totalUserSteps,
+    currentPageId,
+    batchCode,
+    examNo,
+    preparePageSubmissionData,
+    taskStartTime,
+    isQuestionnaireStarted,
+  } = useAppContext();
 
   // 记录包装器的使用情况，便于调试 - 只在真正需要时记录
   useEffect(() => {
@@ -56,84 +74,73 @@ export const Grade7Wrapper = ({ userContext, initialPageId }) => {
     }
   }, [initialPageId]);
 
-  // 判断当前页面类型
   const isCurrentPageQuestionnaire = isQuestionnairePage(currentPageId);
-  const currentQuestionnaireStep = getQuestionnaireStepNumber(currentPageId);
-
-  // 决定是否显示左侧导航
-  // 注意事项页面（currentStepNumber === 0）不显示导航
-  // 问卷页面或人机交互页面显示对应的导航
+  const currentQuestionnaireStep = getQuestionnaireStepNumber(currentPageId) || 1;
+  const navigationMode = isCurrentPageQuestionnaire ? 'questionnaire' : 'experiment';
   const showNavigation = isCurrentPageQuestionnaire || (currentStepNumber > 0 && totalUserSteps > 0);
 
-  // 渲染现有的PageRouter组件，并添加左侧导航
+  const navCurrentStep = isCurrentPageQuestionnaire
+    ? currentQuestionnaireStep
+    : Math.max(1, currentStepNumber || 1);
+  const navTotalSteps = isCurrentPageQuestionnaire
+    ? TOTAL_QUESTIONNAIRE_STEPS
+    : Math.max(totalUserSteps || TOTAL_USER_STEPS, 1);
+
+  const showTimer = isCurrentPageQuestionnaire ? isQuestionnaireStarted : Boolean(taskStartTime);
+  const timerScope = isCurrentPageQuestionnaire ? QUESTIONNAIRE_TIMER_SCOPE : TASK_TIMER_SCOPE;
+  const timerWarningThreshold = isCurrentPageQuestionnaire
+    ? QUESTIONNAIRE_WARNING_THRESHOLD
+    : TASK_WARNING_THRESHOLD;
+
+  const submissionConfig = useMemo(() => {
+    const baseConfig = {
+      getUserContext: () => ({
+        batchCode: batchCode || userContext?.batchCode || '',
+        examNo: examNo || userContext?.examNo || '',
+      }),
+      buildMark: () => preparePageSubmissionData(),
+      allowProceedOnFailureInDev: Boolean(import.meta.env?.DEV),
+    };
+
+    if (flowContext?.flowId) {
+      baseConfig.getFlowContext = () => ({
+        flowId: flowContext.flowId,
+        submoduleId: flowContext.submoduleId,
+        stepIndex: flowContext.stepIndex,
+        pageId: currentPageId,
+      });
+    }
+
+    return baseConfig;
+  }, [batchCode, currentPageId, flowContext, examNo, preparePageSubmissionData, userContext]);
+
+  const pageMeta = useMemo(() => {
+    const meta = pageInfoMapping[currentPageId] || {};
+    return {
+      pageId: currentPageId,
+      pageNumber: meta.number || currentPageId,
+      pageDesc: meta.desc || '',
+    };
+  }, [currentPageId]);
+
   return (
-    <div
-      className="grade-7-module-wrapper"
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        height: '100%',
-        width: '100%'
-      }}
+    <AssessmentPageFrame
+      navigationMode={navigationMode}
+      currentStep={navCurrentStep}
+      totalSteps={navTotalSteps}
+      showNavigation={showNavigation}
+      showTimer={showTimer}
+      timerVariant={navigationMode === 'questionnaire' ? 'questionnaire' : 'task'}
+      timerWarningThreshold={timerWarningThreshold}
+      timerCriticalThreshold={CRITICAL_THRESHOLD}
+      timerScope={timerScope}
+      submission={submissionConfig}
+      pageMeta={pageMeta}
+      hideNextButton
+      allowNavigationClick={false}
     >
-      {/* 左侧导航栏 - 根据页面类型渲染不同的导航 */}
-      {showNavigation && (
-        isCurrentPageQuestionnaire ? (
-          <QuestionnaireNavigation
-            currentQuestionnaireStep={currentQuestionnaireStep}
-            totalQuestionnaireSteps={TOTAL_QUESTIONNAIRE_STEPS}
-          />
-        ) : (
-          <StepNavigation
-            currentStepNumber={currentStepNumber}
-            totalSteps={totalUserSteps}
-          />
-        )
-      )}
-
-      {/* 主内容区域 */}
-      <div style={{ flex: 1, height: '100%', overflow: 'auto' }}>
-        {/*
-          直接渲染现有的PageRouter组件
-          所有现有的功能、Context、路由逻辑都保持不变
-          PageRouter会自动处理：
-          - 页面路由和导航
-          - 用户认证检查
-          - 页面组件渲染
-          - 数据提交和日志记录
-          - 计时器和进度管理
-        */}
-        <PageRouter />
-      </div>
-
-      {/*
-        可选：添加模块特定的调试信息
-        仅在开发环境显示，生产环境可通过环境变量控制
-      */}
-      {import.meta.env.DEV && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '10px',
-            right: '10px',
-            background: 'rgba(0,0,0,0.8)',
-            color: 'white',
-            padding: '5px 10px',
-            borderRadius: '3px',
-            fontSize: '12px',
-            zIndex: 9999
-          }}
-        >
-          Grade-7 Module Active
-          {initialPageId && ` | Initial: ${initialPageId}`}
-          {showNavigation && (
-            isCurrentPageQuestionnaire
-              ? ` | 问卷: ${currentQuestionnaireStep}/${TOTAL_QUESTIONNAIRE_STEPS}`
-              : ` | 任务: ${currentStepNumber}/${totalUserSteps}`
-          )}
-        </div>
-      )}
-    </div>
+      <PageRouter />
+    </AssessmentPageFrame>
   );
 };
 

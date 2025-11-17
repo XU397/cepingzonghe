@@ -46,6 +46,8 @@ export const TEMPERATURE_OPTIONS = [25, 30, 35, 40, 45]; // 温度(摄氏度, 5�
 export const EXPERIMENT_DURATION = 40 * 60; // 40分钟(秒)
 export const QUESTIONNAIRE_DURATION = 10 * 60; // 10分钟(秒)
 export const NOTICE_COUNTDOWN = 40; // 注意事项倒计时(秒)
+export const TASK_TIMER_SCOPE = 'module.g7-tracking.task';
+export const QUESTIONNAIRE_TIMER_SCOPE = 'module.g7-tracking.questionnaire';
 
 // 心跳检测配置
 export const HEARTBEAT_INTERVAL = 30 * 1000; // 30秒(毫秒)

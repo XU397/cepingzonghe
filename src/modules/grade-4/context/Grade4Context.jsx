@@ -3,13 +3,26 @@
  * 管理模块内的所有状态、用户操作记录和数据提交
  */
 
-import { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
+import { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
 import { moduleConfig } from '../moduleConfig';
-import { submitPageData } from '../../../shared/services/dataLogger';
+import { usePageSubmission } from '@shared/services/submission/usePageSubmission.js';
+import { TimerService, useTimer } from '@shared/services/timers';
 import { useAppContext } from '../../../context/AppContext';
+import STORAGE_KEYS, { setStorageItem } from '@shared/services/storage/storageKeys.js';
 
 // 从配置读取主任务时长（毫秒），转换为秒；默认40分钟
 const MAIN_TASK_SECONDS = Math.round(((moduleConfig?.timers?.mainTask) || (40 * 60 * 1000)) / 1000);
+const TASK_TIMER_SCOPE = `module.${moduleConfig?.moduleId || 'grade-4'}.task`;
+
+const parseBooleanEnvFlag = (value) => {
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return ['1', 'true', 'yes', 'on', 'enable', 'enabled'].includes(normalized);
+  }
+  return Boolean(value);
+};
+
+const USE_UNIFIED_FRAME_FLAG = parseBooleanEnvFlag(import.meta.env?.VITE_USE_UNIFIED_FRAME);
 
 // 初始状态
 const initialState = {
@@ -116,16 +129,20 @@ const grade4Reducer = (state, action) => {
       return { ...state, globalContext: action.payload };
       
     // 全局倒计时相关reducers
-    case ACTION_TYPES.START_GLOBAL_TIMER:
+    case ACTION_TYPES.START_GLOBAL_TIMER: {
+      const { startTime, remainingTime } = action.payload || {};
+      const nextRemaining = typeof remainingTime === 'number' ? remainingTime : MAIN_TASK_SECONDS;
       return {
         ...state,
         globalTimer: {
           ...state.globalTimer,
           isActive: true,
-          startTime: action.payload,
-          remainingTime: MAIN_TASK_SECONDS // 重置为配置的主任务时长
-        }
+          isCompleted: false,
+          startTime,
+          remainingTime: nextRemaining,
+        },
       };
+    }
       
     case ACTION_TYPES.UPDATE_GLOBAL_TIMER:
       return {
@@ -228,7 +245,15 @@ const Grade4Context = createContext();
 // Provider 组件
 export const Grade4Provider = ({ children, globalContext, authInfo, initialPageId }) => {
   // 尝试从AppContext获取认证信息作为最后的fallback
-  const appContext = useAppContext();
+  let appContext = null;
+  try {
+    appContext = useAppContext();
+  } catch (error) {
+    if (import.meta.env?.DEV) {
+      console.warn('[Grade4Context] AppContext 不可用，使用降级模式用于测试/独立运行', error);
+    }
+    appContext = null;
+  }
 
   // 根据initialPageId计算初始页面号
   const getInitialPageNumber = (pageId) => {
@@ -306,6 +331,7 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
     authInfo: finalAuthInfo,
     globalContext
   });
+  const timeoutNavigationTriggeredRef = useRef(false);
 
   // 格式化时间戳
   const formatTimestamp = useCallback((date = new Date()) => {
@@ -336,6 +362,64 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
     console.log(`[Grade4Context] 记录操作:`, operation);
   }, [formatTimestamp]); // 移除state.operations.length依赖
 
+  const buildMarkForSubmission = useCallback((customOperationList = null) => {
+    const currentTime = formatTimestamp();
+
+    const getPageDescription = (pageNumber) => {
+      const pages = moduleConfig?.pages || {};
+      const match = Object.values(pages).find((p) => Number(p.number) === Number(pageNumber));
+      if (match) {
+        const pageNumberLabel = match.number ?? pageNumber;
+        const description = match.desc ?? '';
+        return `第${pageNumberLabel}页-${description}`.trim();
+      }
+      return `第${pageNumber}页`;
+    };
+
+    const beginTime = state.notices.pageEnterTime
+      ? formatTimestamp(state.notices.pageEnterTime)
+      : currentTime;
+
+    return {
+      pageNumber: state.currentPage.toString(),
+      pageDesc: getPageDescription(state.currentPage),
+      operationList: customOperationList || state.operations,
+      answerList: state.answers,
+      beginTime,
+      endTime: currentTime,
+      imgList: [],
+    };
+  }, [formatTimestamp, state.answers, state.currentPage, state.notices.pageEnterTime, state.operations]);
+
+  const getUserContext = useCallback(() => ({
+    batchCode:
+      state.authInfo?.batchCode ||
+      globalContext?.batchCode ||
+      appContext?.batchCode ||
+      localStorage.getItem('batchCode') ||
+      '',
+    examNo:
+      state.authInfo?.examNo ||
+      globalContext?.examNo ||
+      appContext?.examNo ||
+      localStorage.getItem('examNo') ||
+      '',
+  }), [appContext, globalContext, state.authInfo]);
+
+  const allowDevBypass = Boolean(import.meta.env?.DEV);
+
+  const {
+    submit: submitWithUnifiedHook,
+    isSubmitting: isSubmittingPage,
+    lastError: submissionError,
+    getLastError: getSubmissionError,
+  } = usePageSubmission({
+    getUserContext,
+    buildMark: () => buildMarkForSubmission(),
+    allowProceedOnFailureInDev: allowDevBypass,
+    logger: console,
+  });
+
   // 页面恢复Effect
   useEffect(() => {
     if (initialPageId && initialPageId !== 'notices') {
@@ -356,24 +440,6 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
       });
     }
   }, [initialPageId, state.currentPage, logOperation]);
-
-  // 全局倒计时相关Actions
-  const startGlobalTimer = useCallback(() => {
-    const startTime = Date.now();
-    dispatch({
-      type: ACTION_TYPES.START_GLOBAL_TIMER,
-      payload: startTime
-    });
-    
-    console.log(`[Grade4Context] 🕐 启动全局倒计时: ${Math.round(MAIN_TASK_SECONDS / 60)}分钟`);
-    
-    // 记录计时器启动操作
-    logOperation({
-      targetElement: '全局计时器',
-      eventType: 'timer_start',
-      value: `倒计时开始（${Math.round(MAIN_TASK_SECONDS / 60)}分钟）`
-    });
-  }, [logOperation]);
 
   const updateGlobalTimer = useCallback((remainingTime) => {
     dispatch({
@@ -397,30 +463,53 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
     });
   }, [logOperation]);
 
-  // 全局倒计时效果
+  // 统一计时器 Hook
+  const handleGlobalTimeout = useCallback(() => {
+    completeGlobalTimer();
+  }, [completeGlobalTimer]);
+
+  const {
+    start: startUnifiedTaskTimer,
+    getDebugInfo: getTaskTimerDebugInfo,
+  } = useTimer('task', {
+    onTimeout: handleGlobalTimeout,
+    onTick: updateGlobalTimer,
+    scope: TASK_TIMER_SCOPE,
+  });
+
   useEffect(() => {
-    let intervalId = null;
-    
-    if (state.globalTimer.isActive && !state.globalTimer.isCompleted) {
-      intervalId = setInterval(() => {
-        const now = Date.now();
-        const elapsed = Math.floor((now - state.globalTimer.startTime) / 1000);
-        const remaining = Math.max(0, MAIN_TASK_SECONDS - elapsed);
-        
-        if (remaining > 0) {
-          updateGlobalTimer(remaining);
-        } else {
-          completeGlobalTimer();
-        }
-      }, 1000);
+    const debug =
+      typeof getTaskTimerDebugInfo === 'function'
+        ? getTaskTimerDebugInfo()
+        : TimerService.getInstance('task').getDebugInfo();
+
+    if (!debug) {
+      return;
     }
-    
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [state.globalTimer.isActive, state.globalTimer.isCompleted, state.globalTimer.startTime, updateGlobalTimer, completeGlobalTimer]);
+
+    if (debug.startTime && !state.globalTimer.startTime) {
+      dispatch({
+        type: ACTION_TYPES.START_GLOBAL_TIMER,
+        payload: {
+          startTime: debug.startTime,
+          remainingTime:
+            typeof debug.remaining === 'number' ? debug.remaining : undefined,
+        },
+      });
+    }
+
+    if (typeof debug.remaining === 'number') {
+      dispatch({
+        type: ACTION_TYPES.UPDATE_GLOBAL_TIMER,
+        payload: debug.remaining,
+      });
+    }
+
+    if (debug.isTimeout && !state.globalTimer.isCompleted) {
+      completeGlobalTimer();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 收集答案
   const collectAnswer = useCallback(({
@@ -441,6 +530,45 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
 
     console.log(`[Grade4Context] 收集答案:`, answer);
   }, []); // 移除state.answers.length依赖
+
+  const startGlobalTimer = useCallback(() => {
+    const timerInstance = TimerService.getInstance('task');
+    const alreadyRunning = timerInstance.isRunning && !timerInstance.isTimeout();
+
+    if (!alreadyRunning && (timerInstance.getRemaining() <= 0 || timerInstance.isTimeout())) {
+      timerInstance.reset();
+    }
+
+    startUnifiedTaskTimer(MAIN_TASK_SECONDS, {
+      onTimeout: handleGlobalTimeout,
+      scope: TASK_TIMER_SCOPE,
+      force: false,
+    });
+
+    if (!alreadyRunning) {
+      const startTimestamp = Date.now();
+      dispatch({
+        type: ACTION_TYPES.START_GLOBAL_TIMER,
+        payload: {
+          startTime: startTimestamp,
+          remainingTime: MAIN_TASK_SECONDS,
+        },
+      });
+      dispatch({
+        type: ACTION_TYPES.UPDATE_GLOBAL_TIMER,
+        payload: MAIN_TASK_SECONDS,
+      });
+      timeoutNavigationTriggeredRef.current = false;
+
+      console.log(`[Grade4Context] 🕐 启动全局倒计时: ${Math.round(MAIN_TASK_SECONDS / 60)}分钟`);
+
+      logOperation({
+        targetElement: '全局计时器',
+        eventType: 'timer_start',
+        value: `倒计时开始（${Math.round(MAIN_TASK_SECONDS / 60)}分钟）`,
+      });
+    }
+  }, [handleGlobalTimeout, logOperation, startUnifiedTaskTimer]);
 
   // 注意事项页面特定Actions
   const noticesActions = {
@@ -638,7 +766,7 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
         // 这样刷新页面后能正确恢复到当前页面
         // 注意：不更新 AppContext 的 state，避免触发模块重新挂载
         localStorage.setItem('hci-pageNum', String(pageNumber));
-        localStorage.setItem('pageNum', String(pageNumber));
+        setStorageItem(STORAGE_KEYS.CORE_PAGE_NUM, String(pageNumber), true);
         console.log(`[Grade4Context] 📍 已更新 localStorage pageNum: ${pageNumber}`);
 
         // 清空操作记录为新页面做准备
@@ -661,75 +789,61 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
     }
   }, [state.currentPage, state.operations, formatTimestamp, setCurrentPage, logOperation]);
 
+  useEffect(() => {
+    if (!state.globalTimer.isCompleted) {
+      return;
+    }
+
+    if (timeoutNavigationTriggeredRef.current) {
+      return;
+    }
+
+    timeoutNavigationTriggeredRef.current = true;
+
+    if (state.currentPage !== 12) {
+      navigateToPage('task-completion', { skipSubmit: true });
+    }
+  }, [navigateToPage, state.currentPage, state.globalTimer.isCompleted]);
+
   // 内部数据提交函数 - 支持自定义操作列表
   const submitPageDataInternal = useCallback(async (customOperationList = null) => {
-    if (!state.authInfo?.batchCode || !state.authInfo?.examNo) {
-      console.error('[Grade4Context] ❌ 缺少认证信息，无法提交数据', {
-        hasBatchCode: !!state.authInfo?.batchCode,
-        hasExamNo: !!state.authInfo?.examNo,
-        authInfo: state.authInfo
-      });
+    const context = getUserContext();
+
+    if (!context.batchCode || !context.examNo) {
+      console.error('[Grade4Context] ❌ 缺少认证信息，无法提交数据', context);
       return false;
     }
 
-    const currentTime = formatTimestamp();
-    
-    // 根据页面类型确定页面描述
-    const getPageDescription = (pageNumber) => {
-      const pages = moduleConfig?.pages || {};
-      const match = Object.values(pages).find(p => Number(p.number) === Number(pageNumber));
-      if (match) {
-        const n = match.number ?? pageNumber;
-        const d = match.desc ?? '';
-        // 仅影响数据上报描述，不影响页面顶部标题
-        return `第${n}页-${d}`.trim();
-      }
-      return `第${pageNumber}页`;
-    };
-    
-    const markData = {
-      pageNumber: state.currentPage.toString(),
-      pageDesc: getPageDescription(state.currentPage),
-      operationList: customOperationList || state.operations,
-      answerList: state.answers,
-      beginTime: state.notices.pageEnterTime || currentTime,
-      endTime: currentTime,
-      imgList: []
-    };
+    const markData = buildMarkForSubmission(customOperationList);
 
-    try {
-      console.log('[Grade4Context] 📤 准备提交页面数据:', {
-        pageNumber: markData.pageNumber,
-        pageDesc: markData.pageDesc,
-        operationCount: markData.operationList.length,
-        answerCount: markData.answerList.length,
-        batchCode: state.authInfo.batchCode,
-        examNo: state.authInfo.examNo
-      });
+    console.log('[Grade4Context] 📤 准备提交页面数据:', {
+      pageNumber: markData.pageNumber,
+      pageDesc: markData.pageDesc,
+      operationCount: markData.operationList?.length || 0,
+      answerCount: markData.answerList?.length || 0,
+      batchCode: context.batchCode,
+      examNo: context.examNo,
+    });
 
-      await submitPageData(state.authInfo, markData);
+    const success = await submitWithUnifiedHook({
+      markOverride: markData,
+      userContextOverride: context,
+    });
 
+    if (success) {
       console.log('[Grade4Context] ✅ 页面数据提交成功');
       return true;
-      
-    } catch (error) {
-      console.error('[Grade4Context] ❌ 页面数据提交失败:', error);
-      
-      // 检查是否是session过期错误
-      if (error.isSessionExpired || error.code === 401 || (error.message && (
-        error.message.includes('401') || 
-        error.message.includes('session已过期') ||
-        error.message.includes('请重新登录')
-      ))) {
-        console.log("[Grade4Context] 检测到session过期");
-        alert('登录会话已过期，请重新登录以继续使用');
-      } else {
-        console.error("数据提交失败，可能是网络问题，请稍后重试");
-      }
-      
-      return false;
     }
-  }, [state, formatTimestamp]);
+
+    const error = getSubmissionError();
+    console.error('[Grade4Context] ❌ 页面数据提交失败:', error || '未知错误');
+
+    if (error && !error.isSessionExpired && error.code !== 401) {
+      console.error('数据提交失败，可能是网络问题，请稍后重试');
+    }
+
+    return false;
+  }, [buildMarkForSubmission, getSubmissionError, getUserContext, submitWithUnifiedHook]);
 
   // 提交当前页面数据 - 兼容性保留，使用内部函数
   const submitCurrentPageData = useCallback(async () => {
@@ -776,9 +890,14 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
     setSelectedTrains,
     setPricingData,
     navigateToPage,
-    
+    isSubmittingPage,
+    submissionError,
+
     // 工具函数
     formatTimestamp,
+    buildMarkForSubmission,
+    getUserContext,
+    useUnifiedFrame: USE_UNIFIED_FRAME_FLAG,
   };
 
   return (

@@ -1,0 +1,104 @@
+/**
+ * 计时器样式 Token (CSS 变量)
+ *
+ * 用途:
+ * - 定义计时器的全局样式变量
+ * - 允许子模块通过覆写变量自定义样式
+ * - 保持视觉一致性 (基于 Grade-7 规范)
+ *
+ * 使用方式:
+ * ```css
+ * :root {
+ *   --timer-warning-bg: #your-color;
+ * }
+ * ```
+ */
+
+:root {
+  /* ============ 布局与定位 ============ */
+  --timer-top: 55px;
+  --timer-right: 20px;
+  --timer-padding: 12px 20px;
+  --timer-border-radius: 30px;
+  --timer-z-index: 999;
+  --timer-font-size: 18px;
+
+  /* ============ 颜色 - 普通状态 ============ */
+  --timer-bg: var(--cartoon-secondary, #ffeaa7);
+  --timer-fg: var(--text-color, #2d3436);
+  --timer-border-color: #ffb347;
+  --timer-shadow: 0 4px 10px var(--cartoon-shadow, rgba(0, 0, 0, 0.1));
+
+  /* ============ 颜色 - 警告状态 (<300s) ============ */
+  --timer-warning-bg: #ffb347;
+  --timer-warning-fg: #2d3436;
+  --timer-warning-border: #ff9800;
+
+  /* ============ 颜色 - 严重状态 (<60s) ============ */
+  --timer-critical-bg: var(--cartoon-red, #ff6b6b);
+  --timer-critical-fg: white;
+  --timer-critical-border: #ff6b6b;
+
+  /* ============ 颜色 - 完成状态 (时间到) ============ */
+  --timer-complete-bg: var(--cartoon-red, #ff6b6b);
+  --timer-complete-fg: white;
+  --timer-complete-border: #ff6b6b;
+
+  /* ============ 变体 - 问卷计时器 ============ */
+  --timer-questionnaire-top: 55px;
+  --timer-questionnaire-bg: #a29bfe;
+  --timer-questionnaire-border: #6c5ce7;
+
+  /* ============ 变体 - 注意事项计时器 ============ */
+  --timer-notice-top: 55px;
+  --timer-notice-bg: #74b9ff;
+  --timer-notice-border: #0984e3;
+
+  /* ============ 响应式 ============ */
+  --timer-top-mobile: 50px;
+  --timer-right-mobile: 15px;
+  --timer-top-small: 45px;
+  --timer-right-small: 10px;
+}
+
+/* ============ 主题覆写示例 (可选) ============ */
+
+/* 深色主题示例 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --timer-bg: #34495e;
+    --timer-fg: #ecf0f1;
+    --timer-border-color: #7f8c8d;
+    --timer-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* 高对比度主题 */
+@media (prefers-contrast: high) {
+  :root {
+    --timer-bg: white;
+    --timer-fg: black;
+    --timer-border-color: black;
+    --timer-warning-bg: yellow;
+    --timer-warning-fg: black;
+    --timer-critical-bg: red;
+    --timer-critical-fg: white;
+  }
+}
+
+/* ============ 模块级覆写示例 ============ */
+
+/* Grade-4 模块覆写 (可选) */
+[data-module='grade-4'] {
+  /* --timer-bg: #your-custom-color; */
+}
+
+/* Grade-7 模块覆写 (可选) */
+[data-module='grade-7'] {
+  /* --timer-bg: #your-custom-color; */
+}
+
+/* Grade-7-Tracking 模块覆写 (可选) */
+[data-module='grade-7-tracking'] {
+  /* --timer-bg: #your-custom-color; */
+}

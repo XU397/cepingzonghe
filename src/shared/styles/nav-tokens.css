@@ -1,0 +1,197 @@
+/**
+ * 导航样式 Token (CSS 变量)
+ *
+ * 用途:
+ * - 定义导航的全局样式变量 (基于 Grade-7 视觉规范)
+ * - 允许子模块通过覆写变量自定义样式
+ * - 保持视觉一致性与可配置性
+ *
+ * 使用方式:
+ * ```css
+ * :root {
+ *   --nav-dot-size: 32px;
+ * }
+ * ```
+ *
+ * 或在模块容器覆写:
+ * ```css
+ * [data-module='custom-module'] {
+ *   --nav-dot-active: #your-color;
+ * }
+ * ```
+ */
+
+:root {
+  /* ============ 尺寸与间距 ============ */
+
+  /* 圆点直径 (基于 Grade-7 规范: 24px) */
+  --nav-dot-size: 24px;
+
+  /* 圆点之间的垂直间距 */
+  --nav-gap: 16px;
+
+  /* 连接线宽度 */
+  --nav-line-width: 2px;
+
+  /* 导航容器宽度 */
+  --nav-container-width: 100px;
+
+  /* 导航容器内边距 */
+  --nav-container-padding: 15px 10px;
+
+  /* ============ 颜色 - 圆点状态 ============ */
+
+  /* 默认圆点 (未完成) */
+  --nav-dot: #ffffff;
+  --nav-dot-border: var(--cartoon-border, #dfe6e9);
+  --nav-dot-text: var(--text-color, #2d3436);
+
+  /* 激活圆点 (当前步骤) */
+  --nav-dot-active: var(--cartoon-primary, #59c1ff);
+  --nav-dot-active-border: var(--cartoon-dark, #2d3436);
+  --nav-dot-active-text: #ffffff;
+
+  /* 完成圆点 (已完成步骤) */
+  --nav-dot-completed: var(--cartoon-green, #55efc4);
+  --nav-dot-completed-border: #5cbb9f;
+  --nav-dot-completed-text: #ffffff;
+
+  /* ============ 颜色 - 连接线 ============ */
+
+  /* 连接线颜色 */
+  --nav-line-color: var(--cartoon-border, #dfe6e9);
+
+  /* 连接线圆角 */
+  --nav-line-radius: 1px;
+
+  /* ============ 颜色 - 文字与背景 ============ */
+
+  /* 步骤指示器文字颜色 (如 "5/12") */
+  --nav-text: var(--cartoon-dark, #2d3436);
+
+  /* 步骤指示器背景 */
+  --nav-indicator-bg: var(--cartoon-secondary, #ffeaa7);
+
+  /* 导航容器背景 */
+  --nav-container-bg: var(--cartoon-light, #f5f6fa);
+
+  /* 导航容器边框 */
+  --nav-container-border: 3px solid var(--cartoon-border, #dfe6e9);
+
+  /* ============ 字体 ============ */
+
+  /* 圆点数字字号 */
+  --nav-dot-font-size: 14px;
+
+  /* 步骤指示器字号 */
+  --nav-indicator-font-size: 1em;
+
+  /* 标题字号 (如 "进度") */
+  --nav-title-font-size: 14px;
+
+  /* ============ 阴影与效果 ============ */
+
+  /* 圆点阴影 */
+  --nav-dot-shadow: 0 3px 8px var(--cartoon-shadow, rgba(0, 0, 0, 0.1));
+
+  /* 激活圆点阴影 */
+  --nav-dot-active-shadow: 0 5px 15px rgba(89, 193, 255, 0.4);
+
+  /* 圆点悬浮阴影 */
+  --nav-dot-hover-shadow: 0 5px 15px var(--cartoon-shadow, rgba(0, 0, 0, 0.15));
+
+  /* 步骤指示器阴影 */
+  --nav-indicator-shadow: 0 3px 6px var(--cartoon-shadow, rgba(0, 0, 0, 0.1));
+
+  /* 步骤指示器圆角 */
+  --nav-indicator-radius: 15px;
+
+  /* 步骤指示器内边距 */
+  --nav-indicator-padding: 10px 5px;
+
+  /* ============ 动画 ============ */
+
+  /* 过渡时间 */
+  --nav-transition-duration: 0.3s;
+
+  /* 激活圆点缩放 */
+  --nav-dot-active-scale: 1.1;
+
+  /* 悬浮圆点缩放 */
+  --nav-dot-hover-scale: 1.05;
+
+  /* ============ Z-index ============ */
+
+  /* 圆点层级 */
+  --nav-dot-z-index: 1;
+
+  /* 连接线层级 */
+  --nav-line-z-index: 0;
+
+  /* ============ 响应式断点 ============ */
+
+  /* 小屏幕 (可选) */
+  --nav-container-width-small: 80px;
+  --nav-dot-size-small: 20px;
+  --nav-gap-small: 12px;
+}
+
+/* ============ 主题覆写示例 (可选) ============ */
+
+/* 深色主题示例 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --nav-container-bg: #2d3436;
+    --nav-container-border: 3px solid #636e72;
+    --nav-dot: #34495e;
+    --nav-dot-border: #636e72;
+    --nav-dot-text: #ecf0f1;
+    --nav-line-color: #636e72;
+    --nav-text: #ecf0f1;
+    --nav-indicator-bg: #f39c12;
+    --nav-dot-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* 高对比度主题 */
+@media (prefers-contrast: high) {
+  :root {
+    --nav-dot: white;
+    --nav-dot-border: black;
+    --nav-dot-text: black;
+    --nav-dot-active: blue;
+    --nav-dot-active-text: white;
+    --nav-dot-completed: green;
+    --nav-dot-completed-text: white;
+    --nav-line-color: black;
+    --nav-container-bg: white;
+  }
+}
+
+/* ============ 模块级覆写示例 ============ */
+
+/* Grade-4 模块覆写 (可选) */
+[data-module='grade-4'] {
+  /* --nav-dot-active: #your-custom-color; */
+}
+
+/* Grade-7 模块覆写 (可选) */
+[data-module='grade-7'] {
+  /* 使用基线样式，无需覆写 */
+}
+
+/* Grade-7-Tracking 模块覆写 (可选) */
+[data-module='grade-7-tracking'] {
+  /* --nav-dot-active: #your-custom-color; */
+}
+
+/* 问卷模式覆写 (可选) */
+[data-nav-mode='questionnaire'] {
+  /* --nav-dot-active: #a29bfe; */
+  /* --nav-indicator-bg: #a29bfe; */
+}
+
+/* 实验模式覆写 (可选) */
+[data-nav-mode='experiment'] {
+  /* 使用基线样式 */
+}

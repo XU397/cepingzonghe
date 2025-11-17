@@ -8,6 +8,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { Suspense, lazy, useEffect } from 'react';
+import { useRenderCounter } from '@shared/utils/RenderCounter.jsx';
 import { TrackingProvider, useTrackingContext } from './context/TrackingProvider';
 import { getInitialPage, getPageId } from './utils/pageMapping';
 import ModuleErrorBoundary from '../ErrorBoundary';
@@ -76,6 +77,8 @@ const PageLoadingFallback = () => (
  * 这个组件在TrackingProvider内部，可以访问TrackingContext
  */
 const ModuleRouter = () => {
+  // DEV-only render counter for g7-tracking visuals: 15s window, threshold 80
+  useRenderCounter({ component: 'g7-tracking', windows: [15], thresholds: { 15: 80 } })
   const { session } = useTrackingContext();
 
   // 根据 session.currentPage 动态获取当前页面ID
@@ -108,7 +111,7 @@ const ModuleRouter = () => {
  * @param {Object} props.userContext - 用户上下文(包含认证信息、会话数据等)
  * @param {string} props.initialPageId - 初始页面ID(用于页面恢复)
  */
-const Grade7TrackingModule = ({ userContext, initialPageId }) => {
+const Grade7TrackingModule = ({ userContext, initialPageId, children }) => {
   console.log('[Grade7TrackingModule] 7年级追踪测评模块初始化', {
     hasUserContext: !!userContext,
     initialPageId,
@@ -160,6 +163,7 @@ const Grade7TrackingModule = ({ userContext, initialPageId }) => {
   return (
     <ModuleErrorBoundary>
       <TrackingProvider userContext={userContext} initialPageId={initialPage}>
+        {children}
         {/* ModuleRouter 在 TrackingProvider 内部，可以访问 session.currentPage */}
         <ModuleRouter />
       </TrackingProvider>

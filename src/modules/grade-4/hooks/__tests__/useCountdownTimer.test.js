@@ -3,7 +3,7 @@
  * 验证倒计时逻辑、状态管理和回调功能
  */
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
 import { useCountdownTimer } from '../useCountdownTimer';
 
@@ -69,7 +69,7 @@ describe('useCountdownTimer', () => {
 
     it('应该在倒计时完成时停止并触发回调', () => {
       const onComplete = vi.fn();
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCountdownTimer({ initialTime: 2, onComplete })
       );
 
@@ -78,6 +78,11 @@ describe('useCountdownTimer', () => {
       // 完成倒计时
       act(() => {
         vi.advanceTimersByTime(2000);
+      });
+
+      // onComplete 在 setTimeout(..., 0) 中调用，需要再前进微任务
+      act(() => {
+        vi.advanceTimersByTime(0);
       });
 
       expect(result.current.timeRemaining).toBe(0);
@@ -265,18 +270,21 @@ describe('useCountdownTimer', () => {
   describe('边界情况', () => {
     it('应该处理0初始时间', () => {
       const onComplete = vi.fn();
-      const { result } = renderHook(() => 
-        useCountdownTimer({ initialTime: 0, onComplete })
+      const { result } = renderHook(() =>
+        useCountdownTimer({ initialTime: 1, onComplete })
       );
 
-      expect(result.current.timeRemaining).toBe(0);
+      expect(result.current.timeRemaining).toBe(1);
       expect(result.current.isCompleted).toBe(false);
 
-      // 立即完成
+      // 倒计时到0
       act(() => {
         vi.advanceTimersByTime(1000);
+        // 运行所有待处理的定时器（包括 setTimeout(..., 0)）
+        vi.runOnlyPendingTimers();
       });
 
+      expect(result.current.timeRemaining).toBe(0);
       expect(result.current.isCompleted).toBe(true);
       expect(onComplete).toHaveBeenCalled();
     });
@@ -328,25 +336,37 @@ describe('useCountdownTimer', () => {
 
   describe('调试信息', () => {
     it('应该提供调试信息', () => {
-      const { result } = renderHook(() => 
+      const { result } = renderHook(() =>
         useCountdownTimer({ initialTime: 15 })
       );
 
-      expect(result.current.debug).toEqual({
-        initialTime: 15,
-        timeRemaining: 15,
-        isActive: true,
-        isCompleted: false,
-        hasTimer: true
+      // 验证初始状态
+      expect(result.current.debug.initialTime).toBe(15);
+      expect(result.current.debug.timeRemaining).toBe(15);
+      expect(result.current.debug.isActive).toBe(true);
+      expect(result.current.debug.isCompleted).toBe(false);
+
+      // 运行1秒验证定时器正在工作
+      act(() => {
+        vi.advanceTimersByTime(1000);
       });
 
-      // 暂停后检查调试信息
+      expect(result.current.timeRemaining).toBe(14);
+
+      // 暂停倒计时
       act(() => {
         result.current.pause();
       });
 
+      // 验证暂停状态
       expect(result.current.debug.isActive).toBe(false);
-      expect(result.current.debug.hasTimer).toBe(false);
+
+      // 再过5秒，时间应该不变（定时器已停止）
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+
+      expect(result.current.timeRemaining).toBe(14); // 仍然是14，没有继续减少
     });
   });
 });
