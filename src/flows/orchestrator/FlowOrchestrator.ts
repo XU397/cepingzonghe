@@ -35,13 +35,17 @@ type ResolveResult = {
  */
 export class FlowOrchestrator {
   private flowId: string;
+  private examNo: string | null;
+  private batchCode: string | null;
   private definition: FlowDefinition | null = null;
   private progress: FlowProgress | null = null;
   private hasLoaded = false;
   private disposed = false;
 
-  constructor(flowId: string) {
+  constructor(flowId: string, examNo?: string | null, batchCode?: string | null) {
     this.flowId = flowId;
+    this.examNo = examNo ?? null;
+    this.batchCode = batchCode ?? null;
   }
 
   /**
@@ -307,6 +311,10 @@ export class FlowOrchestrator {
    */
   private async fetchProgressBundle(): Promise<FlowProgress | null> {
     const progressEndpoint = this.getProgressEndpoint();
+    if (!progressEndpoint) {
+      // examNo 不存在时不尝试从后端加载进度，直接返回 null
+      return null;
+    }
     const response: any = await apiClient.get(progressEndpoint);
     this.log('Progress response:', response);
 
@@ -327,11 +335,19 @@ export class FlowOrchestrator {
     return payload as FlowProgress;
   }
 
-  private getProgressEndpoint(): string {
-    if (typeof endpoints.flow?.updateProgress === 'function') {
-      return endpoints.flow.updateProgress(this.flowId);
+  private getProgressEndpoint(): string | null {
+    // 后端规范：GET /stu/api/flows/{flowId}/progress/{examNo}?batchCode={batchCode}
+    if (!this.examNo) {
+      return null;
     }
-    return `/api/flows/${this.flowId}/progress`;
+    if (typeof endpoints.flow?.getProgress === 'function') {
+      return endpoints.flow.getProgress(this.flowId, this.examNo, this.batchCode || undefined);
+    }
+    const base = `/stu/api/flows/${this.flowId}/progress/${this.examNo}`;
+    if (!this.batchCode) {
+      return base;
+    }
+    return `${base}?batchCode=${encodeURIComponent(this.batchCode)}`;
   }
 
   private extractApiPayload<T>(response: any, allowNull = false): T {
@@ -342,9 +358,24 @@ export class FlowOrchestrator {
       throw new Error('Invalid API response format');
     }
 
-    if (typeof response === 'object') {
-      if ('obj' in response) {
-        const payload = (response as any).obj;
+    let working: any = response;
+
+    // 部分环境下后端返回 Content-Type 非 application/json，apiClient 会以字符串形式返回
+    // 此处尝试将看起来像 JSON 的字符串解析为对象
+    if (typeof working === 'string') {
+      const trimmed = working.trim();
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+          working = JSON.parse(trimmed);
+        } catch {
+          // 解析失败则保留原始字符串，由下方逻辑按原样返回
+        }
+      }
+    }
+
+    if (typeof working === 'object' && working !== null) {
+      if ('obj' in working) {
+        const payload = (working as any).obj;
         if (payload === undefined) {
           throw new Error('Invalid API response format');
         }
@@ -354,12 +385,13 @@ export class FlowOrchestrator {
         return payload as T;
       }
 
-      if ('code' in response) {
+      if ('code' in working) {
+        // 有 code 但没有 obj，视为无效格式
         throw new Error('Invalid API response format');
       }
     }
 
-    return response as T;
+    return working as T;
   }
 
   /**
@@ -368,7 +400,15 @@ export class FlowOrchestrator {
   private loadDefinitionFromCache(): FlowDefinition | null {
     try {
       const raw = localStorage.getItem(this.getCacheKey('definition'));
-      return raw ? (JSON.parse(raw) as FlowDefinition) : null;
+      if (!raw) {
+        return null;
+      }
+      const parsed = JSON.parse(raw) as FlowDefinition;
+      // 如果缓存中的定义没有有效的 steps，则视为无效缓存，返回 null（避免旧错误配置影响新定义）
+      if (!parsed || !Array.isArray(parsed.steps) || parsed.steps.length === 0) {
+        return null;
+      }
+      return parsed;
     } catch (error) {
       this.warn('Failed to parse cached definition', error);
       return null;

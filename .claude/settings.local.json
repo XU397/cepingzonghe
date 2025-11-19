@@ -45,9 +45,35 @@
       "Bash(done)",
       "Bash(for file in Page02_QuestionnaireNotice.jsx Page06_Hypothesis.jsx Page07_Design.jsx Page08_Evaluation.jsx Page09_Transition.jsx Page10_Experiment.jsx Page13_Summary.jsx Page14_Solution.jsx)",
       "Bash(head:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(npx vitest:*)",
+      "Bash(openspec validate:*)",
+      "Bash(nul)",
+      "Bash(npm test:*)",
+      "Bash(mkdir:*)",
+      "Bash(openspec list:*)",
+      "Skill(codex)",
+      "Bash(uv run:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(netstat:*)",
+      "Bash(ss:*)",
+      "Bash(echo:*)",
+      "Bash(dpkg:*)",
+      "Bash(/home/chenx/chrome/chrome/linux-142.0.7444.162/chrome-linux64/chrome:*)",
+      "Bash(ldd:*)",
+      "Bash(chmod:*)",
+      "Bash(/tmp/test-chrome-debug.sh)",
+      "Bash(npx chrome-devtools-mcp@latest:*)",
+      "Bash(pkill:*)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__list_console_messages",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "chrome-devtools"
+  ]
 }

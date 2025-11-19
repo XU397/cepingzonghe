@@ -201,22 +201,25 @@ export function usePageSubmission(options = {}) {
       return false;
     }
 
-    markCandidate.operationList = ensureArray(markCandidate.operationList).map((operation, index) => {
-      const eventType = operation.eventType;
-      const isFlowContextEvent = isFlowContextEventType(eventType);
+    // 统一规范 code：无论上游是否提供，均按索引从 1 递增
+    markCandidate.operationList = ensureArray(markCandidate.operationList).map(
+      (operation, index) => {
+        const eventType = operation.eventType;
+        const isFlowContextEvent = isFlowContextEventType(eventType);
 
-      return {
-        code: operation.code ?? index + 1,
-        eventType,
-        targetElement: operation.targetElement ?? '',
-        value: isFlowContextEvent ? operation.value : maybeString(operation.value),
-        time: operation.time || formatTimestamp(new Date()),
-        pageId: operation.pageId,
-      };
-    });
+        return {
+          code: index + 1,
+          eventType,
+          targetElement: operation.targetElement ?? '',
+          value: isFlowContextEvent ? operation.value : maybeString(operation.value),
+          time: operation.time || formatTimestamp(new Date()),
+          pageId: operation.pageId,
+        };
+      },
+    );
 
     markCandidate.answerList = ensureArray(markCandidate.answerList).map((answer, index) => ({
-      code: answer.code ?? index + 1,
+      code: index + 1,
       targetElement: answer.targetElement ?? '',
       value: maybeString(answer.value),
     }));

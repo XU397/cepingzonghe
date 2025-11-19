@@ -3,6 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import NavigationButton from '../components/common/NavigationButton';
 import TextInput from '../components/common/TextInput';
 import { useDataLogging } from '../hooks/useDataLogging';
+import EventTypes from '../shared/services/submission/eventTypes';
 import backgroundImage from '../assets/images/P2.png'; // 导入背景图片 P2.png
 import dialogueImage from '../assets/images/P2-1.png'; // 导入对话场景图片
 
@@ -84,7 +85,7 @@ const Page_03_Dialogue_Question = () => {
     }
     logOperation({
       targetElement: '科学问题输入框',
-      eventType: 'focus',
+      eventType: EventTypes.FOCUS,
     });
   }, [isInputFocused, logOperation]);
 
@@ -115,7 +116,7 @@ const Page_03_Dialogue_Question = () => {
     const submissionSuccess = await submitPageData();
 
     if (submissionSuccess) {
-      navigateToPage('Page_04_Material_Reading_Factor_Selection');
+      navigateToPage('Page_04_Material_Reading_Factor_Selection', { skipSubmit: true });
       return true;
     } else {
       alert('数据提交失败，请稍后再试。');

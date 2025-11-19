@@ -6,6 +6,7 @@ import STORAGE_KEYS, { removeStorageItem, getStorageItem, setStorageItem } from 
 import { handlePageTransition } from '../utils/pageTransitionUtils';
 import { useBrowserCloseHandler } from '../hooks/useBrowserCloseHandler';
 import { apiClient } from '@shared/services/api';
+import EventTypes, { EventTypeValues } from '@shared/services/submission/eventTypes.js';
 
 /**
  * 应用全局上下文
@@ -178,6 +179,18 @@ export const AppProvider = ({ children }) => {
     });
     
     debugLog('[AppContext.logOperation] value type:', typeof value, value);
+
+    // 仅将标准事件类型写入当前页面的 operationList，非标准事件保留为运行日志但不进入 Mark 提交
+    const isStandardEventType =
+      typeof eventType === 'string' && EventTypeValues.includes(eventType);
+    if (!isStandardEventType) {
+      debugLog('[AppContext.logOperation] 非标准事件类型，仅记录日志不写入 operationList:', {
+        eventType,
+        targetElement: finalTargetElement,
+        value,
+      });
+      return false;
+    }
     
     setCurrentPageData(prevData => {
       // 🔧 防重复逻辑：检查是否存在相同的操作记录
@@ -442,8 +455,8 @@ export const AppProvider = ({ children }) => {
   }, [handleSessionExpired]);
 
   const buildMarkFromContext = useCallback(() => {
-    const prepared = preparePageSubmissionData();
-    return prepared?.mark || null;
+    // preparePageSubmissionData() 直接返回 mark 对象
+    return preparePageSubmissionData() || null;
   }, [preparePageSubmissionData]);
 
   const getUserContextForSubmission = useCallback(() => ({
@@ -509,8 +522,8 @@ export const AppProvider = ({ children }) => {
         };
       }
     } else {
-      const prepared = preparePageSubmissionData();
-      markData = prepared?.mark;
+      // preparePageSubmissionData() 直接返回 mark 对象，不是 { mark: {...} } 格式
+      markData = preparePageSubmissionData();
     }
 
     if (!markData) {

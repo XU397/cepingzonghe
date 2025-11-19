@@ -91,7 +91,7 @@ export interface SubmoduleDefinition {
   /** 获取总步数 */
   getTotalSteps: () => number;
   /** 获取导航模式 */
-  getNavigationMode: (pageId: string) => 'experiment' | 'questionnaire';
+  getNavigationMode: (pageId: string) => 'experiment' | 'questionnaire' | 'hidden';
   /** 获取默认计时器配置 */
   getDefaultTimers?: () => {
     task?: number;

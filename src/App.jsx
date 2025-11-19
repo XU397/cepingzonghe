@@ -7,6 +7,7 @@ import StepNavigation from './components/common/StepNavigation';
 import QuestionnaireNavigation from './components/questionnaire/QuestionnaireNavigation';
 import UserInfoBar from './components/common/UserInfoBar';
 import ApiConfigDebug from './components/debug/ApiConfigDebug';
+import DevToolsPanel from './components/dev/DevToolsPanel';
 import useFullscreen from './hooks/useFullscreen';
 import FullscreenPrompt from './components/FullscreenPrompt';
 import { isQuestionnairePage, getQuestionnaireStepNumber, TOTAL_QUESTIONNAIRE_STEPS } from './utils/pageMappings';
@@ -15,6 +16,9 @@ import './styles/global.css'; // Ensure global styles are imported
 
 // 导入模块路由器
 const ModuleRouter = React.lazy(() => import('./modules/ModuleRouter.jsx'));
+const isDevEnvironment = typeof process !== 'undefined'
+  ? process.env.NODE_ENV === 'development'
+  : Boolean(import.meta.env?.DEV);
 
 /**
  * 主应用内容组件
@@ -331,6 +335,7 @@ function App() {
     <>
       <AppContent />
       {showDebug && <ApiConfigDebug />}
+      {isDevEnvironment && <DevToolsPanel />}
     </>
   );
 }

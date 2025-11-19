@@ -84,7 +84,7 @@ const Page_17_Simulation_Question_3 = () => {
 
     const submissionSuccess = await submitPageData();
     if (submissionSuccess) {
-      navigateToPage('Page_18_Solution_Selection');
+      navigateToPage('Page_18_Solution_Selection', { skipSubmit: true });
       return true;
     } else {
       alert('数据提交失败，请重试。');

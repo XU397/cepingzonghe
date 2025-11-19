@@ -113,7 +113,7 @@ const Page_11_Solution_Design_Measurement_Ideas = () => {
     
     const submissionSuccess = await submitPageData();
     if (submissionSuccess) {
-      navigateToPage('Page_12_Solution_Evaluation_Measurement_Critique');
+      navigateToPage('Page_12_Solution_Evaluation_Measurement_Critique', { skipSubmit: true });
       return true;
     } else {
       setAlertMessage('数据提交失败，请重试。');

@@ -127,7 +127,7 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
     
     const submissionSuccess = await submitPageData();
     if (submissionSuccess) {
-      navigateToPage('Page_13_Transition_To_Simulation');
+      navigateToPage('Page_13_Transition_To_Simulation', { skipSubmit: true });
       return true;
     } else {
       setAlertMessage('数据提交失败，请重试。');

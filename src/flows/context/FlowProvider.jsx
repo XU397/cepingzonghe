@@ -23,11 +23,11 @@ function parseFlag(val, def) {
  * - When disabled via flag, renders children as-is (no provider)
  */
 export function FlowProvider({
-  flowId,
-  submoduleId,
-  stepIndex,
-  progress,
-  orchestratorRef,
+  flowId = '',
+  submoduleId = '',
+  stepIndex = 0,
+  progress = null,
+  orchestratorRef = null,
   heartbeatEnabled = false,
   children,
 }) {
@@ -142,15 +142,6 @@ FlowProvider.propTypes = {
   orchestratorRef: PropTypes.shape({ current: PropTypes.any }),
   heartbeatEnabled: PropTypes.bool,
   children: PropTypes.node.isRequired,
-};
-
-FlowProvider.defaultProps = {
-  flowId: '',
-  submoduleId: '',
-  stepIndex: 0,
-  progress: null,
-  orchestratorRef: null,
-  heartbeatEnabled: false,
 };
 
 /**

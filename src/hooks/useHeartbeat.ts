@@ -5,6 +5,8 @@ type Options = {
   flowId?: string | null;
   stepIndexRef: MutableRefObject<number>;
   modulePageNumRef: MutableRefObject<string | number>;
+  examNo?: string | null;
+  batchCode?: string | null;
   enabled?: boolean;
   intervalMs?: number; // 默认 15s
   onError?: (e: unknown) => void;
@@ -105,6 +107,8 @@ export default function useHeartbeat({
   flowId,
   stepIndexRef,
   modulePageNumRef,
+  examNo,
+  batchCode,
   enabled = false,
   intervalMs = 15000,
   onError,
@@ -118,7 +122,12 @@ export default function useHeartbeat({
 
   useEffect(() => {
     if (!enabled || !flowId) {
-      console.debug('[useHeartbeat] Disabled or missing flowId', { enabled, flowId });
+      console.debug('[useHeartbeat] Disabled or missing flowId', {
+        enabled,
+        flowId,
+        hasExamNo: !!examNo,
+        hasBatchCode: !!batchCode,
+      });
       return;
     }
 
@@ -127,6 +136,8 @@ export default function useHeartbeat({
     const sendHeartbeat = () => {
       const payload = {
         flowId,
+        examNo: examNo ?? null,
+        batchCode: batchCode ?? null,
         stepIndex: stepIndexRef.current ?? 0,
         modulePageNum: modulePageNumRef.current ?? '1',
         ts: Date.now(),

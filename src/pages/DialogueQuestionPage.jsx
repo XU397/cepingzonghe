@@ -34,7 +34,6 @@ const DialogueQuestionPage = () => {
     
     // 收集问题作为答案
     collectAnswer({
-      code: '1',
       targetElement: '科学问题输入框',
       value: question
     });

@@ -74,6 +74,11 @@ function ExperimentFlowBridge({ flowContext }) {
 
 export function G7TrackingExperimentComponent({ userContext, initialPageId, flowContext }) {
   const { ModuleComponent: TrackingModule } = Grade7TrackingModuleDefinition || {};
+  const enhancedUserContext = {
+    ...userContext,
+    // 向 Tracking 模块提供 getFlowContext，供 useDataLogger 注入 flow_context
+    getFlowContext: () => (flowContext ? { ...flowContext } : null),
+  };
 
   useEffect(() => {
     console.log('[G7TrackingExperiment] Submodule mounted', {
@@ -93,7 +98,7 @@ export function G7TrackingExperimentComponent({ userContext, initialPageId, flow
 
   return (
     <TrackingModule
-      userContext={userContext}
+      userContext={enhancedUserContext}
       initialPageId={initialPageId}
     >
       <ExperimentFlowBridge flowContext={flowContext} />

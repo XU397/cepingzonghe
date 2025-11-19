@@ -40,15 +40,28 @@ pnpm install
 
 ### 开发模式
 
-```bash
-# 启动开发服务器（默认端口 3000）
-npm run dev
+#### 🎭 Mock 模式（推荐，前端独立调试）
 
-# 使用 Mock 模式（无需后端）
-VITE_USE_MOCK=1 npm run dev
+无需后端，支持完整流程测试：
+
+```bash
+# 1. 确认 .env 文件中 VITE_USE_MOCK=1
+# 2. 启动开发服务器
+npm run dev
 ```
 
 访问: http://localhost:3000
+
+**详细指引**：[📖 Mock 模式快速开始](./docs/QUICK_START_MOCK.md)
+
+#### 🔗 联调模式（对接真实后端）
+
+```bash
+# 修改 .env: VITE_USE_MOCK=0
+npm run dev
+```
+
+**配置说明**：[📘 Mock 模式使用指南](./docs/MOCK_MODE_GUIDE.md)
 
 ### 生产构建
 

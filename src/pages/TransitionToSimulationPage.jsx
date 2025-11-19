@@ -42,7 +42,7 @@ const TransitionToSimulationPage = () => {
     const submissionSuccess = await submitPageData();
 
     if (submissionSuccess) {
-      navigateToPage('Page_14_Simulation_Intro_Exploration'); 
+      navigateToPage('Page_14_Simulation_Intro_Exploration', { skipSubmit: true }); 
     } else {
       console.error('TransitionToSimulationPage: 提交页面数据失败');
       alert('数据提交失败，请稍后再试。');

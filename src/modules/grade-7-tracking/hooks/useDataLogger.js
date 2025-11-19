@@ -22,6 +22,12 @@ export function useDataLogger() {
     examNo: store.session?.examNo,
   }));
 
+  // 从 TrackingProvider 暴露的 userContext 中读取 Flow 上下文（如有）
+  const { flowContextGetter, flowContextValue } = useTrackingContextSelector((store) => ({
+    flowContextGetter: store.userContext?.getFlowContext,
+    flowContextValue: store.userContext?.flowContext || null,
+  }));
+
   const getUserContext = useCallback(() => ({
     batchCode: batchCode || localStorage.getItem('batchCode') || '',
     examNo: examNo || localStorage.getItem('examNo') || '',
@@ -58,6 +64,7 @@ export function useDataLogger() {
     clearError,
   } = usePageSubmission({
     getUserContext,
+    getFlowContext: flowContextGetter || (flowContextValue ? (() => flowContextValue) : undefined),
     handleSessionExpired,
     allowProceedOnFailureInDev: true,
     logger: console,

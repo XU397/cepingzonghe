@@ -2,7 +2,6 @@ import React, { useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { useDataLogging } from '../hooks/useDataLogging';
 import NavigationButton from '../components/common/NavigationButton';
-import { submitPageMarkData } from '../services/apiService';
 import { pageInfoMapping } from '../utils/pageMappings';
 import styles from './Page_19_Task_Completion.module.css';
 
@@ -34,61 +33,13 @@ const Page_19_Task_Completion = () => {
   const pageLoadedRef = useRef(false);
   const dataSubmittedRef = useRef(false);
 
-  // 页面进入记录和数据提交 - 只执行一次
+  // 页面进入记录 - 只执行一次（提交由按钮触发，避免重复）
   useEffect(() => {
     if (!pageLoadedRef.current) {
       pageLoadedRef.current = true;
-      console.log('[Page_19_Task_Completion] 页面挂载，设置页面进入时间');
       const enterTime = new Date();
       setPageEnterTime(enterTime);
       logPageEnter('主任务完成页面');
-      console.log('[Page_19_Task_Completion] 页面进入记录完成');
-      
-      // 直接调用API提交页面数据，绕过AppContext的阻止逻辑
-      const submitPageEnterData = async () => {
-        if (dataSubmittedRef.current) return; // 防止重复提交
-        dataSubmittedRef.current = true;
-        
-        console.log('[Page_19_Task_Completion] 直接提交页面进入数据');
-        try {
-          const pageInfo = pageInfoMapping[currentPageId] || { number: '19', desc: '主任务完成页面' };
-          const beginTime = formatDateTime(enterTime);
-          const endTime = formatDateTime(new Date());
-          
-          // 构建页面进入的操作记录
-          const pageEnterOperation = {
-            code: 1,
-            targetElement: '页面',
-            eventType: 'page_enter',
-            value: `进入页面${currentPageId}`,
-            time: beginTime
-          };
-          
-          const payload = {
-            batchCode,
-            examNo,
-            mark: {
-              pageNumber: pageInfo.number,
-              pageDesc: pageInfo.desc,
-              operationList: [pageEnterOperation],
-              answerList: [],
-              beginTime,
-              endTime,
-              imgList: []
-            }
-          };
-          
-          console.log('[Page_19_Task_Completion] 直接提交的数据:', payload);
-          await submitPageMarkData(payload);
-          console.log('[Page_19_Task_Completion] 页面进入数据提交成功');
-        } catch (error) {
-          console.error('[Page_19_Task_Completion] 页面进入数据提交失败:', error);
-          // 不影响页面正常显示，只记录错误
-        }
-      };
-      
-      // 延迟一小段时间确保页面进入时间已设置
-      setTimeout(submitPageEnterData, 100);
     }
   }, []);
 
@@ -118,7 +69,7 @@ const Page_19_Task_Completion = () => {
 
     if (submissionSuccess) {
       console.log("[Page_19_Task_Completion] 页面数据提交成功，跳转到问卷说明页面");
-      navigateToPage('Page_20_Questionnaire_Intro'); 
+      navigateToPage('Page_20_Questionnaire_Intro', { skipSubmit: true }); 
     } else {
       console.error('Page_19_Task_Completion: 提交页面数据失败');
       alert('数据提交失败，请稍后再试。');

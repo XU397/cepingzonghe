@@ -12,9 +12,15 @@ export const endpoints = {
 
   // Flow（新增，待后端实现）
   flow: {
-    getDefinition: (flowId: string) => `/api/flows/${flowId}`,
-    getProgress: (flowId: string, examNo: string) => `/api/flows/${flowId}/progress/${examNo}`,
-    updateProgress: (flowId: string) => `/api/flows/${flowId}/progress`,
+    // 注意：后端约定实际路径为 /stu/api/flows/{flowId}
+    getDefinition: (flowId: string) => `/stu/api/flows/${flowId}`,
+    // 进度查询：GET /stu/api/flows/{flowId}/progress/{examNo}?batchCode={batchCode}
+    getProgress: (flowId: string, examNo: string, batchCode?: string) => {
+      const base = `/stu/api/flows/${flowId}/progress/${examNo}`;
+      if (!batchCode) return base;
+      return `${base}?batchCode=${encodeURIComponent(batchCode)}`;
+    },
+    updateProgress: (flowId: string) => `/stu/api/flows/${flowId}/progress`,
   },
 
   // 心跳（新增，待后端实现）

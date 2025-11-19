@@ -1,3 +1,9 @@
+import {
+  DEV_TOOLS_STORAGE_KEYS,
+  DEV_TOOLS_DEFAULTS,
+  readDevBooleanPreference
+} from '../utils/devTools';
+
 /**
  * API配置文件
  * 根据运行环境动态配置API基础URL
@@ -12,6 +18,39 @@ const isDevelopment = import.meta.env.DEV;
  * 判断当前是否为生产环境
  */
 const isProduction = import.meta.env.PROD;
+
+const envMockDefault = (() => {
+  const rawValue = import.meta.env?.VITE_USE_MOCK;
+  if (rawValue === undefined || rawValue === null) {
+    return DEV_TOOLS_DEFAULTS.mock;
+  }
+  const normalized = String(rawValue).toLowerCase();
+  return normalized === 'true' || normalized === '1';
+})();
+
+const resolveMockPreference = () => {
+  if (!isDevelopment) {
+    return envMockDefault;
+  }
+  return readDevBooleanPreference(
+    DEV_TOOLS_STORAGE_KEYS.mock,
+    envMockDefault
+  );
+};
+
+const useMock = resolveMockPreference();
+
+const buildDevApiBaseUrl = () => {
+  if (useMock) {
+    return '/stu';
+  }
+  const target = import.meta.env?.VITE_API_TARGET;
+  if (!target) {
+    return '/stu';
+  }
+  const trimmed = target.endsWith('/') ? target.slice(0, -1) : target;
+  return trimmed.endsWith('/stu') ? trimmed : `${trimmed}/stu`;
+};
 
 /**
  * 获取当前域名和端口
@@ -89,10 +128,11 @@ function getProductionApiUrl() {
 const API_CONFIG = {
   // 开发环境配置
   development: {
-    baseURL: '/stu', // 使用Vite代理
+    baseURL: buildDevApiBaseUrl(),
     timeout: 10000,
     corsMode: 'cors',
-    credentials: 'include'
+    credentials: 'include',
+    useMock
   },
   // 生产环境配置
   production: (() => {
@@ -121,6 +161,9 @@ export const getApiConfig = () => {
     console.log(`[API Config] CORS模式: ${config.corsMode}`);
     console.log(`[API Config] 凭证模式: ${config.credentials}`);
     console.log(`[API Config] 当前域名: ${getCurrentHost()}`);
+    if (env === 'development') {
+      console.log(`[API Config] Mock 模式: ${useMock ? '启用' : '禁用'}`);
+    }
     hasLoggedConfig = true;
   }
   
@@ -201,6 +244,8 @@ export const getFetchOptions = (customOptions = {}) => {
   };
 };
 
+export const isMockApiEnabled = () => useMock;
+
 export default {
   getApiConfig,
   getApiBaseUrl,
@@ -208,5 +253,6 @@ export default {
   getCorsMode,
   getCredentialsMode,
   buildApiUrl,
-  getFetchOptions
-}; 
+  getFetchOptions,
+  isMockApiEnabled
+};

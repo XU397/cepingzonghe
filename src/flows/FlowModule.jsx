@@ -117,7 +117,13 @@ const logFlowContextOnce = (flowId, resolved, logOperation, loggedRef) => {
   debugLog('[FlowModule] flow_context logged:', operation);
 };
 
-const advanceFlowStep = ({ orchestratorRef, completionSignaledRef, navigate, loadFlow }) => {
+const advanceFlowStep = ({
+  orchestratorRef,
+  completionSignaledRef,
+  navigate,
+  loadFlow,
+  onFlowCompleted,
+}) => {
   const orchestrator = orchestratorRef.current;
   if (!orchestrator) {
     return;
@@ -127,6 +133,13 @@ const advanceFlowStep = ({ orchestratorRef, completionSignaledRef, navigate, loa
 
   if (!hasNext) {
     debugLog('[FlowModule] Flow completed');
+    if (typeof onFlowCompleted === 'function') {
+      try {
+        onFlowCompleted();
+      } catch (err) {
+        console.error('[FlowModule] Error during onFlowCompleted:', err);
+      }
+    }
     navigate('/login', { replace: true });
     return;
   }
@@ -407,12 +420,16 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
 
   // 在 DEV 环境下，Flow 直达时补充认证状态，避免路由层显示登录页
   const handleLoginSuccess = flowContextSnapshot?.handleLoginSuccess;
+  const hasRealAuthContext =
+    Boolean(flowContextSnapshot?.isAuthenticated) &&
+    Boolean(flowContextSnapshot?.batchCode || flowContextSnapshot?.examNo);
   useEffect(() => {
-    
     if (!import.meta.env.DEV) return;
     if (!devMockFlowId) return;
     if (typeof handleLoginSuccess !== 'function') return;
     if (devAuthAppliedRef.current) return;
+    // 如果已经有真实的认证上下文（来自后端登录），则不要再注入 Mock 账号
+    if (hasRealAuthContext) return;
 
     const userData = {
       batchCode: 'FLOW-MOCK',
@@ -429,7 +446,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     } catch (err) {
       console.error('[FlowModule] Mock authentication failed:', err);
     }
-  }, [devMockFlowId, handleLoginSuccess]);
+  }, [devMockFlowId, handleLoginSuccess, hasRealAuthContext]);
 
   const contextFlowId = useMemo(
     () => deriveFlowIdFromUrl(effectiveUserContext?.url || effectiveUserContext?.moduleUrl),
@@ -515,7 +532,13 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     });
   }, [contextFlowId, effectiveUserContext, initialPageId, navigate, redirectingToRoute]);
 
-  const heartbeatEnabled = Boolean(flowId) && !state.loading && !state.error && !state.showTransition;
+  const heartbeatEnabled =
+    Boolean(flowId) &&
+    !state.loading &&
+    !state.error &&
+    !state.showTransition &&
+    !!(effectiveUserContext?.examNo || flowContextSnapshot?.examNo) &&
+    !!(effectiveUserContext?.batchCode || flowContextSnapshot?.batchCode);
   useEffect(() => {
     debugLog('[FlowModule] heartbeatEnabled changed:', heartbeatEnabled, {
       hasFlowId: Boolean(flowId),
@@ -534,6 +557,8 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     flowId: flowId || contextFlowId || 'pending',
     stepIndexRef: stableStepIndexRef,
     modulePageNumRef: stableModulePageNumRef,
+    examNo: effectiveUserContext?.examNo || flowContextSnapshot?.examNo || null,
+    batchCode: effectiveUserContext?.batchCode || flowContextSnapshot?.batchCode || null,
     enabled: heartbeatEnabled,
     intervalMs: 15000, // 15秒
     onError: handleHeartbeatError,
@@ -581,9 +606,10 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
         completionSignaledRef,
         navigate,
         loadFlow,
+        onFlowCompleted: appContext?.handleLogout || appContext?.clearAllCache || null,
       });
     }
-  }, [loadFlow, navigate, state.currentStep]);
+  }, [appContext?.clearAllCache, appContext?.handleLogout, loadFlow, navigate, state.currentStep]);
 
   /**
    * 过渡页继续
@@ -599,8 +625,9 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       completionSignaledRef,
       navigate,
       loadFlow,
+      onFlowCompleted: appContext?.handleLogout || appContext?.clearAllCache || null,
     });
-  }, [loadFlow, navigate]);
+  }, [appContext?.clearAllCache, appContext?.handleLogout, loadFlow, navigate]);
 
   /**
    * 子模块超时回调
@@ -631,7 +658,11 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       }
     });
 
-    const orchestrator = new FlowOrchestrator(flowId);
+    const orchestrator = new FlowOrchestrator(
+      flowId,
+      effectiveUserContext?.examNo || null,
+      effectiveUserContext?.batchCode || null,
+    );
     orchestratorRef.current = orchestrator;
     completionSignaledRef.current = false;
 

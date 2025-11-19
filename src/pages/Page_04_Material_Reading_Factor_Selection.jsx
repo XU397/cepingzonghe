@@ -145,7 +145,6 @@ const Page_04_Material_Reading_Factor_Selection = () => {
       // 立即收集答案
       if (newSelections[factorKey]) {
         collectAnswer({
-          code: `P04_Factor_${factorKey}`,
           targetElement: `影响因素选择: ${factorDisplayName}`,
           value: factorDisplayName,
         });
@@ -172,7 +171,7 @@ const Page_04_Material_Reading_Factor_Selection = () => {
     
     const submissionSuccess = await submitPageData();
     if (submissionSuccess) {
-      navigateToPage('Page_10_Hypothesis_Focus');
+      navigateToPage('Page_10_Hypothesis_Focus', { skipSubmit: true });
       return true;
     } else {
       setAlertMessage('数据提交失败，请重试');

@@ -49,9 +49,13 @@ export function getTotalSteps(): number {
 
 /**
  * 获取导航模式
- * 7年级实验部分全部为 experiment 模式
+ * - 注意事项页（Page_01_Precautions）为导航隐藏模式 hidden
+ * - 其他页面均为 experiment 模式
  */
-export function getNavigationMode(pageId: string): 'experiment' | 'questionnaire' {
+export function getNavigationMode(pageId: string): 'experiment' | 'questionnaire' | 'hidden' {
+  if (pageId === 'Page_01_Precautions') {
+    return 'hidden';
+  }
   return 'experiment';
 }
 

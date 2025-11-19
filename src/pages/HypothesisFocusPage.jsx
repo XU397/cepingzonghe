@@ -49,7 +49,7 @@ const HypothesisFocusPage = () => {
     const submissionSuccess = await submitPageData();
 
     if (submissionSuccess) {
-      navigateToPage('Page_11_Solution_Design_Measurement_Ideas'); 
+      navigateToPage('Page_11_Solution_Design_Measurement_Ideas', { skipSubmit: true }); 
     } else {
       console.error('HypothesisFocusPage: 提交页面数据失败');
       alert('数据提交失败，请稍后再试。');

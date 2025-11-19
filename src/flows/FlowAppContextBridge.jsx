@@ -8,7 +8,12 @@ const debugLog = () => {};
  * 重新暴露 AppContext，并在 navigateToPage 被调用时先执行 beforeNavigate。
  * 这样遗留模块继续通过 useAppContext 使用导航能力，但 Flow 编排器仍然可以拦截导航。
  */
-export function FlowAppContextBridge({ beforeNavigate, afterNavigate, flowContext, children }) {
+export function FlowAppContextBridge({
+  beforeNavigate = undefined,
+  afterNavigate = undefined,
+  flowContext = null,
+  children,
+}) {
   const contextValue = useAppContext();
   const setFlowContextFn = contextValue?.setFlowContext;
 
@@ -93,12 +98,6 @@ FlowAppContextBridge.propTypes = {
     stepIndex: PropTypes.number,
   }),
   children: PropTypes.node.isRequired,
-};
-
-FlowAppContextBridge.defaultProps = {
-  beforeNavigate: undefined,
-  afterNavigate: undefined,
-  flowContext: null,
 };
 
 export default FlowAppContextBridge;

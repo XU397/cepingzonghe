@@ -1,11 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import '../styles/FullscreenPrompt.css';
+import {
+  DEV_TOOLS_STORAGE_KEYS,
+  DEV_TOOLS_DEFAULTS,
+  readDevBooleanPreference,
+  subscribeToFullscreenPreference
+} from '../utils/devTools';
+
+const isDevelopment = typeof process !== 'undefined'
+  ? process.env.NODE_ENV === 'development'
+  : Boolean(import.meta.env?.DEV);
+
+const shouldCheckFullscreenByDefault = () => {
+  if (!isDevelopment) {
+    return true;
+  }
+  return readDevBooleanPreference(
+    DEV_TOOLS_STORAGE_KEYS.fullscreen,
+    DEV_TOOLS_DEFAULTS.fullscreen
+  );
+};
 
 /**
  * 全屏提示组件
  * 当用户退出全屏时显示，提示用户重新进入全屏
  */
 const FullscreenPrompt = ({ onEnterFullscreen }) => {
+  const [fullscreenCheckEnabled, setFullscreenCheckEnabled] = useState(
+    shouldCheckFullscreenByDefault
+  );
+
+  useEffect(() => {
+    if (!isDevelopment) {
+      return undefined;
+    }
+    const unsubscribe = subscribeToFullscreenPreference((enabled) => {
+      setFullscreenCheckEnabled(Boolean(enabled));
+    });
+    return unsubscribe;
+  }, []);
+
+  if (!fullscreenCheckEnabled) {
+    return null;
+  }
+
   return (
     <div className="fullscreen-prompt-overlay">
       <div className="fullscreen-prompt-container">

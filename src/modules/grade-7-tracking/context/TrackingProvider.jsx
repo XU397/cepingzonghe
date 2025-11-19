@@ -595,7 +595,10 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
           return 'page_exit';
         case '文本域输入':
         case 'text_input':
+        case 'text_input_start':
           return 'input';
+        case 'start_edit':
+          return 'input_focus';
         case 'input_blur':
           return 'input_blur';
         case 'checkbox_toggle':
@@ -616,6 +619,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
           return 'timer_stop';
         case '完成':
         case 'simulation_operation':
+        case 'complete_design':
           return 'simulation_operation';
         case 'questionnaire_answer':
           return 'questionnaire_answer';

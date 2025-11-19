@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
+import EventTypes from '../../shared/services/submission/eventTypes';
 
 /**
  * 通用文本输入组件
@@ -63,7 +64,7 @@ const TextInput = ({
       // 记录用户停止输入后的值
       logOperation({
         targetElement: elementDesc,
-        eventType: 'INPUT_CHANGE',
+        eventType: EventTypes.INPUT_CHANGE,
         value: newValue.substring(0, 50) + (newValue.length > 50 ? '...' : '')
       });
     }, 1000);
@@ -79,7 +80,7 @@ const TextInput = ({
     setIsFocused(true);
     logOperation({
       targetElement: elementDesc,
-      eventType: 'FOCUS'
+      eventType: EventTypes.INPUT_FOCUS
     });
     onFocus && onFocus(e);
   };
@@ -92,7 +93,7 @@ const TextInput = ({
     setIsFocused(false);
     logOperation({
       targetElement: elementDesc,
-      eventType: 'BLUR',
+      eventType: EventTypes.INPUT_BLUR,
       value: e.target.value.substring(0, 50) + (e.target.value.length > 50 ? '...' : '')
     });
     onBlur && onBlur(e);

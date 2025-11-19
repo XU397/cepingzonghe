@@ -90,7 +90,7 @@ const Page_15_Simulation_Question_1 = () => {
 
     const submissionSuccess = await submitPageData();
     if (submissionSuccess) {
-      navigateToPage('Page_16_Simulation_Question_2');
+      navigateToPage('Page_16_Simulation_Question_2', { skipSubmit: true });
       return true;
     } else {
       alert('数据提交失败，请重试。'); 

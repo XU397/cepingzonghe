@@ -8,6 +8,13 @@ export default defineConfig(({ mode }) => {
   const useMock = String(env.VITE_USE_MOCK ?? '1') === '1' || String(env.VITE_USE_MOCK).toLowerCase() === 'true'
   const apiTarget = env.VITE_API_TARGET || 'http://117.72.14.166:9002'
 
+  // 启动时打印 Mock 状态
+  console.log('\n🔧 ==================== Vite 配置 ====================')
+  console.log(`📦 运行模式: ${mode}`)
+  console.log(`🎭 Mock 模式: ${useMock ? '✅ 启用（前端独立调试）' : '❌ 禁用（真实后端联调）'}`)
+  console.log(`🌐 后端地址: ${useMock ? 'N/A (使用 Mock)' : apiTarget}`)
+  console.log('====================================================\n')
+
   // 简易 Mock：开发时拦截 /stu/login 与 /stu/saveHcMark，避免后端不可达
   const mockStuApi = {
     name: 'mock-stu-api',
@@ -16,7 +23,91 @@ export default defineConfig(({ mode }) => {
       if (!useMock) return
       server.middlewares.use((req, res, next) => {
         const url = req.url || ''
+
+        // Flow 编排 mock 端点（供 FlowOrchestrator 在 dev 模式下使用）
+        if (url.startsWith('/api/flows/')) {
+          const method = (req.method || 'GET').toUpperCase()
+
+          const respondJson = (statusCode, payload) => {
+            res.statusCode = statusCode
+            res.setHeader('Content-Type', 'application/json; charset=utf-8')
+            res.end(JSON.stringify(payload))
+          }
+          const logFlow = (...args) => console.log('[Mock Flow API]', ...args)
+          const logFlowError = (error, context = {}) => {
+            console.error('[Mock Flow API] Error', { ...context, error })
+          }
+
+          ;(async () => {
+            try {
+              const urlObj = new URL(req.url || '', 'http://localhost')
+              const segments = urlObj.pathname.split('/').filter(Boolean)
+              const flowIdSegment = segments[2]
+              if (!flowIdSegment) {
+                logFlow('Missing flowId segment', { pathname: urlObj.pathname })
+                respondJson(400, { code: 400, msg: 'Flow ID is required', obj: null })
+                return
+              }
+              let flowId = ''
+              try {
+                flowId = decodeURIComponent(flowIdSegment).trim()
+              } catch (err) {
+                logFlowError(err, { detail: 'Failed to decode flowId' })
+                respondJson(400, { code: 400, msg: 'Invalid flow ID encoding', obj: null })
+                return
+              }
+              if (!flowId) {
+                logFlow('Flow ID resolved empty value', { raw: flowIdSegment })
+                respondJson(400, { code: 400, msg: 'Invalid flow ID', obj: null })
+                return
+              }
+
+              const isProgressEndpoint = segments[3] === 'progress'
+
+              if (!isProgressEndpoint && method === 'GET') {
+                logFlow('Fetching flow definition', { flowId })
+                const { getMockFlowDefinition } = await import('./src/flows/orchestrator/mockFlowDefinitions.js')
+                const definition = typeof getMockFlowDefinition === 'function'
+                  ? getMockFlowDefinition(flowId)
+                  : undefined
+                if (!definition) {
+                  logFlow('Flow definition not found', { flowId })
+                  respondJson(404, { code: 404, msg: `Flow ${flowId} not found`, obj: null })
+                  return
+                }
+                respondJson(200, { code: 200, msg: 'ok', obj: definition })
+                return
+              }
+
+              if (isProgressEndpoint && method === 'GET') {
+                const progress = {
+                  stepIndex: 0,
+                  modulePageNum: null,
+                  lastUpdated: new Date().toISOString(),
+                }
+                logFlow('Returning default progress', { flowId })
+                respondJson(200, { code: 200, msg: 'ok', obj: progress })
+                return
+              }
+
+              if (isProgressEndpoint && method === 'POST') {
+                logFlow('Received progress heartbeat (mock)', { flowId })
+                respondJson(200, { code: 200, msg: 'Progress saved (mock)', obj: true })
+                return
+              }
+
+              logFlow('Method not supported for flow mock endpoint', { method, flowId, isProgressEndpoint })
+              respondJson(405, { code: 405, msg: 'Method not allowed', obj: null })
+            } catch (error) {
+              logFlowError(error, { url })
+              respondJson(500, { code: 500, msg: 'Flow mock server error', obj: null })
+            }
+          })()
+          return
+        }
+
         if (url.startsWith('/stu/login')) {
+          console.log('🎭 [Mock API] 拦截登录请求: /stu/login')
           res.setHeader('Content-Type', 'application/json; charset=utf-8')
           res.end(JSON.stringify({
             code: 200,
@@ -30,14 +121,17 @@ export default defineConfig(({ mode }) => {
               schoolName: '开发环境（Mock）',
               studentCode: 'M001',
               studentName: '本地模拟用户',
-              url: '/four-grade'
+              url: '/flow/test-flow-1'
             }
           }))
           return
         }
         if (url.startsWith('/stu/saveHcMark')) {
+          console.log('🎭 [Mock API] ✅ 拦截数据提交: /stu/saveHcMark')
+          console.log('   📦 请求方法:', req.method)
+          console.log('   ✨ 返回 Mock 成功响应')
           res.setHeader('Content-Type', 'application/json; charset=utf-8')
-          res.end(JSON.stringify({ code: 200, msg: 'ok', obj: true }))
+          res.end(JSON.stringify({ code: 200, msg: 'Mock提交成功', obj: true }))
           return
         }
         if (url.startsWith('/stu/checkSession')) {
@@ -63,7 +157,17 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), mockStuApi],
     resolve: {
       alias: {
+        '@': path.resolve(__dirname, 'src'),
+        '@app': path.resolve(__dirname, 'src/app'),
+        '@flows': path.resolve(__dirname, 'src/flows'),
+        '@submodules': path.resolve(__dirname, 'src/submodules'),
         '@shared': path.resolve(__dirname, 'src/shared'),
+        '@hooks': path.resolve(__dirname, 'src/hooks'),
+        '@utils': path.resolve(__dirname, 'src/utils'),
+        '@components': path.resolve(__dirname, 'src/components'),
+        '@modules': path.resolve(__dirname, 'src/modules'),
+        '@pages': path.resolve(__dirname, 'src/pages'),
+        '@services': path.resolve(__dirname, 'src/services'),
       }
     },
     build: {
@@ -103,6 +207,25 @@ export default defineConfig(({ mode }) => {
           },
         }
       }
+    },
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      // WSL2 兼容性：使用 vmThreads 避免 forks/threads 超时问题
+      pool: 'vmThreads',
+      // 增加超时时间
+      testTimeout: 10000,
+      hookTimeout: 10000,
+      // 如果还有问题，可以禁用并行
+      // fileParallelism: false,
+      deps: {
+        inline: ['react-router', 'react-router-dom'],
+      },
+      server: {
+        deps: {
+          inline: ['react-router', 'react-router-dom'],
+        },
+      },
     }
   }
 })
