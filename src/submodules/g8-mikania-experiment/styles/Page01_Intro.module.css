@@ -1,0 +1,80 @@
+/* Page 01 - 任务背景页样式 */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 100%;
+  padding: 10px 60px 40px;
+  box-sizing: border-box;
+}
+
+.content {
+  width: 100%;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #2c5282;
+  margin: 0 0 30px 0;
+  text-align: left;
+  line-height: 1.4;
+}
+
+.description {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333333;
+  margin: 0 0 40px 0;
+  text-align: justify;
+  text-indent: 2em;
+}
+
+/* 图片网格布局 */
+.imageGrid {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin-top: 20px;
+}
+
+.imageItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 图片占位符 */
+.imagePlaceholder {
+  width: 280px;
+  height: 200px;
+  background-color: #e8e8e8;
+  border: 2px solid #d0d0d0;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.placeholderText {
+  color: #888888;
+  font-size: 14px;
+}
+
+/* 实际图片样式（替换占位符时使用） */
+.plantImage {
+  width: 280px;
+  height: 200px;
+  object-fit: cover;
+  border: 2px solid #d0d0d0;
+  border-radius: 4px;
+}
+
+.imageLabel {
+  margin: 12px 0 0 0;
+  font-size: 14px;
+  color: #333333;
+  text-align: center;
+}

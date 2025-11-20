@@ -1,0 +1,198 @@
+/* Page 04 - 实验数据 + Q2 样式 */
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  min-height: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+/* 页面标题 */
+.pageTitle {
+  width: 100%;
+  font-size: 36px;
+  font-weight: 700;
+  color: #2c5282;
+  margin: 0 0 5px 0;
+  text-align: left;
+  line-height: 1.2;
+}
+
+/* 左侧面板 */
+.leftPanel {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--card-background, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px var(--cartoon-shadow, rgba(0, 0, 0, 0.1));
+}
+
+/* 右侧面板 */
+.rightPanel {
+  flex: 0.8;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--card-background, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px var(--cartoon-shadow, rgba(0, 0, 0, 0.1));
+}
+
+/* 面板标题 */
+.panelTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--cartoon-primary, #59c1ff);
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--cartoon-border, #ffd99e);
+}
+
+/* 说明文字 */
+.instructions {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary, #666666);
+  margin: 0 0 15px 0;
+}
+
+/* 实验面板容器 */
+.experimentContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-color, #f5f5f5);
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 400px;
+}
+
+/* 问题卡片 */
+.questionCard {
+  background-color: var(--background-color, #f5f5f5);
+  border-radius: 8px;
+  padding: 20px;
+  flex: 1;
+}
+
+.questionText {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-color, #333333);
+  margin: 0 0 20px 0;
+}
+
+/* 选项容器 */
+.optionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 选项按钮 */
+.optionButton {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  background-color: var(--card-background, #ffffff);
+  border: 2px solid var(--cartoon-border, #ffd99e);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.optionButton:hover {
+  transform: translateX(5px);
+  border-color: var(--cartoon-primary, #59c1ff);
+}
+
+.optionSelected {
+  background-color: var(--cartoon-primary, #59c1ff);
+  border-color: var(--cartoon-primary, #59c1ff);
+  color: white;
+}
+
+.optionSelected:hover {
+  border-color: var(--cartoon-primary, #59c1ff);
+}
+
+.optionSelected .optionLabel {
+  background-color: white;
+  color: var(--cartoon-primary, #59c1ff);
+}
+
+.optionSelected .optionText {
+  color: white;
+}
+
+/* 选项标签 */
+.optionLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: var(--cartoon-secondary, #ffce6b);
+  color: var(--text-color, #333333);
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+/* 选项文字 */
+.optionText {
+  font-size: 14px;
+  color: var(--text-color, #333333);
+}
+
+/* 错误提示 */
+.errorHint {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 12px;
+  padding: 6px 10px;
+  background-color: #ffebee;
+  border-radius: 4px;
+}
+
+/* 操作行 */
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cartoon-border, #ffd99e);
+}
+
+/* 下一页按钮 */
+.nextButton {
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  background-color: var(--cartoon-primary, #59c1ff);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nextButton:hover:not(:disabled) {
+  background-color: var(--cartoon-primary-dark, #3aa8e8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(89, 193, 255, 0.3);
+}
+
+.nextButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

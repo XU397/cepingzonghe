@@ -1,14 +1,14 @@
 <!--
 Sync Impact Report:
-Version: 0.0.0 → 1.0.0
-Modified Principles: N/A (Initial Constitution)
-Added Sections: All core principles and governance sections
+Version: 1.0.0 → 1.1.0
+Modified Principles: None
+Added Sections:
+  - Principle VIII: Specification Authority Hierarchy (NEW)
 Removed Sections: None
 Templates Status:
-  ✅ Constitution created from scratch
-  ⚠ plan-template.md - May need alignment check
-  ⚠ spec-template.md - May need alignment check
-  ⚠ tasks-template.md - May need alignment check
+  ✅ plan-template.md - Aligned (Constitution Check section present)
+  ✅ spec-template.md - Aligned (standard requirements structure)
+  ✅ tasks-template.md - Aligned (user story organization)
 Follow-up TODOs: None
 -->
 
@@ -154,6 +154,40 @@ Consistent code quality reduces bugs, improves maintainability, and accelerates 
 - Code review checklist includes style compliance
 - Prettier auto-formatting enforced
 
+### VIII. Specification Authority Hierarchy (NON-NEGOTIABLE)
+
+**Principle:**
+The project maintains a clear hierarchy of authoritative documentation:
+
+**Single Source of Truth:**
+- The `openspec/` directory contains the **authoritative specifications** for this project
+- Specifications in `openspec/specs/*.md` are the canonical source of truth
+- Code and documentation MUST conform to these specifications
+- When conflicts arise, `openspec/` specifications take precedence
+
+**Guidance Documents:**
+- Documents such as:
+  - `docs/需求-交互前端改造方案.md`
+  - `docs/三端改造方案与职责边界.md`
+  - `docs/子模块设计说明书模板.md`
+- These are **interpretations and implementation guides** for the openspec specifications
+- They provide practical guidance but MUST NOT contradict the authoritative specs
+- When discrepancies exist, the openspec spec is correct
+
+**Document Update Protocol:**
+- Changes to authoritative behavior MUST first be proposed via openspec change proposals
+- Guidance documents MUST be updated to reflect openspec changes
+- Code implementations MUST follow the current openspec specifications
+
+**Rationale:**
+A clear documentation hierarchy prevents conflicting sources of truth, ensures consistent implementation across the codebase, and provides developers with unambiguous guidance on the intended system behavior.
+
+**Validation:**
+- Code review checks implementation against openspec specs
+- Guidance documents reference their corresponding openspec specs
+- Proposed changes follow the openspec change proposal workflow
+- Regular audits ensure guidance documents remain aligned with specs
+
 ## Technology Stack Constraints
 
 ### Required Technologies
@@ -197,6 +231,7 @@ Technology standardization reduces complexity, improves build performance, and e
   - Error handling completeness
   - CSS Modules usage
   - Console warnings/errors resolved
+  - **Implementation aligns with openspec specifications**
 
 ### Deployment Approval
 - All modules MUST pass local testing in mock mode
@@ -230,5 +265,7 @@ For day-to-day development guidance, refer to:
 - **CLAUDE.md**: Comprehensive development patterns and troubleshooting
 - **docs/模块化开发规范与扩展指引.md**: Detailed Chinese module development guide
 - **src/modules/README.md**: Module system implementation notes
+- **openspec/specs/**: Authoritative specifications (source of truth)
+- **openspec/AGENTS.md**: AI agent guidance for spec-driven development
 
-**Version**: 1.0.0 | **Ratified**: 2025-01-14 | **Last Amended**: 2025-01-14
+**Version**: 1.1.0 | **Ratified**: 2025-01-14 | **Last Amended**: 2025-11-19
