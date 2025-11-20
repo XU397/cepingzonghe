@@ -1,0 +1,345 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.backgroundImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 80px;
+  z-index: 2;
+}
+
+.titleBox {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px 60px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  text-align: center;
+  max-width: 80%;
+  animation: titleAppear 1.5s ease-out;
+}
+
+.mainTitle {
+  font-size: 48px;
+  font-weight: bold;
+  margin: 0;
+  color: #2c3e50;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+  letter-spacing: 2px;
+}
+
+@keyframes titleAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 900px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #2c5aa0;
+  text-align: center;
+  margin-bottom: 30px;
+  position: relative;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 4px;
+}
+
+.titleUnderline {
+  width: 180px;
+  height: 5px;
+  background: linear-gradient(to right, #4a9fd8 0%, #4a9fd8 50%, #ffa500 50%, #ffa500 100%);
+  margin: 12px auto 0;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.noticeCard {
+  width: 100%;
+  max-width: 900px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 30px 40px;
+  position: relative;
+  border: 2px solid #ffa500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.labelTag {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  background: linear-gradient(135deg, #ff8c00 0%, #ffa500 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 12px 0 12px 0;
+}
+
+.noticeList {
+  list-style: none;
+  padding: 0;
+  margin: 30px 0 0 0;
+}
+
+.noticeList li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #333;
+}
+
+.noticeList li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #ffa500;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.noticeList li:last-child {
+  margin-bottom: 0;
+}
+
+.highlight {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+.highlightRed {
+  color: #e74c3c;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.highlightBold {
+  color: #2c5aa0;
+  font-weight: 700;
+}
+
+.confirmCard {
+  width: 100%;
+  max-width: 900px;
+  background: rgba(232, 244, 253, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 25px 40px;
+  border: 2px solid #ffa500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2c5aa0;
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.checkboxLabel {
+  font-size: 1.1rem;
+  color: #2c5aa0;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.confirmButton {
+  background: linear-gradient(135deg, #ff8c00 0%, #ffa500 100%);
+  color: #fff;
+  border: none;
+  padding: 12px 30px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+}
+
+.confirmButton:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 140, 0, 0.4);
+}
+
+.confirmButton.disabled {
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+.countdownNumber {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.dividerLine {
+  width: 120px;
+  height: 2px;
+  background: #ffa500;
+  margin-bottom: 20px;
+  border-style: dashed;
+  border-width: 1px 0 0 0;
+  border-color: #ffa500;
+  background: transparent;
+}
+
+.continueButton {
+  background: #d0d0d0;
+  color: #666;
+  border: none;
+  padding: 12px 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.continueButton:hover:not(.disabled) {
+  background: #2c5aa0;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+}
+
+.continueButton.disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .titleBox {
+    padding: 25px 40px;
+    max-width: 90%;
+  }
+  
+  .mainTitle {
+    font-size: 36px;
+    letter-spacing: 1px;
+  }
+  
+  .content {
+    top: 55%;
+    max-width: 95%;
+    padding: 15px;
+  }
+
+  .title {
+    font-size: 1.6rem;
+  }
+
+  .noticeCard,
+  .confirmCard {
+    padding: 20px;
+  }
+
+  .noticeList li {
+    font-size: 1rem;
+  }
+
+  .labelTag {
+    font-size: 0.9rem;
+    padding: 6px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .titleBox {
+    padding: 20px 25px;
+    max-width: 95%;
+  }
+  
+  .mainTitle {
+    font-size: 28px;
+    letter-spacing: 1px;
+  }
+  
+  .content {
+    top: 60%;
+  }
+
+  .title {
+    font-size: 1.4rem;
+  }
+
+  .noticeList li {
+    font-size: 0.95rem;
+  }
+
+  .checkboxLabel {
+    font-size: 1rem;
+  }
+
+  .confirmButton,
+  .continueButton {
+    padding: 10px 25px;
+    font-size: 0.95rem;
+  }
+}

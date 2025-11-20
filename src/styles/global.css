@@ -21,6 +21,10 @@
   --cartoon-shadow: rgba(255, 188, 97, 0.3);
   --cartoon-green: #67d5b5;
   --cartoon-red: #ff8a80;
+  
+  /* 光伏治沙实验环境色彩 */
+  --sky-gradient-top: #87ceeb;
+  --sky-gradient-bottom: #e0f6ff;
 }
 
 * {

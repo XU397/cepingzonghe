@@ -87,6 +87,23 @@ export const mockFlowDefinitions = new Map([
       steps: TEST_FLOW_2_STEPS,
     }),
   ],
+  [
+    'g8-physics-assessment',
+    defineFlow({
+      flowId: 'g8-physics-assessment',
+      name: '8年级光伏治沙物理实验',
+      displayName: '8年级光伏治沙物理实验',
+      description: '光伏治沙互动实验评估',
+      url: '/flow/g8-physics-assessment',
+      steps: [
+        {
+          submoduleId: 'g8-pv-sand-experiment',
+          displayName: '光伏治沙实验',
+          transitionPage: null,
+        },
+      ],
+    }),
+  ],
 ]);
 
 /**
