@@ -1,0 +1,51 @@
+/* ChartPanel - 发芽率趋势图样式 */
+
+.chartContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: var(--card-background, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px var(--cartoon-shadow, rgba(0, 0, 0, 0.1));
+}
+
+.chartTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color, #333333);
+  margin: 0 0 15px 0;
+  text-align: center;
+}
+
+.chartSvg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* 图例 */
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 15px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendColor {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.legendText {
+  font-size: 13px;
+  color: var(--text-color, #333333);
+}

@@ -81,7 +81,7 @@ function fixSpecificIssues() {
   if (fs.existsSync(timerDisplayPath)) {
     let content = fs.readFileSync(timerDisplayPath, 'utf-8');
     // 移除整个formatTime函数定义
-    content = content.replace(/  \/\/ 格式化时间显示\(保留1位小数\)[\s\S]*?  };/, '  // formatTime removed (unused)');
+    content = content.replace(/ {2}\/\/ 格式化时间显示\(保留1位小数\)[\s\S]*? {2}};/, '  // formatTime removed (unused)');
     fs.writeFileSync(timerDisplayPath, content, 'utf-8');
     console.log('✅ 修复 TimerDisplay.jsx 未使用函数 formatTime\n');
   }

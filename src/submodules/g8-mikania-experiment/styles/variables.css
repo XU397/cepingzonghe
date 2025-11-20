@@ -1,0 +1,12 @@
+:root {
+  --cartoon-primary: #59c1ff;
+  --cartoon-secondary: #ffce6b;
+  --cartoon-border: #ffd99e;
+  --cartoon-green: #67d5b5;
+  --cartoon-red: #ff8a80;
+  --text-color: #333333;
+  --text-secondary: #666666;
+  --background-color: #f5f5f5;
+  --card-background: #ffffff;
+  --cartoon-shadow: rgba(0, 0, 0, 0.1);
+}

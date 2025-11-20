@@ -87,7 +87,7 @@ export function useRenderCounter(options) {
           // Always use warn for the unified parseable format
           // Do NOT include extra fields to keep the format strict.
           // Example: [RenderCounter] component=FlowModule window=5s renders=XX mounts=YY threshold=100
-          // eslint-disable-next-line no-console
+           
           console.warn(
             `[RenderCounter] component=${componentName} window=${winSec}s renders=${renders} mounts=${mounts} threshold=${threshold}`
           )
@@ -95,7 +95,7 @@ export function useRenderCounter(options) {
         }
       } else if (logLevel === 'debug') {
         // Optional, lightweight debug log (different prefix to avoid parser confusion)
-        // eslint-disable-next-line no-console
+         
         console.debug(
           `[RenderCounter:debug] component=${componentName} window=${winSec}s renders=${renders} mounts=${mounts}`
         )

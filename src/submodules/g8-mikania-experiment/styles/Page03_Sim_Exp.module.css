@@ -1,0 +1,226 @@
+/* Page 03 - 模拟实验页样式 */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 5px 40px 10px;
+  box-sizing: border-box;
+  gap: 5px;
+}
+
+/* 页面标题 */
+.pageTitle {
+  font-size: 36px;
+  font-weight: 700;
+  color: #2c5282;
+  margin: 0 0 5px 0;
+  text-align: left;
+  line-height: 1.2;
+}
+
+/* 主内容区域 - 左右布局 */
+.mainContent {
+  display: flex;
+  gap: 25px;
+  flex: 1;
+  align-items: flex-start;
+}
+
+/* 左侧面板 */
+.leftPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 实验步骤说明卡片 - 粉色背景 */
+.instructionCard {
+  background-color: #f8d7da;
+  border: 2px solid #f5c2c7;
+  border-radius: 8px;
+  padding: 18px 22px;
+}
+
+/* 介绍文字 */
+.introText {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #333333;
+  margin: 0 0 12px 0;
+  text-align: justify;
+}
+
+/* 步骤列表 */
+.stepsList {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.stepItem {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #333333;
+  margin: 0 0 8px 0;
+  padding-left: 0;
+  position: relative;
+}
+
+.stepItem::before {
+  content: '✓';
+  color: #333333;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.stepItem:last-child {
+  margin-bottom: 0;
+}
+
+/* 加粗文字 */
+.bold {
+  font-weight: 700;
+}
+
+/* ========================================
+   示例按钮样式 - 模拟实验面板控件
+   ======================================== */
+
+/* 橙色浓度框 */
+.sampleConc {
+  display: inline-block;
+  padding: 3px 10px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #ffe0b2, #ffcc80);
+  border-radius: 5px;
+  color: #5d4037;
+  font-weight: bold;
+  font-size: 12px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  vertical-align: middle;
+}
+
+/* 向上箭头按钮 - 红色 */
+.arrowBtnUp {
+  display: inline-block;
+  width: 20px;
+  height: 16px;
+  margin: 0 2px;
+  background: linear-gradient(to bottom, #ff6b6b, #ee5a52);
+  color: white;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+/* 向下箭头按钮 - 蓝色 */
+.arrowBtnDown {
+  display: inline-block;
+  width: 20px;
+  height: 16px;
+  margin: 0 2px;
+  background: linear-gradient(to bottom, #4fc3f7, #039be5);
+  color: white;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+/* 开始按钮 - 蓝色圆角 */
+.sampleStart {
+  display: inline-block;
+  padding: 4px 16px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #4fc3f7, #039be5);
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  box-shadow: 0 3px 0 #0277bd;
+  vertical-align: middle;
+}
+
+/* 绿色发芽率框 */
+.sampleRate {
+  display: inline-block;
+  padding: 4px 12px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #c8e6c9, #a5d6a7);
+  border-radius: 6px;
+  color: #1b5e20;
+  font-weight: 900;
+  font-size: 14px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  vertical-align: middle;
+}
+
+/* 重置按钮 - 青色/紫色圆角 */
+.sampleReset {
+  display: inline-block;
+  padding: 4px 16px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #4fc3f7, #039be5);
+  filter: hue-rotate(180deg);
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  box-shadow: 0 3px 0 #c62828;
+  vertical-align: middle;
+}
+
+/* 右侧面板 - 实验区域 */
+.rightPanel {
+  flex: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background-color: var(--card-background, #ffffff);
+  border: 2px solid #d0d0d0;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 460px;
+}
+
+/* 按钮容器 */
+.buttonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding: 0 25px;
+}
+
+/* 下一页按钮 */
+.nextButton {
+  padding: 10px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #59c1ff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nextButton:hover:not(.disabled) {
+  background-color: #3ba5e6;
+  transform: translateY(-1px);
+}
+
+.nextButton:active:not(.disabled) {
+  transform: translateY(0);
+}
+
+.nextButton.disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}

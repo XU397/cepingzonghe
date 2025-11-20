@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page 03: 模拟实验互动 - 薇甘菊防治</title>
+    <style>
+        /* 16.1 视觉色彩系统标准 */
+        :root {
+            --cartoon-primary: #59c1ff;
+            --cartoon-secondary: #ffce6b;
+            --cartoon-border: #ffd99e;
+            --cartoon-green: #67d5b5;
+            --cartoon-red: #ff8a80;
+            --text-color: #333333;
+            --text-secondary: #666666;
+            --background-color: #f5f5f5;
+            --card-background: #ffffff;
+            --cartoon-shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 主容器 - 布局重构 */
+        .main-container {
+            position: relative;
+            width: 760px;
+            height: 500px; 
+            background-color: var(--card-background);
+            border: 8px solid #bdc3c7;
+            border-radius: 30px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: grid;
+            grid-template-columns: 170px 1fr 170px;
+            grid-template-rows: 1fr 70px;
+            gap: 10px;
+            align-items: center;
+            justify-items: center;
+        }
+
+        /* 通用侧边栏容器 */
+        .sidebar-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 标题样式 */
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        /* 左侧：浓度选择组 */
+        .controls-conc-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .radio-btn { display: none; }
+
+        .conc-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 120px;
+            height: 40px;
+            background: linear-gradient(to bottom, #ffe0b2, #ffcc80);
+            border-radius: 8px;
+            color: #5d4037;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            border: 2px solid #fff;
+        }
+
+        .radio-btn:checked + .conc-label {
+            border-color: #e65100;
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(230, 81, 0, 0.2);
+            background: linear-gradient(to bottom, #ffcc80, #ffb74d);
+        }
+
+        /* 右侧：结果显示 */
+        .result-box {
+            width: 120px;
+            padding: 20px 0;
+            background: linear-gradient(to bottom, #c8e6c9, #a5d6a7);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 900;
+            color: #1b5e20;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 3px solid #fff;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+        }
+
+        /* 中间：实验区 */
+        .experiment-area {
+            grid-column: 2 / 3;
+            grid-row: 1 / 2;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: visible; 
+        }
+
+        #experiment-svg {
+            width: 100%;
+            height: 100%;
+            max-width: 420px;
+            max-height: 420px;
+        }
+
+        /* 底部：操作栏 */
+        .controls-bottom {
+            grid-column: 1 / 4;
+            grid-row: 2 / 3;
+            display: flex;
+            gap: 50px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding-top: 10px;
+            border-top: 2px dashed #e0e0e0;
+        }
+
+        .btn-action {
+            width: 120px;
+            height: 44px;
+            border: none;
+            border-radius: 22px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #0277bd;
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to bottom, #4fc3f7, #039be5);
+        }
+
+        .btn-action:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .btn-reset { filter: hue-rotate(180deg); box-shadow: 0 4px 0 #c62828; }
+        .btn-start:disabled { background: #cfd8dc; box-shadow: none; cursor: not-allowed; color: #90a4ae; }
+
+        /* 天数控制器 */
+        .days-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .days-panel {
+            background: #37474f;
+            padding: 5px 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+            border: 2px solid #546e7a;
+        }
+
+        .days-display {
+            background: #fff;
+            color: #000;
+            font-size: 22px;
+            font-weight: bold;
+            padding: 2px 15px;
+            border-radius: 4px;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .days-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .btn-tiny {
+            width: 24px;
+            height: 18px;
+            background: #b0bec5;
+            border: none;
+            cursor: pointer;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+        }
+        .btn-tiny:hover { background: #fff; }
+
+        /* -----------------------------------
+           SVG 动画与样式定义 
+           ----------------------------------- */
+        
+        #dropper-group {
+            transform: translate(200px, 140px) scale(1.4); 
+            transform-box: fill-box;
+            transform-origin: center center;
+            transition: transform 0.5s ease;
+        }
+
+        .dropper-move-action {
+            animation: dropperMove 2.5s forwards;
+        }
+
+        @keyframes dropperMove {
+            0% { transform: translate(200px, 140px) scale(1.4); }
+            30% { transform: translate(200px, 220px) scale(1.4); } 
+            70% { transform: translate(200px, 220px) scale(1.4); } 
+            100% { transform: translate(200px, 140px) scale(1.4); } 
+        }
+
+        /* 关键修正：胶头挤压动画 */
+        #dropper-bulb {
+            /* 原点设为胶头底部与玻璃管的连接处 (0, -70) */
+            transform-origin: 0px -70px;
+            /* 移除 transform-box，使用用户坐标系 */
+        }
+
+        .bulb-squeeze-action {
+            animation: bulbSqueeze 0.6s ease-in-out 0.8s forwards; 
+        }
+
+        @keyframes bulbSqueeze {
+            0% { transform: scale(1, 1); }
+            /* 挤压：水平稍微变宽(1.1)，垂直变短(0.85)，基点不动 */
+            50% { transform: scale(1.1, 0.85); } 
+            100% { transform: scale(1, 1); }
+        }
+
+        .drop { opacity: 0; fill: #ef5350; }
+
+        .drop-falling-action {
+            animation: dropFullProcess 1.2s linear 0.8s forwards;
+        }
+
+        @keyframes dropFullProcess {
+            0% { 
+                opacity: 1; 
+                transform: translate(200px, 270px); 
+                r: 0;
+            }
+            15% { 
+                r: 8; 
+            }
+            80% {
+                opacity: 1;
+                transform: translate(200px, 305px); 
+                r: 8;
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(200px, 315px); 
+                r: 12;
+            }
+        }
+
+        .seed-base { fill: #795548; }
+        .sprout-group {
+            transform-origin: 0px 0px;
+            transform: scale(0); 
+            opacity: 0;
+            transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 1s;
+        }
+        .sprout-stem { fill: none; stroke: #8bc34a; stroke-width: 2; stroke-linecap: round; }
+        .sprout-leaf { fill: #4caf50; }
+
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    
+    <!-- 左侧面板：标题 + 按钮组 (垂直紧凑排列) -->
+    <div class="sidebar-panel" style="grid-column: 1/2; grid-row: 1/2;">
+        <div class="panel-title">菟丝子水浸液浓度</div>
+        <div class="controls-conc-group">
+            <input type="radio" id="conc-0" name="concentration" value="0" class="radio-btn">
+            <label for="conc-0" class="conc-label">0mg/ml</label>
+            
+            <input type="radio" id="conc-5" name="concentration" value="5" class="radio-btn">
+            <label for="conc-5" class="conc-label">5mg/ml</label>
+            
+            <input type="radio" id="conc-10" name="concentration" value="10" class="radio-btn">
+            <label for="conc-10" class="conc-label">10mg/ml</label>
+        </div>
+    </div>
+
+    <!-- 中间：SVG 实验区 -->
+    <div class="experiment-area">
+        <svg id="experiment-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+                    <feOffset dx="2" dy="2" result="offsetblur"/>
+                    <feComponentTransfer>
+                        <feFuncA type="linear" slope="0.3"/>
+                    </feComponentTransfer>
+                    <feMerge> 
+                        <feMergeNode/>
+                        <feMergeNode in="SourceGraphic"/> 
+                    </feMerge>
+                </filter>
+            </defs>
+
+            <!-- 培养皿容器 -->
+            <g transform="translate(200, 310)">
+                <ellipse cx="0" cy="10" rx="145" ry="65" fill="rgba(0,0,0,0.15)" />
+                <ellipse cx="0" cy="0" rx="150" ry="70" fill="#f5f5f5" stroke="#cfd8dc" stroke-width="3" />
+                <ellipse cx="0" cy="5" rx="140" ry="60" fill="#5d4037" />
+                <circle cx="-50" cy="-20" r="2" fill="#3e2723" opacity="0.4"/>
+                <circle cx="60" cy="30" r="3" fill="#3e2723" opacity="0.4"/>
+                <circle cx="20" cy="-40" r="2" fill="#3e2723" opacity="0.4"/>
+            </g>
+
+            <!-- 种子层 -->
+            <g id="seeds-layer" transform="translate(200, 310)"></g>
+
+            <!-- 水滴 -->
+            <circle id="water-drop" cx="0" cy="0" r="0" class="drop" />
+
+            <!-- 滴管组 -->
+            <g id="dropper-group">
+                <!-- 胶头 -->
+                <g id="dropper-bulb">
+                    <!-- 修正路径：确保底部闭合线是平直的，位于y=-80处 -->
+                    <!-- Rect遮盖法：使用rect绘制下半部分，path绘制上半部分，组合成一个整体 -->
+                    <path d="M-16,-80 Q-25,-100 0,-120 Q25,-100 16,-80 Z" fill="#d32f2f" />
+                    <rect x="-16" y="-80" width="32" height="10" rx="2" fill="#d32f2f" />
+                </g>
+                <!-- 玻璃管 -->
+                <g id="dropper-body">
+                    <!-- 顶部从y=-70开始，确保与胶头底部y=-70 (rect底部) 连接 -->
+                    <rect x="-8" y="-70" width="16" height="100" fill="rgba(255,255,255,0.9)" stroke="#90a4ae" stroke-width="1.5"/>
+                    <line x1="-4" y1="-50" x2="4" y2="-50" stroke="#90a4ae" stroke-width="1"/>
+                    <line x1="-4" y1="-30" x2="4" y2="-30" stroke="#90a4ae" stroke-width="1"/>
+                    <line x1="-4" y1="-10" x2="4" y2="-10" stroke="#90a4ae" stroke-width="1"/>
+                    <rect x="-6" y="-20" width="12" height="60" fill="#ef5350" opacity="0.8" />
+                    <path d="M-8,30 L-2,50 L2,50 L8,30 Z" fill="rgba(255,255,255,0.9)" stroke="#90a4ae" stroke-width="1.5"/>
+                    <path d="M-6,30 L-1,48 L1,48 L6,30 Z" fill="#ef5350" opacity="0.8" />
+                </g>
+            </g>
+        </svg>
+    </div>
+
+    <!-- 右侧面板：标题 + 结果 -->
+    <div class="sidebar-panel" style="grid-column: 3/4; grid-row: 1/2;">
+        <div class="panel-title">薇甘菊发芽率</div>
+        <div class="result-box" id="result-rate">--%</div>
+    </div>
+
+    <!-- 底部：控制栏 -->
+    <div class="controls-bottom">
+        <button class="btn-action btn-reset" onclick="resetExperiment()">重置</button>
+        
+        <div class="days-control">
+            <div class="days-panel">
+                <div class="days-btns">
+                    <button class="btn-tiny" onclick="changeDays(1)">▲</button>
+                    <button class="btn-tiny" onclick="changeDays(-1)">▼</button>
+                </div>
+                <div class="days-display"><span id="day-display">1</span>h</div>
+            </div>
+            <div style="margin-top:5px; font-weight:bold; font-size: 14px;">天数</div>
+        </div>
+
+        <button class="btn-action btn-start" id="btn-start" onclick="startExperiment()">开始</button>
+    </div>
+
+</div>
+
+<script>
+    // 核心数据模型
+    const germinationData = {
+        1: { 0: 0, 5: 0, 10: 0 },
+        2: { 0: 45, 5: 15, 10: 10 },
+        3: { 0: 68, 5: 30, 10: 22 },
+        4: { 0: 72, 5: 40, 10: 35 },
+        5: { 0: 75, 5: 50, 10: 45 },
+        6: { 0: 78, 5: 55, 10: 50 },
+        7: { 0: 78, 5: 60, 10: 55 }
+    };
+
+    let currentDays = 1;
+    let currentConc = null;
+    let isAnimating = false;
+    const totalSeeds = 60; 
+    const seedsArray = []; 
+
+    window.onload = function() {
+        initSeeds();
+        updateUIState();
+    };
+
+    function initSeeds() {
+        const container = document.getElementById('seeds-layer');
+        container.innerHTML = ''; 
+        seedsArray.length = 0;
+        const rx = 120; const ry = 50;
+        const positions = [];
+        for (let i = 0; i < totalSeeds; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.sqrt(Math.random());
+            const x = r * rx * Math.cos(angle);
+            const y = r * ry * Math.sin(angle);
+            positions.push({x, y});
+        }
+        positions.sort((a, b) => a.y - b.y);
+        positions.forEach(pos => { createSeedElement(container, pos.x, pos.y); });
+    }
+
+    function createSeedElement(container, x, y) {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("transform", `translate(${x}, ${y})`);
+        const seed = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+        seed.setAttribute("cx", 0); seed.setAttribute("cy", 0);
+        seed.setAttribute("rx", 4); seed.setAttribute("ry", 2.5);
+        seed.setAttribute("class", "seed-base");
+        seed.setAttribute("transform", `rotate(${Math.random() * 180})`);
+        const sproutGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        sproutGroup.setAttribute("class", "sprout-group");
+        const stem = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        stem.setAttribute("d", "M0,0 Q-2,-10 0,-20");
+        stem.setAttribute("class", "sprout-stem");
+        const leafL = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+        leafL.setAttribute("cx", -5); leafL.setAttribute("cy", -20);
+        leafL.setAttribute("rx", 5); leafL.setAttribute("ry", 2.5);
+        leafL.setAttribute("transform", "rotate(-30 -5 -20)"); leafL.setAttribute("class", "sprout-leaf");
+        const leafR = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
+        leafR.setAttribute("cx", 5); leafR.setAttribute("cy", -20);
+        leafR.setAttribute("rx", 5); leafR.setAttribute("ry", 2.5);
+        leafR.setAttribute("transform", "rotate(30 5 -20)"); leafR.setAttribute("class", "sprout-leaf");
+        sproutGroup.appendChild(stem); sproutGroup.appendChild(leafL); sproutGroup.appendChild(leafR);
+        g.appendChild(seed); g.appendChild(sproutGroup); container.appendChild(g);
+        seedsArray.push({ group: g, sprout: sproutGroup });
+    }
+
+    function changeDays(delta) {
+        if (isAnimating) return;
+        const newValue = currentDays + delta;
+        if (newValue >= 1 && newValue <= 7) {
+            currentDays = newValue;
+            document.getElementById('day-display').textContent = currentDays;
+            resetExperimentVisuals();
+        }
+    }
+
+    document.querySelectorAll('input[name="concentration"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (isAnimating) return;
+            currentConc = parseInt(e.target.value);
+            resetExperimentVisuals();
+            updateUIState();
+        });
+    });
+
+    function updateUIState() {
+        const btn = document.getElementById('btn-start');
+        btn.disabled = (currentConc === null);
+    }
+
+    function startExperiment() {
+        if (isAnimating || currentConc === null) return;
+        isAnimating = true;
+        disableControls(true);
+        resetExperimentVisuals();
+
+        const targetRate = germinationData[currentDays][currentConc];
+        const seedsToSproutCount = Math.round((targetRate / 100) * totalSeeds);
+        
+        const dropper = document.getElementById('dropper-group');
+        const bulb = document.getElementById('dropper-bulb');
+        const drop = document.getElementById('water-drop');
+
+        void dropper.offsetWidth; 
+        
+        dropper.classList.add('dropper-move-action');
+        bulb.classList.add('bulb-squeeze-action');
+        drop.classList.add('drop-falling-action');
+
+        setTimeout(() => { animateSprouting(seedsToSproutCount); }, 2200);
+
+        setTimeout(() => {
+            document.getElementById('result-rate').textContent = targetRate + "%";
+            isAnimating = false;
+            disableControls(false);
+        }, 3500);
+    }
+
+    function animateSprouting(count) {
+        const shuffledIndices = Array.from({length: totalSeeds}, (_, i) => i).sort(() => 0.5 - Math.random());
+        const activeIndices = shuffledIndices.slice(0, count);
+        activeIndices.forEach(idx => {
+            const sprout = seedsArray[idx].sprout;
+            sprout.style.opacity = "1";
+            const randomScale = 0.8 + Math.random() * 0.5;
+            sprout.style.transform = `scale(${randomScale})`; 
+        });
+    }
+
+    function resetExperiment() {
+        if (isAnimating) return;
+        
+        resetExperimentVisuals();
+        currentDays = 1;
+        currentConc = null;
+        
+        document.getElementById('day-display').textContent = currentDays;
+        document.getElementById('result-rate').textContent = "--%";
+        document.querySelectorAll('input[name="concentration"]').forEach(r => r.checked = false);
+        
+        updateUIState();
+    }
+
+    function resetExperimentVisuals() {
+        seedsArray.forEach(obj => {
+            obj.sprout.style.opacity = "0";
+            obj.sprout.style.transform = "scale(0)";
+        });
+        document.getElementById('dropper-group').classList.remove('dropper-move-action');
+        document.getElementById('dropper-bulb').classList.remove('bulb-squeeze-action');
+        document.getElementById('water-drop').classList.remove('drop-falling-action');
+        document.getElementById('result-rate').textContent = "--%";
+    }
+
+    function disableControls(disabled) {
+        document.getElementById('btn-start').disabled = disabled;
+        document.querySelectorAll('.radio-btn').forEach(r => r.disabled = disabled);
+        document.querySelectorAll('.btn-tiny').forEach(b => b.disabled = disabled);
+    }
+</script>
+
+</body>
+</html>

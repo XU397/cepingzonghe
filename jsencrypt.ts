@@ -7,14 +7,16 @@ const privateKey = '';
 const encrypt = (txt: string): string => {
   const encryptor = new JSEncrypt();
   encryptor.setPublicKey(publicKey); // 设置公钥
-  return encryptor.encrypt(txt); // 对数据进行加密
+  const result = encryptor.encrypt(txt); // 对数据进行加密
+  return result || ''; // 确保返回字符串
 };
 
 // 解密
 const decrypt = (txt: string): string => {
   const encryptor = new JSEncrypt();
   encryptor.setPrivateKey(privateKey); // 设置私钥
-  return encryptor.decrypt(txt); // 对数据进行解密
+  const result = encryptor.decrypt(txt); // 对数据进行解密
+  return result || ''; // 确保返回字符串
 };
 
 export { decrypt, encrypt };
