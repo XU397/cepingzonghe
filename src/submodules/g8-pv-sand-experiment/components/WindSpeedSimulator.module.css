@@ -1,0 +1,211 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.heightIndicator {
+  text-align: center;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.heightText {
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+.simulatorCanvas {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%);
+  border-radius: 8px;
+  /* 硬件加速优化 */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 区域样式 */
+.withPanelRegion,
+.noPanelRegion {
+  transition: opacity 0.3s ease;
+}
+
+/* 文字样式 */
+.regionLabel {
+  font-size: 14px;
+  font-weight: 600;
+  fill: #1f2937;
+  font-family: 'Inter', sans-serif;
+}
+
+.speedValue {
+  font-size: 16px;
+  font-weight: 700;
+  fill: #1e40af;
+  font-family: 'Inter', sans-serif;
+}
+
+.heightMarker {
+  font-size: 12px;
+  font-weight: 500;
+  fill: #dc2626;
+  font-family: 'Inter', sans-serif;
+}
+
+/* 状态栏 */
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: all 0.3s ease;
+  margin-right: 8px;
+}
+
+.statusDot.active {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  animation: pulse 2s infinite;
+}
+
+.statusText {
+  font-weight: 500;
+  flex: 1;
+}
+
+.performanceIndicator {
+  font-size: 16px;
+  opacity: 0.7;
+  margin-left: 8px;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+/* 风力粒子动画优化 */
+.svg circle {
+  /* 确保粒子动画流畅 */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .container {
+    max-width: 100%;
+  }
+  
+  .svg {
+    height: 240px;
+  }
+  
+  .heightText {
+    font-size: 14px;
+  }
+  
+  .statusBar {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .simulatorCanvas {
+    border: 2px solid #000;
+  }
+  
+  .regionLabel,
+  .speedValue {
+    fill: #000;
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .statusDot {
+    animation: none;
+  }
+  
+  .svg circle {
+    will-change: auto;
+  }
+  
+  .svg {
+    transform: none;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .simulatorCanvas {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  
+  .svg {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  }
+  
+  .statusBar {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+  }
+}
+
+/* 性能优化 */
+.container {
+  contain: layout style paint;
+  content-visibility: auto;
+}
+
+/* 3D 变换优化 */
+.svg,
+.svg circle {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}

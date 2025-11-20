@@ -43,6 +43,9 @@ class SubmoduleRegistry {
       const { G4ExperimentSubmodule } = await import('./g4-experiment');
       this.register(G4ExperimentSubmodule);
 
+      const { g8PvSandExperimentSubmodule } = await import('./g8-pv-sand-experiment');
+      this.register(g8PvSandExperimentSubmodule);
+
       this.initialized = true;
       console.log(
         '[SubmoduleRegistry] ✅ Submodule registry initialized with',

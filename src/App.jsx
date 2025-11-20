@@ -7,7 +7,7 @@ import StepNavigation from './components/common/StepNavigation';
 import QuestionnaireNavigation from './components/questionnaire/QuestionnaireNavigation';
 import UserInfoBar from './components/common/UserInfoBar';
 import ApiConfigDebug from './components/debug/ApiConfigDebug';
-import DevToolsPanel from './components/dev/DevToolsPanel';
+// import DevToolsPanel from './components/dev/DevToolsPanel';  // 文件不存在，暂时注释
 import useFullscreen from './hooks/useFullscreen';
 import FullscreenPrompt from './components/FullscreenPrompt';
 import { isQuestionnairePage, getQuestionnaireStepNumber, TOTAL_QUESTIONNAIRE_STEPS } from './utils/pageMappings';
@@ -335,7 +335,7 @@ function App() {
     <>
       <AppContent />
       {showDebug && <ApiConfigDebug />}
-      {isDevEnvironment && <DevToolsPanel />}
+      {/* {isDevEnvironment && <DevToolsPanel />} */}  {/* 临时注释，DevToolsPanel组件不存在 */}
     </>
   );
 }
