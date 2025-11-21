@@ -46,6 +46,9 @@ class SubmoduleRegistry {
       const { G8DroneImagingSubmodule } = await import('./g8-drone-imaging');
       this.register(G8DroneImagingSubmodule);
 
+      const { G8MikaniaExperimentSubmodule } = await import('./g8-mikania-experiment');
+      this.register(G8MikaniaExperimentSubmodule);
+
       const { g8PvSandExperimentSubmodule } = await import('./g8-pv-sand-experiment');
       this.register(g8PvSandExperimentSubmodule);
 
