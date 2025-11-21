@@ -1,14 +1,14 @@
 <!--
 Sync Impact Report:
-Version: 0.0.0 → 1.0.0
-Modified Principles: N/A (Initial Constitution)
-Added Sections: All core principles and governance sections
+Version: 1.0.0 → 1.1.0
+Modified Principles: None
+Added Sections:
+  - Principle VIII: OpenSpec as Source of Truth (Spec-Driven Development)
 Removed Sections: None
 Templates Status:
-  ✅ Constitution created from scratch
-  ⚠ plan-template.md - May need alignment check
-  ⚠ spec-template.md - May need alignment check
-  ⚠ tasks-template.md - May need alignment check
+  ✅ plan-template.md - Aligned (already references /specs/ directory)
+  ✅ spec-template.md - Aligned (serves as spec creation tool)
+  ✅ tasks-template.md - Aligned (requires spec.md as prerequisite)
 Follow-up TODOs: None
 -->
 
@@ -154,6 +154,31 @@ Consistent code quality reduces bugs, improves maintainability, and accelerates 
 - Code review checklist includes style compliance
 - Prettier auto-formatting enforced
 
+### VIII. OpenSpec as Source of Truth (NON-NEGOTIABLE)
+
+**Principle:**
+- The `openspec/` directory contains the authoritative specifications for the project
+- Specifications (specs) are the single source of truth; code and documentation MUST follow specs
+- Other documentation (e.g., `docs/需求-交互前端改造方案.md`, `docs/三端改造方案与职责边界.md`, submodule design guides) are interpretations and implementation guides of the specs
+- When conflicts exist between specs and other documents, specs take precedence
+- All architectural decisions, data contracts, and interface definitions MUST be traceable to specs
+
+**Documentation Hierarchy:**
+1. **Authoritative**: `openspec/specs/**/*.md` - Canonical definitions
+2. **Project Conventions**: `openspec/project.md` - Naming, policies, terminology
+3. **Implementation Guides**: `docs/*.md` - How to implement specs
+4. **Code Comments**: Inline explanations referencing specs
+
+**Rationale:**
+Spec-driven development ensures consistency across teams, prevents drift between documentation and implementation, and establishes clear governance for architectural changes. When multiple documents exist, a single source of truth prevents conflicting implementations.
+
+**Validation:**
+- New features MUST have corresponding spec before implementation
+- Code reviews MUST verify alignment with referenced specs
+- Breaking changes MUST go through OpenSpec proposal process
+- `openspec validate` command MUST pass before deployment
+- Documentation updates MUST NOT contradict existing specs
+
 ## Technology Stack Constraints
 
 ### Required Technologies
@@ -176,20 +201,23 @@ Technology standardization reduces complexity, improves build performance, and e
 ## Development Workflow
 
 ### Module Development Lifecycle
-1. **Specification**: Define module requirements, page flow, data model
-2. **Module Registration**: Create module definition in `src/modules/grade-<N>/index.jsx`
-3. **Context Setup**: Implement module Context for state management
-4. **Page Implementation**: Build pages following linear navigation pattern
-5. **Data Integration**: Implement operation logging and data submission
-6. **Backend Coordination**: Verify URL mapping and pageNum handling with backend team
-7. **Self-Check Validation**: Complete validation checklist (login, navigation, logging, errors, styles)
-8. **Registry Update**: Add module to `ModuleRegistry.js` initialize() method
-9. **Testing**: Verify mock mode, backend integration, page restoration
-10. **Documentation**: Update module-specific README with page descriptions
+1. **Specification**: Define module requirements in OpenSpec format
+2. **Proposal**: Create OpenSpec proposal for architectural changes
+3. **Module Registration**: Create module definition in `src/modules/grade-<N>/index.jsx`
+4. **Context Setup**: Implement module Context for state management
+5. **Page Implementation**: Build pages following linear navigation pattern
+6. **Data Integration**: Implement operation logging and data submission
+7. **Backend Coordination**: Verify URL mapping and pageNum handling with backend team
+8. **Self-Check Validation**: Complete validation checklist (login, navigation, logging, errors, styles)
+9. **Registry Update**: Add module to `ModuleRegistry.js` initialize() method
+10. **Testing**: Verify mock mode, backend integration, page restoration
+11. **Documentation**: Update module-specific README with page descriptions
+12. **Spec Alignment**: Verify implementation matches spec before deployment
 
 ### Code Review Requirements
 - All module code MUST be reviewed by at least one peer
 - Reviewers MUST verify constitution compliance
+- Reviewers MUST verify OpenSpec alignment
 - Review checklist MUST include:
   - Module isolation (no cross-module imports)
   - Data contract adherence (MarkObject structure)
@@ -197,6 +225,7 @@ Technology standardization reduces complexity, improves build performance, and e
   - Error handling completeness
   - CSS Modules usage
   - Console warnings/errors resolved
+  - Spec reference traceability
 
 ### Deployment Approval
 - All modules MUST pass local testing in mock mode
@@ -204,6 +233,7 @@ Technology standardization reduces complexity, improves build performance, and e
 - pageNum restoration MUST be tested with multiple scenarios
 - Performance metrics MUST show no degradation in module load times
 - Accessibility audit MUST pass (minimum: keyboard navigation, ARIA labels)
+- OpenSpec validation MUST pass (`openspec validate --strict`)
 
 ## Governance
 
@@ -213,6 +243,7 @@ Technology standardization reduces complexity, improves build performance, and e
 3. Breaking changes (MAJOR version bump) require team consensus
 4. Template updates MUST be synchronized with constitution changes
 5. Dependent documentation (CLAUDE.md, 模块化开发规范与扩展指引.md) MUST be updated
+6. OpenSpec specs MUST be updated to reflect constitution amendments
 
 ### Versioning Policy
 - **MAJOR**: Backward-incompatible changes (e.g., removing a principle, changing module contract)
@@ -224,11 +255,14 @@ Technology standardization reduces complexity, improves build performance, and e
 - New modules MUST complete self-check validation before production deployment
 - Violations MUST be tracked and remediated within one sprint
 - Constitution violations in production MUST be hotfixed within 48 hours
+- Spec-code drift MUST be reconciled through either spec update or code fix
 
 ### Runtime Development Guidance
 For day-to-day development guidance, refer to:
+- **openspec/project.md**: Authoritative project conventions and terminology
+- **openspec/specs/**: Canonical specifications for all features
 - **CLAUDE.md**: Comprehensive development patterns and troubleshooting
 - **docs/模块化开发规范与扩展指引.md**: Detailed Chinese module development guide
 - **src/modules/README.md**: Module system implementation notes
 
-**Version**: 1.0.0 | **Ratified**: 2025-01-14 | **Last Amended**: 2025-01-14
+**Version**: 1.1.0 | **Ratified**: 2025-01-14 | **Last Amended**: 2025-11-19

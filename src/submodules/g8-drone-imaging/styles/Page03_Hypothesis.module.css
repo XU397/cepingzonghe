@@ -1,0 +1,220 @@
+/* Page03_Hypothesis.module.css - Hypothesis page styles */
+
+/* Main container */
+.hypothesisContainer {
+  padding: 24px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Page title */
+.pageTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+/* Description text */
+.description {
+  font-size: 18px;
+  color: #666;
+  margin: 0 0 20px 0;
+  line-height: 2;
+  text-indent: 2em;
+}
+
+/* Split layout container */
+.splitLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Left content - question text */
+.leftContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Right content - textarea */
+.rightContent {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Question box */
+.questionBox {
+  background: #fff8e1;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
+}
+
+.questionText {
+  font-size: 18px;
+  color: #e65100;
+  margin: 0;
+  line-height: 2;
+  text-indent: 2em;
+}
+
+.questionText strong {
+  font-weight: 700;
+}
+
+/* Hint box */
+.hintBox {
+  background: #f5f5f5;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.hintText {
+  font-size: 18px;
+  color: #666;
+  margin: 0;
+  line-height: 2;
+  text-indent: 2em;
+}
+
+/* Textarea wrapper */
+.textareaWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Textarea */
+.textarea {
+  width: 100%;
+  min-height: 180px;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.textarea.error {
+  border-color: #d32f2f;
+}
+
+.textarea::placeholder {
+  color: #999;
+}
+
+/* Character count indicator */
+.charCounter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.charCount {
+  font-size: 14px;
+  color: #999;
+}
+
+.charCount.warning {
+  color: #f57c00;
+}
+
+.charCount.valid {
+  color: #4caf50;
+}
+
+.minCharsHint {
+  font-size: 14px;
+  color: #999;
+}
+
+/* Error message */
+.errorMessage {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #ffebee;
+  border-radius: 6px;
+  border-left: 3px solid #d32f2f;
+}
+
+/* Button area */
+.buttonArea {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+/* Previous button */
+.prevButton {
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  background: #fff;
+  color: #666;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.prevButton:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+/* Next button */
+.nextButton {
+  padding: 10px 28px;
+  font-size: 16px;
+  font-weight: bold;
+  background: linear-gradient(180deg, #6ecfff 0%, #38a4ff 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(56, 164, 255, 0.4);
+  transition: all 0.2s;
+}
+
+.nextButton:hover:not(:disabled) {
+  background: linear-gradient(180deg, #89d9ff 0%, #5bb5ff 100%);
+  transform: translateY(-1px);
+}
+
+.nextButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .splitLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .hypothesisContainer {
+    padding: 16px;
+  }
+
+  .textarea {
+    min-height: 150px;
+  }
+}

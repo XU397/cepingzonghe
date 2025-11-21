@@ -1,15 +1,31 @@
 :root {
-  /* 布局 */
+  /* 布局 - 主框架 */
   --page-frame-bg: #f5f7fb;
   --page-frame-content-bg: #ffffff;
   --page-frame-border: #e3eaf3;
   --page-frame-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
   --page-frame-radius: 18px;
-  --page-frame-nav-width: 240px;
-  --page-frame-padding-x: 48px;
-  --page-frame-padding-y: 32px;
-  --page-frame-body-gap: 28px;
+  --page-frame-nav-width: 100px;
+  --page-frame-nav-bg: #e8f5f7;
+  --page-frame-content-padding: 0px;
+  --page-frame-body-gap: 16px;
   --page-frame-content-max-width: 1280px;
+  --page-frame-content-area-bg: #fffef9;
+
+  /* 新增：Frame 容器配置 (1280×800 基准) */
+  --frame-wrapper-padding: 20px;
+  --frame-max-width: 1280px;
+  --frame-height: 750px;
+  --frame-border-width: 3px;
+  --frame-border-color: #ffd93d;
+  --frame-border-radius: 20px;
+  --frame-shadow: 0 20px 50px rgba(255, 193, 7, 0.2);
+
+  /* 新增：浮动元素定位 */
+  --timer-slot-top: calc(var(--userinfo-bar-height, 50px) + 10px);
+  --timer-slot-right: 10px;
+  --action-row-bottom: 20px;
+  --action-row-right: 20px;
 
   /* 错误托盘 */
   --page-frame-error-bg: #fff2eb;

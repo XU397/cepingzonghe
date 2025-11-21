@@ -9,7 +9,7 @@
   --text-color: #333;
   --border-color: #e0e0e0;
   --shadow-color: rgba(0, 0, 0, 0.1);
-  
+
   /* 卡通风格配色 - 适合13岁少年 */
   --cartoon-primary: #59c1ff;
   --cartoon-secondary: #ffce6b;
@@ -21,6 +21,9 @@
   --cartoon-shadow: rgba(255, 188, 97, 0.3);
   --cartoon-green: #67d5b5;
   --cartoon-red: #ff8a80;
+
+  /* 全局布局变量 */
+  --userinfo-bar-height: 50px;
 }
 
 * {

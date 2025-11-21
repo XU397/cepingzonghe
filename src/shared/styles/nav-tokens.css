@@ -25,10 +25,10 @@
   /* ============ 尺寸与间距 ============ */
 
   /* 圆点直径 (基于 Grade-7 规范: 24px) */
-  --nav-dot-size: 24px;
+  --nav-dot-size: 38px;
 
   /* 圆点之间的垂直间距 */
-  --nav-gap: 16px;
+  --nav-gap: 8px;
 
   /* 连接线宽度 */
   --nav-line-width: 2px;
@@ -37,7 +37,7 @@
   --nav-container-width: 100px;
 
   /* 导航容器内边距 */
-  --nav-container-padding: 15px 10px;
+  --nav-container-padding: 20px 10px;
 
   /* ============ 颜色 - 圆点状态 ============ */
 
@@ -72,11 +72,11 @@
   /* 步骤指示器背景 */
   --nav-indicator-bg: var(--cartoon-secondary, #ffeaa7);
 
-  /* 导航容器背景 */
-  --nav-container-bg: var(--cartoon-light, #f5f6fa);
+  /* 导航容器背景 - 浅蓝灰色 */
+  --nav-container-bg: #e8f5f7;
 
-  /* 导航容器边框 */
-  --nav-container-border: 3px solid var(--cartoon-border, #dfe6e9);
+  /* 导航容器边框 - 去掉右侧边框，由 frame 统一管理 */
+  --nav-container-border: none;
 
   /* ============ 字体 ============ */
 
@@ -104,10 +104,10 @@
   --nav-indicator-shadow: 0 3px 6px var(--cartoon-shadow, rgba(0, 0, 0, 0.1));
 
   /* 步骤指示器圆角 */
-  --nav-indicator-radius: 15px;
+  --nav-indicator-radius: 8px;
 
   /* 步骤指示器内边距 */
-  --nav-indicator-padding: 10px 5px;
+  --nav-indicator-padding: 10px 15px;
 
   /* ============ 动画 ============ */
 
@@ -138,8 +138,8 @@
 
 /* ============ 主题覆写示例 (可选) ============ */
 
-/* 深色主题示例 */
-@media (prefers-color-scheme: dark) {
+/* 深色主题已禁用 - 强制使用浅色主题以匹配参考设计 */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --nav-container-bg: #2d3436;
     --nav-container-border: 3px solid #636e72;
@@ -151,7 +151,7 @@
     --nav-indicator-bg: #f39c12;
     --nav-dot-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
   }
-}
+} */
 
 /* 高对比度主题 */
 @media (prefers-contrast: high) {

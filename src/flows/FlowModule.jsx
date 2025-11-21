@@ -1,7 +1,5 @@
 /**
- * Flow Module - 拼装式测评入口
- * 识别 /flow/<flowId>，动态加载子模块并管理过渡
- */
+ * Flow Module - 拼装式测评入�? * 识别 /flow/<flowId>，动态加载子模块并管理过�? */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -12,6 +10,7 @@ import { FlowProvider } from '@/flows/context';
 import { submoduleRegistry } from '@/submodules/registry';
 import { useAppContext } from '@/context/AppContext';
 import { createFlowContextOperation } from '@/shared/types/flow';
+import { TimerService } from '@shared/services/timers';
 import useHeartbeat from '@/hooks/useHeartbeat';
 import styles from './FlowModule.module.css';
 import { createModuleUserContext } from '@/modules/utils/createModuleUserContext.js';
@@ -19,8 +18,16 @@ import { useRenderCounter } from '@shared/utils/RenderCounter.jsx';
 
 const FLOW_APP_CONTEXT_KEYS_TO_CLEAR = ['hci-pageNum', 'hci-currentStepNumber', 'hci-totalUserSteps'];
 const debugLog = () => {};
+const isDevEnv = typeof process !== 'undefined'
+  ? process.env.NODE_ENV === 'development'
+  : Boolean(import.meta.env?.DEV);
+// 显式开关：仅当设置�?VITE_FLOW_DEV_MOCK_AUTH 时才启用 Flow �?Mock 账号
+const flowDevMockAuthEnabled = Boolean(import.meta.env?.VITE_FLOW_DEV_MOCK_AUTH);
+// Flow 心跳开关：默认开启，VITE_FLOW_HEARTBEAT_ENABLED=0 时可全局关闭
+const flowHeartbeatEnabled =
+  String(import.meta.env?.VITE_FLOW_HEARTBEAT_ENABLED ?? '1') !== '0';
 
-// Simple flag parser (true/1/yes/on → true)
+// Simple flag parser (true/1/yes/on �?true)
 const parseFlag = (val, def) => {
   if (val === undefined || val === null) return !!def;
   const s = String(val).toLowerCase();
@@ -117,6 +124,71 @@ const logFlowContextOnce = (flowId, resolved, logOperation, loggedRef) => {
   debugLog('[FlowModule] flow_context logged:', operation);
 };
 
+const applyTimerConfigForStep = (flowId, resolved, step) => {
+  if (!resolved?.submoduleDefinition) {
+    return;
+  }
+
+  const submodule = resolved.submoduleDefinition;
+  const stepConfig = step || null;
+  const overrides = (stepConfig && stepConfig.overrides && stepConfig.overrides.timers) || {};
+
+  const defaultTimers =
+    typeof submodule.getDefaultTimers === 'function' ? submodule.getDefaultTimers() || {} : {};
+
+  const taskDuration =
+    typeof overrides.task === 'number' && overrides.task > 0
+      ? overrides.task
+      : typeof defaultTimers.task === 'number' && defaultTimers.task > 0
+        ? defaultTimers.task
+        : null;
+
+  const questionnaireDuration =
+    typeof overrides.questionnaire === 'number' && overrides.questionnaire > 0
+      ? overrides.questionnaire
+      : typeof defaultTimers.questionnaire === 'number' && defaultTimers.questionnaire > 0
+        ? defaultTimers.questionnaire
+        : null;
+
+  const baseScopeParts = [
+    'flow',
+    flowId || 'unknown',
+    resolved.submoduleId || 'unknown',
+    String(resolved.stepIndex ?? 0),
+    ];
+    const baseScope = baseScopeParts.join('::');
+
+  if (taskDuration) {
+    const expectedScope = `${baseScope}::task`;
+    const taskTimer = TimerService.getInstance('task');
+    const debug = taskTimer.getDebugInfo();
+    const hasSameScopeRunning =
+      debug.scope === expectedScope && debug.remaining > 0 && !debug.isTimeout;
+
+    if (!hasSameScopeRunning) {
+      TimerService.startTask(taskDuration, {
+        scope: expectedScope,
+        force: true,
+      });
+    }
+  }
+
+  if (questionnaireDuration) {
+    const expectedScope = `${baseScope}::questionnaire`;
+    const questionnaireTimer = TimerService.getInstance('questionnaire');
+    const debugQ = questionnaireTimer.getDebugInfo();
+    const hasSameScopeRunning =
+      debugQ.scope === expectedScope && debugQ.remaining > 0 && !debugQ.isTimeout;
+
+    if (!hasSameScopeRunning) {
+      TimerService.startQuestionnaire(questionnaireDuration, {
+        scope: expectedScope,
+        force: true,
+      });
+    }
+  }
+};
+
 const advanceFlowStep = ({
   orchestratorRef,
   completionSignaledRef,
@@ -201,19 +273,25 @@ const loadFlowState = async ({
       return;
     }
 
-    const resolved = orchestrator.resolve(definition, progress);
+      const resolved = orchestrator.resolve(definition, progress);
 
-    if (!resolved.submoduleDefinition) {
-      throw new Error(`Submodule not found: ${resolved.submoduleId}`);
-    }
+      if (!resolved.submoduleDefinition) {
+        throw new Error(`Submodule not found: ${resolved.submoduleId}`);
+      }
 
-    if (shouldAbort?.()) {
-      return;
-    }
+      if (shouldAbort?.()) {
+        return;
+      }
 
-    logFlowContextOnce(flowId, resolved, logOperation, flowContextLogCacheRef);
+      logFlowContextOnce(flowId, resolved, logOperation, flowContextLogCacheRef);
 
-    resolved.submoduleDefinition.onInitialize?.();
+      if (shouldAbort?.()) {
+        return;
+      }
+
+      applyTimerConfigForStep(flowId, resolved, resolved.step);
+
+      resolved.submoduleDefinition.onInitialize?.();
 
     if (shouldAbort?.()) {
       return;
@@ -247,8 +325,7 @@ const loadFlowState = async ({
 };
 
 /**
- * FlowModule 主组件
- */
+ * FlowModule 主组�? */
 function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   const params = useParams();
   const navigate = useNavigate();
@@ -332,10 +409,9 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     logOperationRef.current = logOperation;
   }, [logOperation]);
 
-  // 验证 remount 行为：组件挂载/卸载日志（切换 /flow/A -> /flow/B 应触发）
+  // 验证 remount 行为：组件挂�?卸载日志（切�?/flow/A -> /flow/B 应触发）
   useEffect(() => {
-    // 注意：这里的 flowId 在首次渲染时可能为空，等状态解析后会再次挂载
-    debugLog('[FlowModule] mount', { flowId: flowIdProp });
+    // 注意：这里的 flowId 在首次渲染时可能为空，等状态解析后会再次挂�?    debugLog('[FlowModule] mount', { flowId: flowIdProp });
     return () => {
       debugLog('[FlowModule] unmount', { flowId: flowIdProp });
     };
@@ -366,7 +442,8 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   ]);
 
   const routeFlowId = params?.flowId || null;
-  const devMockFlowId = flowIdProp || routeFlowId || null;
+  // DEV Mock only enabled when explicitly requested to avoid impacting real accounts
+  const devMockFlowId = isDevEnv && flowDevMockAuthEnabled ? (flowIdProp || routeFlowId || null) : null;
   const devAuthAppliedRef = useRef(false);
   const effectiveUserContext = useMemo(() => {
     const hasFullContext =
@@ -404,7 +481,8 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       return serializableUserContext;
     }
 
-    if (import.meta.env.DEV && devMockFlowId) {
+    // 仅在显式开�?dev mock 时，才为 Flow 构�?Mock 账号
+    if (devMockFlowId) {
       const mockContext = {
         batchCode: 'FLOW-MOCK',
         examNo: 'E001',
@@ -418,13 +496,13 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     return null;
   }, [userContext, flowContextSnapshot, fallbackAuthInfo, devMockFlowId]);
 
-  // 在 DEV 环境下，Flow 直达时补充认证状态，避免路由层显示登录页
+  // �?DEV 环境下，Flow 直达时补充认证状态，避免路由层显示登录页
   const handleLoginSuccess = flowContextSnapshot?.handleLoginSuccess;
   const hasRealAuthContext =
     Boolean(flowContextSnapshot?.isAuthenticated) &&
     Boolean(flowContextSnapshot?.batchCode || flowContextSnapshot?.examNo);
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
+    // 仅在显式开�?dev mock 且当前没有真实账号上下文时，才注�?Mock 账号
     if (!devMockFlowId) return;
     if (typeof handleLoginSuccess !== 'function') return;
     if (devAuthAppliedRef.current) return;
@@ -458,26 +536,34 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   );
 
   const [flowId, setFlowId] = useState(initialResolvedFlowId);
+  const stableResolvedFlowIdRef = useRef(initialResolvedFlowId || null);
   const flowContextLogCacheRef = useRef(new Set());
   const orchestratorRef = useRef(null);
+  const pendingLoadRef = useRef(null);
 
   useEffect(() => {
     flowContextLogCacheRef.current.clear();
   }, [flowId]);
-  const lastResolvedFlowIdRef = useRef(initialResolvedFlowId);
   useEffect(() => {
-    const nextFlowId = initialResolvedFlowId || null;
+    pendingLoadRef.current = null;
+  }, [flowId]);
+  useEffect(() => {
+    const resolvedFlowId = initialResolvedFlowId || stableResolvedFlowIdRef.current || null;
 
-    if (lastResolvedFlowIdRef.current === nextFlowId && flowId === nextFlowId) {
+    if (!resolvedFlowId) {
+      if (stableResolvedFlowIdRef.current !== null) {
+        stableResolvedFlowIdRef.current = null;
+      }
+      setFlowId((prev) => (prev === null ? prev : null));
       return;
     }
 
-    lastResolvedFlowIdRef.current = nextFlowId;
-
-    if (nextFlowId !== flowId) {
-      setFlowId(nextFlowId);
+    if (stableResolvedFlowIdRef.current !== resolvedFlowId) {
+      stableResolvedFlowIdRef.current = resolvedFlowId;
     }
-  }, [flowId, initialResolvedFlowId]);
+
+    setFlowId((prev) => (prev === resolvedFlowId ? prev : resolvedFlowId));
+  }, [initialResolvedFlowId]);
   const [state, setState] = useState(() => createInitialState());
   const completionSignaledRef = useRef(false);
   const redirectingToRoute = !flowIdProp && !routeFlowId && !!contextFlowId;
@@ -549,18 +635,19 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   }, [heartbeatEnabled, flowId, state.error, state.loading, state.showTransition]);
   const handleHeartbeatError = useCallback((error) => {
     console.error('[FlowModule] Heartbeat failed:', error);
-    // 失败时本地队列会自动保存，下次重试
+    // Errors are queued locally and retried later
   }, []);
 
-  // 集成心跳进度回写
+  // Heartbeat progress sync
+  // FIXME: disabled previously due to infinite loop; see docs/HEARTBEAT_INFINITE_LOOP_BUG.md
   useHeartbeat({
     flowId: flowId || contextFlowId || 'pending',
     stepIndexRef: stableStepIndexRef,
     modulePageNumRef: stableModulePageNumRef,
     examNo: effectiveUserContext?.examNo || flowContextSnapshot?.examNo || null,
     batchCode: effectiveUserContext?.batchCode || flowContextSnapshot?.batchCode || null,
-    enabled: heartbeatEnabled,
-    intervalMs: 15000, // 15秒
+    enabled: flowHeartbeatEnabled && heartbeatEnabled,
+    intervalMs: 15000, // 15s
     onError: handleHeartbeatError,
   });
 
@@ -570,37 +657,45 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   const renderCountRef = useRef(0);
   renderCountRef.current += 1;
   debugLog(`[FlowModule DEBUG] Render #${renderCountRef.current}`);
-  const loadFlow = useCallback(async () => {
-    await loadFlowState({
+  const loadFlow = useCallback(() => {
+    if (!flowId || !orchestratorRef.current) {
+      return Promise.resolve();
+    }
+    if (pendingLoadRef.current) {
+      return pendingLoadRef.current;
+    }
+    const promise = loadFlowState({
       flowId,
       orchestrator: orchestratorRef.current,
       logOperation: (...args) => logOperationRef.current?.(...args),
       setState,
       flowContextLogCacheRef,
+    }).finally(() => {
+      pendingLoadRef.current = null;
     });
-  }, [flowId]);
+    pendingLoadRef.current = promise;
+    return promise;
+  }, [flowContextLogCacheRef, flowId]);
 
   /**
-   * 子模块完成回调
+   * Handle submodule completion
    */
   const handleSubmoduleComplete = useCallback(() => {
     completionSignaledRef.current = true;
     debugLog('[FlowModule] Submodule completed');
 
-    // 调用子模块销毁钩子
+    // Call submodule destroy hook
     state.currentStep?.submoduleDefinition?.onDestroy?.();
 
-    // 检查过渡页配置
+    // Check transition page config
     const transitionConfig = state.currentStep?.step?.transitionPage;
 
     if (transitionConfig) {
-      // 显示过渡页
       setState((prev) => ({
         ...prev,
         showTransition: true,
       }));
     } else {
-      // 直接进入下一步
       advanceFlowStep({
         orchestratorRef,
         completionSignaledRef,
@@ -612,8 +707,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   }, [appContext?.clearAllCache, appContext?.handleLogout, loadFlow, navigate, state.currentStep]);
 
   /**
-   * 过渡页继续
-   */
+   * 过渡页继�?   */
   const handleTransitionNext = useCallback(() => {
     setState((prev) => ({
       ...prev,
@@ -630,8 +724,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   }, [appContext?.clearAllCache, appContext?.handleLogout, loadFlow, navigate]);
 
   /**
-   * 子模块超时回调
-   */
+   * 子模块超时回�?   */
   const handleSubmoduleTimeout = useCallback(() => {
     debugLog('[FlowModule] Submodule timeout');
     handleSubmoduleComplete();
@@ -704,16 +797,35 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       if (!orchestrator) {
         return;
       }
+      const currentProgress =
+        typeof orchestrator.getProgress === 'function' ? orchestrator.getProgress() : null;
+      if (
+        currentProgress &&
+        currentProgress.stepIndex === activeStepIndex &&
+        currentProgress.modulePageNum === normalized
+      ) {
+        return;
+      }
+
       orchestrator.updateProgress(activeStepIndex, normalized);
-      setState((prev) => ({
-        ...prev,
-        progress: {
-          ...(prev.progress || {}),
-          stepIndex: activeStepIndex,
-          modulePageNum: normalized,
-          lastUpdated: new Date().toISOString(),
-        },
-      }));
+      setState((prev) => {
+        if (
+          prev.progress &&
+          prev.progress.stepIndex === activeStepIndex &&
+          prev.progress.modulePageNum === normalized
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          progress: {
+            ...(prev.progress || {}),
+            stepIndex: activeStepIndex,
+            modulePageNum: normalized,
+            lastUpdated: new Date().toISOString(),
+          },
+        };
+      });
     },
     [activeStepIndex]
   );
@@ -810,7 +922,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       <div className={styles.container}>
         <div className={styles.loading}>
           <div className={styles.spinner}></div>
-          <p>正在跳转到 Flow 流程...</p>
+          <p>������ת�� Flow ����...</p>
         </div>
       </div>
     );
@@ -820,39 +932,39 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
-          <h2>缺少 Flow ID</h2>
-          <p>无法确定要加载的 Flow，请检查登录返回的 url。</p>
+          <h2>ȱ�� Flow ID</h2>
+          <p>�޷�ȷ��Ҫ���ص� Flow�������¼���ص� url��</p>
         </div>
       </div>
     );
   }
 
-  // Loading 状态
+  // Loading ״̬
   if (state.loading) {
     return (
       <div className={styles.container}>
         <div className={styles.loading}>
           <div className={styles.spinner}></div>
-          <p>正在加载测评...</p>
+          <p>���ڼ��ز���...</p>
         </div>
       </div>
     );
   }
 
-  // Error 状态
+  // Error ״̬
   if (state.error) {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
-          <h2>加载失败</h2>
+          <h2>����ʧ��</h2>
           <p>{state.error}</p>
-          <button onClick={loadFlow}>重试</button>
+          <button onClick={loadFlow}>����</button>
         </div>
       </div>
     );
   }
 
-  // 显示过渡页
+  // ��ʾ����ҳ
   if (state.showTransition) {
     const transitionConfig = state.currentStep?.step?.transitionPage || {};
     return (
@@ -865,14 +977,14 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     );
   }
 
-  // 渲染子模块
+  // ��Ⱦ��ģ��
   const SubmoduleComponent = state.submoduleComponent;
   if (!SubmoduleComponent) {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
-          <h2>子模块未找到</h2>
-          <p>无法加载子模块组件</p>
+          <h2>��ģ��δ�ҵ�</h2>
+          <p>�޷�������ģ�����</p>
         </div>
       </div>
     );
@@ -913,18 +1025,17 @@ export function FlowModule(props) {
 }
 
 /**
- * Flow Module 定义（用于注册到 ModuleRegistry）
- */
+ * Flow Module 定义（用于注册到 ModuleRegistry�? */
 export const FlowModule_Definition = {
   moduleId: 'flow',
-  displayName: 'Flow 拼装式测评',
+  displayName: 'Flow ƴװʽ����',
   url: '/flow/:flowId',
   version: '1.0.0',
   ModuleComponent: FlowModule,
 
   getInitialPage: (pageNum) => {
     // Flow 使用复合页码 M<stepIndex>:<subPageNum>
-    // 但这里直接返回 null，由 FlowOrchestrator 处理
+    // 但这里直接返�?null，由 FlowOrchestrator 处理
     return null;
   },
 
@@ -936,3 +1047,5 @@ export const FlowModule_Definition = {
     debugLog('[FlowModule] Cleaning up...');
   },
 };
+
+

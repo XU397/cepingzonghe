@@ -15,12 +15,10 @@
  */
 
 :root {
-  /* ============ 布局与定位 ============ */
-  --timer-top: 55px;
-  --timer-right: 20px;
+  /* ============ 布局与样式 ============ */
   --timer-padding: 12px 20px;
   --timer-border-radius: 30px;
-  --timer-z-index: 999;
+  --timer-z-index: 10;
   --timer-font-size: 18px;
 
   /* ============ 颜色 - 普通状态 ============ */
@@ -45,33 +43,25 @@
   --timer-complete-border: #ff6b6b;
 
   /* ============ 变体 - 问卷计时器 ============ */
-  --timer-questionnaire-top: 55px;
   --timer-questionnaire-bg: #a29bfe;
   --timer-questionnaire-border: #6c5ce7;
 
   /* ============ 变体 - 注意事项计时器 ============ */
-  --timer-notice-top: 55px;
   --timer-notice-bg: #74b9ff;
   --timer-notice-border: #0984e3;
-
-  /* ============ 响应式 ============ */
-  --timer-top-mobile: 50px;
-  --timer-right-mobile: 15px;
-  --timer-top-small: 45px;
-  --timer-right-small: 10px;
 }
 
 /* ============ 主题覆写示例 (可选) ============ */
 
-/* 深色主题示例 */
-@media (prefers-color-scheme: dark) {
+/* 深色主题已禁用 - 强制使用浅色主题以匹配参考设计 */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --timer-bg: #34495e;
     --timer-fg: #ecf0f1;
     --timer-border-color: #7f8c8d;
     --timer-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   }
-}
+} */
 
 /* 高对比度主题 */
 @media (prefers-contrast: high) {

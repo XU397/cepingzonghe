@@ -374,21 +374,22 @@ export function AssessmentPageFrame({
   }, [nextButtonProps]);
 
   return (
-    <div className={`${styles.frame} ${className}`} data-nav-mode={navigationMode}>
-      <aside className={`${styles.navRail} ${showNav ? '' : styles.navHidden}`}>
-        {showNav && (
-          <LeftStepperNav
-            mode={navigationMode === 'questionnaire' ? 'questionnaire' : 'experiment'}
-            currentStep={currentStep}
-            totalSteps={totalSteps}
-            compact={navCompact}
-            onStepClick={disableNavigationClick ? undefined : onStepClick}
-            title={navTitle}
-          />
-        )}
-      </aside>
+    <div className={styles.frameWrapper}>
+      <div className={`${styles.frame} ${className}`} data-nav-mode={navigationMode}>
+        <aside className={`${styles.navRail} ${showNav ? '' : styles.navHidden}`}>
+          {showNav && (
+            <LeftStepperNav
+              mode={navigationMode === 'questionnaire' ? 'questionnaire' : 'experiment'}
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+              compact={navCompact}
+              onStepClick={disableNavigationClick ? undefined : onStepClick}
+              title={navTitle}
+            />
+          )}
+        </aside>
 
-      <section className={styles.content}>
+        <section className={styles.content}>
         <div className={styles.contentCard}>
           <div className={styles.header}>
             <div className={styles.timerSlot}>
@@ -429,6 +430,7 @@ export function AssessmentPageFrame({
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }

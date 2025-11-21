@@ -113,10 +113,11 @@ const PrecautionsPage = () => {
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      minHeight: '85vh',
+      //minHeight: '85vh',
       boxSizing: 'border-box',
       padding: '0px 20px',
-      minWidth: '90%',
+      height: '100%'
+      //minWidth: '90%',
     }}>
       <h1 className="page-title" style={{ 
         marginBottom: '20px',
@@ -159,7 +160,7 @@ const PrecautionsPage = () => {
             fontSize: '16px',
             marginTop: '2px'
           }}>•</span>
-          作答时间共<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>50分钟</span>(其中测评时间40分钟，问卷调查10分钟)，时间结束后，系统将自动退出答题界面。
+          作答时间共<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>40分钟</span>，时间结束后，系统将自动退出答题界面。
         </p>
         <p style={{ 
           fontSize: '18px', 

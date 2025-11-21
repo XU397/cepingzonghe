@@ -1,0 +1,298 @@
+/* Page01_Cover.module.css - Cover page styles matching screenshot design */
+
+/* Main container */
+.coverContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 500px;
+  justify-content: center;
+  height: 100% !important;
+  padding: 20px 10px;
+  background: url('../assets/images/p00.jpg') no-repeat center center;
+  background-size: cover;
+  position: relative;
+}
+
+/* Optional overlay for better text readability */
+.coverContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.15);
+  z-index: 0;
+}
+
+/* Content wrapper */
+.coverContent {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  width: 100%;
+}
+
+/* Title section */
+.titleSection {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 12px 0;
+  display: inline-block;
+  position: relative;
+}
+
+.titleUnderline {
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: #1976d2;
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
+
+/* Notice area - main content box */
+.noticeArea {
+  position: relative;
+  background: #fff;
+  padding: 32px 28px 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  margin-top: 20px;
+  text-align: left;
+  border: 2px solid #ffcc80;
+  border-left: 5px solid #ff9800;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
+}
+
+/* Notice badge - floating on top-left corner */
+.noticeBadge {
+  position: absolute;
+  top: -16px;
+  left: 20px;
+  display: inline-block;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(238, 90, 36, 0.3);
+}
+
+.noticeList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.noticeList li {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: 16px;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.noticeList li:last-child {
+  margin-bottom: 0;
+}
+
+.noticeList li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #ff9800;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+/* Highlighted text in notice */
+.highlight {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.highlightBold {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+/* Confirmation box */
+.confirmationBox {
+  background: #e3f2fd;
+  border: 2px solid #90caf9;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Checkbox wrapper */
+.checkboxWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  color: #1565c0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxLabel.disabled {
+  color: #90caf9;
+  cursor: not-allowed;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #1976d2;
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.checkboxText {
+  font-weight: 500;
+}
+
+/* Countdown button */
+.countdownButton {
+  display: inline-block;
+  background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 12px 28px;
+  border-radius: 25px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+  cursor: default;
+}
+
+.countdownButton.hidden {
+  display: none;
+}
+
+/* Error message */
+.errorMessage {
+  color: #d32f2f;
+  font-size: 14px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: #ffebee;
+  border-radius: 8px;
+  border-left: 4px solid #d32f2f;
+  text-align: center;
+}
+
+/* Separator line */
+.separator {
+  width: 120px;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ff9800 0px,
+    #ff9800 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  margin: 0 auto 24px;
+}
+
+/* Next button */
+.nextButton {
+  display: block;
+  margin: 0 auto;
+  padding: 14px 48px;
+  font-size: 18px;
+  font-weight: 600;
+  background: #e0e0e0;
+  color: #999;
+  border: none;
+  border-radius: 25px;
+  cursor: not-allowed;
+  transition: all 0.3s;
+}
+
+.nextButton.enabled {
+  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.4);
+}
+
+.nextButton.enabled:hover {
+  background: linear-gradient(135deg, #64b5f6 0%, #1e88e5 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.5);
+}
+
+.nextButton.enabled:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .coverContainer {
+    padding: 24px 16px;
+    min-height: 400px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .noticeBadge {
+    font-size: 14px;
+    padding: 8px 20px;
+  }
+
+  .noticeArea {
+    padding: 16px 20px;
+  }
+
+  .noticeList li {
+    font-size: 14px;
+    padding-left: 20px;
+  }
+
+  .confirmationBox {
+    padding: 16px;
+  }
+
+  .checkboxLabel {
+    font-size: 14px;
+  }
+
+  .countdownButton {
+    font-size: 13px;
+    padding: 10px 20px;
+  }
+
+  .nextButton {
+    padding: 12px 36px;
+    font-size: 16px;
+  }
+}

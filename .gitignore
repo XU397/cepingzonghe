@@ -48,4 +48,21 @@ Thumbs.db
 coverage/
 
 # ESLint cache
-.eslintcache
+.eslintcachemcp/
+nul
+# 临时文件和工具
+mcp/
+nul
+tools/node/
+test-results/
+test-screenshots/
+dist.rar
+browser-state-*.json
+
+# 临时文档
+*REPORT.md
+*SUMMARY.md
+*ISSUE*.md
+*GUIDE.md
+scratch.txt
+*.bak

@@ -1,0 +1,382 @@
+/* Page04_Experiment.module.css - Experiment page layout styles */
+
+/* Main container */
+.experimentContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Page title */
+.pageTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
+  border-bottom: 1px solid #ddd;
+  margin: 0;
+}
+
+/* Two-column layout */
+.twoColumnLayout {
+  display: grid;
+  grid-template-columns: 30% 70%;
+  min-height: 400px;
+}
+
+/* Left panel - Instructions */
+.leftPanel {
+  padding: 24px 20px;
+  background: #f8fafc;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Panel title in left column */
+.panelTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+.introText {
+  font-size: 16px;
+  color: #37474f;
+  line-height: 2;
+  margin: 0 0 16px 0;
+  text-indent: 2em;
+}
+
+.instructionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.instructionList li {
+  position: relative;
+  font-size: 16px;
+  color: #455a64;
+  line-height: 2;
+  padding: 8px 0 8px 24px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.instructionList li:last-child {
+  border-bottom: none;
+}
+
+.instructionList li::before {
+  content: '\2713';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  color: #4caf50;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Inline icon images in instructions */
+.inlineIcon {
+  height: 26px;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+
+/* Error message */
+.errorMessage {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #ffebee;
+  border-radius: 6px;
+  border-left: 3px solid #d32f2f;
+}
+
+/* Right panel - Experiment unit container */
+.rightPanel {
+  padding: 16px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Experiment unit - contains simulator and controls */
+.experimentUnit {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Simulator wrapper */
+.simulatorWrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Control bar inside right panel */
+.controlBar {
+  height: 80px;
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  padding: 0 20px;
+}
+
+/* Bottom control bar (legacy, kept for backward compatibility) */
+.bottomBar {
+  height: 100px;
+  background-color: #fff;
+  border-top: 2px solid #eee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  padding: 0 20px;
+}
+
+/* Primary action button */
+.actionBtn {
+  width: 120px;
+  height: 44px;
+  background: linear-gradient(180deg, #6ecfff 0%, #38a4ff 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #2c8ddd, 0 8px 10px rgba(0, 0, 0, 0.15);
+  transition: all 0.1s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.actionBtn:hover {
+  background: linear-gradient(180deg, #89d9ff 0%, #5bb5ff 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 #2c8ddd, 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.actionBtn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #2c8ddd, 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.actionBtn:disabled,
+.actionBtn.disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Capture button - different color */
+.captureBtn {
+  composes: actionBtn;
+  background: linear-gradient(180deg, #81c784 0%, #4caf50 100%);
+  box-shadow: 0 4px 0 #388e3c, 0 8px 10px rgba(0, 0, 0, 0.15);
+}
+
+.captureBtn:hover {
+  background: linear-gradient(180deg, #a5d6a7 0%, #66bb6a 100%);
+  box-shadow: 0 5px 0 #388e3c, 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.captureBtn:active {
+  box-shadow: 0 1px 0 #388e3c, 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.captureBtn:disabled,
+.captureBtn.disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Reset button - warning color */
+.resetBtn {
+  composes: actionBtn;
+  background: linear-gradient(180deg, #ffab91 0%, #ff7043 100%);
+  box-shadow: 0 4px 0 #e64a19, 0 8px 10px rgba(0, 0, 0, 0.15);
+}
+
+.resetBtn:hover {
+  background: linear-gradient(180deg, #ffccbc 0%, #ff8a65 100%);
+  box-shadow: 0 5px 0 #e64a19, 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.resetBtn:active {
+  box-shadow: 0 1px 0 #e64a19, 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation buttons at bottom */
+.navigationBar {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.navBtn {
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.prevBtn {
+  composes: navBtn;
+  background: #fff;
+  color: #666;
+  border: 2px solid #ddd;
+}
+
+.prevBtn:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+.nextBtn {
+  composes: navBtn;
+  background: linear-gradient(180deg, #6ecfff 0%, #38a4ff 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 6px rgba(56, 164, 255, 0.4);
+}
+
+.nextBtn:hover {
+  background: linear-gradient(180deg, #89d9ff 0%, #5bb5ff 100%);
+  box-shadow: 0 4px 10px rgba(56, 164, 255, 0.5);
+}
+
+/* Instructions panel (kept for backward compatibility) */
+.instructionsPanel {
+  background: #e3f2fd;
+  padding: 12px 16px;
+  margin: 0 16px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+}
+
+.instructionsTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1565c0;
+  margin: 0 0 6px 0;
+}
+
+.instructionsText {
+  font-size: 13px;
+  color: #37474f;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Capture history display */
+.captureHistory {
+  padding: 12px 16px;
+  background: #fafafa;
+  border-top: 1px solid #eee;
+}
+
+.historyTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.historyList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.historyItem {
+  font-size: 12px;
+  background: #e8e8e8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #555;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .experimentContainer {
+    border-radius: 0;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .pageTitle {
+    font-size: 18px;
+    padding: 12px 16px;
+  }
+
+  /* Stack columns on mobile */
+  .twoColumnLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .leftPanel {
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 16px;
+  }
+
+  .rightPanel {
+    padding: 12px;
+  }
+
+  .controlBar {
+    height: 70px;
+    gap: 20px;
+    padding: 0 12px;
+  }
+
+  .bottomBar {
+    height: 90px;
+    gap: 20px;
+    padding: 0 12px;
+  }
+
+  .actionBtn {
+    width: 100px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .navigationBar {
+    padding: 12px 16px;
+  }
+
+  .navBtn {
+    padding: 8px 20px;
+    font-size: 14px;
+  }
+}

@@ -25,6 +25,9 @@ export const EventTypes = Object.freeze({
   QUESTIONNAIRE_ANSWER: 'questionnaire_answer',
   SESSION_EXPIRED: 'session_expired',
   NETWORK_ERROR: 'network_error',
+  CLICK_BLOCKED: 'click_blocked',
+  AUTO_SUBMIT: 'auto_submit',
+  READING_COMPLETE: 'reading_complete',
 });
 
 export const EventTypeValues = Object.freeze(Object.values(EventTypes));

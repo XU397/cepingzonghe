@@ -5,7 +5,6 @@ import QuestionnaireTimer from './components/questionnaire/QuestionnaireTimer';
 import PageRouter from './components/PageRouter';
 import StepNavigation from './components/common/StepNavigation';
 import QuestionnaireNavigation from './components/questionnaire/QuestionnaireNavigation';
-import UserInfoBar from './components/common/UserInfoBar';
 import ApiConfigDebug from './components/debug/ApiConfigDebug';
 import DevToolsPanel from './components/dev/DevToolsPanel';
 import useFullscreen from './hooks/useFullscreen';
@@ -261,7 +260,7 @@ const AppContent = () => {
           <FullscreenPrompt onEnterFullscreen={enterFullscreen} />
         )}
 
-        <UserInfoBar />
+        {/* UserInfoBar 已移到 AppShell 全局渲染 */}
         {showTimer && (isCurrentPageQuestionnaire ? <QuestionnaireTimer /> : <Timer />)}
         <div className="main-content-wrapper">
           {/* 模块系统下不显示全局导航，模块内部有自己的导航系统 */}
@@ -301,8 +300,7 @@ const AppContent = () => {
         <FullscreenPrompt onEnterFullscreen={enterFullscreen} />
       )}
 
-      {/* 用户信息条 */}
-      <UserInfoBar />
+      {/* UserInfoBar 已移到 AppShell 全局渲染 */}
       {/* 根据当前页面类型显示不同的计时器 */}
       {showTimer && (isCurrentPageQuestionnaire ? <QuestionnaireTimer /> : <Timer />)}
       <div className="main-content-wrapper">

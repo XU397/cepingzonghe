@@ -15,6 +15,7 @@ type Options = {
 const MAX_QUEUE = 50;
 
 let lastHeartbeat: any | null = null;
+const flushingFlows = new Set<string>();
 
 declare global {
   interface Window {
@@ -48,33 +49,46 @@ function saveQueue(flowId: string, queue: any[]) {
 }
 
 async function flushQueue(flowId: string, onError?: (e: unknown) => void) {
-  const progressEndpoint = endpoints.flow.updateProgress(flowId);
+  // 防止并发 flush 同一个 flowId
+  if (flushingFlows.has(flowId)) {
+    console.debug('[useHeartbeat] Flush already in progress, skipping', { flowId });
+    return;
+  }
+
   const queue = loadQueue(flowId);
   if (!queue.length) return;
-  const remain: any[] = [];
-  const baseURL = import.meta.env.VITE_API_BASE_URL || '';
-  const url = baseURL + progressEndpoint;
 
-  for (const item of queue) {
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item),
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`HTTP ${res.status}: ${text || 'Request failed'}`);
+  flushingFlows.add(flowId);
+
+  try {
+    const progressEndpoint = endpoints.flow.updateProgress(flowId);
+    const remain: any[] = [];
+    const baseURL = import.meta.env.VITE_API_BASE_URL || '';
+    const url = baseURL + progressEndpoint;
+
+    for (const item of queue) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item),
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          throw new Error(`HTTP ${res.status}: ${text || 'Request failed'}`);
+        }
+        console.log('[useHeartbeat] Flush success', { flowId, status: res.status, ts: item?.ts });
+      } catch (e) {
+        remain.push(item);
+        console.error('[useHeartbeat] Flush failed', e, { flowId, queueLength: queue.length });
+        onError?.(e);
       }
-      console.log('[useHeartbeat] Flush success', { flowId, status: res.status, ts: item?.ts });
-    } catch (e) {
-      remain.push(item);
-      console.error('[useHeartbeat] Flush failed', e, { flowId, queueLength: queue.length });
-      onError?.(e);
     }
+    saveQueue(flowId, remain);
+  } finally {
+    flushingFlows.delete(flowId);
   }
-  saveQueue(flowId, remain);
 }
 
 async function writeNow(payload: any, onError?: (e: unknown) => void) {
@@ -115,55 +129,71 @@ export default function useHeartbeat({
 }: Options) {
   const timerRef = useRef<number | null>(null);
   const onErrorRef = useRef(onError);
+  const enabledRef = useRef(enabled);
 
   useEffect(() => {
     onErrorRef.current = onError;
   }, [onError]);
 
   useEffect(() => {
-    if (!enabled || !flowId) {
-      console.debug('[useHeartbeat] Disabled or missing flowId', {
-        enabled,
-        flowId,
-        hasExamNo: !!examNo,
-        hasBatchCode: !!batchCode,
-      });
+    enabledRef.current = enabled;
+  }, [enabled]);
+
+  // 只依赖 flowId，在内部检查 enabled 状态
+  useEffect(() => {
+    if (!flowId) {
       return;
     }
 
-    console.log('[useHeartbeat] Starting heartbeat', { flowId });
+    // 延迟检查 enabled 状态，避免在 loading 状态变化时频繁触发
+    const startupDelay = setTimeout(() => {
+      if (!enabledRef.current) {
+        console.debug('[useHeartbeat] Not enabled, skipping startup', { flowId });
+        return;
+      }
 
-    const sendHeartbeat = () => {
-      const payload = {
-        flowId,
-        examNo: examNo ?? null,
-        batchCode: batchCode ?? null,
-        stepIndex: stepIndexRef.current ?? 0,
-        modulePageNum: modulePageNumRef.current ?? '1',
-        ts: Date.now(),
+      // 如果已经有定时器在运行，不要重复初始化
+      if (timerRef.current) {
+        console.debug('[useHeartbeat] Timer already running, skipping', { flowId });
+        return;
+      }
+
+      console.log('[useHeartbeat] Starting heartbeat', { flowId });
+
+      const sendHeartbeat = () => {
+        const payload = {
+          flowId,
+          examNo: examNo ?? null,
+          batchCode: batchCode ?? null,
+          stepIndex: stepIndexRef.current ?? 0,
+          modulePageNum: modulePageNumRef.current ?? '1',
+          ts: Date.now(),
+        };
+
+        lastHeartbeat = payload;
+        console.log('[useHeartbeat] Sending heartbeat', payload);
+        writeNow(payload, onErrorRef.current);
       };
 
-      lastHeartbeat = payload;
-      console.log('[useHeartbeat] Sending heartbeat', payload);
-      writeNow(payload, onErrorRef.current);
-    };
-
-    flushQueue(flowId, onErrorRef.current).finally(() => {
-      sendHeartbeat();
-    });
-
-    timerRef.current = window.setInterval(() => {
-      sendHeartbeat();
-    }, Math.max(3000, intervalMs));
+      flushQueue(flowId, onErrorRef.current).finally(() => {
+        if (timerRef.current === null) {
+          sendHeartbeat();
+          timerRef.current = window.setInterval(() => {
+            sendHeartbeat();
+          }, Math.max(3000, intervalMs));
+        }
+      });
+    }, 500); // 500ms 延迟，等待 loading 状态稳定
 
     return () => {
+      clearTimeout(startupDelay);
       console.log('[useHeartbeat] Cleaning up heartbeat', { flowId });
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [enabled, flowId, intervalMs]);
+  }, [flowId, intervalMs]); // 不依赖 enabled，避免频繁触发
 
   // DEV-only global debug helpers
   if (import.meta.env.DEV) {

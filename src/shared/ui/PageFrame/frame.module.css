@@ -2,21 +2,39 @@
 @import '../../styles/nav-tokens.css';
 @import '../../styles/timer-tokens.css';
 
-.frame {
+/* 外层包裹容器 - 负责垂直居中 */
+.frameWrapper {
   display: flex;
+  justify-content: center;
+  align-items: center;
   min-height: 100vh;
   background: var(--page-frame-bg);
+  padding: var(--frame-wrapper-padding, 20px 20px calc(20px + var(--userinfo-bar-height, 50px)));
+}
+
+/* 主框架 - 固定尺寸，黄色圆角边框 */
+.frame {
+  display: flex;
+  width: 100%;
+  max-width: var(--frame-max-width, 1280px);
+  height: var(--frame-height, 750px);
+  background: var(--page-frame-content-bg);
+  border: var(--frame-border-width, 3px) solid var(--frame-border-color, #ffd93d);
+  border-radius: var(--frame-border-radius, 20px);
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--frame-shadow, 0 20px 50px rgba(255, 193, 7, 0.2));
   color: var(--text-color, #1f2a37);
 }
 
 .navRail {
   width: var(--page-frame-nav-width);
-  padding: var(--page-frame-padding-y) 20px;
-  background: var(--page-frame-content-bg);
-  border-right: 1px solid var(--page-frame-border);
-  box-shadow: inset -1px 0 0 rgba(15, 23, 42, 0.05);
+  padding: 0;
+  background: transparent;
+  border-right: none;
   display: flex;
   justify-content: center;
+  overflow-y: auto;
 }
 
 .navHidden {
@@ -25,24 +43,23 @@
 
 .content {
   flex: 1;
-  min-height: 100vh;
-  padding: var(--page-frame-padding-y) var(--page-frame-padding-x);
+  position: relative;
+  padding: var(--page-frame-content-padding, 24px 32px);
   display: flex;
   flex-direction: column;
   gap: var(--page-frame-body-gap);
   box-sizing: border-box;
+  overflow-y: auto;
+  background: var(--page-frame-content-area-bg, #fffef9);
+  margin-top: 0px;
 }
 
 .contentCard {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--page-frame-content-bg);
-  border-radius: var(--page-frame-radius);
-  box-shadow: var(--page-frame-shadow);
-  padding: 32px 36px 28px;
-  max-width: var(--page-frame-content-max-width);
-  margin: 0 auto;
+  position: relative;
+  padding: 0;
   width: 100%;
   box-sizing: border-box;
 }
@@ -50,17 +67,21 @@
 .header {
   display: flex;
   justify-content: flex-end;
-  min-height: 64px;
+  min-height: 0;
+  position: static;
 }
 
 .timerSlot {
-  position: relative;
-  min-height: 64px;
+  position: fixed;
+  top: var(--timer-slot-top, 10px);
+  right: var(--timer-slot-right, 10px);
+  z-index: 1000;
 }
 
 .body {
   flex: 1;
-  margin-top: 8px;
+  margin-top: 0px;
+  height: 100%;
 }
 
 .bodyStretch {
@@ -70,18 +91,22 @@
 }
 
 .footer {
-  margin-top: 24px;
+  margin-top: 0px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: relative;
+  padding-bottom: 0; /* 为浮动按钮留出空间 */
 }
 
 .actionRow {
+  position: fixed;
+  bottom: var(--action-row-bottom, 20px);
+  right: var(--action-row-right, 20px);
+  z-index: 100;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 16px;
-  flex-wrap: wrap;
 }
 
 .nextButton {
@@ -207,25 +232,45 @@
 }
 
 @media (max-width: 768px) {
+  .frameWrapper {
+    padding: 10px;
+  }
+
   .frame {
     flex-direction: column;
+    height: auto;
+    min-height: 600px;
   }
 
   .navRail {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--page-frame-border);
+    padding: 20px;
   }
 
-  .contentCard {
-    padding: 24px 20px;
+  .content {
+    padding: 20px;
+  }
+
+
+  .timerSlot {
+    /* 保持固定定位在 UserInfoBar 下方 */
+    top: calc(var(--userinfo-bar-height, 50px) + 8px);
+    right: 8px;
   }
 
   .actionRow {
-    justify-content: stretch;
+    /* 保持固定定位在右下角 */
+    bottom: 15px;
+    right: 15px;
   }
 
   .nextButton {
-    width: 100%;
+    min-width: 140px;
+  }
+
+  .footer {
+    padding-bottom: 0;
   }
 }

@@ -1,0 +1,380 @@
+/* Page05_FocalAnalysis.module.css - Focal length analysis page styles */
+
+/* Main container */
+.analysisContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Two-column layout */
+.twoColumnLayout {
+  display: grid;
+  grid-template-columns: 30% 70%;
+  min-height: 400px;
+}
+
+/* Left panel - Questions */
+.leftPanel {
+  padding: 24px 20px;
+  background: #f8fafc;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Panel title in left column */
+.panelTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+/* Right panel - Experiment unit container */
+.rightPanel {
+  padding: 16px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Experiment unit - contains simulator and controls */
+.experimentUnit {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Simulator wrapper */
+.simulatorWrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Control bar inside right panel */
+.controlBar {
+  height: 80px;
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  padding: 0 20px;
+}
+
+/* Page title - kept for backwards compatibility but hidden */
+.pageTitle {
+  display: none;
+}
+
+/* Question box */
+.questionBox {
+  background: #e8f5e9;
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border-left: 4px solid #4caf50;
+}
+
+.questionText {
+  font-size: 18px;
+  color: #2e7d32;
+  margin: 0;
+  line-height: 2;
+  text-indent: 2em;
+}
+
+.questionText strong {
+  font-weight: 700;
+}
+
+/* Radio group container */
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* Radio option */
+.radioOption {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.radioOption:hover {
+  border-color: #90caf9;
+  background: #f5f5f5;
+}
+
+.radioOption.selected {
+  border-color: #1976d2;
+  background: #e3f2fd;
+}
+
+.radioInput {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  cursor: pointer;
+  accent-color: #1976d2;
+}
+
+.radioLabel {
+  font-size: 18px;
+  color: #333;
+  flex: 1;
+  cursor: pointer;
+  line-height: 2;
+}
+
+/* Reference image area */
+.referenceArea {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.referenceTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin: 0 0 12px 0;
+}
+
+.referenceImage {
+  width: 100%;
+  height: 200px;
+  background: #e0e0e0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.referenceImage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.placeholderText {
+  font-size: 14px;
+  color: #999;
+}
+
+/* Error message */
+.errorMessage {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #ffebee;
+  border-radius: 6px;
+  border-left: 3px solid #d32f2f;
+}
+
+/* Button area */
+.buttonArea {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* Previous button */
+.prevButton {
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  background: #fff;
+  color: #666;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.prevButton:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+/* Next button */
+.nextButton {
+  padding: 10px 28px;
+  font-size: 16px;
+  font-weight: bold;
+  background: linear-gradient(180deg, #6ecfff 0%, #38a4ff 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(56, 164, 255, 0.4);
+  transition: all 0.2s;
+}
+
+.nextButton:hover:not(:disabled) {
+  background: linear-gradient(180deg, #89d9ff 0%, #5bb5ff 100%);
+  transform: translateY(-1px);
+}
+
+.nextButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Navigation buttons at bottom */
+.navigationBar {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Action buttons for experiment */
+.actionBtn {
+  width: 120px;
+  height: 44px;
+  background: linear-gradient(180deg, #6ecfff 0%, #38a4ff 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #2c8ddd, 0 8px 10px rgba(0, 0, 0, 0.15);
+  transition: all 0.1s;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.actionBtn:hover {
+  background: linear-gradient(180deg, #89d9ff 0%, #5bb5ff 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 #2c8ddd, 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.actionBtn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #2c8ddd, 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.actionBtn:disabled,
+.actionBtn.disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Capture button - different color */
+.captureBtn {
+  composes: actionBtn;
+  background: linear-gradient(180deg, #81c784 0%, #4caf50 100%);
+  box-shadow: 0 4px 0 #388e3c, 0 8px 10px rgba(0, 0, 0, 0.15);
+}
+
+.captureBtn:hover {
+  background: linear-gradient(180deg, #a5d6a7 0%, #66bb6a 100%);
+  box-shadow: 0 5px 0 #388e3c, 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.captureBtn:active {
+  box-shadow: 0 1px 0 #388e3c, 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.captureBtn:disabled,
+.captureBtn.disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Reset button - warning color */
+.resetBtn {
+  composes: actionBtn;
+  background: linear-gradient(180deg, #ffab91 0%, #ff7043 100%);
+  box-shadow: 0 4px 0 #e64a19, 0 8px 10px rgba(0, 0, 0, 0.15);
+}
+
+.resetBtn:hover {
+  background: linear-gradient(180deg, #ffccbc 0%, #ff8a65 100%);
+  box-shadow: 0 5px 0 #e64a19, 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+.resetBtn:active {
+  box-shadow: 0 1px 0 #e64a19, 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .analysisContainer {
+    border-radius: 0;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  /* Stack columns on mobile */
+  .twoColumnLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .leftPanel {
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 16px;
+  }
+
+  .rightPanel {
+    padding: 12px;
+  }
+
+  .controlBar {
+    height: 70px;
+    gap: 20px;
+    padding: 0 12px;
+  }
+
+  .actionBtn {
+    width: 100px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .radioOption {
+    padding: 12px 14px;
+  }
+
+  .referenceImage {
+    height: 150px;
+  }
+
+  .navigationBar {
+    padding: 12px 16px;
+  }
+}

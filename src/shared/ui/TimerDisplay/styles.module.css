@@ -5,18 +5,16 @@
  * 支持 CSS 变量覆写 (通过 timer-tokens.css)
  */
 
-/* 默认计时器容器 */
+/* 默认计时器容器 - 使用相对定位，由父容器 .timerSlot 控制位置 */
 .timer {
-  position: fixed;
-  top: var(--timer-top, 55px);
-  right: var(--timer-right, 20px);
+  position: relative;
   background-color: var(--timer-bg, var(--cartoon-secondary, #ffeaa7));
   color: var(--timer-fg, var(--text-color, #2d3436));
   padding: var(--timer-padding, 12px 20px);
   border-radius: var(--timer-border-radius, 30px);
   font-weight: bold;
   box-shadow: var(--timer-shadow, 0 4px 10px var(--cartoon-shadow, rgba(0, 0, 0, 0.1)));
-  z-index: var(--timer-z-index, 999);
+  z-index: var(--timer-z-index, 10);
   font-size: var(--timer-font-size, 18px);
   display: flex;
   align-items: center;
@@ -89,14 +87,12 @@
 
 /* 问卷计时器 */
 .timer.questionnaire {
-  top: var(--timer-questionnaire-top, 55px);
   background-color: var(--timer-questionnaire-bg, #a29bfe);
   border-color: var(--timer-questionnaire-border, #6c5ce7);
 }
 
 /* 注意事项计时器 */
 .timer.notice {
-  top: var(--timer-notice-top, 55px);
   background-color: var(--timer-notice-bg, #74b9ff);
   border-color: var(--timer-notice-border, #0984e3);
 }
@@ -120,8 +116,6 @@
 
 @media (max-width: 768px) {
   .timer {
-    top: var(--timer-top-mobile, 50px);
-    right: var(--timer-right-mobile, 15px);
     padding: 10px 16px;
     font-size: 16px;
   }
@@ -139,8 +133,6 @@
 
 @media (max-width: 480px) {
   .timer {
-    top: var(--timer-top-small, 45px);
-    right: var(--timer-right-small, 10px);
     padding: 8px 14px;
     font-size: 14px;
   }
