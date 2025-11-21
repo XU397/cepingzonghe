@@ -12,7 +12,7 @@ const asArray = (value) => (Array.isArray(value) ? value : []);
 const composeAsync = (...handlers) => async (...args) => {
   for (const handler of handlers) {
     if (typeof handler === 'function') {
-      // eslint-disable-next-line no-await-in-loop
+       
       await handler(...args);
     }
   }

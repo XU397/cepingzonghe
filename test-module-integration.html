@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模块集成验证 - 测试页面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            background: #f9f9f9;
+        }
+        .test-item h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.pending { background: #FFC107; color: #000; }
+        .status.pass { background: #4CAF50; color: white; }
+        .status.fail { background: #f44336; color: white; }
+        .code-block {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn-secondary {
+            background: #2196F3;
+        }
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 模块统一平台集成 - 浏览器验证</h1>
+
+    <div class="test-section">
+        <h2>📋 验证清单概览</h2>
+        <p><strong>提案ID</strong>: update-module-integration-to-unified-platform</p>
+        <p><strong>验证时间</strong>: <span id="verify-time"></span></p>
+        <p><strong>开发服务器</strong>: <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 A. Grade-7 模块验证 (高优先级)</h2>
+
+        <div class="test-item">
+            <h3>A1. 登录与模块加载 <span class="status pending">待验证</span></h3>
+            <p><strong>验证步骤</strong>:</p>
+            <ol>
+                <li>点击下方按钮打开应用</li>
+                <li>在开发者工具 Console 中查看日志</li>
+                <li>查找: <code>[Grade7Wrapper] 🎯 7年级模块包装器已挂载</code></li>
+                <li>查找: <code>[AssessmentPageFrame] 页面框架初始化</code></li>
+            </ol>
+            <button class="btn" onclick="openApp()">打开应用 (新标签页)</button>
+            <button class="btn btn-secondary" onclick="showInFrame()">在下方框架中显示</button>
+        </div>
+
+        <div class="test-item">
+            <h3>A2. 统一页面框架布局 <span class="status pending">待验证</span></h3>
+            <p><strong>检查要点</strong>:</p>
+            <ul>
+                <li>✓ 左侧导航栏 (LeftStepperNav) 显示正常</li>
+                <li>✓ 圆点样式正确 (当前高亮蓝色、已完成绿色、未完成灰色)</li>
+                <li>✓ 步骤指示器显示 (如 "5/12")</li>
+                <li>✓ 顶部计时器 (TimerDisplay) 正常倒计时</li>
+                <li>✓ 导航不可点击 (只读模式)</li>
+            </ul>
+            <div class="code-block">
+// 在 Console 中检查 DOM 结构
+document.querySelector('[data-nav-mode]')?.dataset.navMode
+// 应返回: "experiment" 或 "questionnaire"
+
+document.querySelector('.timer-display')?.textContent
+// 应返回: 倒计时时间 (如 "38:25")
+            </div>
+        </div>
+
+        <div class="test-item">
+            <h3>A3. 实验/问卷模式切换 <span class="status pending">待验证</span></h3>
+            <p><strong>验证步骤</strong>:</p>
+            <ol>
+                <li>完成实验部分,进入问卷页面</li>
+                <li>观察左侧导航是否自动切换</li>
+                <li>观察计时器是否重置为 10 分钟</li>
+            </ol>
+            <div class="code-block">
+// 检查导航模式
+document.querySelector('[data-nav-mode]')?.dataset.navMode
+
+// 检查计时器作用域 (在 localStorage 中)
+Object.keys(localStorage).filter(k => k.includes('timer'))
+            </div>
+        </div>
+
+        <div class="test-item">
+            <h3>A4. 跨刷新恢复 <span class="status pending">待验证</span></h3>
+            <p><strong>验证步骤</strong>:</p>
+            <ol>
+                <li>进入任意页面 (如第 5 页)</li>
+                <li>等待计时器走到某个时间 (如 38:00)</li>
+                <li>按 F5 刷新页面</li>
+                <li>检查: 页面是否仍在第 5 页</li>
+                <li>检查: 计时器是否从 38:00 继续倒计时</li>
+            </ol>
+            <div class="code-block">
+// 检查 localStorage 中的页面位置
+localStorage.getItem('hci-pageNum')
+
+// 检查计时器状态
+Object.keys(localStorage)
+    .filter(k => k.startsWith('timer:'))
+    .map(k => ({key: k, value: localStorage.getItem(k)}))
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🟡 B. Grade-4 模块验证 (中优先级)</h2>
+
+        <div class="test-item">
+            <h3>B1. 旧版布局 (默认) <span class="status pending">待验证</span></h3>
+            <p><strong>环境配置</strong>:</p>
+            <div class="code-block">
+# .env.local 文件
+# 不设置 VITE_USE_UNIFIED_FRAME (或设置为 false)
+            </div>
+            <p><strong>预期行为</strong>: 使用旧版 LeftNavigation 组件</p>
+        </div>
+
+        <div class="test-item">
+            <h3>B2. 新版布局 (可选) <span class="status pending">待验证</span></h3>
+            <p><strong>环境配置</strong>:</p>
+            <div class="code-block">
+# .env.local 文件
+VITE_USE_UNIFIED_FRAME=true
+
+# 重启开发服务器
+npm run dev
+            </div>
+            <p><strong>预期行为</strong>: ScenarioIntroPage 使用 AssessmentPageFrame</p>
+            <button class="btn btn-secondary" onclick="checkEnvVar()">检查环境变量</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🟢 C. Grade-7-Tracking 模块验证 (低优先级)</h2>
+
+        <div class="test-item">
+            <h3>C1. useDataLogger 委托验证 <span class="status pending">待验证</span></h3>
+            <p><strong>Console 日志检查</strong>:</p>
+            <ul>
+                <li>查找: <code>[useDataLogger] 提交数据</code></li>
+                <li>查找: <code>[usePageSubmission] 提交成功</code></li>
+            </ul>
+        </div>
+
+        <div class="test-item">
+            <h3>C2. TimerService 集成验证 <span class="status pending">待验证</span></h3>
+            <p><strong>验证点</strong>:</p>
+            <ul>
+                <li>实验计时器正常启动</li>
+                <li>问卷计时器正常启动</li>
+                <li>跨刷新恢复正常</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 验证结果记录</h2>
+        <div id="results">
+            <p>在浏览器 Console 中运行以下命令记录验证结果:</p>
+            <div class="code-block">
+// 记录验证结果
+const results = {
+    grade7_layout: 'pass', // pass | fail | pending
+    grade7_timer: 'pass',
+    grade7_navigation: 'pass',
+    grade7_refresh: 'pass',
+    grade4_legacy: 'pending',
+    grade4_unified: 'pending',
+    g7tracking_submit: 'pending',
+    g7tracking_timer: 'pending',
+    timestamp: new Date().toISOString(),
+    notes: '在此记录问题'
+};
+
+console.log('验证结果:', JSON.stringify(results, null, 2));
+localStorage.setItem('verification-results', JSON.stringify(results));
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section" id="iframe-container" style="display: none;">
+        <h2>📱 应用预览</h2>
+        <iframe id="app-frame" src=""></iframe>
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 快速链接</h2>
+        <button class="btn" onclick="window.open('http://localhost:3000', '_blank')">打开应用</button>
+        <button class="btn btn-secondary" onclick="window.open('/openspec/changes/update-module-integration-to-unified-platform/BROWSER_VERIFICATION_CHECKLIST.md', '_blank')">查看完整清单</button>
+        <button class="btn btn-secondary" onclick="window.open('/openspec/changes/update-module-integration-to-unified-platform/IMPLEMENTATION_SUMMARY.md', '_blank')">查看实施总结</button>
+    </div>
+
+    <script>
+        // 显示当前时间
+        document.getElementById('verify-time').textContent = new Date().toLocaleString('zh-CN');
+
+        function openApp() {
+            window.open('http://localhost:3000', '_blank');
+        }
+
+        function showInFrame() {
+            const container = document.getElementById('iframe-container');
+            const frame = document.getElementById('app-frame');
+            frame.src = 'http://localhost:3000';
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function checkEnvVar() {
+            fetch('http://localhost:3000')
+                .then(() => {
+                    alert('请在开发服务器的 Console 中检查:\\n\\nimport.meta.env.VITE_USE_UNIFIED_FRAME');
+                })
+                .catch(e => {
+                    alert('无法连接到开发服务器。请确保 npm run dev 正在运行。');
+                });
+        }
+
+        // 自动检查 localStorage 中的验证结果
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('verification-results');
+            if (saved) {
+                console.log('已保存的验证结果:', JSON.parse(saved));
+            }
+        });
+    </script>
+</body>
+</html>

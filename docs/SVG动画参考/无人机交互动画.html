@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>无人机航拍 GSD 仿真实验</title>
+    <style>
+        /* =========================================
+           1. 全局变量与重置
+           ========================================= */
+        :root {
+            --primary-blue: linear-gradient(180deg, #6ecfff 0%, #38a4ff 100%); /* 按钮蓝 */
+            --primary-blue-hover: linear-gradient(180deg, #89d9ff 0%, #5bb5ff 100%);
+            --height-btn-bg: #ffe0b2;      /* 高度按钮浅橙色 */
+            --height-btn-active: #ffb74d;  /* 高度按钮深橙色 */
+            --gsd-green: #c8e6c9;          /* GSD背景绿 */
+            --gsd-text: #2e7d32;           /* GSD文字绿 */
+            --panel-border: #cfd8dc;
+            --text-main: #37474f;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none; /* 防止频繁点击选中文本 */
+        }
+
+        /* =========================================
+           2. 主容器 (仿真平板界面)
+           ========================================= */
+        .app-container {
+            position: relative;
+            width: 900px;
+            height: 640px;
+            background-color: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 4px solid #e0e0e0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* =========================================
+           3. SVG 实验舞台 (中间层)
+           ========================================= */
+        .stage-area {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(to bottom, #e1f5fe 0%, #b3e5fc 50%, #dcedc8 50%, #c5e1a5 100%);
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* 闪光层 */
+        .flash-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease-out;
+            z-index: 10;
+        }
+
+        /* =========================================
+           4. UI 悬浮控件 (上层)
+           ========================================= */
+        
+        /* --- 左上角：飞行高度 --- */
+        .control-height {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #000;
+            margin-bottom: 5px;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .height-btn {
+            width: 120px;
+            padding: 10px 0;
+            background-color: var(--height-btn-bg);
+            border: 2px solid #fff;
+            border-radius: 8px;
+            color: #bf5f00;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s, background-color 0.2s;
+            text-align: center;
+        }
+
+        .height-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+        }
+
+        .height-btn:active {
+            transform: translateY(1px);
+        }
+
+        .height-btn.active {
+            background-color: var(--height-btn-active);
+            color: #fff;
+            border-color: #ff9800;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- 右上角：GSD 显示 --- */
+        .display-gsd {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gsd-box {
+            width: 140px;
+            height: 60px;
+            background: linear-gradient(180deg, #dcedc8 0%, #c5e1a5 100%);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--gsd-text);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+        }
+
+        /* --- 底部：控制栏 (完全参考截图) --- */
+        .bottom-bar {
+            height: 120px;
+            background-color: #fff;
+            border-top: 2px solid #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px; /* 控件间距 */
+            z-index: 10;
+            padding-bottom: 10px; /* 视觉微调 */
+        }
+
+        /* 通用蓝色大按钮 */
+        .big-btn {
+            width: 140px;
+            height: 50px;
+            background: var(--primary-blue);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2c8ddd, 0 8px 10px rgba(0,0,0,0.15);
+            transition: all 0.1s;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .big-btn:hover {
+            background: var(--primary-blue-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 0 #2c8ddd, 0 10px 15px rgba(0,0,0,0.2);
+        }
+
+        .big-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #2c8ddd, 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* 焦距控制器 (仪表盘风格) */
+        .focal-control-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .focal-device {
+            width: 140px;
+            height: 60px;
+            background: linear-gradient(180deg, #4a4a4a 0%, #2c2c2c 100%);
+            border-radius: 8px;
+            border: 2px solid #666;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            position: relative;
+        }
+
+        /* 左侧调节箭头区 */
+        .focal-arrows {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 44px;
+            margin-right: 8px;
+        }
+
+        .arrow-btn {
+            width: 30px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 4px;
+            border: 1px solid #999;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.1s;
+        }
+        
+        .arrow-btn:active { background: #bbb; }
+        .arrow-btn svg { width: 12px; height: 12px; fill: #555; }
+        /* 红色上箭头，蓝色下箭头 */
+        .arrow-up svg { fill: #d32f2f; }
+        .arrow-down svg { fill: #1976d2; }
+
+        /* 中间读数区 */
+        .focal-display {
+            flex: 1;
+            height: 40px;
+            background: #fff;
+            border-radius: 4px;
+            border: 2px solid #999;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: "Arial", sans-serif;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* =========================================
+           5. 动画与过渡
+           ========================================= */
+        .drone-group {
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .propeller {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: spin 0.08s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* 地面模糊层 */
+        .ground-layer {
+            transition: filter 0.6s ease-out;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- 左上角：飞行高度 -->
+    <div class="control-height">
+        <div class="section-title">飞行高度</div>
+        <div class="height-btn active" onclick="setHeight(100)">100米</div>
+        <div class="height-btn" onclick="setHeight(200)">200米</div>
+        <div class="height-btn" onclick="setHeight(300)">300米</div>
+    </div>
+
+    <!-- 右上角：GSD -->
+    <div class="display-gsd">
+        <div class="section-title">地面采样距离 (GSD)</div>
+        <div class="gsd-box" id="gsdValue">0</div>
+    </div>
+
+    <!-- 中间舞台：SVG -->
+    <div class="stage-area">
+        <svg viewBox="0 0 900 480" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <!-- 模糊滤镜 -->
+                <filter id="groundBlur" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur id="blurKernel" stdDeviation="0" />
+                </filter>
+
+                <!-- 无人机图标 -->
+                <g id="droneIcon">
+                    <!-- 机臂 -->
+                    <path d="M-40,-8 L40,-8" stroke="#455a64" stroke-width="4" stroke-linecap="round"/>
+                    <path d="M-40,8 L40,8" stroke="#455a64" stroke-width="4" stroke-linecap="round"/>
+                    <!-- 机身 -->
+                    <rect x="-18" y="-12" width="36" height="24" rx="6" fill="#eceff1" stroke="#455a64" stroke-width="2"/>
+                    <circle cx="0" cy="0" r="8" fill="#29b6f6" stroke="#01579b" stroke-width="2"/>
+                    <!-- 螺旋桨 (四个) -->
+                    <g class="propeller" transform="translate(-40, -8)"><line x1="-10" x2="10" stroke="#333" stroke-width="2"/></g>
+                    <g class="propeller" transform="translate(40, -8)"><line x1="-10" x2="10" stroke="#333" stroke-width="2"/></g>
+                    <g class="propeller" transform="translate(-40, 8)"><line x1="-10" x2="10" stroke="#333" stroke-width="2"/></g>
+                    <g class="propeller" transform="translate(40, 8)"><line x1="-10" x2="10" stroke="#333" stroke-width="2"/></g>
+                </g>
+                
+                <!-- 树木定义 -->
+                <g id="tree">
+                    <path d="M-10,0 L10,0 L0,-40 Z" fill="#66bb6a"/>
+                    <rect x="-2" y="0" width="4" height="10" fill="#795548"/>
+                </g>
+            </defs>
+
+            <!-- 地面层 (应用模糊的对象) -->
+            <g class="ground-layer" style="filter: url(#groundBlur)">
+                <!-- 远景山脉 -->
+                <path d="M0,300 L200,150 L400,300 L600,200 L900,350 L900,480 L0,480 Z" fill="#c5e1a5" stroke="none"/>
+                <path d="M-50,480 L950,480 L950,300 L-50,300 Z" fill="#dcedc8"/> <!-- 草地底色 -->
+
+                <!-- 装饰性树木 -->
+                <use href="#tree" x="100" y="320" transform="scale(1.5)"/>
+                <use href="#tree" x="150" y="340" transform="scale(1.2)"/>
+                <use href="#tree" x="800" y="330" transform="scale(1.4)"/>
+                <use href="#tree" x="750" y="310" transform="scale(1.1)"/>
+
+                <!-- 房子主体 -->
+                <g transform="translate(450, 360)">
+                    <rect x="-60" y="-50" width="120" height="90" fill="#fff3e0" stroke="#5d4037" stroke-width="3"/>
+                    <path d="M-70,-50 L0,-100 L70,-50 Z" fill="#ff7043" stroke="#5d4037" stroke-width="3"/> <!-- 红屋顶 -->
+                    <rect x="-20" y="10" width="40" height="40" fill="#8d6e63" stroke="#3e2723" stroke-width="2"/> <!-- 门 -->
+                    <rect x="-45" y="-30" width="25" height="25" fill="#81d4fa" stroke="#0277bd" stroke-width="2"/> <!-- 窗 -->
+                    <rect x="20" y="-30" width="25" height="25" fill="#81d4fa" stroke="#0277bd" stroke-width="2"/> <!-- 窗 -->
+                    <!-- 烟囱 -->
+                    <rect x="30" y="-90" width="20" height="30" fill="#8d6e63"/>
+                </g>
+            </g>
+
+            <!-- 视锥 (拍照时的光束) -->
+            <path id="fovCone" d="M450,100 L350,400 L550,400 Z" fill="rgba(255, 255, 255, 0.3)" stroke="rgba(255,255,255,0.5)" stroke-dasharray="5,5" style="opacity: 0; transition: opacity 0.2s;"/>
+
+            <!-- 无人机 (悬停层，不模糊) -->
+            <g id="droneGroup" class="drone-group" transform="translate(450, 150) scale(0.8)">
+                <use href="#droneIcon"/>
+            </g>
+        </svg>
+        
+        <!-- 闪光遮罩 -->
+        <div class="flash-overlay" id="flash"></div>
+    </div>
+
+    <!-- 底部控制栏 -->
+    <div class="bottom-bar">
+        <!-- 重置按钮 -->
+        <button class="big-btn" onclick="resetExperiment()">重置</button>
+
+        <!-- 焦距调节器 -->
+        <div class="focal-control-wrapper">
+            <div class="focal-device">
+                <div class="focal-arrows">
+                    <div class="arrow-btn arrow-up" onclick="adjustFocal(1)">
+                        <svg viewBox="0 0 24 24"><path d="M12 8l-6 6h12z"/></svg>
+                    </div>
+                    <div class="arrow-btn arrow-down" onclick="adjustFocal(-1)">
+                        <svg viewBox="0 0 24 24"><path d="M12 16l6-6H6z"/></svg>
+                    </div>
+                </div>
+                <div class="focal-display" id="focalDisplay">8mm</div>
+            </div>
+            <div style="font-weight:bold; color:#333; font-size:18px;">镜头焦距</div>
+        </div>
+
+        <!-- 开始按钮 -->
+        <button class="big-btn" onclick="startExperiment()">开始</button>
+    </div>
+
+</div>
+
+<script>
+    // 核心数据 (查表法)
+    const GSD_LOOKUP = {
+        100: { 8: 3.01, 24: 1.00, 50: 0.48 },
+        200: { 8: 6.03, 24: 2.01, 50: 0.96 },
+        300: { 8: 9.04, 24: 3.01, 50: 1.45 }
+    };
+
+    // 允许的焦距档位
+    const FOCAL_STEPS = [8, 24, 50];
+
+    // 状态变量
+    let currentHeight = 100;
+    let focalIndex = 0; // 默认指向 8mm (index 0)
+    let currentGSD = 0;
+
+    // DOM 元素
+    const elDrone = document.getElementById('droneGroup');
+    const elBlur = document.getElementById('blurKernel');
+    const elGsd = document.getElementById('gsdValue');
+    const elFlash = document.getElementById('flash');
+    const elFov = document.getElementById('fovCone');
+    const elFocalDisplay = document.getElementById('focalDisplay');
+
+    // 初始化
+    updateDronePosition();
+    updateFocalDisplay();
+
+    // --- 逻辑控制 ---
+
+    // 1. 设置高度
+    function setHeight(h) {
+        currentHeight = h;
+        // 更新按钮样式
+        document.querySelectorAll('.height-btn').forEach(btn => {
+            if(btn.innerText.includes(h)) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        // 移动无人机
+        updateDronePosition();
+        // 切换高度不应该直接触发结果，重置显示
+        clearResult();
+    }
+
+    // 2. 调节焦距 (步进)
+    function adjustFocal(direction) {
+        // direction: 1 (上/右), -1 (下/左)
+        let newIndex = focalIndex + direction;
+        if (newIndex < 0) newIndex = 0; // 不循环，到底为止
+        if (newIndex >= FOCAL_STEPS.length) newIndex = FOCAL_STEPS.length - 1;
+        
+        if (newIndex !== focalIndex) {
+            focalIndex = newIndex;
+            updateFocalDisplay();
+            clearResult(); // 改变参数后需重新拍摄
+        }
+    }
+
+    // 更新焦距显示文字
+    function updateFocalDisplay() {
+        elFocalDisplay.innerText = FOCAL_STEPS[focalIndex] + 'mm';
+    }
+
+    // 3. 移动无人机 (Y轴位置)
+    function updateDronePosition() {
+        // 映射: 100m -> Y=250, 200m -> Y=150, 300m -> Y=50
+        const yPos = 350 - currentHeight; 
+        // 保持X居中(450)，缩放0.8
+        elDrone.setAttribute('transform', `translate(450, ${yPos}) scale(0.8)`);
+    }
+
+    // 4. 清除结果 (恢复清晰)
+    function clearResult() {
+        elGsd.innerText = "0";
+        elBlur.setAttribute('stdDeviation', 0);
+        elFov.style.opacity = 0;
+    }
+
+    // 5. 开始实验
+    function startExperiment() {
+        // 播放闪光
+        elFlash.style.opacity = 0.8;
+        setTimeout(() => elFlash.style.opacity = 0, 150);
+
+        // 获取当前焦距值
+        const focalVal = FOCAL_STEPS[focalIndex];
+        
+        // 查表
+        const gsd = GSD_LOOKUP[currentHeight][focalVal];
+        
+        // 显示结果
+        setTimeout(() => {
+            elGsd.innerText = gsd.toFixed(2);
+            
+            // 计算并应用模糊
+            // 模糊算法优化: 为了让 0.48 看此时很清晰，9.04 很模糊
+            // 系数 0.8: 9.04 * 0.8 = 7.2px (非常糊)
+            //           0.48 * 0.8 = 0.38px (基本无感)
+            const blurVal = gsd * 0.8;
+            elBlur.setAttribute('stdDeviation', blurVal);
+            
+            // 显示视锥示意 (根据焦距改变宽度)
+            showFovCone(focalVal);
+
+        }, 200); // 稍作延迟模拟计算
+    }
+
+    // 显示视锥
+    function showFovCone(focal) {
+        const yTop = 350 - currentHeight; // 无人机底部大概位置
+        const yBottom = 400; // 地面
+        
+        // 焦距越小(8mm)，视野越宽(Angle大)
+        // 焦距越大(50mm)，视野越窄
+        let widthHalf = 150; 
+        if(focal === 24) widthHalf = 80;
+        if(focal === 50) widthHalf = 40;
+
+        const xLeft = 450 - widthHalf;
+        const xRight = 450 + widthHalf;
+
+        elFov.setAttribute('d', `M450,${yTop} L${xLeft},${yBottom} L${xRight},${yBottom} Z`);
+        elFov.style.opacity = 1;
+    }
+
+    // 6. 重置
+    function resetExperiment() {
+        setHeight(100);
+        focalIndex = 0; // 回到8mm
+        updateFocalDisplay();
+        clearResult();
+    }
+
+</script>
+
+</body>
+</html>

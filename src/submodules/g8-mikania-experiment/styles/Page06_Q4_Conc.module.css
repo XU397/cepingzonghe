@@ -1,0 +1,232 @@
+/* Page 06 - 结论 + Q4 样式 */
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: flex-start;
+  min-height: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+/* 页面标题 */
+.pageTitle {
+  width: 100%;
+  font-size: 36px;
+  font-weight: 700;
+  color: #2c5282;
+  margin: 0 0 5px 0;
+  text-align: left;
+  line-height: 1.2;
+}
+
+/* 左侧面板 - 问题区域 */
+.leftPanel {
+  flex: 0.8;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--card-background, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px var(--cartoon-shadow, rgba(0, 0, 0, 0.1));
+}
+
+/* 右侧面板 - 趋势图 */
+.rightPanel {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--card-background, #ffffff);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px var(--cartoon-shadow, rgba(0, 0, 0, 0.1));
+}
+
+/* 面板标题 */
+.panelTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--cartoon-primary, #59c1ff);
+  margin: 0 0 15px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--cartoon-border, #ffd99e);
+}
+
+/* 图表容器 */
+.chartContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 问题卡片 */
+.questionCard {
+  background-color: var(--background-color, #f5f5f5);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.questionCard:last-of-type {
+  margin-bottom: 0;
+}
+
+.questionText {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-color, #333333);
+  margin: 0 0 16px 0;
+}
+
+/* 问题标签 */
+.questionLabel {
+  font-weight: 700;
+  color: var(--cartoon-primary, #59c1ff);
+  margin-right: 4px;
+}
+
+/* 判断题容器 */
+.judgmentContainer {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* 判断按钮 */
+.judgmentButton {
+  width: 100px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  background-color: var(--card-background, #ffffff);
+  border: 3px solid var(--cartoon-border, #ffd99e);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-color, #333333);
+}
+
+.judgmentButton:hover {
+  transform: scale(1.05);
+  border-color: var(--cartoon-primary, #59c1ff);
+}
+
+.judgmentSelected {
+  background-color: var(--cartoon-green, #67d5b5);
+  border-color: var(--cartoon-green, #67d5b5);
+  color: white;
+}
+
+.judgmentSelected:hover {
+  border-color: var(--cartoon-green, #67d5b5);
+}
+
+/* 输入区域 */
+.inputContainer {
+  position: relative;
+}
+
+.textInput {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-color, #333333);
+  background-color: var(--card-background, #ffffff);
+  border: 2px solid var(--cartoon-border, #ffd99e);
+  border-radius: 8px;
+  resize: vertical;
+  min-height: 120px;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.textInput:focus {
+  outline: none;
+  border-color: var(--cartoon-primary, #59c1ff);
+}
+
+.textInput::placeholder {
+  color: #999999;
+}
+
+/* 输入框错误状态 */
+.textInputError {
+  border-color: var(--cartoon-red, #ff8a80);
+}
+
+.textInputError:focus {
+  border-color: var(--cartoon-red, #ff8a80);
+}
+
+/* 字符计数器 */
+.charCounter {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  font-size: 12px;
+  color: var(--text-secondary, #666666);
+}
+
+.insufficientChars {
+  color: var(--cartoon-red, #ff8a80);
+  font-weight: 600;
+}
+
+.sufficientChars {
+  color: var(--cartoon-green, #67d5b5);
+  font-weight: 600;
+}
+
+.charRequirement {
+  color: var(--text-secondary, #666666);
+}
+
+/* 错误提示 */
+.errorHint {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  text-align: center;
+}
+
+/* 操作行 */
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cartoon-border, #ffd99e);
+}
+
+/* 提交按钮 */
+.submitButton {
+  padding: 12px 40px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  background-color: var(--cartoon-green, #67d5b5);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: var(--cartoon-green-dark, #4bc4a0);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(103, 213, 181, 0.3);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
