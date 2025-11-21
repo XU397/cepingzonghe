@@ -1,8 +1,8 @@
-import {
-  DEV_TOOLS_STORAGE_KEYS,
-  DEV_TOOLS_DEFAULTS,
-  readDevBooleanPreference
-} from '../utils/devTools';
+// import {
+//   DEV_TOOLS_STORAGE_KEYS,
+//   DEV_TOOLS_DEFAULTS,
+//   readDevBooleanPreference
+// } from '../utils/devTools';  // 文件不存在，暂时注释
 
 /**
  * API配置文件
@@ -22,20 +22,15 @@ const isProduction = import.meta.env.PROD;
 const envMockDefault = (() => {
   const rawValue = import.meta.env?.VITE_USE_MOCK;
   if (rawValue === undefined || rawValue === null) {
-    return DEV_TOOLS_DEFAULTS.mock;
+    return true; // 默认启用mock模式
   }
   const normalized = String(rawValue).toLowerCase();
   return normalized === 'true' || normalized === '1';
 })();
 
 const resolveMockPreference = () => {
-  if (!isDevelopment) {
-    return envMockDefault;
-  }
-  return readDevBooleanPreference(
-    DEV_TOOLS_STORAGE_KEYS.mock,
-    envMockDefault
-  );
+  // 简化版本：直接使用环境变量配置
+  return envMockDefault;
 };
 
 const useMock = resolveMockPreference();

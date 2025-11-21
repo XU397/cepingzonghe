@@ -1376,28 +1376,44 @@ export const AppProvider = ({ children }) => {
       // 瀛樺偍鐢ㄦ埛淇℃伅
       setCurrentUser(userData);
       
-      // 澶勭悊妯″潡URL瀛楁
+      // Handle module URL (route) and derive flowId if present
       try {
-        const userModuleUrl = userData.url || '/four-grade'; // 榛樿鍊硷紙鍥涘勾绾фā鍧楋級
+        let userModuleUrl = userData.url || '/four-grade'; // default legacy module
+        if (!userData.url && flowIdFromLogin) {
+          userModuleUrl = `/flow/${flowIdFromLogin}`;
+        }
         setModuleUrl(userModuleUrl);
         setStorageItem(STORAGE_KEYS.CORE_MODULE_URL, userModuleUrl, true);
-        debugLog('[AppContext] URL瀛楁澶勭悊瀹屾垚:', {
+        if (!flowIdFromLogin) {
+          flowIdFromLogin =
+            extractFlowIdFromUrl(userModuleUrl) ||
+            flowProgressFromLogin?.flowId ||
+            flowProgressFromLogin?.flow_id ||
+            flowIdFromLogin;
+        }
+        debugLog('[AppContext] moduleUrl resolved', {
           receivedUrl: userData.url,
           appliedUrl: userModuleUrl,
-          isDefault: !userData.url
+          isDefault: !userData.url,
         });
-        
-        if (!userData.url) {
+
+        if (!userData.url && !flowIdFromLogin) {
           debugLog('[AppContext] Using default moduleUrl: /four-grade (API response missing url field)');
         }
       } catch (error) {
-        console.error('[AppContext] URL extraction failed:', error.message);
-        // 閿欒澶勭悊锛氫娇鐢ㄩ粯璁ゅ€硷紙鍥涘勾绾фā鍧楋級
+        console.error('[AppContext] URL extraction failed:', error?.message);
         const defaultUrl = '/four-grade';
         setModuleUrl(defaultUrl);
         setStorageItem(STORAGE_KEYS.CORE_MODULE_URL, defaultUrl, true);
-        debugLog('[AppContext] 閿欒鎭㈠ - 浣跨敤榛樿moduleUrl:', defaultUrl);
+        debugLog('[AppContext] Fallback moduleUrl applied:', defaultUrl);
       }
+
+      if (flowIdFromLogin && flowProgressFromLogin) {
+        persistFlowProgressFromLogin(flowIdFromLogin, flowProgressFromLogin);
+      }
+
+      const isFlowLogin = Boolean(flowIdFromLogin);
+
       
       // 瀛樺偍蹇呰鐨勪换鍔′俊鎭?
       setBatchCode(userData.batchCode);
@@ -1457,30 +1473,42 @@ export const AppProvider = ({ children }) => {
       });
       
       if (isRelogin) {
-        // 閲嶆柊鐧诲綍锛氫繚鎸佺幇鏈変换鍔＄姸鎬侊紝鎵嬪姩鎭㈠璁℃椂鍣?
-        debugLog('[AppContext] 馃攧 妫€娴嬪埌閲嶆柊鐧诲綍锛屾仮澶嶇幇鏈変换鍔＄姸鎬?);
-        
-        // 绔嬪嵆鎭㈠浠诲姟鐘舵€?
+        // 重新登录：保持现有任务状态，手动恢复计时器
+        debugLog('[AppContext] 🔄 检测到重新登录，恢复现有任务状态');
         setTimeout(() => {
-          debugLog('[AppContext] 馃殌 寮€濮嬫墽琛屾仮澶嶄换鍔＄姸鎬?..');
+          debugLog('[AppContext] 🚀 开始执行恢复任务状态..');
           restoreTaskState();
-        }, 200); // 澧炲姞寤惰繜纭繚鐘舵€佹洿鏂板畬鎴?
+        }, 200); // 增加延迟确保状态更新完成
       } else {
-        // 棣栨鐧诲綍锛氶噸缃换鍔＄浉鍏崇姸鎬?
-        debugLog('[AppContext] 棣栨鐧诲綍锛岄噸缃换鍔＄姸鎬?);
-        
-        setTaskStartTime(null);
-        setRemainingTime(TOTAL_TASK_DURATION);
-        setCurrentPageIdInternal('Page_01_Precautions');  // 鏀逛负娉ㄦ剰浜嬮」椤甸潰
-        setIsTaskFinished(false);
-        setIsTimeUp(false);
-        
-        // 娓呴櫎鍙兘瀛樺湪鐨勬棫浠诲姟鏁版嵁
-        localStorage.removeItem('isTaskFinished');
-        localStorage.removeItem('taskStartTime');
-        localStorage.removeItem('remainingTime');
-        localStorage.removeItem('currentPageId');
-        // 娉ㄦ剰锛氫笉娓呴櫎moduleUrl锛屽洜涓哄畠闇€瑕佸湪棣栨鐧诲綍鏃朵篃淇濇寔
+        if (isFlowLogin) {
+          debugLog('[AppContext] 首次登录 Flow，按进度恢复，跳过注意事项页重置', {
+            flowId: flowIdFromLogin,
+            progress: flowProgressFromLogin,
+          });
+          // 重置计时状态，避免旧数据污染
+          setTaskStartTime(null);
+          setRemainingTime(TOTAL_TASK_DURATION);
+          setIsTaskFinished(false);
+          setIsTimeUp(false);
+          localStorage.removeItem('isTaskFinished');
+          localStorage.removeItem('taskStartTime');
+          localStorage.removeItem('remainingTime');
+          localStorage.removeItem('currentPageId');
+        } else {
+          // 首次登录：重置任务相关状态（传统模块）
+          debugLog('[AppContext] 首次登录，重置任务状态');
+          setTaskStartTime(null);
+          setRemainingTime(TOTAL_TASK_DURATION);
+          setCurrentPageIdInternal('Page_01_Precautions');  // 改为注意事项页面
+          setIsTaskFinished(false);
+          setIsTimeUp(false);
+          // 清除可能存在的旧任务数据
+          localStorage.removeItem('isTaskFinished');
+          localStorage.removeItem('taskStartTime');
+          localStorage.removeItem('remainingTime');
+          localStorage.removeItem('currentPageId');
+          // 注意：不清除moduleUrl，因为它需要在首次登录时也保持
+        }
       }
       
       debugLog('鐧诲綍鎴愬姛锛岀敤鎴蜂俊鎭凡淇濆瓨:', userData);

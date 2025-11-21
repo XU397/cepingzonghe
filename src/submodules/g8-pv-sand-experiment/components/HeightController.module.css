@@ -1,0 +1,279 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  text-align: center;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.heightOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.heightButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.heightButton:hover:not(.disabled) {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.heightButton.active {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.heightButton.disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  background: #f8fafc;
+}
+
+.heightButton.disabled:hover {
+  transform: none;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.heightValue {
+  display: flex;
+  align-items: baseline;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.unit {
+  font-size: 16px;
+  font-weight: 500;
+  color: #64748b;
+  margin-left: 4px;
+}
+
+.heightIndicator {
+  display: flex;
+  align-items: flex-end;
+  height: 60px;
+  width: 20px;
+}
+
+.heightBar {
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.activeIndicator {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  background: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkmark {
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.lockIndicator {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  background: #f59e0b;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lockIcon {
+  font-size: 12px;
+}
+
+.heightDescription {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.descriptionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.heightLabel {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.description {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.currentStatus {
+  margin-top: 8px;
+}
+
+.statusCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #7dd3fc;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.statusLabel {
+  font-size: 13px;
+  color: #0369a1;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.currentValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0c4a6e;
+}
+
+.lockedText {
+  font-size: 12px;
+  color: #f59e0b;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fefce8;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.hintIcon {
+  font-size: 16px;
+}
+
+.hintText {
+  color: #a16207;
+  font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .container {
+    gap: 16px;
+  }
+  
+  .heightButton {
+    padding: 12px 16px;
+  }
+  
+  .heightValue {
+    font-size: 20px;
+  }
+  
+  .unit {
+    font-size: 14px;
+  }
+  
+  .heightIndicator {
+    height: 50px;
+    width: 16px;
+  }
+  
+  .heightDescription {
+    padding: 12px;
+  }
+  
+  .statusCard {
+    padding: 12px;
+  }
+  
+  .currentValue {
+    font-size: 18px;
+  }
+}
+
+/* 无障碍支持 */
+.heightButton:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .heightButton {
+    border-width: 3px;
+  }
+  
+  .heightButton.active {
+    background: #dbeafe;
+    border-color: #1e40af;
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .heightButton,
+  .heightBar {
+    transition: none;
+  }
+  
+  .heightButton:hover:not(.disabled) {
+    transform: none;
+  }
+}

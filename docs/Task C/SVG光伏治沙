@@ -1,0 +1,385 @@
+import React, { useState } from 'react';
+import { Play, RotateCcw } from 'lucide-react';
+
+/**
+ * ------------------------------------------------------------------
+ * 1. 核心配置与视觉系统 (遵循 V16.1 Color System)
+ * ------------------------------------------------------------------
+ */
+const COLORS = {
+  // --- 核心色板 ---
+  primary: '#59c1ff',       // --cartoon-primary: 主按钮
+  secondary: '#ffce6b',     // --cartoon-secondary: 次要/高亮
+  border: '#ffd99e',        // --cartoon-border: 边框
+  green: '#67d5b5',         // --cartoon-green: 成功/结果显示
+  red: '#ff8a80',           // --cartoon-red: 警告
+  text: '#333333',          // --text-color: 正文
+  textSec: '#666666',       // --text-secondary: 辅助文本
+  bg: '#f5f5f5',            // --background-color: 页面背景
+  cardBg: '#ffffff',        // --card-background: 卡片背景
+  shadow: 'rgba(0,0,0,0.1)',// --cartoon-shadow: 阴影
+
+  // --- 仿真元素固有色 ---
+  panelSurface: '#2c5282',  // 光伏板深蓝
+  panelFrame: '#4a5568',    // 支架深灰
+  poleColor: '#cbd5e0',     // 立柱银白色
+  poleShadow: '#a0aec0',    // 立柱阴影
+  skyGradientTop: '#eef9ff', // 天空淡蓝
+  skyGradientBot: '#f5f5f5', // 天空底部
+};
+
+// 实验数据模型 (包含 0cm 静止状态)
+const WIND_SPEED_DATA = {
+  0:  { withPanel: 0.00, noPanel: 0.00 }, // 0cm 高度无风
+  20: { withPanel: 2.09, noPanel: 2.37 },
+  50: { withPanel: 2.25, noPanel: 2.62 },
+  100: { withPanel: 1.66, noPanel: 2.77 }
+};
+
+// 高度档位序列：0 -> 20 -> 50 -> 100
+const HEIGHT_LEVELS = [0, 20, 50, 100];
+
+/**
+ * ------------------------------------------------------------------
+ * 2. 终极修复版: 透视三杯风速仪 (PerspectiveCupAnemometer)
+ * ------------------------------------------------------------------
+ * 包含：
+ * 1. 正确的横向旋转透视 (scaleY 压缩)。
+ * 2. 安全的高度映射 (0cm-100cm 不穿模)。
+ * 3. [关键修改] 非线性转速算法，放大视觉差异。
+ */
+const PerspectiveCupAnemometer = ({ x, speed, isSpinning, heightPercent, showPanel }) => {
+  
+  // [关键修改] 转速计算公式优化：平方反比
+  // 使用平方 (speed * speed) 来放大差异。
+  // 系数设为 4.5
+  // 1.66 m/s -> 4.5 / 2.75 ≈ 1.63s / 圈 (很慢，肉眼可见的慢)
+  // 2.09 m/s -> 4.5 / 4.36 ≈ 1.03s / 圈 (中等)
+  // 2.77 m/s -> 4.5 / 7.67 ≈ 0.58s / 圈 (飞快)
+  // 差异从之前的 0.4s 扩大到了 >1.0s，对比极其明显。
+  const spinDuration = speed > 0 ? `${4.5 / (speed * speed)}s` : '0s';
+  
+  const groundY = 280; 
+  
+  // [安全像素范围定义]
+  const yFor0cm = 265; 
+  const yFor100cm = 150;
+
+  // 线性插值计算当前头部 Y 坐标
+  const headY = yFor0cm - (heightPercent / 100) * (yFor0cm - yFor100cm);
+
+  return (
+    <g transform={`translate(${x}, 0)`}>
+      
+      {/* A. 光伏板背景 (仅左侧显示) */}
+      {showPanel && (
+        <g>
+           {/* 支架腿 */}
+           <line x1="-70" y1="100" x2="-70" y2={groundY} stroke={COLORS.panelFrame} strokeWidth="4" opacity="0.8" />
+           <line x1="70" y1="100" x2="70" y2={groundY} stroke={COLORS.panelFrame} strokeWidth="4" opacity="0.8" />
+           {/* 板面 */}
+           <g transform="translate(0, 60)">
+              <path d="M -85 0 L 85 0 L 95 30 L -95 30 Z" fill={COLORS.panelSurface} />
+              <rect x="-90" y="5" width="180" height="2" fill="rgba(255,255,255,0.2)" />
+              <line x1="-45" y1="0" x2="-50" y2="30" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+              <line x1="45" y1="0" x2="50" y2="30" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+           </g>
+        </g>
+      )}
+
+      {/* B. 地面底座 (固定) */}
+      <g transform={`translate(0, ${groundY})`}>
+        <path d="M -20 0 L 20 0 L 24 6 L -24 6 Z" fill="#000" />
+        <rect x="-14" y="-10" width="28" height="10" fill="#1a202c" rx="2" />
+      </g>
+
+      {/* C. 运动主体 (头部 + 杆子) */}
+      <g transform={`translate(0, ${headY})`} style={{ transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+        
+        {/* 1. 银色杆子 (向下延伸) */}
+        <rect x="-5" y="0" width="10" height="200" fill={COLORS.poleColor} rx="1" />
+        <rect x="2" y="0" width="3" height="200" fill={COLORS.poleShadow} opacity="0.3" />
+        
+        {/* 杆身刻度 */}
+        <line x1="-5" y1="50" x2="5" y2="50" stroke="#fff" strokeWidth="1" opacity="0.5" />
+        <line x1="-5" y1="100" x2="5" y2="100" stroke="#fff" strokeWidth="1" opacity="0.5" />
+
+        {/* 2. 头部连接块 (黑色) */}
+        <rect x="-8" y="-15" width="16" height="25" fill="#1a202c" rx="2" />
+        <rect x="-9" y="-8" width="18" height="4" fill="#2d3748" /> {/* 装饰环 */}
+
+        {/* 3. 透视旋转风杯组 (横向旋转) */}
+        <g transform="translate(0, -15)">
+          {/* 透视变换容器：scaleY(0.25) 压扁成水平椭圆轨迹 */}
+          <g transform="scale(1, 0.25)"> 
+            {/* 这里的 style 直接绑定计算好的 spinDuration，确保 React 重绘时立即生效 */}
+            <g style={{ 
+              animation: isSpinning ? `spin ${spinDuration} linear infinite` : 'none',
+            }}>
+              {/* 三个风杯臂 */}
+              {[0, 120, 240].map((angle) => (
+                <g key={angle} transform={`rotate(${angle})`}>
+                  <line x1="0" y1="0" x2="60" y2="0" stroke="#1a202c" strokeWidth="4" strokeLinecap="round" />
+                  {/* 风杯 (半球俯视) */}
+                  <g transform="translate(60, 0)">
+                    <circle cx="0" cy="0" r="12" fill="#000" />
+                    <path d="M -5 -5 Q 0 0 -5 5" stroke="#333" strokeWidth="2" fill="none" />
+                  </g>
+                </g>
+              ))}
+              {/* 中心轴帽 */}
+              <circle cx="0" cy="0" r="8" fill="#2d3748" stroke="#000" strokeWidth="2" />
+            </g>
+          </g>
+        </g>
+
+      </g>
+      
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </g>
+  );
+};
+
+/**
+ * ------------------------------------------------------------------
+ * 3. 主页面组件
+ * ------------------------------------------------------------------
+ */
+const PhotovoltaicExperiment = () => {
+  const [heightIndex, setHeightIndex] = useState(0); // 默认为 0 (对应 0cm)
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [displayValues, setDisplayValues] = useState({ left: 0, right: 0 });
+
+  const currentHeight = HEIGHT_LEVELS[heightIndex];
+  const targetValues = WIND_SPEED_DATA[currentHeight];
+
+  // 处理开始
+  const handleStart = () => {
+    if (isPlaying) return;
+    
+    if (currentHeight === 0) {
+      setIsPlaying(true);
+      setShowResult(true);
+      setDisplayValues({ left: '0.00', right: '0.00' });
+      return;
+    }
+
+    setIsPlaying(true);
+    setShowResult(false);
+    setDisplayValues({ left: 0, right: 0 });
+
+    let progress = 0;
+    const timer = setInterval(() => {
+      progress += 50;
+      if (progress >= 2000) {
+        clearInterval(timer);
+        setShowResult(true);
+        setDisplayValues({ 
+          left: targetValues.withPanel, 
+          right: targetValues.noPanel 
+        });
+      } else {
+        // 随机跳动数值
+        setDisplayValues({
+          left: (Math.random() * 3).toFixed(2),
+          right: (Math.random() * 3).toFixed(2)
+        });
+      }
+    }, 50);
+  };
+
+  // 处理重置
+  const handleReset = () => {
+    setIsPlaying(false);
+    setShowResult(false);
+    setDisplayValues({ left: 0, right: 0 });
+  };
+
+  // 处理高度调节
+  const adjustHeight = (delta) => {
+    if (isPlaying) return; // 运行时锁定
+    const newIndex = Math.min(Math.max(heightIndex + delta, 0), HEIGHT_LEVELS.length - 1);
+    setHeightIndex(newIndex);
+    handleReset(); // 切换高度自动重置
+  };
+
+  // 计算高度百分比: 0cm->0, 100cm->100
+  const heightPercent = (currentHeight / 100) * 100;
+
+  return (
+    <div className="w-full min-h-screen p-8 font-sans flex flex-col items-center justify-center"
+         style={{ backgroundColor: COLORS.bg, color: COLORS.text }}>
+      
+      <h1 className="text-3xl font-bold mb-6 tracking-wide" style={{ color: COLORS.text }}>光伏治沙模拟实验</h1>
+
+      {/* 实验卡片容器 */}
+      <div className="relative w-full max-w-4xl rounded-[2.5rem] border-4 shadow-2xl overflow-hidden select-none"
+           style={{ 
+             backgroundColor: COLORS.cardBg, 
+             borderColor: '#fff', 
+             boxShadow: `0 20px 25px -5px ${COLORS.shadow}, 0 10px 10px -5px ${COLORS.shadow}` 
+           }}>
+        
+        {/* 内部装饰背景 (天空) */}
+        <div className="absolute inset-0 pointer-events-none" 
+             style={{ background: `linear-gradient(to bottom, ${COLORS.skyGradientTop}, ${COLORS.skyGradientBot})` }}>
+        </div>
+
+        {/* 顶部标签 */}
+        <div className="relative z-10 flex justify-around pt-8 pb-2">
+          <div className="px-8 py-2 rounded-full text-xl font-bold shadow-sm border"
+               style={{ backgroundColor: 'rgba(255,255,255,0.9)', color: COLORS.text, borderColor: COLORS.border }}>
+            有光伏板
+          </div>
+          <div className="px-8 py-2 rounded-full text-xl font-bold shadow-sm border"
+               style={{ backgroundColor: 'rgba(255,255,255,0.9)', color: COLORS.text, borderColor: COLORS.border }}>
+            无光伏板
+          </div>
+        </div>
+
+        {/* SVG 舞台 */}
+        <div className="relative z-10 h-72 w-full mt-2">
+          <svg viewBox="0 0 600 300" className="w-full h-full">
+            {/* 地平线 */}
+            <line x1="20" y1="280" x2="580" y2="280" stroke={COLORS.border} strokeWidth="4" strokeLinecap="round" />
+
+            {/* 左侧有板 */}
+            {/* 只有当播放中且高度大于0时，speed 才不为0，风扇才开始转 */}
+            <PerspectiveCupAnemometer 
+              x={150} 
+              speed={(isPlaying && currentHeight > 0) ? targetValues.withPanel : 0}
+              isSpinning={isPlaying && currentHeight > 0}
+              heightPercent={heightPercent}
+              showPanel={true}
+            />
+            {/* 右侧无板 */}
+            <PerspectiveCupAnemometer 
+              x={450} 
+              speed={(isPlaying && currentHeight > 0) ? targetValues.noPanel : 0}
+              isSpinning={isPlaying && currentHeight > 0}
+              heightPercent={heightPercent}
+              showPanel={false}
+            />
+
+            {/* 地面遮挡层 (白色遮挡，模拟杆子插入地下) */}
+            <rect x="0" y="282" width="600" height="100" fill={COLORS.cardBg} />
+            <rect x="0" y="282" width="600" height="20" fill={COLORS.bg} opacity="0.1" />
+
+            {/* 标尺辅助线 */}
+            <g transform="translate(300, 140)" opacity="0.3">
+               <line x1="0" y1="0" x2="0" y2="140" stroke={COLORS.textSec} strokeWidth="2" strokeDasharray="4 4" />
+               <line x1="-5" y1="140" x2="5" y2="140" stroke={COLORS.textSec} strokeWidth="2" /> {/* 20cm */}
+               <line x1="-5" y1="87.5" x2="5" y2="87.5" stroke={COLORS.textSec} strokeWidth="2" /> {/* 50cm */}
+               <line x1="-5" y1="0" x2="5" y2="0" stroke={COLORS.textSec} strokeWidth="2" /> {/* 100cm */}
+            </g>
+          </svg>
+        </div>
+
+        {/* 底部控制区 */}
+        <div className="relative z-10 px-12 pb-10 bg-gradient-to-t from-white/80 to-transparent">
+          
+          {/* 数值显示 */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="px-3 py-1 rounded mb-2 text-sm font-bold shadow-sm border"
+                 style={{ backgroundColor: '#fff', color: COLORS.textSec, borderColor: COLORS.border }}>
+              实时风速 (m/s)
+            </div>
+            <div className="flex w-full justify-between gap-20 px-12">
+               {/* 左数值框 */}
+               <div className="flex-1 h-14 rounded-xl border-2 shadow-inner flex items-center justify-center text-3xl font-mono font-bold transition-all duration-300"
+                    style={{ 
+                      backgroundColor: showResult ? COLORS.green : '#fff', 
+                      borderColor: showResult ? COLORS.green : COLORS.border,
+                      color: showResult ? '#fff' : COLORS.text,
+                      textShadow: showResult ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
+                    }}>
+                 {showResult ? Number(targetValues.withPanel).toFixed(2) : (isPlaying ? displayValues.left : '0.00')}
+               </div>
+               {/* 右数值框 */}
+               <div className="flex-1 h-14 rounded-xl border-2 shadow-inner flex items-center justify-center text-3xl font-mono font-bold transition-all duration-300"
+                    style={{ 
+                      backgroundColor: showResult ? COLORS.green : '#fff', 
+                      borderColor: showResult ? COLORS.green : COLORS.border,
+                      color: showResult ? '#fff' : COLORS.text,
+                      textShadow: showResult ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
+                    }}>
+                 {showResult ? Number(targetValues.noPanel).toFixed(2) : (isPlaying ? displayValues.right : '0.00')}
+               </div>
+            </div>
+          </div>
+
+          {/* 按钮组 */}
+          <div className="flex items-center justify-center gap-8">
+            
+            {/* 重置按钮 */}
+            <button 
+              onClick={handleReset}
+              disabled={!isPlaying && !showResult}
+              className="w-32 py-3 rounded-xl font-bold shadow-sm border-2 transition-all active:scale-95 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ 
+                backgroundColor: '#fff', 
+                color: COLORS.textSec, 
+                borderColor: COLORS.border 
+              }}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <RotateCcw size={18} /> 重置
+              </div>
+            </button>
+
+            {/* 高度调节器 */}
+            <div className="p-2 rounded-lg flex items-center gap-3 shadow-lg mx-4"
+                 style={{ backgroundColor: COLORS.text, borderColor: COLORS.border }}>
+              <div className="flex flex-col gap-1">
+                {/* 增加高度 (+) */}
+                <button 
+                  onClick={() => adjustHeight(1)} 
+                  disabled={heightIndex === HEIGHT_LEVELS.length - 1 || isPlaying} 
+                  className="w-10 h-6 rounded flex items-center justify-center disabled:opacity-30 transition-colors"
+                  style={{ backgroundColor: '#4a5568' }}
+                >
+                  <div className="w-0 h-0 border-x-[6px] border-x-transparent border-b-[8px]" style={{ borderBottomColor: '#fff' }}></div>
+                </button>
+                {/* 减少高度 (-) */}
+                <button 
+                  onClick={() => adjustHeight(-1)} 
+                  disabled={heightIndex === 0 || isPlaying} 
+                  className="w-10 h-6 rounded flex items-center justify-center disabled:opacity-30 transition-colors"
+                  style={{ backgroundColor: '#4a5568' }}
+                >
+                  <div className="w-0 h-0 border-x-[6px] border-x-transparent border-t-[8px]" style={{ borderTopColor: '#fff' }}></div>
+                </button>
+              </div>
+              <div className="w-20 h-14 rounded flex flex-col items-center justify-center shadow-inner"
+                   style={{ backgroundColor: '#fff' }}>
+                <span className="text-2xl font-bold leading-none" style={{ color: COLORS.text }}>{currentHeight}</span>
+                <span className="text-[10px] font-bold leading-none mt-1" style={{ color: COLORS.textSec }}>cm</span>
+              </div>
+            </div>
+
+            {/* 开始按钮 */}
+            <button 
+              onClick={handleStart}
+              disabled={isPlaying || showResult}
+              className="w-32 py-3 rounded-xl font-bold text-white shadow-md transition-all active:scale-95 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: COLORS.primary }}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Play size={18} fill="currentColor" /> 开始
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default PhotovoltaicExperiment;

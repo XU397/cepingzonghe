@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
         const url = req.url || ''
 
         // Flow 编排 mock 端点（供 FlowOrchestrator 在 dev 模式下使用）
-        if (url.startsWith('/api/flows/')) {
+        if (url.startsWith('/api/flows/') || url.startsWith('/stu/api/flows/')) {
           const method = (req.method || 'GET').toUpperCase()
 
           const respondJson = (statusCode, payload) => {
@@ -42,7 +42,9 @@ export default defineConfig(({ mode }) => {
             try {
               const urlObj = new URL(req.url || '', 'http://localhost')
               const segments = urlObj.pathname.split('/').filter(Boolean)
-              const flowIdSegment = segments[2]
+              // 判断是 /api/flows/ 还是 /stu/api/flows/ 来确定flowId位置
+              const flowIdIndex = segments[0] === 'stu' ? 3 : 2
+              const flowIdSegment = segments[flowIdIndex]
               if (!flowIdSegment) {
                 logFlow('Missing flowId segment', { pathname: urlObj.pathname })
                 respondJson(400, { code: 400, msg: 'Flow ID is required', obj: null })
@@ -62,7 +64,7 @@ export default defineConfig(({ mode }) => {
                 return
               }
 
-              const isProgressEndpoint = segments[3] === 'progress'
+              const isProgressEndpoint = segments[flowIdIndex + 1] === 'progress'
 
               if (!isProgressEndpoint && method === 'GET') {
                 logFlow('Fetching flow definition', { flowId })
@@ -121,7 +123,7 @@ export default defineConfig(({ mode }) => {
               schoolName: '开发环境（Mock）',
               studentCode: 'M001',
               studentName: '本地模拟用户',
-              url: '/flow/test-flow-1'
+              url: '/flow/g8-physics-assessment'
             }
           }))
           return
@@ -211,6 +213,7 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       globals: true,
+      setupFiles: ['./src/submodules/g8-pv-sand-experiment/__tests__/setupTests.js'],
       // WSL2 兼容性：使用 vmThreads 避免 forks/threads 超时问题
       pool: 'vmThreads',
       // 增加超时时间

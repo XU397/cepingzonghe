@@ -1,24 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/FullscreenPrompt.css';
-import {
-  DEV_TOOLS_STORAGE_KEYS,
-  DEV_TOOLS_DEFAULTS,
-  readDevBooleanPreference,
-  subscribeToFullscreenPreference
-} from '../utils/devTools';
+// import {
+//   DEV_TOOLS_STORAGE_KEYS,
+//   DEV_TOOLS_DEFAULTS,
+//   readDevBooleanPreference,
+//   subscribeToFullscreenPreference
+// } from '../utils/devTools';  // 文件不存在，暂时注释
 
 const isDevelopment = typeof process !== 'undefined'
   ? process.env.NODE_ENV === 'development'
   : Boolean(import.meta.env?.DEV);
 
 const shouldCheckFullscreenByDefault = () => {
-  if (!isDevelopment) {
-    return true;
-  }
-  return readDevBooleanPreference(
-    DEV_TOOLS_STORAGE_KEYS.fullscreen,
-    DEV_TOOLS_DEFAULTS.fullscreen
-  );
+  // 默认总是检查全屏（简化版本）
+  return true;
 };
 
 /**
@@ -31,13 +26,14 @@ const FullscreenPrompt = ({ onEnterFullscreen }) => {
   );
 
   useEffect(() => {
-    if (!isDevelopment) {
-      return undefined;
-    }
-    const unsubscribe = subscribeToFullscreenPreference((enabled) => {
-      setFullscreenCheckEnabled(Boolean(enabled));
-    });
-    return unsubscribe;
+    // 简化版本：开发环境下暂时不支持动态配置
+    // if (!isDevelopment) {
+    //   return undefined;
+    // }
+    // const unsubscribe = subscribeToFullscreenPreference((enabled) => {
+    //   setFullscreenCheckEnabled(Boolean(enabled));
+    // });
+    // return unsubscribe;
   }, []);
 
   if (!fullscreenCheckEnabled) {

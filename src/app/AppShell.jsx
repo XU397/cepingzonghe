@@ -5,6 +5,7 @@ import { FlowModule } from '@/flows/FlowModule.jsx';
 import { AppProvider } from '@/context/AppContext.jsx';
 import G8DroneImagingDevPage from '@/dev/G8DroneImagingDevPage.jsx';
 import UserInfoBar from '@/components/common/UserInfoBar.jsx';
+import PvSandDevHarness from '@/submodules/g8-pv-sand-experiment/dev/PvSandDevHarness';
 
 function AppProviders({ children }) {
   return children;
@@ -45,7 +46,10 @@ export default function AppShell() {
           <Route path="/flow/:flowId" element={<FlowRoute />} />
           {/* 开发专用子模块调试路由：仅在开发环境下启用 */}
           {isDevEnvironment && (
-            <Route path="/dev/g8-drone-imaging" element={<G8DroneImagingDevPage />} />
+            <>
+              <Route path="/dev/g8-drone-imaging" element={<G8DroneImagingDevPage />} />
+              <Route path="/dev/pv-sand" element={<PvSandDevHarness />} />
+            </>
           )}
           {/* 传统模块路由：在 element 内部包裹 StrictMode，从而仅对该分支启用 */}
           {/* 说明：顶层/外层 StrictMode 会在首次装载时决定行为，
