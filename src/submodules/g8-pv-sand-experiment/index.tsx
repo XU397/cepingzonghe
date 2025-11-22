@@ -1,31 +1,34 @@
-import React from 'react';
-import { SubmoduleDefinition } from './types';
-import G8PvSandExperiment from './Component';
-import { getInitialPageId, getTotalSteps, getNavigationMode } from './mapping';
+import { lazy } from 'react';
+import type { SubmoduleDefinition } from '@shared/types/flow';
+import { getPageIdBySubPageNum, getPageConfig, PAGE_CONFIGS } from './mapping';
+import type { PageId } from './mapping';
+
+const Component = lazy(() => import('./Component'));
 
 export const g8PvSandExperimentSubmodule: SubmoduleDefinition = {
   submoduleId: 'g8-pv-sand-experiment',
   displayName: '光伏治沙交互实验',
   version: '1.0.0',
-  Component: G8PvSandExperiment,
-  
+
+  Component,
+
   getInitialPage: (subPageNum: string): string => {
-    const pageNum = subPageNum ? parseInt(subPageNum) : 1;
-    return getInitialPageId(pageNum);
+    const num = parseInt(subPageNum, 10) || 1;
+    return getPageIdBySubPageNum(num);
   },
-  
+
   getTotalSteps: (): number => {
-    return getTotalSteps();
+    return PAGE_CONFIGS.filter(config => config.stepIndex > 0).length;
   },
-  
+
   getNavigationMode: (pageId: string): 'experiment' | 'questionnaire' | 'hidden' => {
-    const mode = getNavigationMode(pageId);
-    return mode === 'experiment' ? 'experiment' : 'hidden';
+    const config = getPageConfig(pageId as PageId);
+    return config?.navigationMode ?? 'experiment';
   },
-  
+
   getDefaultTimers: () => ({
-    task: 20 * 60,         // 20分钟任务计时
-    questionnaire: 10 * 60  // 10分钟问卷计时
+    task: 20 * 60,
+    questionnaire: 0
   })
 };
 

@@ -73,6 +73,7 @@ export const Grade7Wrapper = ({ userContext, initialPageId, flowContext }) => {
   }, [initialPageId]);
 
   const isCurrentPageQuestionnaire = isQuestionnairePage(currentPageId);
+  const isPrecautionsPage = currentPageId === 'Page_01_Precautions';
   const currentQuestionnaireStep = getQuestionnaireStepNumber(currentPageId) || 1;
   const navigationMode = isCurrentPageQuestionnaire ? 'questionnaire' : 'experiment';
   const showNavigation =
@@ -97,9 +98,11 @@ export const Grade7Wrapper = ({ userContext, initialPageId, flowContext }) => {
     !Number.isNaN(questionnaireRemainingTime) &&
     questionnaireRemainingTime > 0;
 
-  const showTimer = isCurrentPageQuestionnaire
-    ? isQuestionnaireStarted || hasQuestionnaireTimer
-    : Boolean(taskStartTime) || hasTaskTimer;
+  const showTimer = isPrecautionsPage
+    ? false
+    : isCurrentPageQuestionnaire
+      ? isQuestionnaireStarted || hasQuestionnaireTimer
+      : Boolean(taskStartTime) || hasTaskTimer;
 
   const timerScope = isCurrentPageQuestionnaire ? QUESTIONNAIRE_TIMER_SCOPE : TASK_TIMER_SCOPE;
   const timerWarningThreshold = isCurrentPageQuestionnaire
@@ -159,4 +162,3 @@ export const Grade7Wrapper = ({ userContext, initialPageId, flowContext }) => {
 };
 
 export default Grade7Wrapper;
-

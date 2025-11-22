@@ -4,11 +4,11 @@ import NavigationButton from '../components/common/NavigationButton';
 import { useDataLogging } from '../hooks/useDataLogging';
 
 // 添加倒计时常量
-const READING_TIME_SECONDS = 40;
+const READING_TIME_SECONDS = 10;
 
 /**
  * 注意事项页面组件
- * 显示任务注意事项，用户需等待40秒倒计时完成后才能勾选确认，然后才能继续
+ * 显示任务注意事项，用户需等待10秒倒计时完成后才能勾选确认，然后才能继续
  */
 const PrecautionsPage = () => {
   const { 

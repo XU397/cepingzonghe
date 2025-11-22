@@ -26,36 +26,34 @@ function FlowRoute() {
   );
 }
 
-// AppShell: 顶层应用外壳，集中挂载路由与全局入口
+// AppShell: top-level shell wiring routes and global entry points
 export default function AppShell() {
   const isDevEnvironment = typeof process !== 'undefined'
     ? process.env.NODE_ENV === 'development'
     : Boolean(import.meta.env?.DEV);
 
   const location = useLocation();
-  // 判断是否在登录页，登录页不显示 UserInfoBar
+  // Hide UserInfoBar on login and landing routes
   const isLoginPage = location.pathname === '/login' || location.pathname === '/';
 
   return (
     <AppProviders>
       <AppProvider>
-        {/* 全局 UserInfoBar - position: fixed 定位，所有路由共享 */}
+        {/* Global UserInfoBar (fixed position); shared across all routes */}
         {!isLoginPage && <UserInfoBar />}
         <Routes>
-          {/* Flow 路由：不包裹 StrictMode，避免开发期双渲染导致编排器二次初始化 */}
+          {/* Flow routes skip StrictMode to avoid double init during dev */}
           <Route path="/flow/:flowId" element={<FlowRoute />} />
-          {/* 开发专用子模块调试路由：仅在开发环境下启用 */}
+          {/* Dev-only harness routes; enabled only during development */}
           {isDevEnvironment && (
             <>
               <Route path="/dev/g8-drone-imaging" element={<G8DroneImagingDevPage />} />
               <Route path="/dev/pv-sand" element={<PvSandDevHarness />} />
             </>
           )}
-          {/* 传统模块路由：在 element 内部包裹 StrictMode，从而仅对该分支启用 */}
-          {/* 说明：顶层/外层 StrictMode 会在首次装载时决定行为，
-              路由切换后无法动态切换。将 StrictMode 放到具体路由的
-              element 中，能够确保 /flow/* 不受影响，而其他模块保持
-              开发期双重渲染以捕获副作用。*/}
+          {/* Other modules wrap elements in StrictMode for that branch only.
+              Keeping StrictMode inside the element keeps /flow/* untouched while
+              letting the rest double-render in dev to surface side effects. */}
           <Route
             path="*"
             element={(

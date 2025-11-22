@@ -1,110 +1,157 @@
+/* Page08Conclusion.module.css - Conclusion page styles */
+
+/* Main container */
 .container {
-  width: 100vw;
-  height: 100vh;
-  background: #f5f5f5;
   display: flex;
-  font-family: 'Microsoft YaHei', sans-serif;
-  position: relative;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   overflow: hidden;
+  user-select: none;
 }
 
 .mainContent {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding: 40px 80px;
-  position: relative;
-  overflow-y: auto;
-  background: white;
+  width: 100%;
+  height: 100%;
+
 }
 
 .title {
-  font-size: 36px;
-  font-weight: bold;
-  color: #2e5c4f;
-  margin-bottom: 30px;
-  text-align: left;
-  width: 100%;
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  padding: 20px 24px;
+  margin: 0;
+  background: #f8fafc;
+  border-bottom: 1px solid #e0e0e0;
 }
 
+/* Two-column layout: 40% left, 60% right */
 .contentWrapper {
-  display: flex;
-  gap: 30px;
-  flex: 1;
+  display: grid;
+  grid-template-columns: 40% 60%;
+  height:100%;
 }
 
+/* Left section - Questions and inputs */
 .leftSection {
-  flex: 1;
+  padding: 24px 20px;
+  background: #f8fafc;
+  border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
 }
 
 .questionBox {
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .questionTitle {
-  font-size: 16px;
+  font-size: 18px;
   color: #333;
-  margin: 0 0 20px 0;
-  line-height: 1.6;
+  margin: 0;
+  line-height: 2;
+  text-indent: 2em;
+}
+
+.questionTitle strong {
+  font-weight: 700;
 }
 
 .options {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .optionItem {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.optionItem:hover {
+  border-color: #90caf9;
+  background: #f5f5f5;
 }
 
 .optionItem input[type="radio"] {
+  width: 18px;
+  height: 18px;
   margin-right: 10px;
-  width: 16px;
-  height: 16px;
+  cursor: pointer;
+  accent-color: #1976d2;
 }
 
 .optionText {
-  font-size: 16px;
+  font-size: 18px;
   color: #333;
+  flex: 1;
+  cursor: pointer;
 }
 
 .reasonLabel {
-  font-size: 15px;
+  font-size: 18px;
+  font-weight: 600;
   color: #333;
-  margin: 0 0 10px 0;
+  margin: 8px 0 10px 0;
 }
 
 .reasonInput {
   width: 100%;
-  min-height: 100px;
+  min-height: 120px;
   padding: 12px;
-  border: 2px solid #4a90d9;
-  border-radius: 4px;
-  font-size: 14px;
-  line-height: 1.5;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  line-height: 2;
   color: #333;
   resize: vertical;
   font-family: inherit;
   box-sizing: border-box;
+  transition: border-color 0.2s;
 }
 
 .reasonInput:focus {
   outline: none;
-  border-color: #3a7fc9;
+  border-color: #1976d2;
 }
 
+.reasonInput::placeholder {
+  color: #999;
+}
+
+/* Right section - Chart */
 .rightSection {
-  width: 450px;
-  flex-shrink: 0;
+  padding: 24px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .chartContainer {
+  width: 100%;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   background-color: #fff;
   border-radius: 8px;
   padding: 20px;
@@ -113,64 +160,79 @@
 
 .chart {
   width: 100%;
-  height: auto;
+  height: 520px;
 }
 
+/* Navigation (hidden, using frame navigation) */
 .navigation {
-  position: fixed;
-  bottom: 30px;
-  right: 50px;
-  z-index: 100;
+  display: none;
 }
 
 .nextButton {
-  background-color: #fff;
-  color: #333;
-  border: 2px solid #333;
-  padding: 8px 20px;
-  font-size: 14px;
-  font-weight: normal;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  display: none;
 }
 
-.nextButton:hover {
-  background-color: #f0f0f0;
+/* Error shake animation */
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
 
+/* Responsive */
 @media (max-width: 1024px) {
   .contentWrapper {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
-  .rightSection {
-    width: 100%;
+  .leftSection {
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .chartContainer {
+    height: 500px;
+  }
+
+  .chart {
+    height: 420px;
   }
 }
 
 @media (max-width: 768px) {
   .container {
-    flex-direction: column;
-  }
-
-  .mainContent {
-    padding: 15px;
+    border-radius: 0;
+    margin: 0;
+    max-width: 100%;
   }
 
   .title {
-    font-size: 32px;
-    text-align: center;
+    font-size: 20px;
+    padding: 16px 20px;
+  }
+
+  .leftSection {
+    padding: 16px;
+  }
+
+  .rightSection {
+    padding: 16px;
+  }
+
+  .chartContainer {
+    height: 400px;
+    padding: 12px;
+  }
+
+  .chart {
+    height: 340px;
   }
 
   .reasonInput {
     min-height: 80px;
   }
 
-  .navigation {
-    position: relative;
-    bottom: auto;
-    right: auto;
-    text-align: center;
-    margin-top: 30px;
+  .optionItem {
+    padding: 10px 12px;
   }
 }

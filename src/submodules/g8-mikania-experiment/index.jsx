@@ -11,6 +11,7 @@ import {
   getNavigationMode,
   getTotalSteps,
   getDefaultTimers,
+  resolvePageNum,
 } from './mapping';
 
 /**
@@ -62,6 +63,7 @@ export const g8MikaniaExperimentSubmodule = {
 
   // CMI接口
   getInitialPage: getInitialPageFromNum,
+  resolvePageNum, // For Flow persistence/recovery
   getTotalSteps,
   getNavigationMode,
 

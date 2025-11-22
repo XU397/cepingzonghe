@@ -1,109 +1,131 @@
-import { PageNumberMapping } from './types';
+export type PageId =
+  | 'instructions_cover'
+  | 'background_notice'
+  | 'experiment_design'
+  | 'tutorial_simulation'
+  | 'experiment_task1'
+  | 'experiment_task2'
+  | 'conclusion_analysis';
 
-export const PAGE_MAPPING: PageNumberMapping = {
-  'page01b-task-cover': {
-    pageNumber: 'H.1b',
-    pageDesc: '任务C：光伏治沙封面',
-    mode: 'hidden'
+export type NavigationMode = 'hidden' | 'experiment' | 'questionnaire';
+
+export interface PageConfig {
+  subPageNum: number;
+  pageId: PageId;
+  type: 'notice' | 'experiment';
+  navigationMode: NavigationMode;
+  stepIndex: number; // 0 for hidden pages
+  pageDesc: string;
+}
+
+export const PAGE_CONFIGS: PageConfig[] = [
+  {
+    subPageNum: 1,
+    pageId: 'instructions_cover',
+    type: 'notice',
+    navigationMode: 'hidden',
+    stepIndex: 0,
+    pageDesc: '任务C：光伏治沙封面'
   },
-  'page03-background': {
-    pageNumber: 'H.3',
-    pageDesc: '背景引入页',
-    mode: 'hidden'
+  {
+    subPageNum: 2,
+    pageId: 'background_notice',
+    type: 'notice',
+    navigationMode: 'experiment',
+    stepIndex: 1,
+    pageDesc: '背景引入说明'
   },
-  'page04-experiment-design': {
-    pageNumber: '1.4',
-    pageDesc: '实验方案设计',
-    mode: 'experiment'
+  {
+    subPageNum: 3,
+    pageId: 'experiment_design',
+    type: 'experiment',
+    navigationMode: 'experiment',
+    stepIndex: 2,
+    pageDesc: '实验方案设计'
   },
-  'page05-tutorial': {
-    pageNumber: '2.5',
-    pageDesc: '操作指引试玩',
-    mode: 'experiment'
+  {
+    subPageNum: 4,
+    pageId: 'tutorial_simulation',
+    type: 'experiment',
+    navigationMode: 'experiment',
+    stepIndex: 3,
+    pageDesc: '模拟实验操作指引'
   },
-  'page06-experiment1': {
-    pageNumber: '3.6',
-    pageDesc: '实验1：50cm高度对比',
-    mode: 'experiment'
+  {
+    subPageNum: 5,
+    pageId: 'experiment_task1',
+    type: 'experiment',
+    navigationMode: 'experiment',
+    stepIndex: 4,
+    pageDesc: '实验探究-1'
   },
-  'page07-experiment2': {
-    pageNumber: '3.7',
-    pageDesc: '实验2：多高度对比',
-    mode: 'experiment'
+  {
+    subPageNum: 6,
+    pageId: 'experiment_task2',
+    type: 'experiment',
+    navigationMode: 'experiment',
+    stepIndex: 5,
+    pageDesc: '实验探究-2'
   },
-  'page08-conclusion': {
-    pageNumber: '4.8',
-    pageDesc: '实验结论分析',
-    mode: 'experiment'
-  }
-};
-
-export const getPageInfo = (pageId: string) => {
-  return PAGE_MAPPING[pageId] || null;
-};
-
-export const getInitialPageId = (pageNum?: number): string => {
-  if (!pageNum || pageNum <= 1) {
-    return 'page01b-task-cover';
-  }
-  
-  const pageIds = Object.keys(PAGE_MAPPING);
-  const targetIndex = Math.min(Math.floor(pageNum) - 1, pageIds.length - 1);
-  return pageIds[targetIndex];
-};
-
-export const getTotalSteps = (): number => {
-  return Object.values(PAGE_MAPPING).filter(page => page.mode === 'experiment').length;
-};
-
-export const getNavigationMode = (pageId: string): 'hidden' | 'experiment' => {
-  const pageInfo = getPageInfo(pageId);
-  return pageInfo?.mode || 'experiment';
-};
-
-export const formatPageDesc = (pageId: string, flowContext?: { flowId: string; stepIndex: number }): string => {
-  const pageInfo = getPageInfo(pageId);
-  if (!pageInfo) return String(pageId);
-  
-  if (flowContext) {
-    return `[${flowContext.flowId}/g8-pv-sand-experiment/${flowContext.stepIndex}] ${pageInfo.pageDesc}`;
-  }
-  
-  return pageInfo.pageDesc;
-};
-
-const PAGE_ORDER: string[] = [
-  'page01b-task-cover',
-  'page03-background',
-  'page04-experiment-design',
-  'page05-tutorial',
-  'page06-experiment1',
-  'page07-experiment2',
-  'page08-conclusion'
+  {
+    subPageNum: 7,
+    pageId: 'conclusion_analysis',
+    type: 'experiment',
+    navigationMode: 'experiment',
+    stepIndex: 6,
+    pageDesc: '结论分析'
+  },
 ];
 
-export const getAllPageIds = (): string[] => {
-  return PAGE_ORDER;
+// 根据 subPageNum 获取 pageId
+export function getPageIdBySubPageNum(subPageNum: number): PageId {
+  const config = PAGE_CONFIGS.find(c => c.subPageNum === subPageNum);
+  return config?.pageId ?? 'instructions_cover';
+}
+
+// 根据 pageId 获取 subPageNum
+export function getSubPageNumByPageId(pageId: PageId): number {
+  const config = PAGE_CONFIGS.find(c => c.pageId === pageId);
+  return config?.subPageNum ?? 1;
+}
+
+// 根据 pageId 获取配置
+export function getPageConfig(pageId: PageId): PageConfig | undefined {
+  return PAGE_CONFIGS.find(c => c.pageId === pageId);
+}
+
+export const getAllPageIds = (): PageId[] => {
+  return PAGE_CONFIGS.map(c => c.pageId);
 };
 
-export const getNextPageId = (currentPageId: string): string | null => {
-  const pageIds = getAllPageIds();
-  const currentIndex = pageIds.indexOf(currentPageId);
-  
-  if (currentIndex === -1 || currentIndex >= pageIds.length - 1) {
-    return null;
+/**
+ * 根据 subPageNum 获取初始页面 ID（用于页面恢复）
+ * @param subPageNum - 页面编号（可选，支持浮点数）
+ * @returns 页面 ID
+ *
+ * 规则：
+ * - 无参数或 <= 1：返回第一页
+ * - 在范围内：返回对应页面
+ * - 超出范围：返回最后一页
+ * - 浮点数：向下取整
+ */
+export function getInitialPageId(subPageNum?: number): PageId {
+  // 无参数或无效值，返回第一页
+  if (subPageNum === undefined || subPageNum <= 1) {
+    return PAGE_CONFIGS[0].pageId;
   }
-  
-  return pageIds[currentIndex + 1];
-};
 
-export const getPreviousPageId = (currentPageId: string): string | null => {
-  const pageIds = getAllPageIds();
-  const currentIndex = pageIds.indexOf(currentPageId);
-  
-  if (currentIndex <= 0) {
-    return null;
+  // 浮点数向下取整
+  const pageNum = Math.floor(subPageNum);
+
+  // 查找对应的页面配置
+  const config = PAGE_CONFIGS.find(c => c.subPageNum === pageNum);
+
+  // 如果找到，返回对应页面；否则返回最后一页
+  if (config) {
+    return config.pageId;
   }
-  
-  return pageIds[currentIndex - 1];
-};
+
+  // 超出范围，返回最后一页
+  return PAGE_CONFIGS[PAGE_CONFIGS.length - 1].pageId;
+}

@@ -27,11 +27,11 @@ const RADIO_OPTIONS: RadioOption[] = [
   { value: 'B', label: 'B. 镜头焦距' },
 ];
 
-// Chart data based on experiment data table
+// Chart data based on experiment data table (from gsdLookup.ts)
 const chartData = [
-  { focalLength: 8, '100米': 3, '200米': 6, '300米': 9 },
-  { focalLength: 24, '100米': 1, '200米': 2, '300米': 3 },
-  { focalLength: 50, '100米': 0.5, '200米': 1, '300米': 1 },
+  { focalLength: 8, '100米': 3.01, '200米': 6.03, '300米': 9.04 },
+  { focalLength: 24, '100米': 1.00, '200米': 2.01, '300米': 3.01 },
+  { focalLength: 50, '100米': 0.48, '200米': 0.96, '300米': 1.45 },
 ];
 
 export default function Page07_Conclusion() {
@@ -230,10 +230,10 @@ export default function Page07_Conclusion() {
                   <Legend verticalAlign="top" align="right" iconType="circle" />
                   <Line
                     type="linear"
-                    dataKey="100米"
-                    stroke="#2196f3"
+                    dataKey="300米"
+                    stroke="#9e9e9e"
                     strokeWidth={2}
-                    dot={{ fill: '#2196f3', r: 5 }}
+                    dot={{ fill: '#9e9e9e', r: 5 }}
                     activeDot={{ r: 7 }}
                   />
                   <Line
@@ -246,10 +246,10 @@ export default function Page07_Conclusion() {
                   />
                   <Line
                     type="linear"
-                    dataKey="300米"
-                    stroke="#9e9e9e"
+                    dataKey="100米"
+                    stroke="#2196f3"
                     strokeWidth={2}
-                    dot={{ fill: '#9e9e9e', r: 5 }}
+                    dot={{ fill: '#2196f3', r: 5 }}
                     activeDot={{ r: 7 }}
                   />
                 </LineChart>

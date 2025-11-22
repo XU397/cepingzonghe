@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
-import { useAnswerDrafts } from '../hooks/useAnswerDrafts';
-import { getNextPageId } from '../mapping';
-import Sidebar from '../components/Sidebar';
 import styles from '../styles/Page04ExperimentDesign.module.css';
 import withPanelImg from '../assets/images/experiment-with-panel.png';
 import noPanelImg from '../assets/images/experiment-no-panel.png';
@@ -10,30 +7,40 @@ import noPanelImg from '../assets/images/experiment-no-panel.png';
 const Page04ExperimentDesign: React.FC = () => {
   const {
     logOperation,
-    navigateToPage,
-    setPageStartTime
+    setPageStartTime,
+    collectAnswer,
+    currentPageId,
+    answers
   } = usePvSandContext();
 
-  const {
-    updateExperimentAnswer,
-    validateExperimentDesign,
-    collectPageAnswers,
-    markPageCompleted,
-    answerDraft
-  } = useAnswerDrafts();
-
   const [designText, setDesignText] = useState('');
-  const [isValid, setIsValid] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const minChars = 10; // Updated to 10 to match Component.tsx validation
 
-  const currentPageId = 'page04-experiment-design';
-  const minChars = 5;
-
-  // 从answerDraft恢复已保存的答案(仅在初始化时执行一次)
+  // Initialize from saved answers
   useEffect(() => {
-    if (answerDraft.experimentAnswers.designReason) {
-      setDesignText(answerDraft.experimentAnswers.designReason);
+    const savedReason = answers['designReason'];
+    if (savedReason && typeof savedReason === 'string') {
+      setDesignText(savedReason);
     }
-  }, []);
+  }, []); // Run once on mount
+
+  // Listen for validation errors from frame
+  useEffect(() => {
+    const handleValidationError = () => {
+      const isValid = (designText || '').toString().trim().length >= minChars;
+      if (!isValid) {
+        setShowError(true);
+        // Auto-hide error after 3 seconds
+        setTimeout(() => setShowError(false), 3000);
+      }
+    };
+
+    window.addEventListener('pv-sand-validation-error', handleValidationError);
+    return () => {
+      window.removeEventListener('pv-sand-validation-error', handleValidationError);
+    };
+  }, [designText, minChars]);
 
   useEffect(() => {
     const startTime = new Date();
@@ -54,62 +61,31 @@ const Page04ExperimentDesign: React.FC = () => {
         time: new Date().toISOString()
       });
     };
-  }, [logOperation, setPageStartTime]);
-
-  useEffect(() => {
-    setIsValid(designText.length >= minChars);
-  }, [designText, minChars]);
+  }, [logOperation, setPageStartTime, currentPageId]);
 
   const handleTextChange = (text: string) => {
     setDesignText(text);
-    updateExperimentAnswer('designReason', text);
+
+    collectAnswer({
+      targetElement: 'designReason',
+      value: text
+    });
 
     logOperation({
       targetElement: '问题1输入框',
-      eventType: 'input',
+      eventType: 'change',
       value: text,
       time: new Date().toISOString()
     });
   };
 
-  const handleNext = () => {
-    const isValidForNext = validateExperimentDesign();
-
-    if (!isValidForNext) {
-      logOperation({
-        targetElement: '下一页',
-        eventType: 'click_blocked',
-        value: `文本长度不足${minChars}字符 (当前: ${designText.length})`,
-        time: new Date().toISOString()
-      });
-      alert(`请至少输入${minChars}个字符 (当前: ${designText.length}字符)`);
-      return;
-    }
-
-    logOperation({
-      targetElement: '下一页按钮',
-      eventType: 'click',
-      value: '进入下一页',
-      time: new Date().toISOString()
-    });
-
-    collectPageAnswers(currentPageId);
-    markPageCompleted(currentPageId);
-
-    const nextPageId = getNextPageId(currentPageId);
-    if (nextPageId) {
-      navigateToPage(nextPageId);
-    }
-  };
+  const isValid = designText.length >= minChars;
 
   return (
     <div className={styles.container}>
-      <Sidebar currentStep={2} totalSteps={6} variant="experiment" />
+      <h1 className={styles.title}>光伏治沙</h1>
 
-      <div className={styles.mainContent}>
-        <h1 className={styles.title}>光伏治沙</h1>
-
-        <div className={styles.contentWrapper}>
+      <div className={styles.contentWrapper}>
           <div className={styles.leftSection}>
             <div className={styles.instructionBox}>
               <p className={styles.instructionText}>
@@ -168,25 +144,23 @@ const Page04ExperimentDesign: React.FC = () => {
                 value={designText}
                 onChange={(e) => handleTextChange(e.target.value)}
                 className={styles.textArea}
-                placeholder=""
+                placeholder="请输入您的回答..."
               />
+              <div style={{ textAlign: 'right', fontSize: '12px', color: isValid ? 'green' : 'red', marginTop: '5px' }}>
+                {designText.length}/{minChars} 字符
+              </div>
+
+              {showError && (
+                <div className={styles.errorMessage}>
+                  实验设计原因至少需要 {minChars} 个字符
+                </div>
+              )}
             </div>
           </div>
         </div>
-
-        <div className={styles.navigation}>
-          <button
-            onClick={handleNext}
-            disabled={!isValid}
-            className={`${styles.nextButton} ${!isValid ? styles.disabled : ''}`}
-            title={!isValid ? `请至少输入${minChars}个字符 (当前: ${designText.length})` : ''}
-          >
-            下一页 {!isValid && `(${designText.length}/${minChars})`}
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
 
 export default Page04ExperimentDesign;
+

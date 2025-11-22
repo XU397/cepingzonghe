@@ -1,32 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
-import { useAnswerDrafts } from '../hooks/useAnswerDrafts';
-import { getNextPageId } from '../mapping';
-import Sidebar from '../components/Sidebar';
 import styles from '../styles/Page08Conclusion.module.css';
 
 const Page08Conclusion: React.FC = () => {
   const {
     logOperation,
-    navigateToPage,
-    setPageStartTime
+    setPageStartTime,
+    collectAnswer,
+    currentPageId,
+    answers
   } = usePvSandContext();
 
-  const {
-    updateExperimentAnswer,
-    collectPageAnswers,
-    markPageCompleted,
-    answerDraft
-  } = useAnswerDrafts();
+  const [selectedOption, setSelectedOption] = useState<string>('');
+  const [reason, setReason] = useState<string>('');
+  const [showError, setShowError] = useState(false);
 
-  const [selectedOption, setSelectedOption] = useState<string>(
-    answerDraft.experimentAnswers.conclusionAnswers?.selectedOption || ''
-  );
-  const [reason, setReason] = useState<string>(
-    answerDraft.experimentAnswers.conclusionAnswers?.reason || ''
-  );
+  // Initialize from saved answers
+  useEffect(() => {
+    const savedOption = answers['selectedOption'];
+    if (savedOption && typeof savedOption === 'string') {
+      setSelectedOption(savedOption);
+    }
+    const savedReason = answers['reason'];
+    if (savedReason && typeof savedReason === 'string') {
+      setReason(savedReason);
+    }
+  }, []);
 
-  const currentPageId = 'page08-conclusion';
+  // Listen for validation errors from frame
+  useEffect(() => {
+    const handleValidationError = () => {
+      setShowError(true);
+      // Auto-hide error after 3 seconds
+      setTimeout(() => setShowError(false), 3000);
+    };
+
+    window.addEventListener('pv-sand-validation-error', handleValidationError);
+    return () => {
+      window.removeEventListener('pv-sand-validation-error', handleValidationError);
+    };
+  }, []);
 
   useEffect(() => {
     const startTime = new Date();
@@ -47,14 +60,14 @@ const Page08Conclusion: React.FC = () => {
         time: new Date().toISOString()
       });
     };
-  }, [logOperation, setPageStartTime]);
+  }, [logOperation, setPageStartTime, currentPageId]);
 
   const handleOptionChange = (option: string) => {
     setSelectedOption(option);
 
-    updateExperimentAnswer('conclusionAnswers', {
-      ...answerDraft.experimentAnswers.conclusionAnswers,
-      selectedOption: option
+    collectAnswer({
+      targetElement: 'selectedOption',
+      value: option
     });
 
     logOperation({
@@ -68,40 +81,23 @@ const Page08Conclusion: React.FC = () => {
   const handleReasonChange = (value: string) => {
     setReason(value);
 
-    updateExperimentAnswer('conclusionAnswers', {
-      ...answerDraft.experimentAnswers.conclusionAnswers,
-      reason: value
+    collectAnswer({
+      targetElement: 'reason',
+      value: value
     });
 
     logOperation({
       targetElement: '理由输入',
-      eventType: 'input',
+      eventType: 'change',
       value: value,
       time: new Date().toISOString()
     });
   };
 
-  const handleNext = () => {
-    logOperation({
-      targetElement: '下一页按钮',
-      eventType: 'click',
-      value: '点击下一页',
-      time: new Date().toISOString()
-    });
-
-    collectPageAnswers(currentPageId);
-    markPageCompleted(currentPageId);
-
-    const nextPageId = getNextPageId(currentPageId);
-    if (nextPageId) {
-      navigateToPage(nextPageId);
-    }
-  };
+  const isValid = !!selectedOption && reason.length >= 10;
 
   return (
     <div className={styles.container}>
-      <Sidebar currentStep={6} totalSteps={6} variant="experiment" />
-
       <div className={styles.mainContent}>
         <h1 className={styles.title}>光伏治沙</h1>
 
@@ -141,86 +137,109 @@ const Page08Conclusion: React.FC = () => {
                 className={styles.reasonInput}
                 value={reason}
                 onChange={(e) => handleReasonChange(e.target.value)}
-                placeholder=""
+                placeholder="请输入您的理由..."
                 rows={4}
               />
+              <div style={{ textAlign: 'right', fontSize: '12px', color: isValid ? 'green' : 'red', marginTop: '5px' }}>
+                {reason.length}/10 字符
+              </div>
+
+              {showError && (
+                <div style={{
+                  background: '#fff5f5',
+                  border: '2px solid #e74c3c',
+                  borderRadius: '8px',
+                  padding: '12px 20px',
+                  color: '#e74c3c',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  marginTop: '10px',
+                  animation: 'errorShake 0.5s ease-out'
+                }}>
+                  请选择结论并填写至少 10 个字符的理由
+                </div>
+              )}
             </div>
           </div>
 
           <div className={styles.rightSection}>
             <div className={styles.chartContainer}>
-              <svg viewBox="0 0 400 300" className={styles.chart}>
+              <svg viewBox="0 0 600 500" className={styles.chart} preserveAspectRatio="xMidYMid meet">
                 {/* 坐标轴 */}
-                <line x1="50" y1="20" x2="50" y2="250" stroke="#333" strokeWidth="2" />
-                <line x1="50" y1="250" x2="380" y2="250" stroke="#333" strokeWidth="2" />
+                <line x1="80" y1="40" x2="80" y2="420" stroke="#333" strokeWidth="3" />
+                <line x1="80" y1="420" x2="560" y2="420" stroke="#333" strokeWidth="3" />
 
                 {/* Y轴刻度 (0-3, 每格0.5) */}
-                <text x="20" y="254" fontSize="12" fill="#333">0</text>
-                <text x="12" y="212" fontSize="12" fill="#333">0.5</text>
-                <text x="20" y="170" fontSize="12" fill="#333">1</text>
-                <text x="12" y="128" fontSize="12" fill="#333">1.5</text>
-                <text x="20" y="86" fontSize="12" fill="#333">2</text>
-                <text x="12" y="44" fontSize="12" fill="#333">2.5</text>
-                <text x="20" y="28" fontSize="12" fill="#333">3</text>
+                <text x="50" y="427" fontSize="16" fill="#333" textAnchor="end">0</text>
+                <text x="50" y="360" fontSize="16" fill="#333" textAnchor="end">0.5</text>
+                <text x="50" y="293" fontSize="16" fill="#333" textAnchor="end">1</text>
+                <text x="50" y="226" fontSize="16" fill="#333" textAnchor="end">1.5</text>
+                <text x="50" y="159" fontSize="16" fill="#333" textAnchor="end">2</text>
+                <text x="50" y="92" fontSize="16" fill="#333" textAnchor="end">2.5</text>
+                <text x="50" y="47" fontSize="16" fill="#333" textAnchor="end">3</text>
 
                 {/* Y轴标签 */}
-                <text x="8" y="140" fontSize="12" fill="#333" transform="rotate(-90, 8, 140)">风速 (m/s)</text>
+                <text x="20" y="230" fontSize="18" fill="#333" transform="rotate(-90, 20, 230)" fontWeight="600">风速 (m/s)</text>
 
                 {/* X轴刻度 */}
-                <text x="95" y="270" fontSize="12" fill="#333">20</text>
-                <text x="195" y="270" fontSize="12" fill="#333">50</text>
-                <text x="315" y="270" fontSize="12" fill="#333">100</text>
+                <text x="160" y="450" fontSize="16" fill="#333" textAnchor="middle">20</text>
+                <text x="320" y="450" fontSize="16" fill="#333" textAnchor="middle">50</text>
+                <text x="490" y="450" fontSize="16" fill="#333" textAnchor="middle">100</text>
 
                 {/* X轴标签 */}
-                <text x="160" y="290" fontSize="12" fill="#333">测量高度 (cm)</text>
+                <text x="320" y="485" fontSize="18" fill="#333" textAnchor="middle" fontWeight="600">测量高度 (cm)</text>
+
+                {/* 网格线 */}
+                <line x1="80" y1="360" x2="560" y2="360" stroke="#e0e0e0" strokeWidth="1" strokeDasharray="5,5" />
+                <line x1="80" y1="293" x2="560" y2="293" stroke="#e0e0e0" strokeWidth="1" strokeDasharray="5,5" />
+                <line x1="80" y1="226" x2="560" y2="226" stroke="#e0e0e0" strokeWidth="1" strokeDasharray="5,5" />
+                <line x1="80" y1="159" x2="560" y2="159" stroke="#e0e0e0" strokeWidth="1" strokeDasharray="5,5" />
+                <line x1="80" y1="92" x2="560" y2="92" stroke="#e0e0e0" strokeWidth="1" strokeDasharray="5,5" />
 
                 {/* 有板数据线 (蓝色) - 2.09, 2.25, 1.66 */}
                 <polyline
-                  points="100,161 200,155 340,183"
+                  points="160,280 320,270 490,308"
                   fill="none"
-                  stroke="#4a90d9"
-                  strokeWidth="2"
+                  stroke="#2196f3"
+                  strokeWidth="3"
                 />
-                <circle cx="100" cy="161" r="4" fill="#4a90d9" />
-                <circle cx="200" cy="155" r="4" fill="#4a90d9" />
-                <circle cx="340" cy="183" r="4" fill="#4a90d9" />
-                <text x="85" y="155" fontSize="11" fill="#4a90d9" fontWeight="bold">2.09</text>
-                <text x="185" y="149" fontSize="11" fill="#4a90d9" fontWeight="bold">2.25</text>
-                <text x="325" y="177" fontSize="11" fill="#4a90d9" fontWeight="bold">1.66</text>
+                <circle cx="160" cy="280" r="6" fill="#2196f3" />
+                <circle cx="320" cy="270" r="6" fill="#2196f3" />
+                <circle cx="490" cy="308" r="6" fill="#2196f3" />
+                <text x="160" y="265" fontSize="14" fill="#2196f3" fontWeight="bold" textAnchor="middle">2.09</text>
+                <text x="320" y="255" fontSize="14" fill="#2196f3" fontWeight="bold" textAnchor="middle">2.25</text>
+                <text x="490" y="293" fontSize="14" fill="#2196f3" fontWeight="bold" textAnchor="middle">1.66</text>
 
                 {/* 无板数据线 (橙色) - 2.37, 2.62, 2.77 */}
                 <polyline
-                  points="100,138 200,120 340,113"
+                  points="160,249 320,230 490,220"
                   fill="none"
-                  stroke="#ff8c42"
-                  strokeWidth="2"
+                  stroke="#ff9800"
+                  strokeWidth="3"
                 />
-                <circle cx="100" cy="138" r="4" fill="#ff8c42" />
-                <circle cx="200" cy="120" r="4" fill="#ff8c42" />
-                <circle cx="340" cy="113" r="4" fill="#ff8c42" />
-                <text x="85" y="132" fontSize="11" fill="#ff8c42" fontWeight="bold">2.37</text>
-                <text x="185" y="114" fontSize="11" fill="#ff8c42" fontWeight="bold">2.62</text>
-                <text x="325" y="107" fontSize="11" fill="#ff8c42" fontWeight="bold">2.77</text>
+                <circle cx="160" cy="249" r="6" fill="#ff9800" />
+                <circle cx="320" cy="230" r="6" fill="#ff9800" />
+                <circle cx="490" cy="220" r="6" fill="#ff9800" />
+                <text x="160" y="234" fontSize="14" fill="#ff9800" fontWeight="bold" textAnchor="middle">2.37</text>
+                <text x="320" y="215" fontSize="14" fill="#ff9800" fontWeight="bold" textAnchor="middle">2.62</text>
+                <text x="490" y="205" fontSize="14" fill="#ff9800" fontWeight="bold" textAnchor="middle">2.77</text>
 
                 {/* 图例 */}
-                <g transform="translate(320, 30)">
-                  <line x1="0" y1="5" x2="20" y2="5" stroke="#4a90d9" strokeWidth="2" />
-                  <circle cx="10" cy="5" r="3" fill="#4a90d9" />
-                  <text x="25" y="10" fontSize="11" fill="#333">有板</text>
+                <g transform="translate(460, 60)">
+                  <rect x="0" y="0" width="120" height="70" fill="white" stroke="#ddd" strokeWidth="1" rx="4" />
 
-                  <line x1="0" y1="25" x2="20" y2="25" stroke="#ff8c42" strokeWidth="2" />
-                  <circle cx="10" cy="25" r="3" fill="#ff8c42" />
-                  <text x="25" y="30" fontSize="11" fill="#333">无板</text>
+                  <line x1="10" y1="20" x2="40" y2="20" stroke="#2196f3" strokeWidth="3" />
+                  <circle cx="25" cy="20" r="4" fill="#2196f3" />
+                  <text x="45" y="25" fontSize="14" fill="#333" fontWeight="600">有板</text>
+
+                  <line x1="10" y1="50" x2="40" y2="50" stroke="#ff9800" strokeWidth="3" />
+                  <circle cx="25" cy="50" r="4" fill="#ff9800" />
+                  <text x="45" y="55" fontSize="14" fill="#333" fontWeight="600">无板</text>
                 </g>
               </svg>
             </div>
           </div>
-        </div>
-
-        <div className={styles.navigation}>
-          <button onClick={handleNext} className={styles.nextButton}>
-            下一页
-          </button>
         </div>
       </div>
     </div>
@@ -228,3 +247,4 @@ const Page08Conclusion: React.FC = () => {
 };
 
 export default Page08Conclusion;
+

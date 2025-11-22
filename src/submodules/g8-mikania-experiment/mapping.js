@@ -3,7 +3,8 @@
  *
  * 本模块共7个页面:
  * - Page 00 (注意事项) - hidden
- * - Page 01-06 (实验流程) - experiment (6步导航)
+ * - Page 01 (任务背景) - hidden
+ * - Page 02-06 (实验流程) - experiment (5步导航)
  */
 
 // 页面映射表 (subPageNum -> pageId)
@@ -31,7 +32,7 @@ export const PAGE_TO_NUM = {
 // 页面到导航步骤的映射 (hidden 页面不计入步数)
 export const PAGE_TO_STEP = {
   'page_00_notice': 0,       // hidden，不占步数（注意事项页）
-  'page_01_intro': 1,        // 导航第 1 步（任务背景）
+  'page_01_intro': 1,        // 导航第 1 步（任务背景页）
   'page_02_step_q1': 2,      // 导航第 2 步
   'page_03_sim_exp': 3,      // 导航第 3 步
   'page_04_q2_data': 4,      // 导航第 4 步
@@ -63,6 +64,35 @@ export const PAGE_ORDER = [
 
 // 默认计时配置 (20分钟)
 export const TASK_DURATION = 20 * 60; // 1200秒
+
+// 页面描述映射
+export const PAGE_DESC_MAP = {
+  'page_00_notice': '注意事项',
+  'page_01_intro': '任务背景',
+  'page_02_step_q1': '实验步骤',
+  'page_03_sim_exp': '模拟实验',
+  'page_04_q2_data': '数据分析',
+  'page_05_q3_trend': '趋势分析',
+  'page_06_q4_conc': '结论验证',
+};
+
+// 问题编码映射 (Q1 -> 1, Q2 -> 2, 等)
+export const QUESTION_CODE_MAP = {
+  Q1: 1,
+  Q2: 2,
+  Q3: 3,
+  Q4a: 4,
+  Q4b: 5,
+};
+
+// 答案键到问题ID的映射
+export const ANSWER_KEY_TO_QUESTION = {
+  'Q1_控制变量原因': 'Q1',
+  'Q2_抑制作用浓度': 'Q2',
+  'Q3_发芽率趋势': 'Q3',
+  'Q4a_菟丝子有效性': 'Q4a',
+  'Q4b_结论理由': 'Q4b',
+};
 
 /**
  * 根据子页码获取初始页面 ID
@@ -154,4 +184,25 @@ export function getDefaultTimers() {
   return {
     task: TASK_DURATION,
   };
+}
+
+/**
+ * 解析页码为页面ID (供Flow持久化/恢复使用)
+ * @param {string | number | null | undefined} subPageNum - 子模块内页码
+ * @returns {string} 页面ID
+ */
+export function resolvePageNum(subPageNum) {
+  if (subPageNum == null || subPageNum === undefined) {
+    return 'page_00_notice';
+  }
+
+  const pageNumStr = String(subPageNum);
+  const pageId = PAGE_MAP[pageNumStr];
+
+  if (!pageId) {
+    console.warn(`[g8-mikania-experiment] Invalid subPageNum: ${subPageNum}, fallback to page_00_notice`);
+    return 'page_00_notice';
+  }
+
+  return pageId;
 }

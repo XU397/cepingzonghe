@@ -143,8 +143,8 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
       title: '方法一: 标记法',
       imageSrc: method1Image,
       description: '将面团近似看成长方体，测量发酵前、后面团的长度、宽度和高度。运用长方体体积公式，算出面团体积。',
-      advantagesPlaceholder: '请在此处写下方法一的优点。',
-      disadvantagesPlaceholder: '请在此处写下方法一的缺点。',
+      advantagesPlaceholder: '请在此处写下方法一的优点，并进行简要说明',
+      disadvantagesPlaceholder: '请在此处写下方法一的缺点，并进行简要说明。',
       advantagesInputDesc: '方法1优点输入框',
       disadvantagesInputDesc: '方法1缺点输入框'
     },
@@ -153,8 +153,8 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
       title: '方法二: 排水法',
       imageSrc: method2Image,
       description: '将一杯盛满水的水杯事先放在水盆中，将面团放入水杯，通过测量水盆中收集的溢出水体积，算出面团体积。',
-      advantagesPlaceholder: '请在此处写下方法二的优点。',
-      disadvantagesPlaceholder: '请在此处写下方法二的缺点。',
+      advantagesPlaceholder: '请在此处写下方法二的优点，并进行简要说明。',
+      disadvantagesPlaceholder: '请在此处写下方法二的缺点，并进行简要说明。',
       advantagesInputDesc: '方法2优点输入框',
       disadvantagesInputDesc: '方法2缺点输入框'
     },
@@ -163,8 +163,8 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
       title: '方法三: 烧杯法',
       imageSrc: method3Image,
       description: '将面团放入带有刻度的烧杯中发酵，直接读取发酵前、后面团的体积。',
-      advantagesPlaceholder: '请在此处写下方法三的优点。',
-      disadvantagesPlaceholder: '请在此处写下方法三的缺点。',
+      advantagesPlaceholder: '请在此处写下方法三的优点，并进行简要说明。',
+      disadvantagesPlaceholder: '请在此处写下方法三的缺点，并进行简要说明。',
       advantagesInputDesc: '方法3优点输入框',
       disadvantagesInputDesc: '方法3缺点输入框'
     },
@@ -248,7 +248,7 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
                 fontSize: '0.9em', 
                 lineHeight: '1.4', 
                 color: '#37474f',
-                height: '45px',
+                height: '65px',
                 overflow: 'auto',
                 textIndent: '2em'
               }}>
@@ -268,14 +268,14 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
                   padding: '4px',
                   border: '1px solid #81d4fa',
                   borderRadius: '6px',
-                  fontSize: '0.9em',
+                  fontSize: '1.2em',
                   boxSizing: 'border-box',
                   lineHeight: '1.4',
                   height: '50px',
                   resize: 'none',
                 }}
               />
-              <label style={{ fontSize: '0.9em', color: '#333', marginTop: '-10px', fontWeight: 'bold', display: 'block' }}>缺点：</label>
+              <label style={{ fontSize: '0.9em', color: '#333', marginTop: '-20px', fontWeight: 'bold', display: 'block' }}>缺点：</label>
               <TextInput
                 value={critiques[method.key].disadvantages}
                 onChange={(value) => handleCritiqueChange(method.key, 'disadvantages', value)}
@@ -289,7 +289,7 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
                   padding: '4px',
                   border: '1px solid #81d4fa',
                   borderRadius: '6px',
-                  fontSize: '0.9em',
+                  fontSize: '1.2em',
                   boxSizing: 'border-box',
                   lineHeight: '1.4',
                   height: '50px',

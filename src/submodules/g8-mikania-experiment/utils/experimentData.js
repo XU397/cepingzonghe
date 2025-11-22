@@ -36,7 +36,7 @@ export const DAYS_RANGE = {
 };
 
 // 种子总数
-export const TOTAL_SEEDS = 60;
+export const TOTAL_SEEDS = 100;
 
 // Valid concentration values
 const VALID_CONCENTRATIONS = [0, 5, 10];

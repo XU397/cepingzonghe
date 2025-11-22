@@ -156,7 +156,7 @@ const Page_11_Solution_Design_Measurement_Ideas = () => {
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
       }}>
         <p style={{ fontSize: '1em', lineHeight: '1.6', color: '#01579b', margin: '0 0 20px 0', textAlign: 'left', textIndent: '2em' }}>
-          为验证小明的猜想，首先要确定评估<strong>面团发酵程度</strong>的方法。通过查阅资料，小明发现可以通过<strong>比较发酵前后面团体积变化</strong>来进行评估。
+          为验证小明的猜想，首先要确定评估<strong>面团发酵程度</strong>的方法。通过查阅资料，小明发现可以通过<strong>测量发酵后的面团体积</strong>来进行评估。
         </p>
         
         {/* 图片对比展示 */}
@@ -237,7 +237,7 @@ const Page_11_Solution_Design_Measurement_Ideas = () => {
           textIndent: '2em',
           lineHeight: '1.6'
         }}>
-          请你帮小明想一想，有哪些可以<span style={{ color: '#d32f2f' }}>测量面团体积</span>的方法。请提出三个可能的想法，将其简要陈述在下方方框内。
+          请你帮小明想一想，有哪些可以<span style={{ color: '#d32f2f' }}>测量面团发酵后体积</span>的方法。请提出三个可能的想法，将其简要陈述在下方方框内。
         </p>
       </div>
       

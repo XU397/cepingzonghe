@@ -127,21 +127,25 @@ function DroneImagingInner({
       time: formatTimestamp(new Date()),
     });
 
-    // Fill unanswered questions with timeout message
+    // Fill unanswered questions with timeout message (local snapshot to ensure即时使用最新值)
     const timeoutValue = '超时未回�?';
+    const populatedAnswers: Record<string, string> = { ...answers };
     QUESTION_IDS.forEach((questionId) => {
-      const currentAnswer = answers[questionId];
+      const currentAnswer = populatedAnswers[questionId];
       if (!currentAnswer || currentAnswer.trim() === '') {
+        populatedAnswers[questionId] = timeoutValue;
         setAnswer(questionId, timeoutValue);
       }
     });
 
-    // Build answer list from answers
-    const answerList = Object.entries(answers).map(([key, value], index) => ({
-      code: index + 1,
-      targetElement: key,
-      value: value || timeoutValue,
-    }));
+    // Build answer list only for非空答案
+    const answerList = Object.entries(populatedAnswers)
+      .filter(([, value]) => typeof value === 'string' && value.trim() !== '')
+      .map(([key, value], index) => ({
+        code: index + 1,
+        targetElement: key,
+        value: value,
+      }));
 
     // Add experiment capture history as answer
     if (experimentState.captureHistory.length > 0) {
@@ -298,10 +302,14 @@ function DroneImagingFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     const buildMark = () => {
       const pageDescBase = pageConfig?.pageId ?? currentPageId;
 
-      const answerList = Object.entries(answers).map(([key, value], index) => ({
+      // 仅提交用户已选择/填写的答案
+      const answerEntries = Object.entries(answers).filter(
+        ([, value]) => typeof value === 'string' && value.trim() !== '',
+      );
+      const answerList = answerEntries.map(([key, value], index) => ({
         code: index + 1,
         targetElement: key,
-        value: value ?? '',
+        value,
       }));
 
       if (experimentState.captureHistory.length > 0) {

@@ -104,7 +104,7 @@ function PetriDish({ germinatedCount = 0, showSeeds = true }) {
   }, [germinatedCount]);
 
   return (
-    <g transform="translate(200, 310)">
+    <g transform="translate(300, 310)">
       {/* Shadow */}
       <ellipse
         cx={0}

@@ -63,7 +63,7 @@ export interface AnswerDraft {
   };
 }
 
-export type StandardEventType = 
+export type StandardEventType =
   | 'page_enter' | 'page_exit'
   | 'click' | 'change'
   | 'click_blocked'
@@ -82,6 +82,7 @@ export interface AnswerEntry {
   code: number;
   targetElement: string;
   value: string;
+  pageId?: string;
 }
 
 export interface MarkObject {
@@ -94,7 +95,7 @@ export interface MarkObject {
   imgList: any[];
 }
 
-import type { SubmoduleDefinition, SubmoduleProps } from '@/shared/types/flow';
+import type { SubmoduleDefinition, SubmoduleProps } from '@shared/types/flow';
 
 // 重新导出类型以便本模块内使用
 export type { SubmoduleDefinition, SubmoduleProps };

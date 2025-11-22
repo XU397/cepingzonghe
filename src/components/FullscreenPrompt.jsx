@@ -1,39 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/FullscreenPrompt.css';
-// import {
-//   DEV_TOOLS_STORAGE_KEYS,
-//   DEV_TOOLS_DEFAULTS,
-//   readDevBooleanPreference,
-//   subscribeToFullscreenPreference
-// } from '../utils/devTools';  // 文件不存在，暂时注释
-
-const isDevelopment = typeof process !== 'undefined'
-  ? process.env.NODE_ENV === 'development'
-  : Boolean(import.meta.env?.DEV);
-
-const shouldCheckFullscreenByDefault = () => {
-  // 默认总是检查全屏（简化版本）
-  return true;
-};
+import {
+  onFullscreenPreferenceChange,
+  shouldEnforceFullscreen
+} from '../utils/fullscreenPreference';
 
 /**
  * 全屏提示组件
  * 当用户退出全屏时显示，提示用户重新进入全屏
  */
 const FullscreenPrompt = ({ onEnterFullscreen }) => {
-  const [fullscreenCheckEnabled, setFullscreenCheckEnabled] = useState(
-    shouldCheckFullscreenByDefault
-  );
+  const [fullscreenCheckEnabled, setFullscreenCheckEnabled] = useState(() => shouldEnforceFullscreen());
 
   useEffect(() => {
-    // 简化版本：开发环境下暂时不支持动态配置
-    // if (!isDevelopment) {
-    //   return undefined;
-    // }
-    // const unsubscribe = subscribeToFullscreenPreference((enabled) => {
-    //   setFullscreenCheckEnabled(Boolean(enabled));
-    // });
-    // return unsubscribe;
+    const unsubscribe = onFullscreenPreferenceChange((enabled) => {
+      setFullscreenCheckEnabled(Boolean(enabled));
+    });
+
+    return unsubscribe;
   }, []);
 
   if (!fullscreenCheckEnabled) {

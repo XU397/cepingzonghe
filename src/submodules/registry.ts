@@ -46,8 +46,8 @@ class SubmoduleRegistry {
       const { G8DroneImagingSubmodule } = await import('./g8-drone-imaging');
       this.register(G8DroneImagingSubmodule);
 
-      const { G8MikaniaExperimentSubmodule } = await import('./g8-mikania-experiment');
-      this.register(G8MikaniaExperimentSubmodule);
+      const { g8MikaniaExperimentSubmodule } = await import('./g8-mikania-experiment');
+      this.register(g8MikaniaExperimentSubmodule);
 
       const { g8PvSandExperimentSubmodule } = await import('./g8-pv-sand-experiment');
       this.register(g8PvSandExperimentSubmodule);
@@ -68,8 +68,16 @@ class SubmoduleRegistry {
   /**
    * 注册子模块
    */
-  register(definition: SubmoduleDefinition): void {
+  register(definition: SubmoduleDefinition | null | undefined): void {
+    if (!definition) {
+      throw new Error('[SubmoduleRegistry] Received empty submodule definition');
+    }
+
     const { submoduleId } = definition;
+
+    if (typeof submoduleId !== 'string' || submoduleId.trim() === '') {
+      throw new Error('[SubmoduleRegistry] Invalid submodule definition: missing submoduleId');
+    }
 
     if (this.registry.has(submoduleId)) {
       console.warn(

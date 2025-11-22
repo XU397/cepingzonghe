@@ -26,6 +26,18 @@ export interface FlowDefinition {
   version?: string;
   /** 步骤列表 */
   steps: FlowStep[];
+  /** 可选完成页配置（所有步骤完成后展示） */
+  completionPage?: FlowCompletionPage;
+}
+
+export interface FlowCompletionPage {
+  title?: string;
+  message?: string;
+  detail?: string;
+  tip?: string;
+  ctaLabel?: string;
+  ctaLink?: string;
+  icon?: string;
 }
 
 /**

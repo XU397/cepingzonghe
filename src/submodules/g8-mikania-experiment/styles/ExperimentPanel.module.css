@@ -4,8 +4,9 @@
 /* Main Container - 3 column grid layout */
 .mainContainer {
   position: relative;
-  width: 680px;
-  height: 450px;
+  width: 100%;
+  max-width: 960px;
+  height: 600px;
   background-color: var(--card-background, #ffffff);
   border: 8px solid #bdc3c7;
   border-radius: 30px;
@@ -28,6 +29,26 @@
   justify-content: center;
   width: 100%;
   height: 100%;
+  z-index: 2;
+  position: relative;
+}
+
+/* Background Layer */
+.backgroundLayer {
+  grid-column: 1 / 4;
+  grid-row: 1 / 2;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 22px 22px 0 0;
+  pointer-events: none;
+}
+
+.backgroundSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* Panel title */
@@ -76,7 +97,7 @@
   transform: scale(1.02);
 }
 
-.radioBtn:checked + .concLabel {
+.radioBtn:checked+.concLabel {
   border-color: #e65100;
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(230, 81, 0, 0.2);
@@ -110,13 +131,12 @@
   align-items: center;
   justify-content: center;
   overflow: visible;
+  z-index: 2;
 }
 
 .experimentSvg {
   width: 100%;
   height: 100%;
-  max-width: 420px;
-  max-height: 420px;
 }
 
 /* Bottom controls */
@@ -130,6 +150,7 @@
   width: 100%;
   padding-top: 10px;
   border-top: 2px dashed #e0e0e0;
+  z-index: 10;
 }
 
 /* Action buttons */
@@ -256,18 +277,22 @@
    ======================================== */
 
 /* Dropper movement animation */
+/* Updated X coordinate from 200 to 300 for wider layout */
 @keyframes dropperMove {
   0% {
-    transform: translate(200px, 140px) scale(1.4);
+    transform: translate(300px, 140px) scale(1.4);
   }
+
   30% {
-    transform: translate(200px, 220px) scale(1.4);
+    transform: translate(300px, 220px) scale(1.4);
   }
+
   70% {
-    transform: translate(200px, 220px) scale(1.4);
+    transform: translate(300px, 220px) scale(1.4);
   }
+
   100% {
-    transform: translate(200px, 140px) scale(1.4);
+    transform: translate(300px, 140px) scale(1.4);
   }
 }
 
@@ -276,32 +301,38 @@
   0% {
     transform: scale(1, 1);
   }
+
   50% {
     transform: scale(1.1, 0.85);
   }
+
   100% {
     transform: scale(1, 1);
   }
 }
 
 /* Water drop falling animation */
+/* Updated X coordinate from 200 to 300 */
 @keyframes dropFullProcess {
   0% {
     opacity: 1;
-    transform: translate(200px, 270px);
+    transform: translate(300px, 270px);
     r: 0;
   }
+
   15% {
     r: 8;
   }
+
   80% {
     opacity: 1;
-    transform: translate(200px, 305px);
+    transform: translate(300px, 305px);
     r: 8;
   }
+
   100% {
     opacity: 0;
-    transform: translate(200px, 315px);
+    transform: translate(300px, 315px);
     r: 12;
   }
 }
@@ -311,8 +342,9 @@
    ======================================== */
 
 /* Dropper group default state */
+/* Updated X coordinate from 200 to 300 */
 .dropperGroup {
-  transform: translate(200px, 140px) scale(1.4);
+  transform: translate(300px, 140px) scale(1.4);
   transform-box: fill-box;
   transform-origin: center center;
   transition: transform 0.5s ease;

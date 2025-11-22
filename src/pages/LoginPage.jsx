@@ -3,6 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import { loginUser } from '../shared/services/apiService';
 import useFullscreen from '../hooks/useFullscreen';
 import FullscreenPrompt from '../components/FullscreenPrompt';
+import { shouldEnforceFullscreen } from '../utils/fullscreenPreference';
 import '../styles/LoginPage.css';
 import logoImage from '../assets/images/img_logo.png';
 import demoImage from '../assets/images/logoinback.png';
@@ -21,6 +22,11 @@ const LoginPage = () => {
 
   // 页面挂载时自动请求全屏
   useEffect(() => {
+    if (!shouldEnforceFullscreen()) {
+      console.log('[LoginPage] 开发模式跳过自动进入全屏');
+      return undefined;
+    }
+
     const requestFullscreen = async () => {
       console.log('[LoginPage] 尝试自动进入全屏模式...');
       const success = await enterFullscreen();
@@ -55,7 +61,10 @@ const LoginPage = () => {
         return;
       }
 
-      const userData = result.obj;
+      const userData = {
+        ...(result.obj || {}),
+        progress: result.progress || result.obj?.progress || null,
+      };
       await handleLoginSuccess(userData);
     } catch (err) {
       setErrorMessage(err?.message || '登录失败');

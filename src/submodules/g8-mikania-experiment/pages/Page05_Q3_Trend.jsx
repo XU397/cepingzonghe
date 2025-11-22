@@ -16,16 +16,11 @@ function Page05Q3Trend() {
     setAnswer,
     logOperation,
     validateCurrentPage,
-    getCurrentValidationErrors,
-    logClickBlocked,
-    navigateToNextPage,
-    isSubmitting,
+    getCurrentMissingFields,
   } = useMikaniaExperiment();
 
   const [selectedOption, setSelectedOption] = useState(state.answers.Q3_发芽率趋势 || '');
-  const [showError, setShowError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [error, setError] = useState('');
 
   // 记录页面进入
   useEffect(() => {
@@ -50,59 +45,53 @@ function Page05Q3Trend() {
     setAnswer('Q3_发芽率趋势', option);
 
     // 清除错误提示
-    if (showError) {
-      setShowError(false);
-      setErrorMessage('');
+    if (error) {
+      setError('');
     }
 
     // 记录操作
     logOperation({
       targetElement: 'Q3_发芽率趋势',
-      eventType: 'change',
+      eventType: 'radio_select',
       value: option,
     });
   };
 
-  // 处理下一页点击 (T051, T052)
-  const handleNext = async () => {
-    console.log('[Page05_Q3_Trend] handleNext 被调用');
-    console.log('[Page05_Q3_Trend] 当前选项:', selectedOption);
-    console.log('[Page05_Q3_Trend] 答案状态:', state.answers.Q3_发芽率趋势);
+  // 处理下一页点击（由 Frame 调用）
+  const handleNext = () => {
+    // 验证必填项
+    if (!validateCurrentPage()) {
+      const missing = getCurrentMissingFields();
 
-    const isValid = validateCurrentPage();
-    console.log('[Page05_Q3_Trend] 验证结果:', isValid);
+      // 显示错误提示
+      setError('请选择一个选项');
 
-    if (!isValid) {
-      const errors = getCurrentValidationErrors();
-      console.log('[Page05_Q3_Trend] 验证错误:', errors);
-      const errorMsg = errors.Q3_发芽率趋势 || '请完成当前问题';
-      setShowError(true);
-      setErrorMessage(errorMsg);
-
-      // Log click_blocked event (T051)
-      logClickBlocked('validation_failed', ['Q3_发芽率趋势']);
+      // 记录阻断事件
+      logOperation({
+        targetElement: '下一页按钮',
+        eventType: 'click_blocked',
+        value: JSON.stringify({
+          reason: 'validation_failed',
+          missing,
+        }),
+      });
       return;
     }
 
-    // Clear errors and proceed
-    setShowError(false);
-    setErrorMessage('');
-    setIsNavigating(true);
+    // 清除错误提示
+    setError('');
 
+    // 记录成功点击
     logOperation({
       targetElement: '下一页按钮',
       eventType: 'click',
-      value: 'page_05_q3_trend',
+      value: 'navigate_to_q4_conc',
     });
 
-    console.log('[Page05_Q3_Trend] 准备调用 navigateToNextPage');
-    try {
-      await navigateToNextPage();
-      console.log('[Page05_Q3_Trend] navigateToNextPage 完成');
-    } catch (error) {
-      console.error('[Page05_Q3_Trend] navigateToNextPage 出错:', error);
-    } finally {
-      setIsNavigating(false);
+    // 触发 Frame 的下一页按钮
+    const frameNextButton = document.querySelector('[data-testid="frame-next-button"]');
+    if (frameNextButton) {
+      frameNextButton.click();
     }
   };
 
@@ -119,10 +108,6 @@ function Page05Q3Trend() {
 
       {/* 左侧：实验面板 */}
       <div className={styles.leftPanel}>
-        <h2 className={styles.panelTitle}>实验数据收集</h2>
-        <p className={styles.instructions}>
-          请继续操作实验，观察不同浓度下的发芽率数据，然后回答右侧问题。
-        </p>
         <div className={styles.experimentContainer}>
           <ExperimentPanel />
         </div>
@@ -149,22 +134,34 @@ function Page05Q3Trend() {
               </button>
             ))}
           </div>
-          {showError && (
-            <div className={styles.errorHint}>{errorMessage}</div>
+          {error && (
+            <div className={styles.errorHint}>
+              {error}
+            </div>
           )}
         </div>
-
-        {/* 下一页按钮 */}
-        <div className={styles.actionRow}>
-          <button
-            className={styles.nextButton}
-            onClick={handleNext}
-            disabled={isNavigating || isSubmitting}
-          >
-            {isNavigating || isSubmitting ? '提交中...' : '下一页'}
-          </button>
-        </div>
       </div>
+
+      {/* 隐藏的下一页按钮，用于 Frame 回调 */}
+      <button
+        type="button"
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: 0,
+          opacity: 0,
+          pointerEvents: 'none',
+          border: 0,
+        }}
+        tabIndex={-1}
+        onClick={handleNext}
+        data-testid="next-button"
+        aria-hidden="true"
+      >
+        下一页
+      </button>
     </div>
   );
 }

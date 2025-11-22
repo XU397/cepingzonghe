@@ -559,7 +559,9 @@ export class FlowOrchestrator {
 
 /**
  * 从复合页码解析 Flow 进度
- * 格式：M<stepIndex>:<subPageNum>
+ * 支持格式：
+ * - <stepIndex>.<subPageNum>（后端当前返回）
+ * - M<stepIndex>:<subPageNum>（兼容旧格式）
  */
 export function parseFlowPageNum(pageNum: string): CompositePageNum | null {
   return parseCompositePageNum(pageNum);

@@ -21,19 +21,13 @@ function Page06Q4Conc() {
     setAnswer,
     logOperation,
     validateCurrentPage,
-    getCurrentValidationErrors,
-    logClickBlocked,
-    navigateToNextPage,
-    isSubmitting,
+    getCurrentMissingFields,
   } = useMikaniaExperiment();
 
   const [selectedJudgment, setSelectedJudgment] = useState(state.answers.Q4a_菟丝子有效性 || '');
   const [conclusionText, setConclusionText] = useState(state.answers.Q4b_结论理由 || '');
-  const [showQ4aError, setShowQ4aError] = useState(false);
-  const [q4aErrorMessage, setQ4aErrorMessage] = useState('');
-  const [showQ4bError, setShowQ4bError] = useState(false);
-  const [q4bErrorMessage, setQ4bErrorMessage] = useState('');
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [errorQ4a, setErrorQ4a] = useState('');
+  const [errorQ4b, setErrorQ4b] = useState('');
 
   // 记录页面进入
   useEffect(() => {
@@ -58,15 +52,14 @@ function Page06Q4Conc() {
     setAnswer('Q4a_菟丝子有效性', value);
 
     // 清除错误提示
-    if (showQ4aError) {
-      setShowQ4aError(false);
-      setQ4aErrorMessage('');
+    if (errorQ4a) {
+      setErrorQ4a('');
     }
 
     // 记录操作
     logOperation({
       targetElement: 'Q4a_菟丝子有效性',
-      eventType: 'change',
+      eventType: 'radio_select',
       value: value,
     });
   };
@@ -78,80 +71,59 @@ function Page06Q4Conc() {
     setAnswer('Q4b_结论理由', value);
 
     // 清除错误提示
-    if (showQ4bError && value.length >= 10) {
-      setShowQ4bError(false);
-      setQ4bErrorMessage('');
+    if (errorQ4b && value.length >= 10) {
+      setErrorQ4b('');
     }
 
     // 记录操作
     logOperation({
       targetElement: 'Q4b_结论理由',
-      eventType: 'change',
+      eventType: 'input_change',
       value: value,
     });
   };
 
-  // 处理提交点击 (T051, T052)
-  const handleSubmit = async () => {
-    console.log('[Page06_Q4_Conc] handleSubmit 被调用');
-    console.log('[Page06_Q4_Conc] 当前判断:', selectedJudgment);
-    console.log('[Page06_Q4_Conc] 当前理由:', conclusionText);
-    console.log('[Page06_Q4_Conc] 答案状态:', state.answers);
+  // 处理提交点击（由 Frame 调用）
+  const handleSubmit = () => {
+    // 验证必填项
+    if (!validateCurrentPage()) {
+      const missing = getCurrentMissingFields();
 
-    const isValid = validateCurrentPage();
-    console.log('[Page06_Q4_Conc] 验证结果:', isValid);
-
-    if (!isValid) {
-      const errors = getCurrentValidationErrors();
-      console.log('[Page06_Q4_Conc] 验证错误:', errors);
-      const missingFields = [];
-
-      // Check Q4a
-      if (errors.Q4a_菟丝子有效性) {
-        setShowQ4aError(true);
-        setQ4aErrorMessage(errors.Q4a_菟丝子有效性);
-        missingFields.push('Q4a_菟丝子有效性');
-      } else {
-        setShowQ4aError(false);
-        setQ4aErrorMessage('');
+      // 显示具体的错误提示
+      if (missing.some(m => m.field === 'Q4a_菟丝子有效性')) {
+        setErrorQ4a('请选择是或否');
+      }
+      if (missing.some(m => m.field === 'Q4b_结论理由')) {
+        setErrorQ4b('请输入至少10个字符的理由');
       }
 
-      // Check Q4b
-      if (errors.Q4b_结论理由) {
-        setShowQ4bError(true);
-        setQ4bErrorMessage(errors.Q4b_结论理由);
-        missingFields.push('Q4b_结论理由');
-      } else {
-        setShowQ4bError(false);
-        setQ4bErrorMessage('');
-      }
-
-      // Log click_blocked event (T051)
-      logClickBlocked('validation_failed', missingFields);
+      // 记录阻断事件
+      logOperation({
+        targetElement: '提交按钮',
+        eventType: 'click_blocked',
+        value: JSON.stringify({
+          reason: 'validation_failed',
+          missing,
+        }),
+      });
       return;
     }
 
-    // Clear all errors and proceed
-    setShowQ4aError(false);
-    setQ4aErrorMessage('');
-    setShowQ4bError(false);
-    setQ4bErrorMessage('');
-    setIsNavigating(true);
+    // 清除错误提示
+    setErrorQ4a('');
+    setErrorQ4b('');
 
+    // 记录成功点击
     logOperation({
       targetElement: '提交按钮',
       eventType: 'click',
-      value: 'page_06_q4_conc',
+      value: 'final_submit',
     });
 
-    console.log('[Page06_Q4_Conc] 准备调用 navigateToNextPage');
-    try {
-      await navigateToNextPage();
-      console.log('[Page06_Q4_Conc] navigateToNextPage 完成');
-    } catch (error) {
-      console.error('[Page06_Q4_Conc] navigateToNextPage 出错:', error);
-    } finally {
-      setIsNavigating(false);
+    // 触发 Frame 的下一页按钮（在最后一页，Frame 会调用 onComplete）
+    const frameNextButton = document.querySelector('[data-testid="frame-next-button"]');
+    if (frameNextButton) {
+      frameNextButton.click();
     }
   };
 
@@ -191,8 +163,10 @@ function Page06Q4Conc() {
               否
             </button>
           </div>
-          {showQ4aError && (
-            <div className={styles.errorHint}>{q4aErrorMessage}</div>
+          {errorQ4a && (
+            <div className={styles.errorHint}>
+              {errorQ4a}
+            </div>
           )}
         </div>
 
@@ -204,7 +178,7 @@ function Page06Q4Conc() {
           </p>
           <div className={styles.inputContainer}>
             <textarea
-              className={`${styles.textInput} ${showQ4bError ? styles.textInputError : ''}`}
+              className={`${styles.textInput} ${errorQ4b ? styles.textInputError : ''}`}
               value={conclusionText}
               onChange={handleTextChange}
               placeholder="请输入您的结论理由..."
@@ -217,20 +191,11 @@ function Page06Q4Conc() {
               <span className={styles.charRequirement}>/{minChars} 字符</span>
             </div>
           </div>
-          {showQ4bError && (
-            <div className={styles.errorHint}>{q4bErrorMessage}</div>
+          {errorQ4b && (
+            <div className={styles.errorHint}>
+              {errorQ4b}
+            </div>
           )}
-        </div>
-
-        {/* 提交按钮 */}
-        <div className={styles.actionRow}>
-          <button
-            className={styles.submitButton}
-            onClick={handleSubmit}
-            disabled={isNavigating || isSubmitting}
-          >
-            {isNavigating || isSubmitting ? '提交中...' : '提交'}
-          </button>
         </div>
       </div>
 
@@ -241,6 +206,27 @@ function Page06Q4Conc() {
           <ChartPanel />
         </div>
       </div>
+
+      {/* 隐藏的提交按钮，用于 Frame 回调 */}
+      <button
+        type="button"
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: 0,
+          opacity: 0,
+          pointerEvents: 'none',
+          border: 0,
+        }}
+        tabIndex={-1}
+        onClick={handleSubmit}
+        data-testid="next-button"
+        aria-hidden="true"
+      >
+        提交
+      </button>
     </div>
   );
 }

@@ -86,8 +86,9 @@ function ExperimentPanel() {
     // Log parameter change event
     logOperation({
       targetElement: '实验面板-浓度选择',
-      eventType: 'exp_param_change',
+      eventType: 'simulation_operation',
       value: JSON.stringify({
+        operation: 'param_change',
         param: 'concentration',
         oldValue,
         newValue,
@@ -117,8 +118,9 @@ function ExperimentPanel() {
     // Log parameter change event
     logOperation({
       targetElement: '实验面板-天数调整',
-      eventType: 'exp_param_change',
+      eventType: 'simulation_operation',
       value: JSON.stringify({
+        operation: 'param_change',
         param: 'days',
         oldValue: currentDays,
         newValue: validatedDays,
@@ -148,8 +150,9 @@ function ExperimentPanel() {
     // Log start event
     logOperation({
       targetElement: '实验面板-开始按钮',
-      eventType: 'exp_start',
+      eventType: 'simulation_operation',
       value: JSON.stringify({
+        operation: 'start',
         concentration: `${concValue}mg/ml`,
         days,
         expectedRate,
@@ -188,8 +191,9 @@ function ExperimentPanel() {
     // Log reset event
     logOperation({
       targetElement: '实验面板-重置按钮',
-      eventType: 'exp_reset',
+      eventType: 'simulation_operation',
       value: JSON.stringify({
+        operation: 'reset',
         previousConcentration: experimentState.concentration,
         previousDays: experimentState.days,
       }),
@@ -211,6 +215,30 @@ function ExperimentPanel() {
 
   return (
     <div className={styles.mainContainer}>
+      {/* Background Layer - Spans full width of top row */}
+      <div className={styles.backgroundLayer}>
+        <svg
+          viewBox="0 0 1200 600"
+          xmlns="http://www.w3.org/2000/svg"
+          className={styles.backgroundSvg}
+          preserveAspectRatio="xMidYMid slice"
+        >
+          <g id="lab-background-full">
+            {/* Wall */}
+            <rect x="0" y="0" width="1200" height="420" fill="#f0f4f8" />
+            {/* Wall decorative stripe */}
+            <rect x="0" y="120" width="1200" height="60" fill="#e1e8ed" />
+
+            {/* Table Surface */}
+            <rect x="0" y="420" width="1200" height="180" fill="#cfd8dc" />
+            {/* Table Top Edge Highlight */}
+            <rect x="0" y="420" width="1200" height="6" fill="#eceff1" />
+            {/* Table Front Edge Shadow */}
+            <rect x="0" y="426" width="1200" height="12" fill="#b0bec5" />
+          </g>
+        </svg>
+      </div>
+
       {/* Left Panel: Concentration Selector */}
       <div className={styles.sidebarPanel} style={{ gridColumn: '1/2', gridRow: '1/2' }}>
         <div className={styles.panelTitle}>菟丝子水浸液浓度</div>
@@ -241,7 +269,7 @@ function ExperimentPanel() {
       {/* Center: SVG Experiment Area */}
       <div className={styles.experimentArea}>
         <svg
-          viewBox="0 0 400 400"
+          viewBox="0 0 600 400"
           xmlns="http://www.w3.org/2000/svg"
           className={styles.experimentSvg}
         >
