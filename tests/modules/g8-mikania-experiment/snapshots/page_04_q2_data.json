@@ -1,0 +1,72 @@
+{
+  "pageNumber": "1.5",
+  "pageDesc": "[flow-g8-experiment-2024/g8-mikania-experiment/1] 数据分析",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_04_q2_data",
+      "time": "2025-11-22 10:03:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "P1.5_Q2_抑制作用浓度",
+      "eventType": "radio_select",
+      "value": "A",
+      "time": "2025-11-22 10:03:05"
+    },
+    {
+      "code": 3,
+      "targetElement": "P1.5_Q2_抑制作用浓度",
+      "eventType": "radio_select",
+      "value": "B",
+      "time": "2025-11-22 10:03:10"
+    },
+    {
+      "code": 4,
+      "targetElement": "P1.5_Q2_抑制作用浓度",
+      "eventType": "radio_select",
+      "value": "C",
+      "time": "2025-11-22 10:03:15"
+    },
+    {
+      "code": 5,
+      "targetElement": "下一页按钮",
+      "eventType": "next_click",
+      "value": "navigate_to_q3_trend",
+      "time": "2025-11-22 10:03:20"
+    },
+    {
+      "code": 6,
+      "targetElement": "页面",
+      "eventType": "page_exit",
+      "value": "page_04_q2_data",
+      "time": "2025-11-22 10:03:20"
+    },
+    {
+      "code": 7,
+      "targetElement": "系统",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"flow-g8-experiment-2024\",\"submoduleId\":\"g8-mikania-experiment\",\"stepIndex\":1,\"pageId\":\"page_04_q2_data\"}",
+      "time": "2025-11-22 10:03:20"
+    },
+    {
+      "code": 8,
+      "targetElement": "系统",
+      "eventType": "page_submit_success",
+      "value": "{\"duration_ms\":88}",
+      "time": "2025-11-22 10:03:20"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "问题2：根据实验结果，哪种浓度的菟丝子提取液对薇甘菊种子萌发抑制作用最强？",
+      "value": "C. 10mg/ml"
+    }
+  ],
+  "beginTime": "2025-11-22 10:03:00",
+  "endTime": "2025-11-22 10:03:20",
+  "imgList": []
+}

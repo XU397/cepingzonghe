@@ -1,0 +1,79 @@
+{
+  "pageNumber": "1.4",
+  "pageDesc": "[flow-g8-experiment-2024/g8-mikania-experiment/1] 模拟实验",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_03_sim_exp",
+      "time": "2025-11-22 10:02:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "P1.4_浓度选择器",
+      "eventType": "simulation_operation",
+      "value": "{\"action\":\"set_concentration\",\"prev\":\"0mg/ml\",\"next\":\"5mg/ml\"}",
+      "time": "2025-11-22 10:02:05"
+    },
+    {
+      "code": 3,
+      "targetElement": "P1.4_天数选择器",
+      "eventType": "simulation_operation",
+      "value": "{\"action\":\"set_days\",\"prev\":1,\"next\":5}",
+      "time": "2025-11-22 10:02:10"
+    },
+    {
+      "code": 4,
+      "targetElement": "P1.4_开始按钮",
+      "eventType": "simulation_timing_started",
+      "value": "{\"concentration\":\"5mg/ml\",\"days\":5}",
+      "time": "2025-11-22 10:02:15"
+    },
+    {
+      "code": 5,
+      "targetElement": "P1.4_实验结果",
+      "eventType": "simulation_run_result",
+      "value": "{\"concentration\":\"5mg/ml\",\"days\":5,\"germinationRate\":65,\"timestamp\":\"2025-11-22 10:02:20\"}",
+      "time": "2025-11-22 10:02:20"
+    },
+    {
+      "code": 6,
+      "targetElement": "下一页按钮",
+      "eventType": "next_click",
+      "value": "navigate_to_q2_data",
+      "time": "2025-11-22 10:02:25"
+    },
+    {
+      "code": 7,
+      "targetElement": "页面",
+      "eventType": "page_exit",
+      "value": "page_03_sim_exp",
+      "time": "2025-11-22 10:02:25"
+    },
+    {
+      "code": 8,
+      "targetElement": "系统",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"flow-g8-experiment-2024\",\"submoduleId\":\"g8-mikania-experiment\",\"stepIndex\":1,\"pageId\":\"page_03_sim_exp\"}",
+      "time": "2025-11-22 10:02:25"
+    },
+    {
+      "code": 9,
+      "targetElement": "系统",
+      "eventType": "page_submit_success",
+      "value": "{\"duration_ms\":105}",
+      "time": "2025-11-22 10:02:25"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "P1.4_实验历史",
+      "value": "{\"runs\":[{\"concentration\":\"5mg/ml\",\"days\":5,\"germinationRate\":65,\"timestamp\":\"2025-11-22 10:02:20\"}]}"
+    }
+  ],
+  "beginTime": "2025-11-22 10:02:00",
+  "endTime": "2025-11-22 10:02:25",
+  "imgList": []
+}

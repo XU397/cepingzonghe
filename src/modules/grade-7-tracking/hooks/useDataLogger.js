@@ -28,6 +28,8 @@ export function useDataLogger() {
     flowContextValue: store.userContext?.flowContext || null,
   }));
 
+  const trackingLogOperation = useTrackingContextSelector((store) => store.logOperation);
+
   const getUserContext = useCallback(() => ({
     batchCode: batchCode || localStorage.getItem('batchCode') || '',
     examNo: examNo || localStorage.getItem('examNo') || '',
@@ -57,6 +59,19 @@ export function useDataLogger() {
     }
   }, []);
 
+  const submitEventLogger = useCallback((operation) => {
+    if (typeof trackingLogOperation !== 'function' || !operation) {
+      return;
+    }
+    trackingLogOperation({
+      action: operation.eventType,
+      target: operation.targetElement,
+      value: operation.value,
+      time: operation.time,
+      pageId: operation.pageId,
+    });
+  }, [trackingLogOperation]);
+
   const {
     submit,
     isSubmitting,
@@ -68,6 +83,7 @@ export function useDataLogger() {
     handleSessionExpired,
     allowProceedOnFailureInDev: true,
     logger: console,
+    logOperation: submitEventLogger,
   });
 
   const submitPageData = useCallback(async (markObject) => {

@@ -1,0 +1,34 @@
+{
+  "pageNumber": "1.7",
+  "pageDesc": "[flow-g8-experiment-2024/g8-mikania-experiment/1] 结论",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_06_q4_conc",
+      "time": "2025-11-22 10:05:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "P1.7_Q4a_菟丝子有效性",
+      "eventType": "radio_select",
+      "value": "是",
+      "time": "2025-11-22 10:05:10"
+    },
+    {
+      "code": 3,
+      "targetElement": "提交按钮",
+      "eventType": "click_blocked",
+      "value": "{\"reason\":\"validation_failed\",\"missing\":[\"Q4b_结论理由\"]}",
+      "time": "2025-11-22 10:05:15"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "问题4a：菟丝子能否有效防治薇甘菊？",
+      "value": "A. 是"
+    }
+  ]
+}

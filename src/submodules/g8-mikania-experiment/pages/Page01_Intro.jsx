@@ -4,38 +4,48 @@
  * 介绍薇甘菊入侵问题和菟丝子防治方法
  */
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { EventTypes } from '@shared/services/submission/eventTypes';
+import { getPageSubNum } from '../mapping';
 import { useMikaniaExperiment } from '../Component';
 import styles from '../styles/Page01_Intro.module.css';
 import mikaniaImage from '../assets/images/薇甘菊.jpg';
 import cuscutaImage from '../assets/images/菟丝子.jpg';
 
 function Page01Intro() {
-  const { logOperation } = useMikaniaExperiment();
+  const { state, logOperation, flowContext } = useMikaniaExperiment();
+
+  const subPageNum = getPageSubNum(state.currentPageId);
+  const flowStepIndex = flowContext?.stepIndex;
+  const pageNumber = useMemo(() => {
+    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
+  }, [flowStepIndex, subPageNum]);
+  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
+  const pageTarget = `${targetPrefix}页面`;
+  const nextButtonTarget = `${targetPrefix}下一页按钮`;
 
   // 记录页面进入
   useEffect(() => {
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: pageTarget,
+      eventType: EventTypes.PAGE_ENTER,
       value: 'page_01_intro',
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: pageTarget,
+        eventType: EventTypes.PAGE_EXIT,
         value: 'page_01_intro',
       });
     };
-  }, [logOperation]);
+  }, [logOperation, pageTarget]);
 
   // 处理下一页点击（由 Frame 调用）
   const handleNext = () => {
-    // 记录点击
     logOperation({
-      targetElement: '下一页按钮',
-      eventType: 'click',
+      targetElement: nextButtonTarget,
+      eventType: EventTypes.NEXT_CLICK,
       value: 'navigate_to_step_q1',
     });
 

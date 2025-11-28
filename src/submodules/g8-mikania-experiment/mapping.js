@@ -96,11 +96,26 @@ export const ANSWER_KEY_TO_QUESTION = {
 
 /**
  * 根据子页码获取初始页面 ID
- * @param {string} subPageNum - 子模块内页码
+ * Supports two input formats:
+ * 1. Page ID (string like "page_00_notice") - returns directly
+ * 2. Page number (number or numeric string like 1, "1") - looks up in PAGE_MAP
+ *
+ * @param {string | number} subPageNum - 子模块内页码或页面ID
  * @returns {string} 页面 ID
  */
 export function getInitialPage(subPageNum) {
-  if (!subPageNum || !PAGE_MAP[subPageNum]) {
+  if (!subPageNum) {
+    console.warn(`[g8-mikania-experiment] Invalid subPageNum: ${subPageNum}, fallback to page_00_notice`);
+    return 'page_00_notice';
+  }
+
+  // If already a valid pageId (string starting with "page_"), return it directly
+  if (typeof subPageNum === 'string' && subPageNum.startsWith('page_')) {
+    return subPageNum;
+  }
+
+  // Otherwise treat as numeric page number and look up in PAGE_MAP
+  if (!PAGE_MAP[subPageNum]) {
     console.warn(`[g8-mikania-experiment] Invalid subPageNum: ${subPageNum}, fallback to page_00_notice`);
     return 'page_00_notice';
   }
@@ -188,12 +203,21 @@ export function getDefaultTimers() {
 
 /**
  * 解析页码为页面ID (供Flow持久化/恢复使用)
- * @param {string | number | null | undefined} subPageNum - 子模块内页码
+ * Supports two input formats:
+ * 1. Page ID (string like "page_00_notice") - returns directly
+ * 2. Page number (number or numeric string like 1, "1") - looks up in PAGE_MAP
+ *
+ * @param {string | number | null | undefined} subPageNum - 子模块内页码或页面ID
  * @returns {string} 页面ID
  */
 export function resolvePageNum(subPageNum) {
   if (subPageNum == null || subPageNum === undefined) {
     return 'page_00_notice';
+  }
+
+  // If already a valid pageId (string starting with "page_"), return it directly
+  if (typeof subPageNum === 'string' && subPageNum.startsWith('page_')) {
+    return subPageNum;
   }
 
   const pageNumStr = String(subPageNum);

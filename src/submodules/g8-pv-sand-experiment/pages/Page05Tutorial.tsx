@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
+import EventTypes from '@shared/services/submission/eventTypes.js';
 import WindSpeedometer from '../components/WindSpeedometer';
 import styles from '../styles/Page05Tutorial.module.css';
-import minusImg from '../assets/images/01.png';
-import plusImg from '../assets/images/02.png';
-import resetImg from '../assets/images/03.png';
-import startImg from '../assets/images/04.png';
-import displayImg from '../assets/images/05.png';
 
 const Page05Tutorial: React.FC = () => {
   const {
@@ -33,6 +29,16 @@ const Page05Tutorial: React.FC = () => {
   useEffect(() => {
     const handleValidationError = () => {
       setShowError(true);
+      logOperation({
+        targetElement: 'next_button',
+        eventType: EventTypes.CLICK_BLOCKED,
+        value: {
+          reason: 'tutorial_not_completed',
+          missing: ['tutorialCompleted'],
+          timestamp: new Date().toISOString(),
+        },
+        time: new Date().toISOString(),
+      });
       // Auto-hide error after 3 seconds
       setTimeout(() => setShowError(false), 3000);
     };
@@ -48,16 +54,16 @@ const Page05Tutorial: React.FC = () => {
     setPageStartTime(startTime);
 
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: 'page',
+      eventType: EventTypes.PAGE_ENTER,
       value: currentPageId,
       time: startTime.toISOString()
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: 'page',
+        eventType: EventTypes.PAGE_EXIT,
         value: currentPageId,
         time: new Date().toISOString()
       });
@@ -68,11 +74,15 @@ const Page05Tutorial: React.FC = () => {
     const newIndex = Math.max(0, Math.min(3, heightIndex + delta));
     setHeightIndex(newIndex);
 
+    const time = new Date().toISOString();
     logOperation({
       targetElement: '高度调节',
-      eventType: 'click',
-      value: `调整高度: ${heightOptions[newIndex]}cm`,
-      time: new Date().toISOString()
+      eventType: EventTypes.SIMULATION_OPERATION,
+      value: {
+        action: 'adjust_height',
+        toHeight: heightOptions[newIndex],
+      },
+      time,
     });
   };
 
@@ -80,17 +90,32 @@ const Page05Tutorial: React.FC = () => {
     if (isRunning) return;
 
     setIsRunning(true);
+    const time = new Date().toISOString();
     logOperation({
       targetElement: '开始按钮',
-      eventType: 'click',
-      value: `开始测量 - 高度${currentHeight}cm`,
-      time: new Date().toISOString()
+      eventType: EventTypes.SIMULATION_TIMING_STARTED,
+      value: {
+        height: currentHeight,
+        context: 'tutorial',
+      },
+      time,
     });
 
     setTimeout(() => {
       setWithPanelSpeed(withPanelData[heightIndex]);
       setWithoutPanelSpeed(withoutPanelData[heightIndex]);
       setIsRunning(false);
+
+      logOperation({
+        targetElement: 'simulation_result',
+        eventType: EventTypes.SIMULATION_RUN_RESULT,
+        value: {
+          height: currentHeight,
+          withPanelSpeed: withPanelData[heightIndex],
+          withoutPanelSpeed: withoutPanelData[heightIndex],
+        },
+        time: new Date().toISOString(),
+      });
 
       // Mark tutorial as completed after first successful run
       collectAnswer({
@@ -108,7 +133,7 @@ const Page05Tutorial: React.FC = () => {
 
     logOperation({
       targetElement: '重置按钮',
-      eventType: 'click',
+      eventType: EventTypes.SIMULATION_OPERATION,
       value: '重置实验',
       time: new Date().toISOString()
     });
@@ -116,61 +141,32 @@ const Page05Tutorial: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>光伏治沙</h1>
-
-      <div className={styles.contentArea}>
+      <div className={styles.mainContent}>
         {/* 左侧说明区域 */}
-        <div className={styles.leftContent}>
-            <div className={styles.instructionBox}>
-              <p className={styles.instructionIntro}>
-                接下来，我们将在计算机上通过模拟实验的方式开展探究。右侧为实验互动界面：
-              </p>
-              <div className={styles.stepList}>
-                <div className={styles.stepItem}>
-                  <span className={styles.checkmark}>✓</span>
-                  <span className={styles.stepText}>
-                    单击下方 <img src={plusImg} alt="+" className={styles.inlineIcon} />/<img src={minusImg} alt="-" className={styles.inlineIcon} /> 按钮，可调整风速仪的观测高度；
-                  </span>
-                </div>
-                <div className={styles.stepItem}>
-                  <span className={styles.checkmark}>✓</span>
-                  <span className={styles.stepText}>
-                    单击<img src={startImg} alt="开始" className={styles.inlineIcon} />按钮，系统将自动采集数据，并在<img src={displayImg} alt="绿色框" className={styles.inlineIcon} />内显示该位点的风速值；
-                  </span>
-                </div>
-                <div className={styles.stepItem}>
-                  <span className={styles.checkmark}>✓</span>
-                  <span className={styles.stepText}>
-                    单击<img src={resetImg} alt="重置" className={styles.inlineIcon} />按钮，可重新开始。
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {showError && (
-              <div style={{
-                background: '#fff5f5',
-                border: '2px solid #e74c3c',
-                borderRadius: '8px',
-                padding: '12px 20px',
-                color: '#e74c3c',
-                fontSize: '14px',
-                fontWeight: 600,
-                textAlign: 'center',
-                marginTop: '10px',
-                animation: 'errorShake 0.5s ease-out'
-              }}>
-                请先完成模拟教程（至少点击一次"开始"按钮）
-              </div>
-            )}
-          </div>
+        <div className={styles.leftPanel}>
+          <h2 className={styles.panelTitle}>模拟实验教程</h2>
+          <p className={styles.instructionIntro}>
+            接下来，我们将在计算机上通过模拟实验的方式开展探究。右侧为实验互动界面：
+          </p>
+          <ul className={styles.stepList}>
+            <li className={styles.stepItem}>
+              单击下方 <span className={styles.arrowBtnPlus}>+</span>/<span className={styles.arrowBtnMinus}>−</span> 按钮，可调整风速仪的观测高度；
+            </li>
+            <li className={styles.stepItem}>
+              单击<span className={styles.sampleStart}>开始</span>按钮，系统将自动采集数据，并在<span className={styles.sampleDisplay}>0m/s</span>内显示该位点的风速值；
+            </li>
+            <li className={styles.stepItem}>
+              单击<span className={styles.sampleReset}>重置</span>按钮，可重新开始。
+            </li>
+          </ul>
+        </div>
 
         {/* 右侧实验面板 */}
-        <div className={styles.experimentContainer}>
+        <div className={styles.rightPanel}>
           <div className={styles.experimentUnit}>
             <div className={styles.panelHeader}>
-              <span className={styles.panelTitle}>有光伏板</span>
-              <span className={styles.panelTitle}>无光伏板</span>
+              <span className={styles.experimentPanelTitle}>有光伏板</span>
+              <span className={styles.experimentPanelTitle}>无光伏板</span>
             </div>
 
             <div className={styles.windDisplay}>
@@ -330,6 +326,13 @@ const Page05Tutorial: React.FC = () => {
               </svg>
             </div>
           </div>
+
+          {/* Error message for validation - placed below experiment area */}
+          {showError && (
+            <div className={styles.errorMessage}>
+              请先完成模拟教程（至少点击一次"开始"按钮）
+            </div>
+          )}
         </div>
       </div>
     </div>

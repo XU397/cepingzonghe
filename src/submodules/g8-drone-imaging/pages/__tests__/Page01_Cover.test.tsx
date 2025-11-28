@@ -35,17 +35,17 @@ describe('Page01_Cover', () => {
   it('初始渲染应展示标题和注意事项区域（对应说明书封面页面基础结构）', () => {
     renderPage();
 
-    expect(screen.getByText('无人机航拍交互课堂')).toBeInTheDocument();
+    expect(screen.getByText('无人机航拍科学探究')).toBeInTheDocument();
     expect(screen.getByText('注意事项')).toBeInTheDocument();
     expect(screen.getByText('我已阅读并理解以上注意事项')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '开始学习' })).toBeInTheDocument();
+    expect(screen.getByTestId('next-button')).toBeInTheDocument();
   });
 
   it('未勾选确认复选框时点击“开始学习”应显示错误提示且停留在当前页（对应 Page 1 校验失败：提示“请先阅读注意事项并勾选确认后再继续”）', () => {
     renderPage();
 
     const currentPage = screen.getByTestId('current-page-id');
-    const nextButton = screen.getByRole('button', { name: '开始学习' });
+    const nextButton = screen.getByTestId('next-button');
 
     expect(currentPage).toHaveTextContent('cover');
 
@@ -63,26 +63,26 @@ describe('Page01_Cover', () => {
     // 初始倒计时内复选框应禁用
     expect(checkbox).toBeDisabled();
 
-    // 快进 30 秒让倒计时结束
-    act(() => {
-      vi.advanceTimersByTime(30000);
-    });
+    // 快进 40 秒让倒计时结束
+    for (let i = 0; i < 40; i += 1) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+    }
 
-    await waitFor(() => {
-      expect(screen.getByText('阅读完成')).toBeInTheDocument();
-      expect(screen.getByRole('checkbox')).not.toBeDisabled();
-    });
+    expect(screen.queryByTestId('countdown-display')).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).not.toBeDisabled();
 
     // 勾选确认
     fireEvent.click(screen.getByRole('checkbox'));
     expect(screen.getByRole('checkbox')).toBeChecked();
 
     // 点击开始学习，触发导航
-    fireEvent.click(screen.getByRole('button', { name: '开始学习' }));
+    fireEvent.click(screen.getByTestId('next-button'));
 
+    vi.useRealTimers();
     await waitFor(() => {
       expect(screen.getByTestId('current-page-id')).toHaveTextContent('background');
     });
   });
 });
-

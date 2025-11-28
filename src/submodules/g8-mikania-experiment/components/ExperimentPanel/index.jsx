@@ -8,7 +8,9 @@
  * - Bottom: Control bar with Reset, Days, and Start buttons
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { EventTypes } from '@shared/services/submission/eventTypes';
+import { formatTimestamp } from '@/shared/services/dataLogger.js';
 import { useMikaniaExperiment } from '../../Component';
 import {
   getGerminationRate,
@@ -18,6 +20,7 @@ import {
   isValidConcentration,
   isValidDays,
 } from '../../utils/experimentData';
+import { getPageSubNum } from '../../mapping';
 import PetriDish from './PetriDish';
 import Dropper from './Dropper';
 import SeedDisplay from './SeedDisplay';
@@ -52,14 +55,28 @@ function validateDays(value) {
 /**
  * ExperimentPanel Component
  */
-function ExperimentPanel() {
+function ExperimentPanel({ pageNumber }) {
   const {
     state,
     setExperimentState,
     logOperation,
+    flowContext,
   } = useMikaniaExperiment();
 
   const { experimentState } = state;
+  const subPageNum = getPageSubNum(state.currentPageId);
+  const flowStepIndex = flowContext?.stepIndex;
+  const computedPageNumber = useMemo(() => {
+    return typeof flowStepIndex === 'number'
+      ? `${flowStepIndex}.${subPageNum}`
+      : String(subPageNum);
+  }, [flowStepIndex, subPageNum]);
+  const effectivePageNumber = pageNumber || computedPageNumber;
+  const pageTargetPrefix = useMemo(() => {
+    if (!effectivePageNumber) return '';
+    return `P${effectivePageNumber}_`;
+  }, [effectivePageNumber]);
+  const buildTarget = useCallback((suffix) => `${pageTargetPrefix}${suffix}`, [pageTargetPrefix]);
 
   // Local animation state
   const [isAnimating, setIsAnimating] = useState(false);
@@ -85,8 +102,8 @@ function ExperimentPanel() {
 
     // Log parameter change event
     logOperation({
-      targetElement: '实验面板-浓度选择',
-      eventType: 'simulation_operation',
+      targetElement: buildTarget('浓度选择器'),
+      eventType: EventTypes.SIMULATION_OPERATION,
       value: JSON.stringify({
         operation: 'param_change',
         param: 'concentration',
@@ -100,7 +117,7 @@ function ExperimentPanel() {
       concentration: newValue,
       currentResult: null, // Clear previous result
     });
-  }, [isAnimating, experimentState.concentration, logOperation, setExperimentState]);
+  }, [isAnimating, experimentState.concentration, buildTarget, logOperation, setExperimentState]);
 
   /**
    * Handle days change
@@ -117,8 +134,8 @@ function ExperimentPanel() {
 
     // Log parameter change event
     logOperation({
-      targetElement: '实验面板-天数调整',
-      eventType: 'simulation_operation',
+      targetElement: buildTarget('天数选择器'),
+      eventType: EventTypes.SIMULATION_OPERATION,
       value: JSON.stringify({
         operation: 'param_change',
         param: 'days',
@@ -132,7 +149,7 @@ function ExperimentPanel() {
       days: validatedDays,
       currentResult: null, // Clear previous result
     });
-  }, [isAnimating, currentDays, logOperation, setExperimentState]);
+  }, [isAnimating, currentDays, buildTarget, logOperation, setExperimentState]);
 
   /**
    * Handle experiment start
@@ -149,13 +166,23 @@ function ExperimentPanel() {
 
     // Log start event
     logOperation({
-      targetElement: '实验面板-开始按钮',
-      eventType: 'simulation_operation',
+      targetElement: buildTarget('开始按钮'),
+      eventType: EventTypes.SIMULATION_OPERATION,
       value: JSON.stringify({
         operation: 'start',
         concentration: `${concValue}mg/ml`,
         days,
         expectedRate,
+      }),
+    });
+
+    logOperation({
+      targetElement: buildTarget('开始按钮'),
+      eventType: EventTypes.SIMULATION_TIMING_STARTED,
+      value: JSON.stringify({
+        concentration: `${concValue}mg/ml`,
+        days,
+        duration_ms: 3500,
       }),
     });
 
@@ -165,6 +192,7 @@ function ExperimentPanel() {
     // Update state to started
     setExperimentState({
       hasStarted: true,
+      currentResult: null,
     });
 
     // Animation sequence timing
@@ -175,12 +203,37 @@ function ExperimentPanel() {
 
     // Show result after animation completes
     setTimeout(() => {
+      const sproutedCount = getSproutedSeedCount(concValue, days);
+      const timestamp = formatTimestamp(new Date());
+
+      logOperation({
+        targetElement: buildTarget('实验结果'),
+        eventType: EventTypes.SIMULATION_RUN_RESULT,
+        value: JSON.stringify({
+          concentration: `${concValue}mg/ml`,
+          days,
+          germinationRate: expectedRate,
+          sproutedCount,
+          timestamp,
+        }),
+      });
+
+      const runs = Array.isArray(experimentState.history) ? experimentState.history : [];
       setExperimentState({
         currentResult: expectedRate,
+        history: [
+          ...runs,
+          {
+            concentration: `${concValue}mg/ml`,
+            days,
+            germinationRate: expectedRate,
+            timestamp,
+          },
+        ],
       });
       setIsAnimating(false);
     }, 3500);
-  }, [isAnimating, currentConcValue, currentDays, logOperation, setExperimentState]);
+  }, [isAnimating, currentConcValue, currentDays, buildTarget, experimentState.history, logOperation, setExperimentState]);
 
   /**
    * Handle experiment reset
@@ -190,8 +243,8 @@ function ExperimentPanel() {
 
     // Log reset event
     logOperation({
-      targetElement: '实验面板-重置按钮',
-      eventType: 'simulation_operation',
+      targetElement: buildTarget('重置按钮'),
+      eventType: EventTypes.SIMULATION_OPERATION,
       value: JSON.stringify({
         operation: 'reset',
         previousConcentration: experimentState.concentration,
@@ -206,7 +259,7 @@ function ExperimentPanel() {
       hasStarted: false,
       currentResult: null,
     });
-  }, [isAnimating, experimentState.concentration, experimentState.days, logOperation, setExperimentState]);
+  }, [isAnimating, experimentState.concentration, experimentState.days, buildTarget, logOperation, setExperimentState]);
 
   // Calculate germinated count for display using validated values
   const germinatedCount = experimentState.currentResult !== null

@@ -1,0 +1,26 @@
+{
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_02_step_q1",
+      "time": "2025-11-22 10:01:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "P1.3_Q1_控制变量原因",
+      "eventType": "input_change",
+      "value": "{\"prev\":\"\",\"next\":\"为了\"}",
+      "time": "2025-11-22 10:01:08"
+    },
+    {
+      "code": 3,
+      "targetElement": "下一页按钮",
+      "eventType": "click_blocked",
+      "value": "{\"reason\":\"validation_failed\",\"missing\":[\"Q1_控制变量原因\"]}",
+      "time": "2025-11-22 10:01:10"
+    }
+  ],
+  "answerList": []
+}

@@ -4,7 +4,9 @@
  * 左侧显示实验步骤和培养皿图片，右侧为Q1填空题
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { EventTypes } from '@shared/services/submission/eventTypes';
+import { getPageSubNum } from '../mapping';
 import { useMikaniaExperiment } from '../Component';
 import styles from '../styles/Page02_Step_Q1.module.css';
 import petriDishImage from '../assets/images/培养皿.jpg';
@@ -16,44 +18,89 @@ function Page02StepQ1() {
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
+    flowContext,
   } = useMikaniaExperiment();
 
   const [inputValue, setInputValue] = useState(state.answers.Q1_控制变量原因 || '');
   const [error, setError] = useState('');
+  const prevValueRef = useRef(state.answers.Q1_控制变量原因 || '');
+
+  const subPageNum = getPageSubNum(state.currentPageId);
+  const flowStepIndex = flowContext?.stepIndex;
+  const pageNumber = useMemo(() => {
+    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
+  }, [flowStepIndex, subPageNum]);
+  const questionTarget = useMemo(() => `P${pageNumber}_Q1_控制变量原因`, [pageNumber]);
 
   // 记录页面进入
   useEffect(() => {
     logOperation({
       targetElement: '页面',
-      eventType: 'page_enter',
+      eventType: EventTypes.PAGE_ENTER,
       value: 'page_02_step_q1',
     });
 
     return () => {
       logOperation({
         targetElement: '页面',
-        eventType: 'page_exit',
+        eventType: EventTypes.PAGE_EXIT,
         value: 'page_02_step_q1',
       });
     };
   }, [logOperation]);
 
+  const handleInputFocus = () => {
+    logOperation({
+      targetElement: questionTarget,
+      eventType: EventTypes.INPUT_FOCUS,
+      value: prevValueRef.current || '',
+    });
+  };
+
   // 处理输入变化
   const handleInputChange = (e) => {
-    const value = e.target.value;
-    setInputValue(value);
-    setAnswer('Q1_控制变量原因', value);
+    const nextValue = e.target.value;
+    const prevValue = prevValueRef.current || '';
+    const payload = {
+      prev: prevValue,
+      next: nextValue,
+      prevLength: prevValue.length,
+      nextLength: nextValue.length,
+    };
+
+    setInputValue(nextValue);
+    setAnswer('Q1_控制变量原因', nextValue);
 
     // 清除错误提示
-    if (error && value.length >= 5) {
+    if (error && nextValue.length >= 5) {
       setError('');
     }
 
-    // 记录操作
     logOperation({
-      targetElement: 'Q1_控制变量原因',
-      eventType: 'input_change',
-      value: value,
+      targetElement: questionTarget,
+      eventType: EventTypes.INPUT_CHANGE,
+      value: JSON.stringify(payload),
+    });
+
+    if (nextValue.length < prevValue.length) {
+      logOperation({
+        targetElement: questionTarget,
+        eventType: EventTypes.INPUT_DELETE,
+        value: JSON.stringify({
+          action: 'delete',
+          ...payload,
+        }),
+      });
+    }
+
+    prevValueRef.current = nextValue;
+  };
+
+  const handleInputBlur = () => {
+    logOperation({
+      targetElement: questionTarget,
+      eventType: EventTypes.INPUT_BLUR,
+      value: prevValueRef.current || '',
     });
   };
 
@@ -69,7 +116,7 @@ function Page02StepQ1() {
       // 记录阻断事件
       logOperation({
         targetElement: '下一页按钮',
-        eventType: 'click_blocked',
+        eventType: EventTypes.CLICK_BLOCKED,
         value: JSON.stringify({
           reason: 'validation_failed',
           missing,
@@ -84,7 +131,7 @@ function Page02StepQ1() {
     // 记录成功点击
     logOperation({
       targetElement: '下一页按钮',
-      eventType: 'click',
+      eventType: EventTypes.NEXT_CLICK,
       value: 'navigate_to_sim_exp',
     });
 
@@ -178,7 +225,9 @@ function Page02StepQ1() {
               <textarea
                 className={`${styles.textInput} ${error ? styles.textInputError : ''}`}
                 value={inputValue}
+                onFocus={handleInputFocus}
                 onChange={handleInputChange}
+                onBlur={handleInputBlur}
                 placeholder="请输入您的答案（至少5个字符）..."
                 rows={6}
               />

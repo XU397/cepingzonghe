@@ -13,7 +13,7 @@ import { submoduleRegistry } from '@/submodules/registry';
 import { useAppContext } from '@/context/AppContext';
 import { createFlowContextOperation } from '@/shared/types/flow';
 import { TimerService } from '@shared/services/timers';
-import useHeartbeat from '@/hooks/useHeartbeat';
+import { endpoints } from '@shared/services/api';
 import styles from './FlowModule.module.css';
 import { createModuleUserContext } from '@/modules/utils/createModuleUserContext.js';
 import { useRenderCounter } from '@shared/utils/RenderCounter.jsx';
@@ -36,12 +36,105 @@ const flowDevMockAuthEnabled = Boolean(import.meta.env?.VITE_FLOW_DEV_MOCK_AUTH)
 // Flow 心跳开关：默认开启，VITE_FLOW_HEARTBEAT_ENABLED=0 时可全局关闭
 const flowHeartbeatEnabled =
   String(import.meta.env?.VITE_FLOW_HEARTBEAT_ENABLED ?? '1') !== '0';
+const PROGRESS_QUEUE_LIMIT = 50;
+const flushingProgressFlows = new Set();
 
 // Simple flag parser (true/1/yes/on => true)
 const parseFlag = (val, def) => {
   if (val === undefined || val === null) return !!def;
   const s = String(val).toLowerCase();
   return s === '1' || s === 'true' || s === 'yes' || s === 'on';
+};
+
+const getProgressQueueKey = (flowId) => `flow.${flowId}.progressQueue`;
+
+const loadProgressQueue = (flowId) => {
+  try {
+    const raw = localStorage.getItem(getProgressQueueKey(flowId));
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveProgressQueue = (flowId, queue) => {
+  try {
+    localStorage.setItem(
+      getProgressQueueKey(flowId),
+      JSON.stringify(queue.slice(-PROGRESS_QUEUE_LIMIT))
+    );
+  } catch {
+    // ignore storage errors
+  }
+};
+
+const flushProgressQueue = async (flowId, onError) => {
+  if (flushingProgressFlows.has(flowId)) {
+    return;
+  }
+
+  const queue = loadProgressQueue(flowId);
+  if (!queue.length) {
+    return;
+  }
+
+  flushingProgressFlows.add(flowId);
+  try {
+    const progressEndpoint = endpoints.flow.updateProgress(flowId);
+    const baseURL = import.meta.env.VITE_API_BASE_URL || '';
+    const url = baseURL + progressEndpoint;
+    const remain = [];
+
+    for (const item of queue) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item),
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          throw new Error(`HTTP ${res.status}: ${text || 'Request failed'}`);
+        }
+      } catch (err) {
+        remain.push(item);
+        onError?.(err);
+      }
+    }
+
+    saveProgressQueue(flowId, remain);
+  } finally {
+    flushingProgressFlows.delete(flowId);
+  }
+};
+
+const sendProgressNow = async (payload, onError) => {
+  const { flowId } = payload;
+  if (!flowId) return;
+
+  const progressEndpoint = endpoints.flow.updateProgress(flowId);
+  const baseURL = import.meta.env.VITE_API_BASE_URL || '';
+  const url = baseURL + progressEndpoint;
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status}: ${text || 'Request failed'}`);
+    }
+  } catch (err) {
+    const queue = loadProgressQueue(flowId);
+    queue.push(payload);
+    saveProgressQueue(flowId, queue);
+    onError?.(err);
+  }
 };
 
 // Wrapper to optionally render FlowProvider
@@ -271,7 +364,6 @@ const advanceFlowStep = ({
     return;
   }
   const hasNext = orchestrator.nextStep();
-  completionSignaledRef.current = false;
 
   if (!hasNext) {
     debugLog('[FlowModule] Flow completed');
@@ -293,7 +385,25 @@ const advanceFlowStep = ({
     return;
   }
 
-  loadFlow();
+  // ✅ 只有在确认有下一步后才重置 flag，并在 loadFlow 完成后异步重置
+  // 避免在加载过程中的导航事件触发重复完成
+  loadFlow().then(() => {
+    // 延迟重置，等待 React 渲染周期完成，确保新子模块已完全加载并稳定
+    // 使用 requestIdleCallback 或 setTimeout(0) 确保在下一个事件循环中重置
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => {
+        completionSignaledRef.current = false;
+        debugLog('[FlowModule] completionSignaledRef reset after idle callback');
+      }, { timeout: 100 });
+    } else {
+      setTimeout(() => {
+        completionSignaledRef.current = false;
+        debugLog('[FlowModule] completionSignaledRef reset after timeout');
+      }, 100);
+    }
+  }).catch(() => {
+    completionSignaledRef.current = false;
+  });
 };
 
 const loadFlowState = async ({
@@ -749,39 +859,74 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     });
   }, [contextFlowId, effectiveUserContext, initialPageId, navigate, redirectingToRoute]);
 
-  const heartbeatEnabled =
-    Boolean(flowId) &&
-    !state.loading &&
-    !state.error &&
-    !state.showTransition &&
-    !state.showCompletion &&
-    !!(effectiveUserContext?.examNo || flowContextSnapshot?.examNo) &&
-    !!(effectiveUserContext?.batchCode || flowContextSnapshot?.batchCode);
-  useEffect(() => {
-    debugLog('[FlowModule] heartbeatEnabled changed:', heartbeatEnabled, {
-      hasFlowId: Boolean(flowId),
-      loading: state.loading,
-      error: state.error,
-      showTransition: state.showTransition,
-    });
-  }, [heartbeatEnabled, flowId, state.error, state.loading, state.showTransition]);
-  const handleHeartbeatError = useCallback((error) => {
-    console.error('[FlowModule] Heartbeat failed:', error);
-    // Errors are queued locally and retried later
+  const lastProgressSentRef = useRef({
+    flowId: null,
+    stepIndex: null,
+    modulePageNum: null,
+  });
+
+  const handleProgressError = useCallback((error) => {
+    console.error('[FlowModule] Progress sync failed:', error);
   }, []);
 
-  // Heartbeat progress sync
-  // FIXME: disabled previously due to infinite loop; see docs/HEARTBEAT_INFINITE_LOOP_BUG.md
-  useHeartbeat({
-    flowId: flowId || contextFlowId || 'pending',
-    stepIndexRef: stableStepIndexRef,
-    modulePageNumRef: stableModulePageNumRef,
-    examNo: effectiveUserContext?.examNo || flowContextSnapshot?.examNo || null,
-    batchCode: effectiveUserContext?.batchCode || flowContextSnapshot?.batchCode || null,
-    enabled: flowHeartbeatEnabled && heartbeatEnabled,
-    intervalMs: 15000, // 15s
-    onError: handleHeartbeatError,
-  });
+  const sendProgressUpdate = useCallback(async (payload) => {
+    if (!flowHeartbeatEnabled || !payload?.flowId) {
+      return;
+    }
+    await flushProgressQueue(payload.flowId, handleProgressError);
+    await sendProgressNow(payload, handleProgressError);
+  }, [handleProgressError]);
+
+  useEffect(() => {
+    const effectiveFlowId = flowId || contextFlowId;
+    const stepIndex = state.currentStep?.stepIndex;
+    const modulePageNum = state.progress?.modulePageNum;
+    const examNo = effectiveUserContext?.examNo || flowContextSnapshot?.examNo || null;
+    const batchCode = effectiveUserContext?.batchCode || flowContextSnapshot?.batchCode || null;
+
+    if (!effectiveFlowId || stepIndex === null || stepIndex === undefined || modulePageNum == null) {
+      return;
+    }
+    if (!examNo || !batchCode) {
+      return;
+    }
+
+    const last = lastProgressSentRef.current;
+    if (
+      last.flowId === effectiveFlowId &&
+      last.stepIndex === stepIndex &&
+      String(last.modulePageNum) === String(modulePageNum)
+    ) {
+      return;
+    }
+
+    const payload = {
+      flowId: effectiveFlowId,
+      examNo,
+      batchCode,
+      stepIndex,
+      modulePageNum: String(modulePageNum),
+      ts: Date.now(),
+    };
+
+    lastProgressSentRef.current = {
+      flowId: effectiveFlowId,
+      stepIndex,
+      modulePageNum: String(modulePageNum),
+    };
+
+    sendProgressUpdate(payload);
+  }, [
+    contextFlowId,
+    effectiveUserContext?.batchCode,
+    effectiveUserContext?.examNo,
+    flowContextSnapshot?.batchCode,
+    flowContextSnapshot?.examNo,
+    flowId,
+    sendProgressUpdate,
+    state.currentStep?.stepIndex,
+    state.progress?.modulePageNum,
+  ]);
 
   /**
    * 加载 Flow
@@ -846,6 +991,12 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
    * Handle submodule completion
    */
   const handleSubmoduleComplete = useCallback(() => {
+    // ✅ 防重入保护：如果已经触发完成，直接返回避免重复执行
+    if (completionSignaledRef.current) {
+      debugLog('[FlowModule] Submodule completion already signaled, skipping duplicate call');
+      return;
+    }
+
     completionSignaledRef.current = true;
     debugLog('[FlowModule] Submodule completed');
     const completionConfig = state.definition?.completionPage || DEFAULT_COMPLETION_CONTENT;
@@ -1014,6 +1165,12 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   const handleBeforeNavigate = useCallback(
     async (nextPageId) => {
       if (typeof currentResolver !== 'function' || !nextPageId) {
+        return true;
+      }
+
+      // ✅ 额外检查：防止在子模块切换期间处理错误的页面
+      if (completionSignaledRef.current) {
+        debugLog('[FlowModule] Skipping beforeNavigate during submodule transition');
         return true;
       }
 

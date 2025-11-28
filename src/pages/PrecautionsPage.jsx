@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useAppContext } from '../context/AppContext';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { submissionFormatTimestamp as formatTimestamp } from '@shared/services/submission';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 import NavigationButton from '../components/common/NavigationButton';
-import { useDataLogging } from '../hooks/useDataLogging';
+import { getNextPageId } from '../utils/pageMappings';
+import { useAppContext } from '../context/AppContext';
 
 // 添加倒计时常量
 const READING_TIME_SECONDS = 10;
+const TIMEOUT_SECONDS = 30; // 倒计时结束后的超时时间
 
 /**
  * 注意事项页面组件
@@ -14,38 +18,116 @@ const PrecautionsPage = () => {
   const { 
     currentPageId, 
     startTaskTimer,
-    setPageEnterTime 
+    setPageEnterTime,
+    navigateToPage
   } = useAppContext();
-  
+  const { submitPage, logOperation, submitOnTimeout } = usePageSubmissionContext();
+
   const [isAcknowledged, setIsAcknowledged] = useState(false);
   // 添加倒计时相关状态
   const [timeRemainingOnPage, setTimeRemainingOnPage] = useState(READING_TIME_SECONDS);
   const [canSelectCheckbox, setCanSelectCheckbox] = useState(false);
 
-  // 数据记录Hook
-  const {
-    logCheckboxChange,
-    logButtonClick,
-    logPageEnter,
-    collectDirectAnswer
-  } = useDataLogging('Page_01_Precautions');
-
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
   const timerRef = useRef(null);
+  const operationsRef = useRef([]);
+  const timerCompleteLoggedRef = useRef(false);
+  const timeoutTimerRef = useRef(null); // 超时计时器
+  const hasSubmittedRef = useRef(false); // 防止重复提交
+
+  const appendOperation = useCallback((operation) => {
+    const normalizedOperation = {
+      time: formatTimestamp(new Date()),
+      ...operation
+    };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
+
+  const logTimerStart = useCallback(() => {
+    appendOperation({
+      eventType: EventTypes.TIMER_START,
+      targetElement: 'countdown_timer',
+      value: { duration: READING_TIME_SECONDS, unit: 'seconds' }
+    });
+  }, [appendOperation]);
 
   // 页面进入时记录 - 只执行一次
   useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      setPageEnterTime(new Date());
-      logPageEnter('注意事项页面');
+    if (pageLoadedRef.current) return;
+    pageLoadedRef.current = true;
+    operationsRef.current = [];
+    setPageEnterTime(new Date());
+    logTimerStart();
+  }, [logTimerStart, setPageEnterTime]);
+
+  // 超时自动提交处理（使用useCallback）
+  const handleTimeoutSubmit = useCallback(async () => {
+    if (hasSubmittedRef.current) {
+      return; // 防止重复提交
     }
-  }, []);
+    hasSubmittedRef.current = true;
+
+    console.log('[PrecautionsPage] 触发超时自动提交');
+
+    const success = await submitOnTimeout({
+      missingAnswerTargets: [
+        {
+          targetElement: '确认：已阅读并同意注意事项？',
+          value: '超时未确认'
+        }
+      ],
+      autoSubmitReason: '超时自动提交',
+      autoSubmitMeta: {
+        timeout: TIMEOUT_SECONDS,
+        readingDuration: READING_TIME_SECONDS
+      },
+      pageExitReason: 'timeout_auto_submit',
+      timeoutSeconds: TIMEOUT_SECONDS,
+      placeholderValue: '超时未确认',
+      markOverride: {
+        operationList: operationsRef.current,
+        answerList: [
+          {
+            targetElement: '确认：已阅读并同意注意事项？',
+            value: '超时未确认'
+          },
+          {
+            targetElement: 'reading_duration',
+            value: String(READING_TIME_SECONDS)
+          }
+        ]
+      }
+    });
+
+    if (success) {
+      startTaskTimer();
+      const nextPageId = getNextPageId(currentPageId);
+      if (nextPageId) {
+        await navigateToPage(nextPageId, { skipSubmit: true });
+      } else {
+        console.error(`[PrecautionsPage] 无法确定下一页，从 ${currentPageId} 跳转失败`);
+      }
+    }
+  }, [currentPageId, navigateToPage, startTaskTimer, submitOnTimeout]);
 
   // 倒计时逻辑 - 使用ref避免重复设置定时器
   useEffect(() => {
     if (timeRemainingOnPage <= 0) {
+      if (!timerCompleteLoggedRef.current) {
+        timerCompleteLoggedRef.current = true;
+        appendOperation({
+          eventType: EventTypes.TIMER_COMPLETE,
+          targetElement: 'countdown_timer',
+          value: { duration: READING_TIME_SECONDS, unit: 'seconds' }
+        });
+
+        // 启动超时自动提交计时器
+        timeoutTimerRef.current = setTimeout(() => {
+          handleTimeoutSubmit();
+        }, TIMEOUT_SECONDS * 1000);
+      }
       setCanSelectCheckbox(true);
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -53,20 +135,30 @@ const PrecautionsPage = () => {
       }
       return;
     }
-    
+
     if (!timerRef.current) {
       timerRef.current = setInterval(() => {
         setTimeRemainingOnPage(prev => prev - 1);
       }, 1000);
     }
-    
+
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [timeRemainingOnPage]);
+  }, [appendOperation, handleTimeoutSubmit, timeRemainingOnPage]);
+
+  // 组件卸载时清理超时计时器
+  useEffect(() => {
+    return () => {
+      if (timeoutTimerRef.current) {
+        clearTimeout(timeoutTimerRef.current);
+        timeoutTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // 缓存是否禁用继续按钮的计算
   const isContinueDisabled = useMemo(() => {
@@ -78,34 +170,58 @@ const PrecautionsPage = () => {
    */
   const handleAcknowledgeChange = useCallback((e) => {
     if (!canSelectCheckbox) return; // 倒计时未完成时不允许勾选
-    
+
     const checked = e.target.checked;
     setIsAcknowledged(checked);
-    
-    // 使用数据记录Hook记录复选框变更
-    logCheckboxChange('确认已阅读注意事项', checked, '注意事项确认状态');
-    
-    // 额外收集确认时间
-    if (checked) {
-      collectDirectAnswer('注意事项确认时间', new Date().toISOString());
-    }
-  }, [canSelectCheckbox, logCheckboxChange, collectDirectAnswer]);
+
+    appendOperation({
+      eventType: checked ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
+      targetElement: 'precautions_acknowledged',
+      value: checked ? 'true' : 'false'
+    });
+  }, [appendOperation, canSelectCheckbox]);
 
   /**
    * 继续按钮点击前的准备
    */
-  const handleBeforeContinue = useCallback(() => {
-    // 记录继续按钮点击
-    logButtonClick('继续', '开始任务');
-    
-    // 收集页面停留时间等数据
-    collectDirectAnswer('页面停留时长', '用户点击继续');
-    collectDirectAnswer('任务开始触发', '通过注意事项页面');
-    
-    // 启动任务计时器
-    startTaskTimer();
-    return true; // 返回true表示可以继续导航
-  }, [logButtonClick, collectDirectAnswer, startTaskTimer]);
+  const handleBeforeContinue = useCallback(async () => {
+    if (hasSubmittedRef.current) {
+      return false; // 防止重复提交
+    }
+    hasSubmittedRef.current = true;
+
+    // 取消超时计时器
+    if (timeoutTimerRef.current) {
+      clearTimeout(timeoutTimerRef.current);
+      timeoutTimerRef.current = null;
+    }
+
+    appendOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_continue',
+      value: '开始任务'
+    });
+
+    const success = await submitPage({
+      answers: [
+        { targetElement: '确认：已阅读并同意注意事项？', value: 'A. 已阅读并同意' },
+        { targetElement: 'reading_duration', value: String(READING_TIME_SECONDS) }
+      ],
+      operations: operationsRef.current
+    });
+
+    if (success) {
+      startTaskTimer();
+      const nextPageId = getNextPageId(currentPageId);
+      if (nextPageId) {
+        await navigateToPage(nextPageId, { skipSubmit: true });
+      } else {
+        console.error(`[PrecautionsPage] 无法确定下一页，从 ${currentPageId} 跳转失败`);
+      }
+    }
+
+    return success;
+  }, [appendOperation, currentPageId, navigateToPage, startTaskTimer, submitPage]);
 
   return (
     <div className="page-content page-fade-in" style={{ 
@@ -194,7 +310,7 @@ const PrecautionsPage = () => {
             fontSize: '18px',
             marginTop: '2px'
           }}>•</span>
-          答题时，<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>不要提前点击"下一页"</span>查看后面的内容，<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>否则将无法返回上一页</span>。
+          答题时，<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>不要提前点击&ldquo;下一页&rdquo;</span>查看后面的内容，<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>否则将无法返回上一页</span>。
         </p>
         <p style={{ 
           fontSize: '18px', 

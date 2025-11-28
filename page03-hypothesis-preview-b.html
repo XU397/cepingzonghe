@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page03 假设页面 - 侧边注释式布局（方案B）</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+      background: linear-gradient(to bottom, #e0f7fa 0%, #b2ebf2 100%);
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 顶部区域 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .flow-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 8px 16px;
+      border-radius: 20px;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 主布局 */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 38% 4% 58%;
+      gap: 0;
+      position: relative;
+    }
+
+    /* 左侧内容区 */
+    .left-section {
+      padding-right: 20px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #495057;
+      margin-bottom: 16px;
+      padding-left: 12px;
+      border-left: 4px solid #667eea;
+    }
+
+    /* 实验背景框 */
+    .background-box {
+      background: #fff8e1;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #ff9800;
+    }
+
+    .background-text {
+      font-size: 15px;
+      color: #e65100;
+      line-height: 1.8;
+      text-indent: 2em;
+    }
+
+    /* 步骤列表 */
+    .steps-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .step-item {
+      background: #f8f9fa;
+      padding: 16px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .step-item:hover {
+      background: #e7f3ff;
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .step-icon {
+      font-size: 24px;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .step-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #333;
+      flex: 1;
+    }
+
+    .step-content {
+      font-size: 14px;
+      color: #6c757d;
+      line-height: 1.8;
+      margin-left: 38px;
+    }
+
+    .step-highlight {
+      background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #1565c0;
+      font-weight: 600;
+    }
+
+    /* 中间连接区 */
+    .connector-section {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 4px;
+    }
+
+    .connector-line {
+      width: 2px;
+      height: 100%;
+      background: repeating-linear-gradient(
+        to bottom,
+        #adb5bd 0px,
+        #adb5bd 8px,
+        transparent 8px,
+        transparent 16px
+      );
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .connector-arrow {
+      position: absolute;
+      font-size: 24px;
+      color: #667eea;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .connector-arrow:nth-child(2) { top: 20%; }
+    .connector-arrow:nth-child(3) { top: 50%; }
+    .connector-arrow:nth-child(4) { top: 80%; }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: translateX(0);
+        opacity: 0.6;
+      }
+      50% {
+        transform: translateX(4px);
+        opacity: 1;
+      }
+    }
+
+    /* 右侧内容区 */
+    .right-section {
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 问题框 */
+    .question-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+      position: relative;
+    }
+
+    .question-badge {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: #ff6b6b;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+    }
+
+    .question-text {
+      color: white;
+      font-size: 17px;
+      line-height: 1.8;
+      margin-top: 4px;
+    }
+
+    .question-text strong {
+      font-weight: 700;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+    }
+
+    /* 思考提示框 */
+    .thinking-card {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .thinking-badge {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: #ffc107;
+      color: #333;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(255, 193, 7, 0.4);
+    }
+
+    .thinking-list {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 0 0;
+    }
+
+    .thinking-list li {
+      padding: 6px 0;
+      padding-left: 24px;
+      position: relative;
+      font-size: 15px;
+      color: #856404;
+      line-height: 1.6;
+    }
+
+    .thinking-list li::before {
+      content: '•';
+      position: absolute;
+      left: 8px;
+      color: #ff9800;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* 答题卡片 */
+    .answer-card {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(240, 147, 251, 0.3);
+      position: relative;
+    }
+
+    .answer-badge {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: #4caf50;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+    }
+
+    .answer-inner {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 4px;
+    }
+
+    .textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 14px;
+      font-size: 15px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.6;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .textarea::placeholder {
+      color: #adb5bd;
+    }
+
+    .char-counter {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding: 0 4px;
+      font-size: 14px;
+    }
+
+    .char-count {
+      color: #6c757d;
+      font-weight: 500;
+    }
+
+    .char-count.valid {
+      color: #4caf50;
+    }
+
+    .char-count.warning {
+      color: #ff9800;
+    }
+
+    .min-chars-hint {
+      color: #adb5bd;
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .connector-section {
+        display: none;
+      }
+
+      .left-section,
+      .right-section {
+        padding: 0;
+      }
+
+      .right-section {
+        margin-top: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部 -->
+    <div class="header">
+      <h1 class="page-title">无人机航拍</h1>
+      <div class="flow-hint">
+        <div class="flow-step">
+          <span>📖</span>
+          <span>阅读左侧</span>
+        </div>
+        <span>→</span>
+        <div class="flow-step">
+          <span>💭</span>
+          <span>思考</span>
+        </div>
+        <span>→</span>
+        <div class="flow-step">
+          <span>✍️</span>
+          <span>作答</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+      <!-- 左侧：实验信息 -->
+      <div class="left-section">
+        <div class="section-title">📋 实验背景</div>
+
+        <div class="background-box">
+          <p class="background-text">
+            本实验旨在探究飞行高度与镜头焦距对无人机地面采样距离（GSD）的影响。
+          </p>
+        </div>
+
+        <div class="section-title">📍 实验步骤</div>
+
+        <ul class="steps-list">
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-number">①</span>
+              <span class="step-title">选择实验场地</span>
+            </div>
+            <div class="step-content">
+              选择平坦开阔的实验场地，设置<span class="step-highlight">三个不同飞行高度</span>（100米，200米，300米）
+            </div>
+          </li>
+
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-number">②</span>
+              <span class="step-title">调整相机焦距</span>
+            </div>
+            <div class="step-content">
+              在同一高度下，分别调整无人机相机镜头焦距为<span class="step-highlight">8毫米, 24毫米, 50毫米</span>进行航拍
+            </div>
+          </li>
+
+          <li class="step-item">
+            <div class="step-header">
+              <span class="step-number">③</span>
+              <span class="step-title">确保参数一致</span>
+            </div>
+            <div class="step-content">
+              除高度和焦距外，确保<span class="step-highlight">其他参数（如相机分辨率，天气条件等）完全一致</span>。每次航拍后，通过影像处理软件计算对应的地面采样距离（GSD，单位：厘米/像素）。
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 中间：连接线 -->
+      <div class="connector-section">
+        <div class="connector-line"></div>
+        <span class="connector-arrow">→</span>
+        <span class="connector-arrow">→</span>
+        <span class="connector-arrow">→</span>
+      </div>
+
+      <!-- 右侧：问题和答题区 -->
+      <div class="right-section">
+        <!-- 问题框 -->
+        <div class="question-card">
+          <div class="question-badge">💡 问题 1</div>
+          <div class="question-text">
+            <strong>为什么在每次航拍时，都需要确保相机分辨率和天气条件等一致？</strong>请写出原因。
+          </div>
+        </div>
+
+        <!-- 思考提示框 -->
+        <div class="thinking-card">
+          <div class="thinking-badge">💭 思考提示</div>
+          <ul class="thinking-list">
+            <li>什么是<strong>控制变量</strong>？</li>
+            <li>为什么要<strong>控制变量</strong>？</li>
+            <li>如果不控制会有什么<strong>影响</strong>？</li>
+          </ul>
+        </div>
+
+        <!-- 答题区 -->
+        <div class="answer-card">
+          <div class="answer-badge">✍️ 你的答案</div>
+          <div class="answer-inner">
+            <textarea
+              class="textarea"
+              placeholder="请写下你的思考...&#10;&#10;提示：可以结合左侧的实验步骤，从控制变量法的角度来分析。"
+              id="answerInput"
+              oninput="updateCharCount()"
+            ></textarea>
+
+            <!-- 字数统计 -->
+            <div class="char-counter">
+              <span class="char-count" id="charCount">已输入 0 字</span>
+              <span class="min-chars-hint">最少 5 字</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updateCharCount() {
+      const input = document.getElementById('answerInput');
+      const charCountEl = document.getElementById('charCount');
+      const length = input.value.length;
+
+      charCountEl.textContent = `已输入 ${length} 字`;
+
+      // 更新样式
+      charCountEl.className = 'char-count';
+      if (length > 5) {
+        charCountEl.classList.add('valid');
+      } else if (length > 0) {
+        charCountEl.classList.add('warning');
+      }
+    }
+  </script>
+</body>
+</html>

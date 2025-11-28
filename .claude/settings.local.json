@@ -1,23 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./node_modules/.bin/tsc:*)",
-      "Bash(cat:*)",
-      "Bash(npx playwright test:*)",
-      "Bash(openspec list:*)",
-      "Bash(openspec show:*)",
-      "Bash(openspec validate:*)",
-      "Bash(npm run dev:*)",
-      "Bash(openspec archive integrate-userinfo-bar-with-frame:*)",
-      "Bash(dir openspecchangesarchive /B 2)",
-      "Bash(nul)",
-      "Bash(findstr:*)",
-      "Bash(git fetch:*)",
-      "Bash(git add:*)",
-      "Bash(rm:*)",
-      "Bash(.gitignore)",
-      "Bash(git reset:*)",
-      "Bash(git commit:*)"
+      "Bash(npm run lint:*)",
+      "Bash(node -c:*)",
+      "Bash(npx eslint:*)",
+      "Bash(find:*)",
+      "Bash(npm run test:submission:*)",
+      "Bash(npm install)",
+      "Bash(npm run test:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

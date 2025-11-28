@@ -2,9 +2,10 @@
  * @file Page_14_Simulation_Intro_Exploration.jsx
  * @description P14: 模拟实验界面介绍与自由探索。
  */
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import NavigationButton from '../components/common/NavigationButton';
 import InteractiveSimulationEnvironment from '../components/simulation/InteractiveSimulationEnvironment'; // 模拟实验环境组件
 
@@ -24,49 +25,32 @@ import tijiImg from '../assets/images/tiji.jpg';
 const Page_14_Simulation_Intro_Exploration = () => {
   const {
     navigateToPage,
-    submitPageData,
     currentPageId,
-    currentPageData,
     setPageEnterTime,
-    collectAnswer,
   } = useAppContext();
-
-  // 数据记录Hook
-  const {
-    logButtonClick,
-    logPageEnter
-  } = useDataLogging('Page_14_Simulation_Intro_Exploration');
+  const { submitPage, logOperation } = usePageSubmissionContext();
 
   const [hasTimingStartedOnce, setHasTimingStartedOnce] = useState(false);
+  const [lastTimingSelection, setLastTimingSelection] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const alertMessage = '请至少进行一次"计时开始"操作以熟悉界面。';
 
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
-  const timeoutHandledRef = useRef(false);
+  const operationsRef = useRef([]);
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
 
   // 页面进入记录 - 只执行一次
   useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      setPageEnterTime(new Date());
-      logPageEnter('模拟实验界面介绍与自由探索页面');
-    }
-  }, []);
-
-  // 检查是否已经进行过计时操作 - 使用缓存避免频繁检查
-  useEffect(() => {
-    if (currentPageData && currentPageData.operationList && !timeoutHandledRef.current) {
-      const hasTimingOperation = currentPageData.operationList.some(op => 
-        op.eventType === 'timer_start' || op.eventType === 'simulation_timing_started'
-      );
-      
-      if (hasTimingOperation && !hasTimingStartedOnce) {
-        setHasTimingStartedOnce(true);
-        timeoutHandledRef.current = true;
-      }
-    }
-  }, [currentPageData, hasTimingStartedOnce]); 
+    if (pageLoadedRef.current) return;
+    pageLoadedRef.current = true;
+    operationsRef.current = [];
+    setPageEnterTime(new Date());
+  }, [setPageEnterTime]);
 
   /**
    * 处理下一页按钮点击
@@ -74,33 +58,50 @@ const Page_14_Simulation_Intro_Exploration = () => {
   const handleNextPage = useCallback(async () => {
     if (!hasTimingStartedOnce) {
       setShowAlert(true);
-      logButtonClick('下一页', '点击失败 - 未进行模拟计时开始操作');
+      recordOperation({
+        eventType: EventTypes.CLICK_BLOCKED,
+        targetElement: 'btn_next',
+        value: { reason: '未进行计时', missing: ['simulation_timing_started'] },
+      });
       return false;
     }
 
     setShowAlert(false);
-    logButtonClick('下一页', '点击成功');
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: '完成模拟实验界面介绍',
+    });
 
-    const submissionSuccess = await submitPageData();
-    if (submissionSuccess) {
-      navigateToPage('Page_15_Simulation_Question_1', { skipSubmit: true });
-      return true;
-    } else {
-      alert('数据提交失败，请稍后再试。');
-      return false;
+    const answers = [];
+    if (lastTimingSelection !== null) {
+      answers.push({
+        targetElement: '模拟发酵时长选择',
+        value: `${lastTimingSelection}小时`,
+      });
     }
-  }, [hasTimingStartedOnce, logButtonClick, submitPageData, navigateToPage]);
+
+    const submissionSuccess = await submitPage({
+      answers,
+      operations: operationsRef.current,
+    });
+    if (submissionSuccess) {
+      await navigateToPage('Page_15_Simulation_Question_1', { skipSubmit: true });
+      return true;
+    }
+
+    alert('数据提交失败，请稍后再试。');
+    return false;
+  }, [hasTimingStartedOnce, lastTimingSelection, navigateToPage, recordOperation, submitPage]);
   
   /**
    * 当模拟器开始计时时，记录所选时间
    */
   const handleTimingStart = useCallback((timeInHours) => {
     setHasTimingStartedOnce(true);
-    collectAnswer({
-      targetElement: `模拟发酵时长选择`,
-      value: `${timeInHours}小时`,
-    });
-  }, [collectAnswer]);
+    setLastTimingSelection(timeInHours);
+    setShowAlert(false);
+  }, []);
 
   // 简单的提示框组件
   const AlertBox = ({ message, onClose }) => (
@@ -159,7 +160,9 @@ const Page_14_Simulation_Intro_Exploration = () => {
             boxShadow: '0 3px 10px rgba(0,0,0,0.08)'
         }}>
           <InteractiveSimulationEnvironment 
+            onTimingStart={handleTimingStart}
             onTimingStarted={handleTimingStart}
+            onLogOperation={recordOperation}
           />
         </div>
       </div>

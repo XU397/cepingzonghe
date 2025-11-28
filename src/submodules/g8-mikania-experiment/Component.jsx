@@ -4,9 +4,8 @@
  * 使用 AssessmentPageFrame 统一框架接入
  */
 
-import { createContext, useContext, useReducer, useEffect, useMemo, useCallback, useRef } from 'react';
+import { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from 'react';
 import { AssessmentPageFrame } from '@/shared/ui/PageFrame';
-import { EventTypes } from '@/shared/services/submission/eventTypes';
 import { formatTimestamp } from '@/shared/services/dataLogger.js';
 import {
   getNextPageId,
@@ -14,7 +13,6 @@ import {
   getTotalSteps,
   getNavigationMode,
   getStepIndex,
-  isLastPage,
   PAGE_DESC_MAP,
   QUESTION_CODE_MAP,
   ANSWER_KEY_TO_QUESTION,
@@ -39,6 +37,14 @@ const STORAGE_KEYS = {
   noticeConfirmed: 'module.g8-mikania-experiment.noticeConfirmed',
 };
 
+const DEFAULT_EXPERIMENT_STATE = {
+  concentration: '0mg/ml',
+  days: 1,
+  hasStarted: false,
+  currentResult: null,
+  history: [],
+};
+
 // 导出给页面组件使用
 export { QUESTION_CODE_MAP, PAGE_DESC_MAP, ANSWER_KEY_TO_QUESTION };
 
@@ -50,6 +56,20 @@ const PAGE_QUESTIONS = {
   'page_04_q2_data': ['Q2_抑制作用浓度'],
   'page_05_q3_trend': ['Q3_发芽率趋势'],
   'page_06_q4_conc': ['Q4a_菟丝子有效性', 'Q4b_结论理由'],
+};
+
+const QUESTION_TEXT_MAP = {
+  Q1: '问题1：为什么在每组实验中，都要确保其他条件一致？',
+  Q2: '问题2：根据实验结果，哪种浓度的菟丝子提取液对薇甘菊种子萌发抑制作用最强？',
+  Q3: '问题3：随着菟丝子提取液浓度的增加，薇甘菊种子发芽率呈现出怎样的变化趋势？',
+  Q4a: '问题4a：菟丝子能否有效防治薇甘菊？',
+  Q4b: '问题4b：请说明你的理由',
+};
+
+const QUESTION_OPTIONS_MAP = {
+  Q2: { A: '5mg/ml', B: '7.5mg/ml', C: '10mg/ml' },
+  Q3: { A: '下降', B: '上升', C: '先上升后下降' },
+  Q4a: { A: '是', B: '否' },
 };
 
 // ========================================
@@ -82,10 +102,7 @@ const createInitialState = (initialPageId) => ({
     Q4b_结论理由: null,
   },
   experimentState: {
-    concentration: '0mg/ml',
-    days: 1,
-    hasStarted: false,
-    currentResult: null,
+    ...DEFAULT_EXPERIMENT_STATE,
   },
   noticeConfirmed: false,
   noticeCountdown: 38,
@@ -106,7 +123,7 @@ export function validatePage(pageId, state) {
     case 'page_02_step_q1':
       return state.answers.Q1_控制变量原因?.length >= 5;
     case 'page_03_sim_exp':
-      return state.experimentState?.hasStarted === true;
+      return Array.isArray(state.experimentState?.history) && state.experimentState.history.length > 0;
     case 'page_04_q2_data':
       return ['A', 'B', 'C'].includes(state.answers.Q2_抑制作用浓度);
     case 'page_05_q3_trend':
@@ -134,7 +151,7 @@ export function getMissingFields(pageId, state) {
       }
       break;
     case 'page_03_sim_exp':
-      if (!state.experimentState?.hasStarted) {
+      if (!Array.isArray(state.experimentState?.history) || state.experimentState.history.length === 0) {
         missing.push('未完成实验操作');
       }
       break;
@@ -286,18 +303,33 @@ function PageRouter({ currentPageId }) {
 // Frame Wrapper Component
 // ========================================
 
-function MikaniaExperimentFrame({ userContext, flowContext, options }) {
+function MikaniaExperimentFrame({ userContext, flowContext }) {
   const {
     state,
-    actions,
     navigateToPage,
+    logOperation,
   } = useMikaniaExperiment();
 
   const currentPageId = state.currentPageId;
   const subPageNum = getPageSubNum(currentPageId);
+  const flowStepIndex = flowContext?.stepIndex;
+  // 始终使用子模块内部的 stepIndex 用于导航高亮，不受 Flow 全局 stepIndex 影响
   const stepIndex = getStepIndex(currentPageId);
+  const pageNumber = useMemo(() => {
+    return typeof flowStepIndex === 'number'
+      ? `${flowStepIndex}.${subPageNum}`
+      : String(subPageNum);
+  }, [flowStepIndex, subPageNum]);
   const totalSteps = getTotalSteps();
   const navigationMode = getNavigationMode(currentPageId);
+
+  // 同步当前页面的进度到 Flow 框架（组件加载时和页面变化时）
+  useEffect(() => {
+    if (flowContext?.updateModuleProgress) {
+      console.log(`[g8-mikania-experiment] Syncing progress to Flow: page ${currentPageId}, subPageNum ${subPageNum}`);
+      flowContext.updateModuleProgress(subPageNum);
+    }
+  }, [currentPageId, subPageNum, flowContext]);
 
   // Validate page before proceeding
   const canProceed = useMemo(() => {
@@ -309,7 +341,7 @@ function MikaniaExperimentFrame({ userContext, flowContext, options }) {
     return PAGE_DESC_MAP[pageId] || '未知页面';
   }, []);
 
-  // Collect answers with simple page number prefix
+  // Collect answers for current page
   const collectAnswers = useCallback(() => {
     const questionKeys = PAGE_QUESTIONS[currentPageId] || [];
     const answerList = [];
@@ -319,17 +351,54 @@ function MikaniaExperimentFrame({ userContext, flowContext, options }) {
       if (value !== null && value !== undefined && value !== '') {
         const questionId = ANSWER_KEY_TO_QUESTION[key];
         const code = QUESTION_CODE_MAP[questionId];
+        const questionText = QUESTION_TEXT_MAP[questionId] || questionId || key;
+        const options = QUESTION_OPTIONS_MAP[questionId];
+
+        let formattedValue = value;
+
+        if (options) {
+          let optionLabel = null;
+
+          if (typeof value === 'string' && options[value]) {
+            optionLabel = value;
+          } else if (typeof value === 'string') {
+            const matchedEntry = Object.entries(options).find(([, optionText]) => optionText === value);
+            if (matchedEntry) {
+              optionLabel = matchedEntry[0];
+            }
+          }
+
+          formattedValue = optionLabel ? `${optionLabel}. ${options[optionLabel]}` : (typeof value === 'string' ? value : String(value));
+        }
 
         answerList.push({
           code,
-          targetElement: `P${subPageNum}_${questionId}`,
-          value: String(value),
+          targetElement: questionText,
+          value: formattedValue,
         });
       }
     });
 
+    if (currentPageId === 'page_03_sim_exp') {
+      const runs = Array.isArray(state.experimentState?.history) ? state.experimentState.history : [];
+      if (runs.length > 0) {
+        answerList.push({
+          code: 1,
+          targetElement: `P${pageNumber}_实验历史`,
+          value: JSON.stringify({
+            runs: runs.map(({ concentration, days, germinationRate, timestamp }) => ({
+              concentration,
+              days,
+              germinationRate,
+              timestamp,
+            })),
+          }),
+        });
+      }
+    }
+
     return answerList;
-  }, [currentPageId, state.answers, subPageNum]);
+  }, [currentPageId, state.answers, pageNumber, state.experimentState]);
 
   // Submission config for Frame
   const submissionConfig = useMemo(() => {
@@ -350,7 +419,7 @@ function MikaniaExperimentFrame({ userContext, flowContext, options }) {
       const answerList = collectAnswers();
 
       return {
-        pageNumber: String(subPageNum),
+        pageNumber,
         pageDesc,
         operationList: state.operations,
         answerList,
@@ -374,8 +443,9 @@ function MikaniaExperimentFrame({ userContext, flowContext, options }) {
       buildMark,
       getFlowContext,
       allowProceedOnFailureInDev: true,
+      logOperation,
     };
-  }, [userContext, flowContext, currentPageId, subPageNum, state.operations, state.pageEnterTime, buildPageDesc, collectAnswers]);
+  }, [userContext, flowContext, currentPageId, pageNumber, state.operations, state.pageEnterTime, buildPageDesc, collectAnswers, logOperation]);
 
   // Navigate to next page
   const goToNextPage = useCallback(() => {
@@ -440,7 +510,7 @@ function MikaniaExperimentFrame({ userContext, flowContext, options }) {
   // Page metadata
   const pageMeta = {
     pageId: currentPageId,
-    pageNumber: String(subPageNum),
+    pageNumber,
     pageDesc: buildPageDesc(currentPageId),
   };
 
@@ -449,6 +519,7 @@ function MikaniaExperimentFrame({ userContext, flowContext, options }) {
 
   return (
     <AssessmentPageFrame
+      pageId={currentPageId}
       navigationMode={navigationMode}
       currentStep={stepIndex}
       totalSteps={totalSteps}
@@ -506,7 +577,12 @@ function MikaniaExperimentComponent({
         if (parsedExperimentState && typeof parsedExperimentState === 'object') {
           dispatch({
             type: ACTION_TYPES.RESTORE_STATE,
-            payload: { experimentState: parsedExperimentState },
+            payload: {
+              experimentState: {
+                ...DEFAULT_EXPERIMENT_STATE,
+                ...parsedExperimentState,
+              },
+            },
           });
         }
       }
@@ -615,7 +691,6 @@ function MikaniaExperimentComponent({
       <MikaniaExperimentFrame
         userContext={userContext}
         flowContext={flowContext}
-        options={options}
       />
     </MikaniaExperimentContext.Provider>
   );

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 import imgBefore from '../assets/images/05-1.png';
 import imgAfter from '../assets/images/05-2.png';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import TextInput from '../components/common/TextInput';
 import NavigationButton from '../components/common/NavigationButton';
 
@@ -12,44 +13,49 @@ import NavigationButton from '../components/common/NavigationButton';
  * 
  * @returns {React.ReactElement} 方案设计测量方法构思页面
  */
+const DEFAULT_IDEAS = {
+  idea1: '',
+  idea2: '',
+  idea3: ''
+};
+
+const DEFAULT_INPUT_STATE = {
+  idea1: { focused: false, lastValue: '' },
+  idea2: { focused: false, lastValue: '' },
+  idea3: { focused: false, lastValue: '' }
+};
+
 const Page_11_Solution_Design_Measurement_Ideas = () => {
   const {
     navigateToPage,
-    submitPageData,
     currentPageId,
     setPageEnterTime
   } = useAppContext();
+  const { submitPage, logOperation } = usePageSubmissionContext();
   
-  // 数据记录Hook
-  const {
-    logInput,
-    logInputBlur,
-    logButtonClick,
-    logPageEnter,
-    collectDirectAnswer
-  } = useDataLogging('Page_11_Solution_Design_Measurement_Ideas');
-  
-  const [ideas, setIdeas] = useState({
-    idea1: '',
-    idea2: '',
-    idea3: ''
-  });
+  const [ideas, setIdeas] = useState(() => ({ ...DEFAULT_IDEAS }));
   const [isNextEnabled, setIsNextEnabled] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
-  const prevIdeasRef = useRef({});
+  const operationsRef = useRef([]);
+  const inputStatesRef = useRef({ ...DEFAULT_INPUT_STATE });
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
 
   // 页面进入记录 - 只执行一次
   useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      setPageEnterTime(new Date());
-      logPageEnter('方案设计测量方法构思页面');
-    }
-  }, []);
+    if (pageLoadedRef.current) return;
+    pageLoadedRef.current = true;
+    operationsRef.current = [];
+    inputStatesRef.current = { ...DEFAULT_INPUT_STATE };
+    setPageEnterTime(new Date());
+  }, [setPageEnterTime]);
 
   // 缓存是否启用下一页按钮的计算
   const hasAtLeastOneIdea = useMemo(() => {
@@ -67,51 +73,99 @@ const Page_11_Solution_Design_Measurement_Ideas = () => {
    * 处理想法输入变化
    */
   const handleIdeaChange = useCallback((key, value) => {
+    const prevValue = inputStatesRef.current[key]?.lastValue || '';
+    const nextValue = value;
+
     setIdeas(prev => ({
       ...prev,
-      [key]: value
+      [key]: nextValue
     }));
     
-    // 记录输入操作
-    const ideaNumber = key.replace('idea', '');
-    logInput(`想法${ideaNumber}输入框`, value);
-  }, [logInput]);
+    if (nextValue.length < prevValue.length) {
+      recordOperation({
+        eventType: EventTypes.INPUT_DELETE,
+        targetElement: `input_${key}`,
+        value: { action: 'delete', prevLength: prevValue.length, nextLength: nextValue.length }
+      });
+    }
+
+    recordOperation({
+      eventType: EventTypes.INPUT_CHANGE,
+      targetElement: `input_${key}`,
+      value: { prev: prevValue, next: nextValue }
+    });
+
+    inputStatesRef.current[key] = {
+      ...(inputStatesRef.current[key] || { focused: false, lastValue: '' }),
+      lastValue: nextValue
+    };
+  }, [recordOperation]);
+
+  /**
+   * 处理输入框聚焦
+   */
+  const handleInputFocus = useCallback((inputKey) => {
+    const currentState = inputStatesRef.current[inputKey] || { focused: false, lastValue: '' };
+
+    if (!currentState.focused) {
+      recordOperation({
+        eventType: EventTypes.INPUT_FOCUS,
+        targetElement: `input_${inputKey}`,
+        value: '聚焦'
+      });
+    }
+
+    inputStatesRef.current[inputKey] = {
+      ...currentState,
+      focused: true,
+      lastValue: ideas[inputKey] || ''
+    };
+  }, [ideas, recordOperation]);
 
   /**
    * 处理输入框失焦
    */
   const handleInputBlur = useCallback((inputKey) => {
-    const value = ideas[inputKey];
-    const ideaNumber = inputKey.replace('idea', '');
-    
-    // 使用缓存机制避免重复提交相同答案
-    const currentIdeas = JSON.stringify(ideas);
-    const prevIdeas = JSON.stringify(prevIdeasRef.current);
-    
-    if (currentIdeas !== prevIdeas) {
-      prevIdeasRef.current = { ...ideas };
-      logInputBlur(`想法${ideaNumber}输入框`, value, `想法${ideaNumber}答案`);
-    }
-  }, [ideas, logInputBlur]);
+    const value = ideas[inputKey] || '';
+
+    recordOperation({
+      eventType: EventTypes.INPUT_BLUR,
+      targetElement: `input_${inputKey}`,
+      value
+    });
+
+    inputStatesRef.current[inputKey] = {
+      ...(inputStatesRef.current[inputKey] || { focused: false, lastValue: '' }),
+      focused: false,
+      lastValue: value
+    };
+  }, [ideas, recordOperation]);
   
   const handleNextPage = useCallback(async () => {
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: isNextEnabled ? '提交测量方法构思' : '点击失败 - 未至少输入一个想法'
+    });
+
     if (!isNextEnabled) {
       setAlertMessage('请至少输入一种测量方法构思。');
       setShowAlert(true);
-      logButtonClick('下一页', '点击失败 - 未至少输入一个想法');
       return false;
     }
 
-    logButtonClick('下一页', '点击成功');
+    const answers = Object.entries(ideas).map(([key, value]) => {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      const index = parseInt(key.replace('idea', ''), 10);
+      const targetElement = Number.isFinite(index) ? `measurement_idea_${index}` : `measurement_idea_${key}`;
+      return { targetElement, value: trimmed };
+    }).filter(Boolean);
     
-    // 收集所有非空想法作为答案
-    Object.entries(ideas).forEach(([key, value], index) => {
-      if (value.trim()) {
-        collectDirectAnswer(`测量方法想法${index + 1}`, value.trim());
-      }
+    const submissionSuccess = await submitPage({
+      answers,
+      operations: operationsRef.current,
     });
-    
-    const submissionSuccess = await submitPageData();
     if (submissionSuccess) {
       navigateToPage('Page_12_Solution_Evaluation_Measurement_Critique', { skipSubmit: true });
       return true;
@@ -120,7 +174,7 @@ const Page_11_Solution_Design_Measurement_Ideas = () => {
       setShowAlert(true);
       return false;
     }
-  }, [isNextEnabled, logButtonClick, ideas, collectDirectAnswer, submitPageData, navigateToPage]);
+  }, [ideas, isNextEnabled, navigateToPage, recordOperation, submitPage]);
   
   // 缓存想法配置数据
   const ideasConfig = useMemo(() => [
@@ -261,6 +315,7 @@ const Page_11_Solution_Design_Measurement_Ideas = () => {
               isMultiline={true}
               elementDesc={ideaItem.desc}
               rows={2}
+              onFocus={() => handleInputFocus(ideaItem.key)}
               onBlur={() => handleInputBlur(ideaItem.key)}
               style={{
                 width: '240px',

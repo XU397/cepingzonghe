@@ -1,0 +1,62 @@
+{
+  "pageNumber": "0.4",
+  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/0] 自由探索实验",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "page",
+      "eventType": "page_enter",
+      "value": "Page04_ExperimentFree",
+      "time": "2025-02-01 09:09:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "flow_context",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"g8-assessment-flow\",\"stepIndex\":0,\"submoduleId\":\"g8-drone-imaging\",\"moduleName\":\"g8-drone-imaging\",\"pageId\":\"experiment_free\"}",
+      "time": "2025-02-01 09:09:00"
+    },
+    {
+      "code": 3,
+      "targetElement": "height_button_100",
+      "eventType": "simulation_operation",
+      "value": {
+        "action": "set_height",
+        "value": 100
+      },
+      "time": "2025-02-01 09:09:04"
+    },
+    {
+      "code": 4,
+      "targetElement": "next_button",
+      "eventType": "next_click",
+      "value": "attempt_next",
+      "time": "2025-02-01 09:09:05"
+    },
+    {
+      "code": 5,
+      "targetElement": "next_button",
+      "eventType": "click_blocked",
+      "value": "{\"reason\":\"no_experiment_capture\",\"missing\":[\"experiment_captures\"]}",
+      "time": "2025-02-01 09:09:05"
+    },
+    {
+      "code": 6,
+      "targetElement": "page",
+      "eventType": "page_exit",
+      "value": "Page04_ExperimentFree",
+      "time": "2025-02-01 09:09:05"
+    },
+    {
+      "code": 7,
+      "targetElement": "flow_context",
+      "eventType": "page_submit_success",
+      "value": "{\"pageNumber\":\"0.4\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/0] 自由探索实验\",\"auto_submit\":false,\"blocked\":true}",
+      "time": "2025-02-01 09:09:05"
+    }
+  ],
+  "answerList": [],
+  "beginTime": "2025-02-01 09:09:00",
+  "endTime": "2025-02-01 09:09:05",
+  "imgList": []
+}

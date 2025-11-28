@@ -1,0 +1,19 @@
+{
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_06_q4_conc",
+      "time": "2025-11-22 10:05:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "提交按钮",
+      "eventType": "click_blocked",
+      "value": "{\"reason\":\"validation_failed\",\"missing\":[\"Q4a_菟丝子有效性\",\"Q4b_结论理由\"]}",
+      "time": "2025-11-22 10:05:05"
+    }
+  ],
+  "answerList": []
+}

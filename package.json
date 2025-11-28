@@ -7,11 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint:submission": "eslint src/shared/services/submission --ext js,jsx,ts,tsx --config .eslintrc.submission-rules.json --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:submission-format": "vitest run src/shared/services/submission/__tests__/submission-format.snapshot.test.js",
+    "test:submission": "vitest run src/shared/services/submission/__tests__"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
@@ -22,7 +25,8 @@
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.7.1",
-    "recharts": "^2.15.4"
+    "recharts": "^2.15.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",
@@ -34,6 +38,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/parser": "^8.47.0",
     "@vitejs/plugin-react": "^4.0.3",
     "chrome-devtools-mcp": "^0.10.1",
     "eslint": "^8.45.0",

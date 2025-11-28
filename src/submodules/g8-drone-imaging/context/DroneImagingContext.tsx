@@ -1,7 +1,17 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
-import { PageId, getPageConfig } from '../mapping';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  ReactNode,
+  useRef,
+} from 'react';
+import { PageId } from '../mapping';
 import { Height, FocalLength, lookupGSD, calculateBlurAmount } from '../utils/gsdLookup';
 import { EventTypes } from '@shared/services/submission/eventTypes';
+import { encodeCompositePageNum } from '@shared/utils/pageMapping';
 
 // Event type values from eventTypes.js
 export type EventType = typeof EventTypes[keyof typeof EventTypes];
@@ -13,6 +23,10 @@ export interface Operation {
   eventType: string;
   value: string;
   time: string;
+}
+
+export interface AnswerRecord {
+  value: string;
 }
 
 // Capture record for experiment history
@@ -38,10 +52,13 @@ export interface ExperimentState {
 export interface DroneImagingContextValue {
   // State
   currentPageId: PageId;
-  answers: Record<string, string>;
+  answers: Record<string, AnswerRecord>;
   operations: Operation[];
   experimentState: ExperimentState;
   pageStartTime: string;
+  stepIndex: number;
+  questionIds: ReturnType<typeof buildQuestionIdMap>;
+  getPagePrefix: (subPageNum: number) => string;
 
   // Navigation
   navigateToPage: (pageId: PageId) => void;
@@ -118,12 +135,73 @@ const DroneImagingContext = createContext<DroneImagingContextValue | null>(null)
 interface DroneImagingProviderProps {
   children: ReactNode;
   initialPageId?: PageId;
+  stepIndex?: number;
+  flowContext?: {
+    flowId: string;
+    submoduleId: string;
+    moduleName?: string;
+  };
 }
 
+// 生成页面元素前缀
+export const getPagePrefix = (subPageNum: number, stepIndex: number) => {
+  const pageNumber = encodeCompositePageNum(stepIndex, subPageNum);
+  return `P${pageNumber}_`;
+};
+
+export const buildQuestionIdMap = (stepIndex: number) => ({
+  confirmRead: `${getPagePrefix(1, stepIndex)}确认阅读`,
+  controlVariableReason: `${getPagePrefix(3, stepIndex)}控制变量理由`,
+  minGsdFocal: `${getPagePrefix(5, stepIndex)}最小GSD焦距`,
+  gsdTrend: `${getPagePrefix(6, stepIndex)}GSD变化趋势`,
+  priorityFactor: `${getPagePrefix(7, stepIndex)}优先调整因素`,
+  priorityReason: `${getPagePrefix(7, stepIndex)}理由说明`,
+  experimentCaptures: 'experiment_captures',
+});
+
 // Provider component
-export function DroneImagingProvider({ children, initialPageId }: DroneImagingProviderProps) {
+export function DroneImagingProvider({ children, initialPageId, stepIndex: stepIndexProp, flowContext }: DroneImagingProviderProps) {
   // Track if initial load has been completed
   const initialLoadComplete = useRef(false);
+  const flowContextInjected = useRef(false);
+
+  const stepIndex = typeof stepIndexProp === 'number' ? stepIndexProp : 0;
+  const questionIds = useMemo(() => buildQuestionIdMap(stepIndex), [stepIndex]);
+  const getPagePrefixMemo = useCallback((subPageNum: number) => getPagePrefix(subPageNum, stepIndex), [stepIndex]);
+
+  const migrateLegacyAnswers = useCallback(
+    (source: Record<string, string | AnswerRecord> | null | undefined) => {
+      if (!source) return {} as Record<string, AnswerRecord>;
+
+      const migrated: Record<string, AnswerRecord> = {};
+      Object.entries(source).forEach(([key, value]) => {
+        const answerValue = typeof value === 'string' ? value : value?.value ?? '';
+        migrated[key] = { value: answerValue };
+      });
+      const legacyMap = {
+        confirmRead: 'P1_确认阅读',
+        controlVariableReason: 'P3_控制变量理由',
+        minGsdFocal: 'P5_最小GSD焦距',
+        gsdTrend: 'P6_GSD变化趋势',
+        priorityFactor: 'P7_优先调整因素',
+        priorityReason: 'P7_理由说明',
+      } as const;
+
+      (Object.keys(legacyMap) as Array<keyof typeof legacyMap>).forEach((key) => {
+        const legacyId = legacyMap[key];
+        const nextId = questionIds[key];
+        if (legacyId in migrated) {
+          if (!(nextId in migrated)) {
+            migrated[nextId] = migrated[legacyId];
+          }
+          delete migrated[legacyId];
+        }
+      });
+
+      return migrated;
+    },
+    [questionIds],
+  );
 
   // Determine initial page: prop takes precedence, then try localStorage
   const getInitialPage = (): PageId => {
@@ -147,11 +225,12 @@ export function DroneImagingProvider({ children, initialPageId }: DroneImagingPr
 
   // State - initialize with restored values
   const [currentPageId, setCurrentPageId] = useState<PageId>(getInitialPage);
-  const [answers, setAnswers] = useState<Record<string, string>>(() => {
+  const [answers, setAnswers] = useState<Record<string, AnswerRecord>>(() => {
     try {
       const savedAnswers = localStorage.getItem(STORAGE_KEYS.ANSWERS);
       if (savedAnswers) {
-        return JSON.parse(savedAnswers);
+        const parsed = JSON.parse(savedAnswers);
+        return migrateLegacyAnswers(parsed);
       }
     } catch (e) {
       console.warn('[DroneImagingContext] Failed to load answers from storage:', e);
@@ -201,7 +280,10 @@ export function DroneImagingProvider({ children, initialPageId }: DroneImagingPr
   // Answer management
   const setAnswer = useCallback((questionId: string, value: string) => {
     setAnswers(prev => {
-      const updated = { ...prev, [questionId]: value };
+      const updatedRecord: AnswerRecord = {
+        value,
+      };
+      const updated = { ...prev, [questionId]: updatedRecord };
       // Auto-save to storage
       try {
         localStorage.setItem(STORAGE_KEYS.ANSWERS, JSON.stringify(updated));
@@ -213,7 +295,12 @@ export function DroneImagingProvider({ children, initialPageId }: DroneImagingPr
   }, []);
 
   const getAnswer = useCallback((questionId: string): string | undefined => {
-    return answers[questionId];
+    const record = answers[questionId] as AnswerRecord | string | undefined;
+    if (!record) return undefined;
+    if (typeof record === 'string') {
+      return record;
+    }
+    return record.value;
   }, [answers]);
 
   // Operation logging
@@ -224,7 +311,33 @@ export function DroneImagingProvider({ children, initialPageId }: DroneImagingPr
         code: nextCode,
         ...op,
       };
-      return [...prev, operation];
+      const newOperations = [...prev, operation];
+
+      // Auto-inject flow_context after first page_enter (if in Flow mode)
+      if (
+        op.eventType === EventTypes.PAGE_ENTER &&
+        op.targetElement === 'page' &&
+        flowContext &&
+        !flowContextInjected.current
+      ) {
+        const flowContextOp: Operation = {
+          code: nextCode + 1,
+          targetElement: 'flow_context',
+          eventType: EventTypes.FLOW_CONTEXT,
+          value: JSON.stringify({
+            flowId: flowContext.flowId,
+            stepIndex,
+            submoduleId: flowContext.submoduleId,
+            moduleName: flowContext.moduleName || 'g8-drone-imaging',
+            pageId: currentPageId,
+          }),
+          time: formatDateTime(new Date()),
+        };
+        flowContextInjected.current = true;
+        return [...newOperations, flowContextOp];
+      }
+
+      return newOperations;
     });
 
     // Update operation count in experiment state
@@ -232,7 +345,7 @@ export function DroneImagingProvider({ children, initialPageId }: DroneImagingPr
       ...prev,
       operationCount: prev.operationCount + 1,
     }));
-  }, []);
+  }, [flowContext, stepIndex, currentPageId]);
 
   const clearOperations = useCallback(() => {
     setOperations([]);
@@ -325,7 +438,8 @@ export function DroneImagingProvider({ children, initialPageId }: DroneImagingPr
       // Load answers
       const savedAnswers = localStorage.getItem(STORAGE_KEYS.ANSWERS);
       if (savedAnswers) {
-        setAnswers(JSON.parse(savedAnswers));
+        const parsed = JSON.parse(savedAnswers);
+        setAnswers(migrateLegacyAnswers(parsed));
       }
 
       // Load experiment history
@@ -358,6 +472,9 @@ export function DroneImagingProvider({ children, initialPageId }: DroneImagingPr
     operations,
     experimentState,
     pageStartTime,
+    stepIndex,
+    questionIds,
+    getPagePrefix: getPagePrefixMemo,
 
     // Navigation
     navigateToPage,

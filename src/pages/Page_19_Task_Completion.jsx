@@ -1,8 +1,8 @@
 import React, { useEffect, useCallback, useRef } from 'react';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import NavigationButton from '../components/common/NavigationButton';
-import { pageInfoMapping } from '../utils/pageMappings';
 import styles from './Page_19_Task_Completion.module.css';
 
 /**
@@ -12,26 +12,23 @@ import styles from './Page_19_Task_Completion.module.css';
  */
 const Page_19_Task_Completion = () => {
   const { 
-    submitPageData, 
     currentPageId, 
     navigateToPage, 
     setIsTaskFinished,
-    setPageEnterTime,
-    batchCode,
-    examNo,
-    formatDateTime,
-    currentPageData
+    setPageEnterTime
   } = useAppContext();
-
-  // 数据记录Hook
-  const {
-    logButtonClick,
-    logPageEnter
-  } = useDataLogging('Page_19_Task_Completion');
+  const { submitPage, logOperation } = usePageSubmissionContext();
 
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
-  const dataSubmittedRef = useRef(false);
+  const operationsRef = useRef([]);
+  const isSubmittingRef = useRef(false);
+
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
 
   // 页面进入记录 - 只执行一次（提交由按钮触发，避免重复）
   useEffect(() => {
@@ -39,16 +36,24 @@ const Page_19_Task_Completion = () => {
       pageLoadedRef.current = true;
       const enterTime = new Date();
       setPageEnterTime(enterTime);
-      logPageEnter('主任务完成页面');
+      operationsRef.current = [];
     }
-  }, []);
+  }, [setPageEnterTime]);
 
   /**
    * 处理下一页按钮点击
    */
   const handleNextPage = useCallback(async () => {
-    // 记录按钮点击操作
-    logButtonClick('继续完成问卷调查', '跳转到问卷调查页面');
+    if (isSubmittingRef.current) {
+      return false;
+    }
+    isSubmittingRef.current = true;
+
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: '进入问卷调查'
+    });
     
     // 设置任务完成状态，停止任务计时器
     console.log("[Page_19_Task_Completion] 设置任务完成状态，停止测评计时器");
@@ -63,21 +68,24 @@ const Page_19_Task_Completion = () => {
     } else {
       console.warn("[Page_19_Task_Completion] setIsTaskFinished is not defined or not a function.");
     }
-    
-    // 提交页面数据（标记为来自按钮）
-    const submissionSuccess = await submitPageData({ isFromButton: true });
+
+    const submissionSuccess = await submitPage({
+      answers: [{ targetElement: 'task_completion_ack', value: 'true' }],
+      operations: operationsRef.current,
+    });
 
     if (submissionSuccess) {
       console.log("[Page_19_Task_Completion] 页面数据提交成功，跳转到问卷说明页面");
-      navigateToPage('Page_20_Questionnaire_Intro', { skipSubmit: true }); 
-    } else {
-      console.error('Page_19_Task_Completion: 提交页面数据失败');
-      alert('数据提交失败，请稍后再试。');
-      return false;
+      await navigateToPage('Page_20_Questionnaire_Intro', { skipSubmit: true }); 
+      isSubmittingRef.current = false;
+      return true;
     }
-    
-    return submissionSuccess;
-  }, [logButtonClick, setIsTaskFinished, submitPageData, navigateToPage]);
+
+    console.error('Page_19_Task_Completion: 提交页面数据失败');
+    alert('数据提交失败，请稍后再试。');
+    isSubmittingRef.current = false;
+    return false;
+  }, [navigateToPage, recordOperation, setIsTaskFinished, submitPage]);
 
   return (
     <div className={`page-container ${styles.pageContainer} page-fade-in`}>

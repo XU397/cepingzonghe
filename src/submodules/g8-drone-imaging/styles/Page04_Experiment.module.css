@@ -88,22 +88,131 @@
   font-size: 14px;
 }
 
-/* Inline icon images in instructions */
-.inlineIcon {
-  height: 26px;
+/* ========================================
+   内联样式 - 模拟控件外观
+   ======================================== */
+
+/* 橙色高度选择框 */
+.sampleHeight {
+  display: inline-block;
+  padding: 4px 12px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #ffe0b2, #ffcc80);
+  border-radius: 6px;
+  color: #bf5f00;
+  font-weight: bold;
+  font-size: 13px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   vertical-align: middle;
+}
+
+/* 向上箭头按钮 - 红色 */
+.arrowBtnUp {
+  display: inline-block;
+  width: 20px;
+  height: 16px;
   margin: 0 2px;
+  background: linear-gradient(to bottom, #ff6b6b, #ee5a52);
+  color: white;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+/* 向下箭头按钮 - 蓝色 */
+.arrowBtnDown {
+  display: inline-block;
+  width: 20px;
+  height: 16px;
+  margin: 0 2px;
+  background: linear-gradient(to bottom, #4fc3f7, #039be5);
+  color: white;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+/* 拍照按钮 - 绿色圆角 */
+.sampleCapture {
+  display: inline-block;
+  padding: 4px 16px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #81c784, #4caf50);
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  box-shadow: 0 3px 0 #388e3c;
+  vertical-align: middle;
+}
+
+/* 绿色GSD显示框 */
+.sampleGSD {
+  display: inline-block;
+  padding: 4px 12px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #dcedc8, #c5e1a5);
+  border-radius: 8px;
+  color: #2e7d32;
+  font-weight: 900;
+  font-size: 14px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  vertical-align: middle;
+}
+
+/* 重置按钮 - 橙红色圆角 */
+.sampleReset {
+  display: inline-block;
+  padding: 4px 16px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #ffab91, #ff7043);
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  box-shadow: 0 3px 0 #e64a19;
+  vertical-align: middle;
 }
 
 /* Error message */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-10px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
 .errorMessage {
   color: #d32f2f;
-  font-size: 13px;
-  margin-bottom: 16px;
+  font-size: 16px;
+  margin-top: 30px;
   padding: 8px 12px;
   background: #ffebee;
   border-radius: 6px;
   border-left: 3px solid #d32f2f;
+  animation: shake 0.6s ease-in-out;
 }
 
 /* Right panel - Experiment unit container */

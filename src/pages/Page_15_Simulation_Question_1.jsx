@@ -4,8 +4,9 @@
  * PRD User_Step_Number_PDF_Ref: 9
  */
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import NavigationButton from '../components/common/NavigationButton';
 import InteractiveSimulationEnvironment from '../components/simulation/InteractiveSimulationEnvironment';
 import RadioButtonGroup from '../components/common/RadioButtonGroup'; // 通用单选按钮组
@@ -21,36 +22,33 @@ const P15_Q1_OPTIONS = [
 const Page_15_Simulation_Question_1 = () => {
   const {
     navigateToPage,
-    submitPageData,
     currentPageId,
     setPageEnterTime,
-    collectAnswer,
   } = useAppContext();
-
-  // 数据记录Hook
-  const {
-    logRadioSelect,
-    logButtonClick,
-    logPageEnter,
-    collectDirectAnswer
-  } = useDataLogging('Page_15_Simulation_Question_1');
+  const { submitPage, logOperation } = usePageSubmissionContext();
 
   const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [timingSelection, setTimingSelection] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const alertMessage = '请先选择一个选项。';
 
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
   const prevAnswerRef = useRef(null);
+  const operationsRef = useRef([]);
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
 
   // 页面进入记录 - 只执行一次
   useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      setPageEnterTime(new Date());
-      logPageEnter('模拟实验问题1页面');
-    }
-  }, []);
+    if (pageLoadedRef.current) return;
+    pageLoadedRef.current = true;
+    operationsRef.current = [];
+    setPageEnterTime(new Date());
+  }, [setPageEnterTime]);
 
   // 缓存是否禁用下一页按钮的计算
   const isDisabled = useMemo(() => {
@@ -66,11 +64,15 @@ const Page_15_Simulation_Question_1 = () => {
       setSelectedAnswer(value);
       prevAnswerRef.current = value;
       
-      logRadioSelect('模拟实验问题1', `${value}°C`, '发酵3小时后体积最大温度');
+      recordOperation({
+        eventType: EventTypes.SELECT_CHANGE,
+        targetElement: 'simulation_q1_option',
+        value: `${value}°C`,
+      });
       
       if (showAlert) setShowAlert(false);
     }
-  }, [logRadioSelect, showAlert]);
+  }, [recordOperation, showAlert]);
 
   /**
    * 处理下一页按钮点击
@@ -78,35 +80,51 @@ const Page_15_Simulation_Question_1 = () => {
   const handleNextPage = useCallback(async () => {
     if (selectedAnswer === null) {
       setShowAlert(true);
-      logButtonClick('下一页', '点击失败 - 未选择答案');
+      recordOperation({
+        eventType: EventTypes.CLICK_BLOCKED,
+        targetElement: 'btn_next',
+        value: { reason: '未选择答案', missing: ['simulation_q1'] },
+      });
       return false;
     }
 
     setShowAlert(false);
-    logButtonClick('下一页', '点击成功');
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: '提交模拟实验问题1',
+    });
 
-    // 收集答案
-    collectDirectAnswer('发酵3小时后体积最大的温度', `${selectedAnswer}°C`);
-
-    const submissionSuccess = await submitPageData();
-    if (submissionSuccess) {
-      navigateToPage('Page_16_Simulation_Question_2', { skipSubmit: true });
-      return true;
-    } else {
-      alert('数据提交失败，请重试。'); 
-      return false;
+    const answers = [
+      { targetElement: '发酵3小时后体积最大的温度', value: `${selectedAnswer}°C` },
+    ];
+    if (timingSelection !== null) {
+      answers.push({
+        targetElement: '模拟发酵时长选择_Q1',
+        value: `${timingSelection}小时`,
+      });
     }
-  }, [selectedAnswer, logButtonClick, collectDirectAnswer, submitPageData, navigateToPage]);
+
+    const submissionSuccess = await submitPage({
+      answers,
+      operations: operationsRef.current,
+    });
+    if (submissionSuccess) {
+      await navigateToPage('Page_16_Simulation_Question_2', { skipSubmit: true });
+      return true;
+    }
+
+    alert('数据提交失败，请重试。'); 
+    return false;
+  }, [navigateToPage, recordOperation, selectedAnswer, submitPage, timingSelection]);
 
   /**
    * 当模拟器开始计时时，记录所选时间
    */
   const handleTimingStart = useCallback((timeInHours) => {
-    collectAnswer({
-      targetElement: `模拟发酵时长选择_Q1`,
-      value: `${timeInHours}小时`,
-    });
-  }, [collectAnswer]);
+    setTimingSelection(timeInHours);
+    setShowAlert(false);
+  }, []);
   
   const AlertBox = ({ message, onClose }) => (
     <div style={{
@@ -138,7 +156,11 @@ const Page_15_Simulation_Question_1 = () => {
             backgroundColor: '#f1f8e9',
             boxShadow: '0 3px 10px rgba(0,0,0,0.08)'
         }}>
-          <InteractiveSimulationEnvironment onTimingStarted={handleTimingStart} /> 
+          <InteractiveSimulationEnvironment
+            onTimingStart={handleTimingStart}
+            onTimingStarted={handleTimingStart}
+            onLogOperation={recordOperation}
+          /> 
         </div>
 
         <div className="question-panel" style={{

@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import NavigationButton from '../components/common/NavigationButton';
 import TextInput from '../components/common/TextInput';
 import Button from '../components/common/Button'; // Generic button
@@ -16,6 +15,8 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 
 // Register Chart.js components
 ChartJS.register(
@@ -37,37 +38,22 @@ ChartJS.register(
 const TEMPERATURE_OPTIONS = simulationTableData.availableTemperatures.map(t => ({ label: `${t}°C`, value: String(t) }));
 // 当前页面专用的时间选项，包含0.5小时间隔
 const TIME_OPTIONS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8].map(t => ({ label: `${t}h`, value: String(t) }));
-const INITIAL_VOLUME_TARGET = simulationTableData.initialVolume * 1.5; // 105ml
 
 const Page_18_Solution_Selection = () => {
   const {
     navigateToPage,
-    submitPageData,
-    submitPageDataWithInfo,
     currentPageId,
     setPageEnterTime,
-    collectAnswer,
-    batchCode,
-    examNo,
-    currentPageData,
-    pageEnterTime,
-    formatDateTime,
   } = useAppContext();
-
-  // 数据记录Hook
-  const {
-    logInput,
-    logInputBlur,
-    logButtonClick,
-    logPageEnter,
-    logOperation // collectDirectAnswer 不再需要
-  } = useDataLogging('Page_18_Solution_Selection');
+  const { submitPage, logOperation } = usePageSubmissionContext();
 
   const [tableRows, setTableRows] = useState([]);
   const [reasonText, setReasonText] = useState('');
-  const [nextButtonDisabled, setNextButtonDisabled] = useState(true);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const operationsRef = useRef([]);
+  const pageLoadedRef = useRef(false);
+  const reasonInputStateRef = useRef({ focused: false, lastValue: '' });
 
   // Chart Data Preparation
   const chartLabels = simulationTableData.availableTimes.map(String);
@@ -138,34 +124,28 @@ const Page_18_Solution_Selection = () => {
     }
   };
 
-  // 页面进入记录 - 只执行一次，使用ref确保不重复执行
-  const pageLoadedRef = useRef(false);
-  useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      setPageEnterTime(new Date());
-      logPageEnter('方案选择页面');
-    }
-  }, []);
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
 
-  // Validation for enabling next button - 使用缓存优化避免过度渲染
-  const prevValidationRef = useRef({ tableRows: [], reasonText: '', disabled: true });
+  // 页面进入记录 - 只执行一次，使用ref确保不重复执行
   useEffect(() => {
-    const currentKey = `${JSON.stringify(tableRows)}_${reasonText}`;
-    const prevKey = `${JSON.stringify(prevValidationRef.current.tableRows)}_${prevValidationRef.current.reasonText}`;
-    
-    if (currentKey !== prevKey) {
-      const hasAtLeastOneRow = tableRows.length > 0;
-      const hasBestChoice = tableRows.some(row => row.isBest);
-      const reasonIsFilled = reasonText.trim().length > 0;
-      const newDisabled = !(hasAtLeastOneRow && hasBestChoice && reasonIsFilled);
-      
-      if (newDisabled !== prevValidationRef.current.disabled) {
-        setNextButtonDisabled(newDisabled);
-        prevValidationRef.current = { tableRows: [...tableRows], reasonText, disabled: newDisabled };
-      }
-    }
-  }, [tableRows, reasonText]);
+    if (pageLoadedRef.current) return;
+    pageLoadedRef.current = true;
+    operationsRef.current = [];
+    reasonInputStateRef.current = { focused: false, lastValue: '' };
+    setPageEnterTime(new Date());
+  }, [setPageEnterTime]);
+
+  const hasAtLeastOneRow = useMemo(() => tableRows.length > 0, [tableRows]);
+  const hasBestChoice = useMemo(() => tableRows.some((row) => row.isBest), [tableRows]);
+  const hasReason = useMemo(() => reasonText.trim().length > 0, [reasonText]);
+  const isNextDisabled = useMemo(
+    () => !(hasAtLeastOneRow && hasBestChoice && hasReason),
+    [hasAtLeastOneRow, hasBestChoice, hasReason],
+  );
 
   const generateUniqueId = () => `row_${new Date().getTime()}_${Math.random().toString(36).substr(2, 5)}`;
 
@@ -179,13 +159,13 @@ const Page_18_Solution_Selection = () => {
       time: TIME_OPTIONS[0].value, // Default to first time
       isBest: false
     };
-    setTableRows(prev => [...prev, newRow]);
-    
-    logOperation({
-      targetElement: '新增方案按钮',
-      eventType: 'click',
-      value: `新增第${tableRows.length + 1}行`
+    const nextIndex = tableRows.length + 1;
+    recordOperation({
+      targetElement: 'btn_add_solution_row',
+      eventType: EventTypes.CLICK,
+      value: `add_row_${nextIndex}`
     });
+    setTableRows(prev => [...prev, newRow]);
   };
 
   /**
@@ -196,10 +176,10 @@ const Page_18_Solution_Selection = () => {
     const rowIndex = tableRows.findIndex(row => row.id === id);
     setTableRows(prev => prev.filter(row => row.id !== id));
     
-    logOperation({
-      targetElement: '删除方案按钮',
-      eventType: 'click',
-      value: `删除第${rowIndex + 1}行`
+    recordOperation({
+      targetElement: 'btn_delete_solution_row',
+      eventType: EventTypes.CLICK,
+      value: rowIndex >= 0 ? `delete_row_${rowIndex + 1}` : 'delete_row'
     });
   };
 
@@ -210,23 +190,30 @@ const Page_18_Solution_Selection = () => {
    * @param {any} value - 新值
    */
   const handleRowDataChange = (id, field, value) => {
-    // 如果是设置最佳选项，需要确保只有一个是最佳的
-    if (field === 'isBest' && value) {
-      setTableRows(prev => prev.map(row => 
-        row.id === id ? { ...row, isBest: true } : { ...row, isBest: false }
-      ));
-    } else {
-      setTableRows(prev => prev.map(row => 
-        row.id === id ? { ...row, [field]: value } : row
-      ));
-    }
-    
+    setTableRows(prev => prev.map(row => {
+      if (row.id !== id) {
+        return field === 'isBest' && value ? { ...row, isBest: false } : row;
+      }
+      if (field === 'isBest') {
+        return { ...row, isBest: value };
+      }
+      return { ...row, [field]: value };
+    }));
+
     const rowIndex = tableRows.findIndex(row => row.id === id);
-    logOperation({
-      targetElement: `第${rowIndex + 1}行${field}选择`,
-      eventType: field === 'isBest' ? 'checkbox_check' : 'select',
-      value: field === 'isBest' ? (value ? '设为最佳' : '取消最佳') : value
-    });
+    if (field === 'isBest') {
+      recordOperation({
+        targetElement: `solution_row_${rowIndex + 1}_best`,
+        eventType: value ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
+        value: value ? 'set_best' : 'unset_best'
+      });
+    } else {
+      recordOperation({
+        targetElement: `solution_row_${rowIndex + 1}_${field}`,
+        eventType: EventTypes.SELECT_CHANGE,
+        value
+      });
+    }
   };
 
   /**
@@ -234,64 +221,95 @@ const Page_18_Solution_Selection = () => {
    * @param {string} value - 输入值
    */
   const handleReasonChange = (value) => {
-    setReasonText(value);
-    logInput('理由输入框', value);
+    const prev = reasonInputStateRef.current.lastValue || '';
+    const nextValue = value;
+
+    if (nextValue.length < prev.length) {
+      recordOperation({
+        eventType: EventTypes.INPUT_DELETE,
+        targetElement: 'solution_reason',
+        value: { action: 'delete', prevLength: prev.length, nextLength: nextValue.length }
+      });
+    }
+
+    recordOperation({
+      eventType: EventTypes.INPUT_CHANGE,
+      targetElement: 'solution_reason',
+      value: { prev, next: nextValue }
+    });
+
+    reasonInputStateRef.current.lastValue = nextValue;
+    setReasonText(nextValue);
+  };
+
+  const handleReasonFocus = () => {
+    if (reasonInputStateRef.current.focused) return;
+    recordOperation({
+      eventType: EventTypes.INPUT_FOCUS,
+      targetElement: 'solution_reason',
+      value: '聚焦'
+    });
+    reasonInputStateRef.current.focused = true;
   };
 
   /**
    * 处理理由输入框失焦
    */
   const handleReasonBlur = () => {
-    // 只记录操作，不自动收集答案，因为我们在提交时手动收集
-    logInput('理由输入框', reasonText);
+    recordOperation({
+      eventType: EventTypes.INPUT_BLUR,
+      targetElement: 'solution_reason',
+      value: reasonText
+    });
+    reasonInputStateRef.current = {
+      focused: false,
+      lastValue: reasonText
+    };
   };
 
   const handleNextPage = async () => {
-    if (nextButtonDisabled) {
-      setAlertMessage('请完成所有必填项：至少添加一个方案、选择一个最佳方案、填写理由。');
+    const missing = [];
+    if (!hasAtLeastOneRow) missing.push('solutions');
+    if (!hasBestChoice) missing.push('best_solution');
+    if (!hasReason) missing.push('reason');
+
+    if (missing.length > 0) {
+      setAlertMessage('请完成所有必填项：至少添加一个方案、选择一个最佳方案并填写理由。');
       setShowAlert(true);
-      logButtonClick('完成探究', '点击失败 - 表单不完整');
+      recordOperation({
+        eventType: EventTypes.CLICK_BLOCKED,
+        targetElement: 'btn_next',
+        value: { reason: 'incomplete', missing }
+      });
       return false;
     }
 
-    logButtonClick('完成探究', '点击成功');
-    
-    // 直接构建答案列表，不依赖状态更新
-    const answerList = [];
-    
-    // 收集表格中所有方案的数据
-    tableRows.forEach((row, index) => {
-      answerList.push({
-        code: index + 1,
-        targetElement: `方案${index + 1}`,
-        value: JSON.stringify({
-          序号: index + 1,
-          温度: `${row.temperature}°C`,
-          时间: `${row.time}小时`,
-          是否最佳: row.isBest ? '是' : '否',
-        }),
-      });
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: '提交方案选择'
     });
+    
+    const solutionRows = tableRows.map((row, index) => ({
+      index: index + 1,
+      temperature: `${row.temperature}°C`,
+      time: `${row.time}小时`,
+      isBest: Boolean(row.isBest),
+    }));
+    const bestSolutions = solutionRows.filter((row) => row.isBest);
 
-    // 收集理由
-    answerList.push({
-      code: tableRows.length + 1,
-      targetElement: '选择理由说明',
-      value: reasonText.trim(),
+    const answers = [
+      { targetElement: 'solution_combinations', value: JSON.stringify(solutionRows) },
+      { targetElement: 'solution_reason', value: reasonText.trim() },
+    ];
+    if (bestSolutions.length > 0) {
+      answers.push({ targetElement: 'best_solutions', value: JSON.stringify(bestSolutions) });
+    }
+    
+    const submissionSuccess = await submitPage({
+      answers,
+      operations: operationsRef.current,
     });
-    
-    // 构建完整的页面数据，包含当前的操作记录和新构建的答案
-    const customPageData = {
-      operationList: currentPageData.operationList || [],
-      answerList: answerList,
-    };
-    
-    // 直接使用submitPageDataWithInfo提交自定义数据
-    const submissionSuccess = await submitPageDataWithInfo(
-      batchCode || localStorage.getItem('batchCode'),
-      examNo || localStorage.getItem('examNo'),
-      customPageData
-    );
     
     if (submissionSuccess) {
       navigateToPage('Page_19_Task_Completion', { skipSubmit: true });
@@ -390,6 +408,7 @@ const Page_18_Solution_Selection = () => {
               id="reasonInput"
               value={reasonText}
               onChange={handleReasonChange}
+              onFocus={handleReasonFocus}
               placeholder="请在此处输入选择最佳方案的理由..."
               isMultiline={true}
               rows={3}
@@ -406,7 +425,7 @@ const Page_18_Solution_Selection = () => {
           currentPageId={currentPageId}
           onClick={handleNextPage}
           buttonText="完成探究"
-          disabled={nextButtonDisabled}
+          disabled={isNextDisabled}
         />
       </div>
     </div>

@@ -16,7 +16,7 @@ const UserInfoBar = () => {
   return (
     <div className={styles.userInfoBar}>
       <div className={styles.platformName}>
-        新都区义务教育质量综合监测平台
+      深圳市教育督导评估监测中心
       </div>
       <div className={styles.userInfo}>
         <span className={styles.userName}>

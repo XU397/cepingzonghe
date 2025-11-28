@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import NavigationButton from '../components/common/NavigationButton';
 // 导入小明图片
 import xiaomingImage from '../assets/images/04-2.png';
@@ -13,33 +14,42 @@ const TransitionToSimulationPage = () => {
   const { 
     currentPageId, 
     setPageEnterTime,
-    navigateToPage,
-    submitPageData
+    navigateToPage
   } = useAppContext();
+  const { submitPage, logOperation } = usePageSubmissionContext();
   
-  // 数据记录Hook
-  const {
-    logButtonClick,
-    logPageEnter
-  } = useDataLogging('Page_13_Transition_To_Simulation');
+  const pageLoadedRef = useRef(false);
+  const operationsRef = useRef([]);
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
   
   // 页面进入记录
   useEffect(() => {
+    if (pageLoadedRef.current) return;
+    pageLoadedRef.current = true;
+    operationsRef.current = [];
     setPageEnterTime(new Date());
-    logPageEnter('过渡到模拟实验页面');
-  }, [setPageEnterTime, logPageEnter]);
+  }, [setPageEnterTime]);
   
   /**
    * 处理下一页按钮点击
    * @async
    * @returns {Promise<boolean>} 返回true表示操作成功，false表示失败
    */
-  const handleNextPage = async () => {
-    // 记录按钮点击操作
-    logButtonClick('下一页', '跳转到模拟实验页面');
+  const handleNextPage = useCallback(async () => {
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: '跳转到模拟实验页面'
+    });
     
-    // 提交页面数据
-    const submissionSuccess = await submitPageData();
+    const submissionSuccess = await submitPage({
+      answers: [],
+      operations: operationsRef.current
+    });
 
     if (submissionSuccess) {
       navigateToPage('Page_14_Simulation_Intro_Exploration', { skipSubmit: true }); 
@@ -50,7 +60,7 @@ const TransitionToSimulationPage = () => {
     }
     
     return submissionSuccess;
-  };
+  }, [navigateToPage, recordOperation, submitPage]);
 
   return (
     <div className="page-content page-fade-in">

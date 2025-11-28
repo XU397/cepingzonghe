@@ -34,7 +34,11 @@ export const DataLoggerProvider = ({ children }) => {
    * @returns {Object} 提交数据对象
    */
   const preparePageSubmissionData = useCallback((isTimeout = false) => {
-    const pageInfo = pageInfoMapping[currentPageId] || { number: '0', desc: '未知页面' };
+    const pageInfo = pageInfoMapping[currentPageId] || {
+      number: '0',
+      compositeNumber: '0.0',
+      desc: '未知页面'
+    };
     const endTime = formatDateTime(new Date()); // Use formatDateTime from AppContext
     const beginTime = pageEnterTime ? formatDateTime(pageEnterTime) : endTime;
 
@@ -49,7 +53,7 @@ export const DataLoggerProvider = ({ children }) => {
       batchCode,
       examNo,
       mark: {
-        pageNumber: pageInfo.number,
+        pageNumber: pageInfo.compositeNumber || pageInfo.number,
         pageDesc: pageInfo.desc,
         operationList: currentPageData.operationList || [], // Use directly from AppContext
         answerList: currentPageData.answerList || [],   // Use directly from AppContext

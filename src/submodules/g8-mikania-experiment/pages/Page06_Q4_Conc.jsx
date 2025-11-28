@@ -10,7 +10,9 @@
  * "提交"按钮并成功提交数据后调用。此页面不直接调用 onComplete()。
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { EventTypes } from '@shared/services/submission/eventTypes';
+import { getPageSubNum } from '../mapping';
 import { useMikaniaExperiment } from '../Component';
 import ChartPanel from '../components/ChartPanel';
 import styles from '../styles/Page06_Q4_Conc.module.css';
@@ -22,64 +24,110 @@ function Page06Q4Conc() {
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
+    flowContext,
   } = useMikaniaExperiment();
 
   const [selectedJudgment, setSelectedJudgment] = useState(state.answers.Q4a_菟丝子有效性 || '');
   const [conclusionText, setConclusionText] = useState(state.answers.Q4b_结论理由 || '');
   const [errorQ4a, setErrorQ4a] = useState('');
   const [errorQ4b, setErrorQ4b] = useState('');
+  const prevConclusionRef = useRef(state.answers.Q4b_结论理由 || '');
+
+  const subPageNum = getPageSubNum(state.currentPageId);
+  const flowStepIndex = flowContext?.stepIndex;
+  const pageNumber = useMemo(() => {
+    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
+  }, [flowStepIndex, subPageNum]);
+  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
+  const q4aTarget = `${targetPrefix}Q4a_菟丝子有效性`;
+  const q4bTarget = `${targetPrefix}Q4b_结论理由`;
+  const submitTarget = `${targetPrefix}提交按钮`;
+  const pageTarget = `${targetPrefix}页面`;
 
   // 记录页面进入
   useEffect(() => {
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: pageTarget,
+      eventType: EventTypes.PAGE_ENTER,
       value: 'page_06_q4_conc',
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: pageTarget,
+        eventType: EventTypes.PAGE_EXIT,
         value: 'page_06_q4_conc',
       });
     };
-  }, [logOperation]);
+  }, [logOperation, pageTarget]);
 
   // 处理判断题变化
   const handleJudgmentChange = (value) => {
     setSelectedJudgment(value);
     setAnswer('Q4a_菟丝子有效性', value);
 
-    // 清除错误提示
     if (errorQ4a) {
       setErrorQ4a('');
     }
 
-    // 记录操作
     logOperation({
-      targetElement: 'Q4a_菟丝子有效性',
-      eventType: 'radio_select',
-      value: value,
+      targetElement: q4aTarget,
+      eventType: EventTypes.RADIO_SELECT,
+      value,
+    });
+  };
+
+  const handleTextFocus = () => {
+    logOperation({
+      targetElement: q4bTarget,
+      eventType: EventTypes.INPUT_FOCUS,
+      value: prevConclusionRef.current || '',
     });
   };
 
   // 处理文本输入变化
   const handleTextChange = (e) => {
-    const value = e.target.value;
-    setConclusionText(value);
-    setAnswer('Q4b_结论理由', value);
+    const nextValue = e.target.value;
+    const prevValue = prevConclusionRef.current || '';
+    const payload = {
+      prev: prevValue,
+      next: nextValue,
+      prevLength: prevValue.length,
+      nextLength: nextValue.length,
+    };
 
-    // 清除错误提示
-    if (errorQ4b && value.length >= 10) {
+    setConclusionText(nextValue);
+    setAnswer('Q4b_结论理由', nextValue);
+
+    if (errorQ4b && nextValue.length >= 10) {
       setErrorQ4b('');
     }
 
-    // 记录操作
     logOperation({
-      targetElement: 'Q4b_结论理由',
-      eventType: 'input_change',
-      value: value,
+      targetElement: q4bTarget,
+      eventType: EventTypes.INPUT_CHANGE,
+      value: JSON.stringify(payload),
+    });
+
+    if (nextValue.length < prevValue.length) {
+      logOperation({
+        targetElement: q4bTarget,
+        eventType: EventTypes.INPUT_DELETE,
+        value: JSON.stringify({
+          action: 'delete',
+          ...payload,
+        }),
+      });
+    }
+
+    prevConclusionRef.current = nextValue;
+  };
+
+  const handleTextBlur = () => {
+    logOperation({
+      targetElement: q4bTarget,
+      eventType: EventTypes.INPUT_BLUR,
+      value: prevConclusionRef.current || '',
     });
   };
 
@@ -89,18 +137,16 @@ function Page06Q4Conc() {
     if (!validateCurrentPage()) {
       const missing = getCurrentMissingFields();
 
-      // 显示具体的错误提示
-      if (missing.some(m => m.field === 'Q4a_菟丝子有效性')) {
+      if (Array.isArray(missing) && missing.includes('Q4a_菟丝子有效性')) {
         setErrorQ4a('请选择是或否');
       }
-      if (missing.some(m => m.field === 'Q4b_结论理由')) {
+      if (Array.isArray(missing) && missing.includes('Q4b_结论理由')) {
         setErrorQ4b('请输入至少10个字符的理由');
       }
 
-      // 记录阻断事件
       logOperation({
-        targetElement: '提交按钮',
-        eventType: 'click_blocked',
+        targetElement: submitTarget,
+        eventType: EventTypes.CLICK_BLOCKED,
         value: JSON.stringify({
           reason: 'validation_failed',
           missing,
@@ -109,14 +155,12 @@ function Page06Q4Conc() {
       return;
     }
 
-    // 清除错误提示
     setErrorQ4a('');
     setErrorQ4b('');
 
-    // 记录成功点击
     logOperation({
-      targetElement: '提交按钮',
-      eventType: 'click',
+      targetElement: submitTarget,
+      eventType: EventTypes.NEXT_CLICK,
       value: 'final_submit',
     });
 
@@ -180,7 +224,9 @@ function Page06Q4Conc() {
             <textarea
               className={`${styles.textInput} ${errorQ4b ? styles.textInputError : ''}`}
               value={conclusionText}
+              onFocus={handleTextFocus}
               onChange={handleTextChange}
+              onBlur={handleTextBlur}
               placeholder="请输入您的结论理由..."
               rows={6}
             />

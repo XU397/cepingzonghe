@@ -1,0 +1,79 @@
+{
+  "pageNumber": "0.3",
+  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/0] 问题1-控制变量理由",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "page",
+      "eventType": "page_enter",
+      "value": "Page03_Hypothesis",
+      "time": "2025-02-01 09:05:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "flow_context",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"g8-assessment-flow\",\"stepIndex\":0,\"submoduleId\":\"g8-drone-imaging\",\"moduleName\":\"g8-drone-imaging\",\"pageId\":\"hypothesis\"}",
+      "time": "2025-02-01 09:05:00"
+    },
+    {
+      "code": 3,
+      "targetElement": "P0.3_控制变量理由",
+      "eventType": "input_focus",
+      "value": "",
+      "time": "2025-02-01 09:05:05"
+    },
+    {
+      "code": 4,
+      "targetElement": "P0.3_控制变量理由",
+      "eventType": "input_change",
+      "value": "{\"prev\":\"\",\"next\":\"为了确保实验变量可控\"}",
+      "time": "2025-02-01 09:05:07"
+    },
+    {
+      "code": 5,
+      "targetElement": "P0.3_控制变量理由",
+      "eventType": "input_change",
+      "value": "{\"prev\":\"为了确保实验变量可控\",\"next\":\"为了确保实验结果可靠，需要控制其他变量\"}",
+      "time": "2025-02-01 09:05:12"
+    },
+    {
+      "code": 6,
+      "targetElement": "P0.3_控制变量理由",
+      "eventType": "input_blur",
+      "value": "为了确保实验结果可靠，需要控制其他变量",
+      "time": "2025-02-01 09:05:14"
+    },
+    {
+      "code": 7,
+      "targetElement": "next_button",
+      "eventType": "next_click",
+      "value": "navigate_to_experiment",
+      "time": "2025-02-01 09:05:16"
+    },
+    {
+      "code": 8,
+      "targetElement": "page",
+      "eventType": "page_exit",
+      "value": "Page03_Hypothesis",
+      "time": "2025-02-01 09:05:16"
+    },
+    {
+      "code": 9,
+      "targetElement": "flow_context",
+      "eventType": "page_submit_success",
+      "value": "{\"pageNumber\":\"0.3\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/0] 问题1-控制变量理由\",\"auto_submit\":false}",
+      "time": "2025-02-01 09:05:16"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "问题1：为什么在每次航拍时，都需要确保相机分辨率和天气条件等一致？请写出原因。",
+      "value": "为了保证实验的准确性和可重复性"
+    }
+  ],
+  "beginTime": "2025-02-01 09:05:00",
+  "endTime": "2025-02-01 09:05:16",
+  "imgList": []
+}

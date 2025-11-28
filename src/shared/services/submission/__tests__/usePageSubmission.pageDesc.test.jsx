@@ -14,9 +14,31 @@ describe('usePageSubmission - pageDesc enhancement', () => {
     const { result } = renderHook(() =>
       usePageSubmission({
         buildMark: () => ({
-          pageNumber: '1',
+          pageNumber: '0.1',
           pageDesc: '注意事项',
-          operationList: [],
+          operationList: [
+            {
+              code: 1,
+              eventType: 'page_enter',
+              targetElement: 'page_enter',
+              value: '进入页面',
+              time: '2024-11-11 10:00:00',
+            },
+            {
+              code: 2,
+              eventType: 'next_click',
+              targetElement: 'next_button',
+              value: 'go_next',
+              time: '2024-11-11 10:00:05',
+            },
+            {
+              code: 3,
+              eventType: 'page_exit',
+              targetElement: 'page_exit',
+              value: '离开页面',
+              time: '2024-11-11 10:00:10',
+            },
+          ],
           answerList: [],
         }),
         getUserContext: () => ({

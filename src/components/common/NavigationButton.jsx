@@ -51,7 +51,7 @@ const NavigationButton = ({
       // 记录操作（只有在默认逻辑时才记录，避免重复）
       logOperation({
         targetElement: `${buttonText}按钮`,
-        eventType: 'click',
+        eventType: 'next_click',
         value: `点击${buttonText}按钮`
       });
 

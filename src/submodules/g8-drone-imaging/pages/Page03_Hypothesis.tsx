@@ -13,16 +13,17 @@ import styles from '../styles/Page03_Hypothesis.module.css';
  * - Validation: text length > 5 characters
  * - Character count indicator
  * - Error message: '请输入至少5个字符的思考内容'
- * - targetElement: 'P3_控制变量理由'
+ * - targetElement: P<pageNumber>_控制变量理由（随 stepIndex 动态生成）
  * - INPUT_CHANGE event logging
  */
 const MIN_CHARS = 5;
 
 export default function Page03_Hypothesis() {
-  const { logOperation, setAnswer, getAnswer } = useDroneImagingContext();
+  const { logOperation, setAnswer, getAnswer, questionIds } = useDroneImagingContext();
+  const hypothesisQuestionId = questionIds.controlVariableReason;
 
   // State
-  const [inputValue, setInputValue] = useState(getAnswer('P3_控制变量理由') || '');
+  const [inputValue, setInputValue] = useState(getAnswer(hypothesisQuestionId) || '');
   const [error, setError] = useState('');
 
   // Page enter/exit logging
@@ -45,19 +46,36 @@ export default function Page03_Hypothesis() {
   }, [logOperation]);
 
   // Handle input change
+  const handleInputFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    logOperation({
+      targetElement: hypothesisQuestionId,
+      eventType: EventTypes.INPUT_FOCUS,
+      value: e.target.value || '',
+      time: formatTimestamp(new Date()),
+    });
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
+    const prevValue = inputValue;
     setInputValue(value);
     setError('');
 
-    // Save answer
-    setAnswer('P3_控制变量理由', value);
+    setAnswer(hypothesisQuestionId, value);
 
-    // Log INPUT_CHANGE event
     logOperation({
-      targetElement: 'P3_控制变量理由',
+      targetElement: hypothesisQuestionId,
       eventType: EventTypes.INPUT_CHANGE,
-      value: value,
+      value: JSON.stringify({ prev: prevValue, next: value }),
+      time: formatTimestamp(new Date()),
+    });
+  };
+
+  const handleInputBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    logOperation({
+      targetElement: hypothesisQuestionId,
+      eventType: EventTypes.INPUT_BLUR,
+      value: e.target.value || '',
       time: formatTimestamp(new Date()),
     });
   };
@@ -72,7 +90,12 @@ export default function Page03_Hypothesis() {
       logOperation({
         targetElement: 'next_button',
         eventType: EventTypes.CLICK_BLOCKED,
-        value: 'input_too_short',
+        value: JSON.stringify({
+          reason: 'input_too_short',
+          missing: [hypothesisQuestionId],
+          currentLength: inputValue.length,
+          requiredLength: MIN_CHARS + 1,
+        }),
         time: formatTimestamp(new Date()),
       });
       return;
@@ -105,32 +128,88 @@ export default function Page03_Hypothesis() {
     <div className={styles.hypothesisContainer} data-testid="page-hypothesis">
       <h2 className={styles.pageTitle}>无人机航拍</h2>
 
-      {/* Split layout */}
+      {/* Split layout: 3/4 left (experiment steps) + 1/4 right (question & input) */}
       <div className={styles.splitLayout}>
-        {/* Left content - question */}
+        {/* Left content - Experiment Steps (Proposal A style) */}
         <div className={styles.leftContent}>
-          <div className={styles.questionBox}>
-            <p className={styles.questionText}>
-            本实验旨在探究飞行高度与镜头焦距对无人机地面采样距离（GSD）的影响。实验步骤如下：
-            </p>
+          {/* Experimental Background */}
+          <div className={styles.backgroundSection}>
+            <div className={styles.backgroundTitle}>📋 实验背景</div>
+            <div className={styles.backgroundText}>
+              本实验旨在探究飞行高度与镜头焦距对无人机地面采样距离（GSD）的影响。实验步骤如下：
+            </div>
           </div>
 
-          <div className={styles.hintBox}>
-            <p className={styles.hintText}>1）选择平坦开阔的实验场地，设置三个不同飞行高度（100米，200米，300米）；</p>
-            <p className={styles.hintText}>2）在同一高度下，分别调整无人机相机镜头焦距为8毫米, 24毫米, 50毫米进行航拍；</p>
-            <p className={styles.hintText}>3）除高度和焦距外，确保其他参数（如相机分辨率，天气条件等）完全一致。每次航拍后，通过影像处理软件计算对应的地面采样距离（GSD，单位：厘米/像素）。</p>
+          {/* Experiment Steps Section */}
+          <div className={styles.stepsSection}>
+            <div className={styles.stepsTitle}>📋 实验步骤提示</div>
+
+            <div className={styles.stepsContainer}>
+              {/* Step 1 */}
+              <div className={styles.stepCard}>
+                <div className={styles.stepNumber}>①</div>
+                <div className={styles.stepIcon}>📍</div>
+                <div className={styles.stepTitle}>选择实验场地</div>
+                <div className={styles.stepContent}>
+                  选择平坦开阔的实验场地<br />
+                  设置<span className={styles.stepHighlight}>三个不同飞行高度</span><br />
+                  (100米、200米、300米)
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className={styles.stepCard}>
+                <div className={styles.stepNumber}>②</div>
+                <div className={styles.stepIcon}>📷</div>
+                <div className={styles.stepTitle}>调整相机焦距</div>
+                <div className={styles.stepContent}>
+                  在同一高度下<br />
+                  分别调整无人机相机镜头焦距为<br />
+                  <span className={styles.stepHighlight}>8mm、24mm、50mm</span> <br />
+                  进行航拍
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className={styles.stepCard}>
+                <div className={styles.stepNumber}>③</div>
+                <div className={styles.stepIcon}>✓</div>
+                <div className={styles.stepTitle}>确保参数一致</div>
+                <div className={styles.stepContent}>
+                  除高度和焦距外<br />
+                  确保<span className={styles.stepHighlight}>其他参数完全一致</span><br />
+                  (相机分辨率、天气条件等)
+                </div>
+              </div>
+
+            </div>
+
+            <div className={styles.stepsFooterNote}>
+              每次航拍后，通过影像处理软件计算对应的地面采样距离（GSD，单位：厘米/像素）。
+            </div>
           </div>
+
         </div>
 
-        {/* Right content - textarea */}
+        {/* Right content - Question & Input (1/4 width) */}
         <div className={styles.rightContent}>
-        <p className={styles.description}>
-        <strong>问题1：</strong>为什么在每次航拍时，都需要确保相机分辨率和天气条件等一致？请写出原因。
-      </p>
+          {/* Question Section */}
+          <div className={styles.questionSection}>
+            <div className={styles.questionBadge}>💡 问题 1</div>
+            <div className={styles.questionContent}>
+              <strong>为什么在每次航拍时，都需要确保相机分辨率和天气条件等一致？</strong>请写出原因。
+            </div>
+          </div>
+
+
+
+          {/* Input Area */}
           <div className={styles.textareaWrapper}>
             <textarea
               value={inputValue}
               onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
               placeholder="请写下你的假设..."
               className={`${styles.textarea} ${error ? styles.error : ''}`}
               data-testid="hypothesis-textarea"
@@ -153,7 +232,7 @@ export default function Page03_Hypothesis() {
               </div>
             )}
           </div>
-      </div>
+        </div>
       </div>
 
       {/* Hidden next button for Flow frame fallback (not visible in UI) */}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
+import EventTypes from '@shared/services/submission/eventTypes.js';
 import WindSpeedometer from '../components/WindSpeedometer';
-import styles from '../styles/Page05Tutorial.module.css';
+import styles from '../styles/Page06_Experiment1.module.css';
 
 const Page06Experiment1: React.FC = () => {
   const {
@@ -40,6 +41,16 @@ const Page06Experiment1: React.FC = () => {
   useEffect(() => {
     const handleValidationError = () => {
       setShowError(true);
+      logOperation({
+        targetElement: 'next_button',
+        eventType: EventTypes.CLICK_BLOCKED,
+        value: {
+          reason: 'choice_required',
+          missing: ['experiment1Choice'],
+          timestamp: new Date().toISOString(),
+        },
+        time: new Date().toISOString(),
+      });
       // Auto-hide error after 3 seconds
       setTimeout(() => setShowError(false), 3000);
     };
@@ -56,16 +67,16 @@ const Page06Experiment1: React.FC = () => {
     setPageStartTime(startTime);
 
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: 'page',
+      eventType: EventTypes.PAGE_ENTER,
       value: currentPageId,
       time: startTime.toISOString()
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: 'page',
+        eventType: EventTypes.PAGE_EXIT,
         value: currentPageId,
         time: new Date().toISOString()
       });
@@ -79,8 +90,11 @@ const Page06Experiment1: React.FC = () => {
 
     logOperation({
       targetElement: '高度调节',
-      eventType: 'click',
-      value: `调整高度: ${heightOptions[newIndex]}cm`,
+      eventType: EventTypes.SIMULATION_OPERATION,
+      value: {
+        action: 'adjust_height',
+        toHeight: heightOptions[newIndex],
+      },
       time: new Date().toISOString()
     });
   };
@@ -92,8 +106,11 @@ const Page06Experiment1: React.FC = () => {
     setIsRunning(true);
     logOperation({
       targetElement: '开始按钮',
-      eventType: 'click',
-      value: `开始测量 - 高度${currentHeight}cm`,
+      eventType: EventTypes.SIMULATION_TIMING_STARTED,
+      value: {
+        height: currentHeight,
+        context: 'experiment_task1',
+      },
       time: new Date().toISOString()
     });
 
@@ -115,6 +132,17 @@ const Page06Experiment1: React.FC = () => {
         }
       });
 
+      logOperation({
+        targetElement: 'simulation_result',
+        eventType: EventTypes.SIMULATION_RUN_RESULT,
+        value: {
+          height: currentHeight,
+          withPanelSpeed: wpSpeed,
+          withoutPanelSpeed: npSpeed,
+        },
+        time: new Date().toISOString(),
+      });
+
     }, 2000);
   };
 
@@ -126,7 +154,7 @@ const Page06Experiment1: React.FC = () => {
 
     logOperation({
       targetElement: '重置按钮',
-      eventType: 'click',
+      eventType: EventTypes.SIMULATION_OPERATION,
       value: '重置实验',
       time: new Date().toISOString()
     });
@@ -142,8 +170,8 @@ const Page06Experiment1: React.FC = () => {
     });
 
     logOperation({
-      targetElement: '实验结果选择题',
-      eventType: 'change',
+      targetElement: 'experiment1Choice',
+      eventType: EventTypes.RADIO_SELECT,
       value: choice === 'withPanel' ? '有光伏板区风速更小' : '无光伏板区风速更小',
       time: new Date().toISOString()
     });
@@ -151,61 +179,11 @@ const Page06Experiment1: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>光伏治沙</h1>
+      {/* 页面标题 */}
+      <h1 className={styles.pageTitle}>光伏治沙</h1>
 
-      <div className={styles.contentArea}>
-        {/* 左侧问题和选择题 */}
-        <div className={styles.leftContent}>
-          <div className={styles.instructionBox}>
-            <p className={styles.instructionIntro}>
-              <strong>问题2：</strong>根据模拟实验，在50厘米高度，哪个区域的风速更低？
-            </p>
-
-            <div className={styles.radioGroup}>
-              <label className={`${styles.radioOption} ${selectedChoice === 'withPanel' ? styles.selected : ''}`}>
-                <input
-                  type="radio"
-                  name="experiment1"
-                  value="withPanel"
-                  checked={selectedChoice === 'withPanel'}
-                  onChange={() => handleChoiceSelect('withPanel')}
-                  className={styles.radioInput}
-                />
-                <span className={styles.radioLabel}>有板区</span>
-              </label>
-              <label className={`${styles.radioOption} ${selectedChoice === 'noPanel' ? styles.selected : ''}`}>
-                <input
-                  type="radio"
-                  name="experiment1"
-                  value="noPanel"
-                  checked={selectedChoice === 'noPanel'}
-                  onChange={() => handleChoiceSelect('noPanel')}
-                  className={styles.radioInput}
-                />
-                <span className={styles.radioLabel}>无板区</span>
-              </label>
-            </div>
-
-            {showError && (
-              <div style={{
-                background: '#fff5f5',
-                border: '2px solid #e74c3c',
-                borderRadius: '8px',
-                padding: '12px 20px',
-                color: '#e74c3c',
-                fontSize: '14px',
-                fontWeight: 600,
-                textAlign: 'center',
-                marginTop: '10px',
-                animation: 'errorShake 0.5s ease-out'
-              }}>
-                请选择一个选项
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 右侧实验面板 */}
+      {/* 左侧：实验面板 */}
+      <div className={styles.leftPanel}>
         <div className={styles.experimentContainer}>
           <div className={styles.experimentUnit}>
             <div className={styles.panelHeader}>
@@ -370,6 +348,37 @@ const Page06Experiment1: React.FC = () => {
               </svg>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 右侧：问题区 */}
+      <div className={styles.rightPanel}>
+        <h2 className={styles.panelTitle}>问题 2</h2>
+        <div className={styles.questionCard}>
+          <p className={styles.questionText}>
+            根据模拟实验，在50厘米高度，哪个区域的风速更低？
+          </p>
+          <div className={styles.optionsContainer}>
+            <button
+              className={`${styles.optionButton} ${selectedChoice === 'withPanel' ? styles.optionSelected : ''}`}
+              onClick={() => handleChoiceSelect('withPanel')}
+            >
+              <span className={styles.optionLabel}>A</span>
+              <span className={styles.optionText}>有板区</span>
+            </button>
+            <button
+              className={`${styles.optionButton} ${selectedChoice === 'noPanel' ? styles.optionSelected : ''}`}
+              onClick={() => handleChoiceSelect('noPanel')}
+            >
+              <span className={styles.optionLabel}>B</span>
+              <span className={styles.optionText}>无板区</span>
+            </button>
+          </div>
+          {showError && (
+            <div className={styles.errorMessage}>
+              请选择一个选项
+            </div>
+          )}
         </div>
       </div>
     </div>

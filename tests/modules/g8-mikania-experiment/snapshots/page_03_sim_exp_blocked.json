@@ -1,0 +1,26 @@
+{
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_03_sim_exp",
+      "time": "2025-11-22 10:02:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "P1.4_浓度选择器",
+      "eventType": "simulation_operation",
+      "value": "{\"action\":\"set_concentration\",\"prev\":\"0mg/ml\",\"next\":\"5mg/ml\"}",
+      "time": "2025-11-22 10:02:05"
+    },
+    {
+      "code": 3,
+      "targetElement": "下一页按钮",
+      "eventType": "click_blocked",
+      "value": "{\"reason\":\"validation_failed\",\"missing\":[\"未完成实验操作\"]}",
+      "time": "2025-11-22 10:02:10"
+    }
+  ],
+  "answerList": []
+}

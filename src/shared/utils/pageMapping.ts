@@ -51,16 +51,16 @@ export interface CompositePageNum {
 /**
  * 解析复合页码
  *
- * 支持以下格式：
- * - `M<stepIndex>:<subPageNum>` - 如 "M1:5" 表示第1步的第5页
+ * 支持以下格式（按优先级）：
  * - `<stepIndex>.<subPageNum>` - 如 "1.5" 表示第1步的第5页
+ * - `M<stepIndex>:<subPageNum>` - 如 "M1:5" 表示第1步的第5页（已废弃，仅保留兼容）
  *
  * @param pageNumStr - 复合页码字符串
  * @returns 解析结果，如果格式无效则返回 null
  *
  * @example
- * parseCompositePageNum("M1:5")  // { stepIndex: 1, subPageNum: 5 }
- * parseCompositePageNum("2.10")  // { stepIndex: 2, subPageNum: 10 }
+ * parseCompositePageNum("1.5")   // { stepIndex: 1, subPageNum: 5 }
+ * parseCompositePageNum("M2:10") // { stepIndex: 2, subPageNum: 10 } 并输出警告
  * parseCompositePageNum("invalid") // null
  */
 export function parseCompositePageNum(pageNumStr: string): CompositePageNum | null {
@@ -68,13 +68,12 @@ export function parseCompositePageNum(pageNumStr: string): CompositePageNum | nu
     return null;
   }
 
-  // 格式1: M<stepIndex>:<subPageNum>
-  const format1Match = pageNumStr.match(/^M(\d+):(\d+)$/);
-  if (format1Match) {
-    const stepIndex = parseInt(format1Match[1], 10);
-    const subPageNum = parseInt(format1Match[2], 10);
+  // 点分格式: <stepIndex>.<subPageNum>
+  const dotMatch = pageNumStr.match(/^(\d+)\.(\d+)$/);
+  if (dotMatch) {
+    const stepIndex = parseInt(dotMatch[1], 10);
+    const subPageNum = parseInt(dotMatch[2], 10);
 
-    // 验证解析结果
     if (isNaN(stepIndex) || isNaN(subPageNum) || stepIndex < 0 || subPageNum < 0) {
       return null;
     }
@@ -82,11 +81,12 @@ export function parseCompositePageNum(pageNumStr: string): CompositePageNum | nu
     return { stepIndex, subPageNum };
   }
 
-  // 格式2: <stepIndex>.<subPageNum>
-  const format2Match = pageNumStr.match(/^(\d+)\.(\d+)$/);
-  if (format2Match) {
-    const stepIndex = parseInt(format2Match[1], 10);
-    const subPageNum = parseInt(format2Match[2], 10);
+  // 格式1: M<stepIndex>:<subPageNum>
+  const format1Match = pageNumStr.match(/^M(\d+):(\d+)$/);
+  if (format1Match) {
+    console.warn('已废弃的 M 前缀格式，请使用点分格式');
+    const stepIndex = parseInt(format1Match[1], 10);
+    const subPageNum = parseInt(format1Match[2], 10);
 
     // 验证解析结果
     if (isNaN(stepIndex) || isNaN(subPageNum) || stepIndex < 0 || subPageNum < 0) {
@@ -105,22 +105,101 @@ export function parseCompositePageNum(pageNumStr: string): CompositePageNum | nu
  *
  * @param stepIndex - Flow步骤索引
  * @param subPageNum - 子模块内的页码
- * @param format - 格式类型，默认为 "M" 格式
  * @returns 复合页码字符串
  *
  * @example
- * buildCompositePageNum(1, 5)           // "M1:5"
- * buildCompositePageNum(2, 10, "dot")   // "2.10"
+ * buildCompositePageNum(1, 5) // "1.5"
  */
-export function buildCompositePageNum(
-  stepIndex: number,
-  subPageNum: number,
-  format: 'M' | 'dot' = 'M'
+export function buildCompositePageNum(stepIndex: number, subPageNum: number): string {
+  return `${stepIndex}.${subPageNum}`;
+}
+
+/**
+ * 统一提交管道使用的复合页码编码函数
+ *
+ * 该函数是 {@link buildCompositePageNum} 的别名，确保所有提交上报统一使用点分格式编码。
+ *
+ * @param stepIndex - Flow步骤索引
+ * @param subPageNum - 子模块内的页码
+ * @returns 点分格式的复合页码
+ *
+ * @example
+ * encodeCompositePageNum(2, 10) // "2.10"
+ */
+export function encodeCompositePageNum(stepIndex: number, subPageNum: number): string {
+  return buildCompositePageNum(stepIndex, subPageNum);
+}
+
+/**
+ * 构造目标元素ID前缀
+ *
+ * 返回 "P<pageNumber>_" 形式的字符串，可用于生成级联元素ID。
+ *
+ * @param pageNumber - 已编码的页码（如 "1.5"）
+ * @returns 形如 "P1.5_" 的前缀
+ *
+ * @example
+ * buildTargetElementPrefix("3.2"); // "P3.2_"
+ */
+export function buildTargetElementPrefix(pageNumber: string): string {
+  return `P${pageNumber}_`;
+}
+
+/**
+ * 构造页面描述日志前缀
+ *
+ * 当 flowId、submoduleId 与 stepIndex 均存在时，返回 "[flow/submodule/step] " 格式，便于日志聚合。
+ *
+ * @param flowId - Flow ID
+ * @param submoduleId - 子模块ID
+ * @param stepIndex - 步骤索引
+ * @returns 前缀字符串或空字符串
+ *
+ * @example
+ * buildPageDescPrefix("flowA", "subM1", 3); // "[flowA/subM1/3] "
+ * buildPageDescPrefix("flowA");             // ""
+ */
+export function buildPageDescPrefix(
+  flowId?: string,
+  submoduleId?: string,
+  stepIndex?: number
 ): string {
-  if (format === 'dot') {
-    return `${stepIndex}.${subPageNum}`;
+  if (!flowId || !submoduleId || typeof stepIndex !== 'number') {
+    return '';
   }
-  return `M${stepIndex}:${subPageNum}`;
+
+  return `[${flowId}/${submoduleId}/${stepIndex}] `;
+}
+
+/**
+ * 生成标准化的 pageDesc，自动拼接 Flow 前缀。
+ */
+export function generatePageDesc(
+  flowId: string | undefined,
+  submoduleId: string | undefined,
+  stepIndex: number | undefined,
+  desc: string,
+): string {
+  const prefix = buildPageDescPrefix(flowId, submoduleId, stepIndex);
+  if (!desc && !prefix) {
+    return '';
+  }
+  if (!prefix) {
+    return desc;
+  }
+  return `${prefix}${desc}`;
+}
+
+/**
+ * 生成带前缀的 targetElement。
+ */
+export function generateTargetElement(pageNumber: string, elementId: string): string {
+  const prefix = buildTargetElementPrefix(pageNumber);
+  const normalized = (elementId || '').trim();
+  if (!normalized) {
+    return prefix;
+  }
+  return `${prefix}${normalized}`;
 }
 
 // ==================== 页码映射 ====================

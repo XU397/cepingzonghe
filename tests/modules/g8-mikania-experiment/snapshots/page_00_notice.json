@@ -1,0 +1,52 @@
+{
+  "pageNumber": "1.1",
+  "pageDesc": "[flow-g8-experiment-2024/g8-mikania-experiment/1] 注意事项",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_00_notice",
+      "time": "2025-11-22 10:00:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "P1.1_注意事项确认",
+      "eventType": "checkbox_check",
+      "value": "checked",
+      "time": "2025-11-22 10:00:40"
+    },
+    {
+      "code": 3,
+      "targetElement": "下一页按钮",
+      "eventType": "next_click",
+      "value": "navigate_to_intro",
+      "time": "2025-11-22 10:00:42"
+    },
+    {
+      "code": 4,
+      "targetElement": "页面",
+      "eventType": "page_exit",
+      "value": "page_00_notice",
+      "time": "2025-11-22 10:00:42"
+    },
+    {
+      "code": 5,
+      "targetElement": "系统",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"flow-g8-experiment-2024\",\"submoduleId\":\"g8-mikania-experiment\",\"stepIndex\":1,\"pageId\":\"page_00_notice\"}",
+      "time": "2025-11-22 10:00:42"
+    },
+    {
+      "code": 6,
+      "targetElement": "系统",
+      "eventType": "page_submit_success",
+      "value": "{\"duration_ms\":120}",
+      "time": "2025-11-22 10:00:42"
+    }
+  ],
+  "answerList": [],
+  "beginTime": "2025-11-22 10:00:00",
+  "endTime": "2025-11-22 10:00:42",
+  "imgList": []
+}

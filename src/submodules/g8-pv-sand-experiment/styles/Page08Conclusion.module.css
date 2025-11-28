@@ -172,6 +172,20 @@
   display: none;
 }
 
+.errorMessage {
+  background: #fff5f5;
+  border: 2px solid #e74c3c;
+  border-radius: 8px;
+  padding: 12px 20px;
+  color: #e74c3c;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 10px;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+  animation: errorShake 0.5s ease-out;
+}
+
 /* Error shake animation */
 @keyframes errorShake {
   0%, 100% { transform: translateX(0); }

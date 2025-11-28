@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
+import EventTypes from '@shared/services/submission/eventTypes.js';
 import styles from '../styles/Page08Conclusion.module.css';
 
 const Page08Conclusion: React.FC = () => {
@@ -31,6 +32,16 @@ const Page08Conclusion: React.FC = () => {
   useEffect(() => {
     const handleValidationError = () => {
       setShowError(true);
+      logOperation({
+        targetElement: 'next_button',
+        eventType: EventTypes.CLICK_BLOCKED,
+        value: {
+          reason: 'conclusion_incomplete',
+          missing: ['selectedOption', 'reason'],
+          timestamp: new Date().toISOString(),
+        },
+        time: new Date().toISOString(),
+      });
       // Auto-hide error after 3 seconds
       setTimeout(() => setShowError(false), 3000);
     };
@@ -46,16 +57,16 @@ const Page08Conclusion: React.FC = () => {
     setPageStartTime(startTime);
 
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: 'page',
+      eventType: EventTypes.PAGE_ENTER,
       value: currentPageId,
       time: startTime.toISOString()
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: 'page',
+        eventType: EventTypes.PAGE_EXIT,
         value: currentPageId,
         time: new Date().toISOString()
       });
@@ -72,13 +83,14 @@ const Page08Conclusion: React.FC = () => {
 
     logOperation({
       targetElement: '选项',
-      eventType: 'click',
+      eventType: EventTypes.RADIO_SELECT,
       value: option,
       time: new Date().toISOString()
     });
   };
 
   const handleReasonChange = (value: string) => {
+    const prev = reason;
     setReason(value);
 
     collectAnswer({
@@ -86,10 +98,41 @@ const Page08Conclusion: React.FC = () => {
       value: value
     });
 
+    const isDelete = value.length < prev.length;
+    const eventType = isDelete ? EventTypes.INPUT_DELETE : EventTypes.INPUT_CHANGE;
+    const normalizedValue = isDelete
+      ? {
+          action: 'delete',
+          prevLength: prev.length,
+          nextLength: value.length,
+        }
+      : {
+          prev,
+          next: value,
+        };
+
     logOperation({
-      targetElement: '理由输入',
-      eventType: 'change',
-      value: value,
+      targetElement: 'reason',
+      eventType,
+      value: normalizedValue,
+      time: new Date().toISOString()
+    });
+  };
+
+  const handleReasonFocus = () => {
+    logOperation({
+      targetElement: 'reason',
+      eventType: EventTypes.INPUT_FOCUS,
+      value: reason ?? '',
+      time: new Date().toISOString(),
+    });
+  };
+
+  const handleReasonBlur = () => {
+    logOperation({
+      targetElement: 'reason',
+      eventType: EventTypes.INPUT_BLUR,
+      value: reason ?? '',
       time: new Date().toISOString()
     });
   };
@@ -137,6 +180,8 @@ const Page08Conclusion: React.FC = () => {
                 className={styles.reasonInput}
                 value={reason}
                 onChange={(e) => handleReasonChange(e.target.value)}
+                onFocus={handleReasonFocus}
+                onBlur={handleReasonBlur}
                 placeholder="请输入您的理由..."
                 rows={4}
               />
@@ -145,18 +190,7 @@ const Page08Conclusion: React.FC = () => {
               </div>
 
               {showError && (
-                <div style={{
-                  background: '#fff5f5',
-                  border: '2px solid #e74c3c',
-                  borderRadius: '8px',
-                  padding: '12px 20px',
-                  color: '#e74c3c',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  marginTop: '10px',
-                  animation: 'errorShake 0.5s ease-out'
-                }}>
+                <div className={styles.errorMessage}>
                   请选择结论并填写至少 10 个字符的理由
                 </div>
               )}

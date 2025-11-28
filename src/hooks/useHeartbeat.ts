@@ -139,7 +139,43 @@ export default function useHeartbeat({
     enabledRef.current = enabled;
   }, [enabled]);
 
-  // 只依赖 flowId，在内部检查 enabled 状态
+  // 抽取心跳启动逻辑为可复用函数
+  const startHeartbeatTimer = (currentFlowId: string) => {
+    if (timerRef.current) {
+      console.debug('[useHeartbeat] Timer already running, skipping', { flowId: currentFlowId });
+      return;
+    }
+
+    console.log('[useHeartbeat] Starting heartbeat', { flowId: currentFlowId });
+
+    const sendHeartbeat = () => {
+      const payload = {
+        flowId: currentFlowId,
+        examNo: examNo ?? null,
+        batchCode: batchCode ?? null,
+        stepIndex: stepIndexRef.current ?? 0,
+        modulePageNum: modulePageNumRef.current ?? '1',
+        ts: Date.now(),
+      };
+
+      lastHeartbeat = payload;
+      console.log('[useHeartbeat] Sending heartbeat', payload);
+      writeNow(payload, onErrorRef.current);
+    };
+
+    flushQueue(currentFlowId, onErrorRef.current).finally(() => {
+      if (timerRef.current === null && enabledRef.current) {
+        sendHeartbeat();
+        timerRef.current = window.setInterval(() => {
+          if (enabledRef.current) {
+            sendHeartbeat();
+          }
+        }, Math.max(3000, intervalMs));
+      }
+    });
+  };
+
+  // 主 effect：初始化时尝试启动（带延迟）
   useEffect(() => {
     if (!flowId) {
       return;
@@ -148,41 +184,10 @@ export default function useHeartbeat({
     // 延迟检查 enabled 状态，避免在 loading 状态变化时频繁触发
     const startupDelay = setTimeout(() => {
       if (!enabledRef.current) {
-        console.debug('[useHeartbeat] Not enabled, skipping startup', { flowId });
+        console.debug('[useHeartbeat] Not enabled on initial check, waiting for enabled change', { flowId });
         return;
       }
-
-      // 如果已经有定时器在运行，不要重复初始化
-      if (timerRef.current) {
-        console.debug('[useHeartbeat] Timer already running, skipping', { flowId });
-        return;
-      }
-
-      console.log('[useHeartbeat] Starting heartbeat', { flowId });
-
-      const sendHeartbeat = () => {
-        const payload = {
-          flowId,
-          examNo: examNo ?? null,
-          batchCode: batchCode ?? null,
-          stepIndex: stepIndexRef.current ?? 0,
-          modulePageNum: modulePageNumRef.current ?? '1',
-          ts: Date.now(),
-        };
-
-        lastHeartbeat = payload;
-        console.log('[useHeartbeat] Sending heartbeat', payload);
-        writeNow(payload, onErrorRef.current);
-      };
-
-      flushQueue(flowId, onErrorRef.current).finally(() => {
-        if (timerRef.current === null) {
-          sendHeartbeat();
-          timerRef.current = window.setInterval(() => {
-            sendHeartbeat();
-          }, Math.max(3000, intervalMs));
-        }
-      });
+      startHeartbeatTimer(flowId);
     }, 500); // 500ms 延迟，等待 loading 状态稳定
 
     return () => {
@@ -194,6 +199,18 @@ export default function useHeartbeat({
       }
     };
   }, [flowId, intervalMs]); // 不依赖 enabled，避免频繁触发
+
+  // 辅助 effect：监听 enabled 从 false 变为 true，补偿启动心跳
+  useEffect(() => {
+    if (!flowId || !enabled) {
+      return;
+    }
+    // 如果 enabled 变为 true 且定时器未运行，立即启动
+    if (!timerRef.current) {
+      console.log('[useHeartbeat] enabled became true, starting heartbeat now', { flowId });
+      startHeartbeatTimer(flowId);
+    }
+  }, [enabled, flowId]);
 
   // DEV-only global debug helpers
   if (import.meta.env.DEV) {

@@ -5,7 +5,9 @@
  * Q3: 根据实验数据分析发芽率趋势
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { EventTypes } from '@shared/services/submission/eventTypes';
+import { getPageSubNum } from '../mapping';
 import { useMikaniaExperiment } from '../Component';
 import ExperimentPanel from '../components/ExperimentPanel';
 import styles from '../styles/Page05_Q3_Trend.module.css';
@@ -17,27 +19,49 @@ function Page05Q3Trend() {
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
+    flowContext,
   } = useMikaniaExperiment();
 
   const [selectedOption, setSelectedOption] = useState(state.answers.Q3_发芽率趋势 || '');
   const [error, setError] = useState('');
 
+  const subPageNum = getPageSubNum(state.currentPageId);
+  const flowStepIndex = flowContext?.stepIndex;
+  const pageNumber = useMemo(() => {
+    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
+  }, [flowStepIndex, subPageNum]);
+  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
+  const questionTarget = `${targetPrefix}Q3_发芽率趋势`;
+  const nextButtonTarget = `${targetPrefix}下一页按钮`;
+  const pageTarget = `${targetPrefix}页面`;
+
   // 记录页面进入
   useEffect(() => {
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: pageTarget,
+      eventType: EventTypes.PAGE_ENTER,
       value: 'page_05_q3_trend',
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: pageTarget,
+        eventType: EventTypes.PAGE_EXIT,
         value: 'page_05_q3_trend',
       });
     };
-  }, [logOperation]);
+  }, [logOperation, pageTarget]);
+
+  // 错误提示自动隐藏：10秒后清除
+  useEffect(() => {
+    if (!error) return;
+
+    const timer = setTimeout(() => {
+      setError('');
+    }, 10000); // 10秒后自动隐藏
+
+    return () => clearTimeout(timer);
+  }, [error]);
 
   // 处理选项变化
   const handleOptionChange = (option) => {
@@ -49,10 +73,9 @@ function Page05Q3Trend() {
       setError('');
     }
 
-    // 记录操作
     logOperation({
-      targetElement: 'Q3_发芽率趋势',
-      eventType: 'radio_select',
+      targetElement: questionTarget,
+      eventType: EventTypes.RADIO_SELECT,
       value: option,
     });
   };
@@ -68,8 +91,8 @@ function Page05Q3Trend() {
 
       // 记录阻断事件
       logOperation({
-        targetElement: '下一页按钮',
-        eventType: 'click_blocked',
+        targetElement: nextButtonTarget,
+        eventType: EventTypes.CLICK_BLOCKED,
         value: JSON.stringify({
           reason: 'validation_failed',
           missing,
@@ -83,8 +106,8 @@ function Page05Q3Trend() {
 
     // 记录成功点击
     logOperation({
-      targetElement: '下一页按钮',
-      eventType: 'click',
+      targetElement: nextButtonTarget,
+      eventType: EventTypes.NEXT_CLICK,
       value: 'navigate_to_q4_conc',
     });
 

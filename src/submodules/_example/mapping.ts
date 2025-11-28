@@ -140,7 +140,7 @@ export function getCurrentStepIndex(pageId: string): number {
  * 解析 Flow 中的复合页码
  *
  * 示例：
- * - "M1:5" 表示第1步的第5页
+ * - "1.5" 表示第1步的第5页
  * - "2.10" 表示第2步的第10页
  */
 export function parseFlowPageNum(compositePageNum: string) {
@@ -151,15 +151,11 @@ export function parseFlowPageNum(compositePageNum: string) {
  * 构造 Flow 中的复合页码
  *
  * 示例：
- * - buildFlowPageNum(1, 5) → "M1:5"
- * - buildFlowPageNum(2, 10, 'dot') → "2.10"
+ * - buildFlowPageNum(1, 5) → "1.5"
+ * - buildFlowPageNum(2, 10) → "2.10"
  */
-export function buildFlowPageNum(
-  stepIndex: number,
-  subPageNum: number,
-  format: 'M' | 'dot' = 'M'
-): string {
-  return buildCompositePageNum(stepIndex, subPageNum, format);
+export function buildFlowPageNum(stepIndex: number, subPageNum: number): string {
+  return buildCompositePageNum(stepIndex, subPageNum);
 }
 
 // ==================== 使用示例 ====================
@@ -182,7 +178,7 @@ const navMode = getNavigationMode('question-1');
 console.log('Nav mode:', navMode); // "questionnaire"
 
 // 4. 解析 Flow 复合页码
-const parsed = parseFlowPageNum("M1:5");
+const parsed = parseFlowPageNum("1.5");
 console.log('Parsed:', parsed); // { stepIndex: 1, subPageNum: 5 }
 
 // 5. 获取下一页 / 上一页 / 当前步骤

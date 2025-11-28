@@ -1,0 +1,21 @@
+{
+  "pageNumber": "1.5",
+  "pageDesc": "[flow-g8-experiment-2024/g8-mikania-experiment/1] 数据分析",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_04_q2_data",
+      "time": "2025-11-22 10:03:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "下一页按钮",
+      "eventType": "click_blocked",
+      "value": "{\"reason\":\"validation_failed\",\"missing\":[\"Q2_抑制作用浓度\"]}",
+      "time": "2025-11-22 10:03:05"
+    }
+  ],
+  "answerList": []
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import Modal from '../components/common/Modal';
 import NavigationButton from '../components/common/NavigationButton';
 import {
@@ -20,21 +21,10 @@ import {
 const Page_04_Material_Reading_Factor_Selection = () => {
   const { 
     navigateToPage,
-    submitPageData,
     currentPageId,
     setPageEnterTime,
-    collectAnswer,
   } = useAppContext();
-  
-  // 数据记录Hook
-  const {
-    logModalOpen,
-    logModalClose,
-    logCheckboxChange,
-    logButtonClick,
-    logPageEnter,
-    logOperation
-  } = useDataLogging('Page_04_Material_Reading_Factor_Selection');
+  const { submitPage, logOperation } = usePageSubmissionContext();
   
   const [openModalId, setOpenModalId] = useState(null);
   const [modalOpenTime, setModalOpenTime] = useState(null);
@@ -51,16 +41,21 @@ const Page_04_Material_Reading_Factor_Selection = () => {
 
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
-  const prevSelectionsRef = useRef({});
+  const operationsRef = useRef([]);
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
 
   // 页面进入记录 - 只执行一次
   useEffect(() => {
     if (!pageLoadedRef.current) {
       pageLoadedRef.current = true;
+      operationsRef.current = [];
       setPageEnterTime(new Date());
-      logPageEnter('资料阅读与因素选择页面');
     }
-  }, []);
+  }, [setPageEnterTime]);
 
   // 缓存是否禁用下一页按钮的计算
   const isNextButtonDisabled = useMemo(() => {
@@ -104,8 +99,12 @@ const Page_04_Material_Reading_Factor_Selection = () => {
     const currentTime = new Date();
     setModalOpenTime(currentTime);
     
-    logModalOpen(getModalTitle(modalId), modalId);
-  }, [logModalOpen, getModalTitle]);
+    recordOperation({
+      eventType: EventTypes.MODAL_OPEN,
+      targetElement: `material_modal_${modalId}`,
+      value: getModalTitle(modalId)
+    });
+  }, [getModalTitle, recordOperation]);
   
   /**
    * 关闭资料模态框
@@ -114,12 +113,16 @@ const Page_04_Material_Reading_Factor_Selection = () => {
     if (modalOpenTime && openModalId) {
       const viewDuration = Math.floor((new Date().getTime() - modalOpenTime.getTime()) / 1000);
       
-      logModalClose(getModalTitle(openModalId), openModalId, viewDuration);
+      recordOperation({
+        eventType: EventTypes.MODAL_CLOSE,
+        targetElement: `material_modal_${openModalId}`,
+        value: { duration: viewDuration, modalId: openModalId }
+      });
     }
     
     setOpenModalId(null);
     setModalOpenTime(null);
-  }, [modalOpenTime, openModalId, logModalClose, getModalTitle]);
+  }, [modalOpenTime, openModalId, recordOperation]);
   
   /**
    * 处理因素选择变更
@@ -130,27 +133,15 @@ const Page_04_Material_Reading_Factor_Selection = () => {
       [factorKey]: !factorSelections[factorKey]
     };
     
-    // 使用缓存机制避免重复提交相同选择
-    const selectionsKey = JSON.stringify(newSelections);
-    const prevSelectionsKey = JSON.stringify(prevSelectionsRef.current);
+    setFactorSelections(newSelections);
     
-    if (selectionsKey !== prevSelectionsKey) {
-      setFactorSelections(newSelections);
-      prevSelectionsRef.current = newSelections;
-      
-      const factorDisplayName = getFactorDisplayName(factorKey);
-      
-      logCheckboxChange(factorDisplayName, newSelections[factorKey]);
-      
-      // 立即收集答案
-      if (newSelections[factorKey]) {
-        collectAnswer({
-          targetElement: `影响因素选择: ${factorDisplayName}`,
-          value: factorDisplayName,
-        });
-      }
-    }
-  }, [factorSelections, getFactorDisplayName, logCheckboxChange, collectAnswer]);
+    const factorDisplayName = getFactorDisplayName(factorKey);
+    recordOperation({
+      eventType: newSelections[factorKey] ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
+      targetElement: `factor_${factorKey}`,
+      value: factorDisplayName
+    });
+  }, [factorSelections, getFactorDisplayName, recordOperation]);
   
   /**
    * 处理下一页按钮点击
@@ -160,16 +151,27 @@ const Page_04_Material_Reading_Factor_Selection = () => {
       (key) => factorSelections[key]
     );
 
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: selectedFactorKeys.length === 0 ? '未选择任何因素' : '提交因素选择'
+    });
+
     if (selectedFactorKeys.length === 0) {
       setAlertMessage('请至少选择一个可能的因素');
       setShowAlert(true);
-      logButtonClick('下一页', '点击失败 - 未选择任何因素');
       return false;
     }
     
-    logButtonClick('下一页', '提交因素选择');
+    const answers = selectedFactorKeys.map((key) => ({
+      targetElement: `影响因素选择:${getFactorDisplayName(key)}`,
+      value: getFactorDisplayName(key)
+    })).filter((answer) => answer.value);
     
-    const submissionSuccess = await submitPageData();
+    const submissionSuccess = await submitPage({
+      answers,
+      operations: operationsRef.current,
+    });
     if (submissionSuccess) {
       navigateToPage('Page_10_Hypothesis_Focus', { skipSubmit: true });
       return true;
@@ -178,7 +180,7 @@ const Page_04_Material_Reading_Factor_Selection = () => {
       setShowAlert(true);
       return false; 
     }
-  }, [factorSelections, logButtonClick, submitPageData, navigateToPage]);
+  }, [factorSelections, getFactorDisplayName, navigateToPage, recordOperation, submitPage]);
 
   // 缓存模态框内容渲染
   const modalContent = useMemo(() => {

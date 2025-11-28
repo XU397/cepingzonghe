@@ -1,0 +1,88 @@
+{
+  "pageNumber": "0.4",
+  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/0] 自由探索实验（超时自动提交）",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "page",
+      "eventType": "page_enter",
+      "value": "Page04_ExperimentFree",
+      "time": "2025-02-01 09:00:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "flow_context",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"g8-assessment-flow\",\"stepIndex\":0,\"submoduleId\":\"g8-drone-imaging\",\"moduleName\":\"g8-drone-imaging\",\"pageId\":\"experiment_free\"}",
+      "time": "2025-02-01 09:00:00"
+    },
+    {
+      "code": 3,
+      "targetElement": "flow_context",
+      "eventType": "timer_complete",
+      "value": "{\"reason\":\"task_timer_expired\",\"elapsed\":1200,\"unit\":\"seconds\"}",
+      "time": "2025-02-01 09:20:00"
+    },
+    {
+      "code": 4,
+      "targetElement": "flow_context",
+      "eventType": "auto_submit",
+      "value": "{\"reason\":\"timer_expired\",\"currentPage\":\"0.4\"}",
+      "time": "2025-02-01 09:20:00"
+    },
+    {
+      "code": 5,
+      "targetElement": "page",
+      "eventType": "page_exit",
+      "value": "Page04_ExperimentFree",
+      "time": "2025-02-01 09:20:00"
+    },
+    {
+      "code": 6,
+      "targetElement": "flow_context",
+      "eventType": "page_submit_success",
+      "value": "{\"pageNumber\":\"0.4\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/0] 自由探索实验（超时自动提交）\",\"auto_submit\":true}",
+      "time": "2025-02-01 09:20:00"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "我已阅读并理解以上注意事项",
+      "value": "已确认"
+    },
+    {
+      "code": 2,
+      "targetElement": "问题1：为什么在每次航拍时，都需要确保相机分辨率和天气条件等一致？请写出原因。",
+      "value": "超时未回答"
+    },
+    {
+      "code": 3,
+      "targetElement": "experiment_captures",
+      "value": "超时未回答"
+    },
+    {
+      "code": 4,
+      "targetElement": "问题2：根据模拟实验，当飞行高度为100米时，使用何种焦距可以使地面采样距离（GSD）达到最小？",
+      "value": "超时未回答"
+    },
+    {
+      "code": 5,
+      "targetElement": "问题3：根据模拟实验，随着飞行高度的增加，地面采样距离（GSD）呈现出怎样的变化趋势？",
+      "value": "超时未回答"
+    },
+    {
+      "code": 6,
+      "targetElement": "问题4：右图展示了飞行高度、镜头焦距与地面采样距离（GSD）的关系曲线。请问在航拍中，为获取更高精度的影像，应优先考虑降低飞行高度还是调整镜头焦距？",
+      "value": "超时未回答"
+    },
+    {
+      "code": 7,
+      "targetElement": "请说明你的理由：",
+      "value": "超时未回答"
+    }
+  ],
+  "beginTime": "2025-02-01 09:00:00",
+  "endTime": "2025-02-01 09:20:00",
+  "imgList": []
+}

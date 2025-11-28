@@ -1,0 +1,55 @@
+{
+  "pageNumber": "1.6",
+  "pageDesc": "[flow-g8-experiment-2024/g8-mikania-experiment/1] 趋势分析",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_05_q3_trend",
+      "time": "2025-11-22 10:04:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "系统",
+      "eventType": "timer_complete",
+      "value": "{\"elapsed\":2400000}",
+      "time": "2025-11-22 10:44:00"
+    },
+    {
+      "code": 3,
+      "targetElement": "系统",
+      "eventType": "auto_submit",
+      "value": "{\"reason\":\"timeout\",\"hasAnswer\":false}",
+      "time": "2025-11-22 10:44:00"
+    },
+    {
+      "code": 4,
+      "targetElement": "页面",
+      "eventType": "page_exit",
+      "value": "page_05_q3_trend",
+      "time": "2025-11-22 10:44:00"
+    },
+    {
+      "code": 5,
+      "targetElement": "系统",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"flow-g8-experiment-2024\",\"submoduleId\":\"g8-mikania-experiment\",\"stepIndex\":1,\"pageId\":\"page_05_q3_trend\"}",
+      "time": "2025-11-22 10:44:00"
+    },
+    {
+      "code": 6,
+      "targetElement": "系统",
+      "eventType": "page_submit_success",
+      "value": "{\"duration_ms\":102,\"auto\":true}",
+      "time": "2025-11-22 10:44:00"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "问题3：随着菟丝子提取液浓度的增加，薇甘菊种子发芽率呈现出怎样的变化趋势？",
+      "value": "超时未回答"
+    }
+  ]
+}

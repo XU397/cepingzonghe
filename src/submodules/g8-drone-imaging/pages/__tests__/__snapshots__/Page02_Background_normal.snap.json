@@ -1,0 +1,66 @@
+{
+  "pageNumber": "0.2",
+  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/0] 背景知识介绍",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "page",
+      "eventType": "page_enter",
+      "value": "Page02_Background",
+      "time": "2025-02-01 09:04:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "flow_context",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"g8-assessment-flow\",\"stepIndex\":0,\"submoduleId\":\"g8-drone-imaging\",\"moduleName\":\"g8-drone-imaging\",\"pageId\":\"background\"}",
+      "time": "2025-02-01 09:04:00"
+    },
+    {
+      "code": 3,
+      "targetElement": "P0.2_reading_timer",
+      "eventType": "timer_start",
+      "value": "{\"duration\":5,\"unit\":\"seconds\"}",
+      "time": "2025-02-01 09:04:00"
+    },
+    {
+      "code": 4,
+      "targetElement": "P0.2_reading_timer",
+      "eventType": "timer_stop",
+      "value": "{\"reason\":\"countdown_finished\",\"elapsed\":5}",
+      "time": "2025-02-01 09:04:05"
+    },
+    {
+      "code": 5,
+      "targetElement": "page",
+      "eventType": "reading_complete",
+      "value": "Page02_Background",
+      "time": "2025-02-01 09:04:05"
+    },
+    {
+      "code": 6,
+      "targetElement": "next_button",
+      "eventType": "next_click",
+      "value": "navigate_to_hypothesis",
+      "time": "2025-02-01 09:04:07"
+    },
+    {
+      "code": 7,
+      "targetElement": "page",
+      "eventType": "page_exit",
+      "value": "Page02_Background",
+      "time": "2025-02-01 09:04:07"
+    },
+    {
+      "code": 8,
+      "targetElement": "flow_context",
+      "eventType": "page_submit_success",
+      "value": "{\"pageNumber\":\"0.2\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/0] 背景知识介绍\",\"auto_submit\":false}",
+      "time": "2025-02-01 09:04:07"
+    }
+  ],
+  "answerList": [],
+  "beginTime": "2025-02-01 09:04:00",
+  "endTime": "2025-02-01 09:04:07",
+  "imgList": []
+}

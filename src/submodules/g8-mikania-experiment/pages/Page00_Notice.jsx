@@ -4,7 +4,9 @@
  * 38秒倒计时后可勾选确认，勾选后可点击下一页
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { EventTypes } from '@shared/services/submission/eventTypes';
+import { getPageSubNum } from '../mapping';
 import { useMikaniaExperiment } from '../Component';
 import styles from '../styles/Page00_Notice.module.css';
 
@@ -16,27 +18,38 @@ function Page00Notice() {
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
+    flowContext,
   } = useMikaniaExperiment();
 
   const { noticeCountdown, noticeConfirmed } = state;
   const [showError, setShowError] = useState(false);
 
+  const subPageNum = getPageSubNum(state.currentPageId);
+  const flowStepIndex = flowContext?.stepIndex;
+  const pageNumber = useMemo(() => {
+    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
+  }, [flowStepIndex, subPageNum]);
+  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
+  const checkboxTarget = `${targetPrefix}注意事项确认`;
+  const nextButtonTarget = `${targetPrefix}下一页按钮`;
+  const pageTarget = `${targetPrefix}页面`;
+
   // 记录页面进入/退出
   useEffect(() => {
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: pageTarget,
+      eventType: EventTypes.PAGE_ENTER,
       value: 'page_00_notice',
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: pageTarget,
+        eventType: EventTypes.PAGE_EXIT,
         value: 'page_00_notice',
       });
     };
-  }, [logOperation]);
+  }, [logOperation, pageTarget]);
 
   // 倒计时逻辑
   useEffect(() => {
@@ -59,10 +72,9 @@ function Page00Notice() {
       setShowError(false);
     }
 
-    // 记录操作 - 使用标准事件类型
     logOperation({
-      targetElement: 'P1_注意事项确认',
-      eventType: checked ? 'checkbox_check' : 'checkbox_uncheck',
+      targetElement: checkboxTarget,
+      eventType: checked ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
       value: checked ? 'checked' : 'unchecked',
     });
   };
@@ -80,8 +92,8 @@ function Page00Notice() {
 
       // 记录阻断事件
       logOperation({
-        targetElement: '下一页按钮',
-        eventType: 'click_blocked',
+        targetElement: nextButtonTarget,
+        eventType: EventTypes.CLICK_BLOCKED,
         value: JSON.stringify({
           reason: 'validation_failed',
           missing,
@@ -95,8 +107,8 @@ function Page00Notice() {
 
     // 记录成功点击
     logOperation({
-      targetElement: '下一页按钮',
-      eventType: 'click',
+      targetElement: nextButtonTarget,
+      eventType: EventTypes.NEXT_CLICK,
       value: 'navigate_to_intro',
     });
 
@@ -121,9 +133,9 @@ function Page00Notice() {
           <span className={styles.readLabel}>请仔细阅读</span>
           <ul className={styles.noticeList}>
             <li>作答时间共<span className={styles.highlight}>20分钟</span>，时间结束后，系统将自动跳转到下一个测评环节。</li>
-            <li>请按顺序回答每页问题，<span className={styles.underline}>上一页题目未完成作答</span>，<span className={styles.underline}>将无法点击进入下一页</span>。</li>
-            <li>答题时，<span className={styles.underline}>不要提前点击"下一页"</span>查看后面的内容，<span className={styles.underline}>否则将无法返回上一页</span>。</li>
-            <li>遇到系统故障、死机、死循环等特殊情况时，<span className={styles.underline}>请举手示意老师</span>。</li>
+            <li>请按顺序回答每页问题，上一页题目未完成作答，将无法点击进入下一页。</li>
+            <li style={{ fontSize: '20px' }}>答题时，<span className={styles.underline}>不要提前点击&quot;下一页&quot;</span>查看后面的内容，<span className={styles.underline}>否则将无法返回上一页</span>。</li>
+            <li>遇到系统故障、死机、死循环等特殊情况时，请举手示意老师。</li>
           </ul>
         </div>
 
@@ -153,7 +165,7 @@ function Page00Notice() {
             <p className={styles.errorText}>
               {noticeCountdown > 0
                 ? '请等待倒计时结束后勾选确认'
-                : '请勾选"我已阅读并理解上述注意事项"后继续'}
+                : '请勾选：“我已阅读并理解上述注意事项“后继续'}
             </p>
           )}
         </div>

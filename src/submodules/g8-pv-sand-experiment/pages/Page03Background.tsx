@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
+import EventTypes from '@shared/services/submission/eventTypes.js';
 import styles from '../styles/Page03Background.module.css';
 import backgroundImage from '../assets/images/pv-sand-background.jpg';
 
@@ -21,17 +22,28 @@ const Page03Background: React.FC = () => {
     const startTime = new Date();
     setPageStartTime(startTime);
 
+    // 计时开始埋点
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: 'background_timer',
+      eventType: EventTypes.TIMER_START,
+      value: {
+        duration: 5,
+        unit: 'seconds',
+      },
+      time: startTime.toISOString(),
+    });
+
+    logOperation({
+      targetElement: 'page',
+      eventType: EventTypes.PAGE_ENTER,
       value: currentPageId,
       time: startTime.toISOString()
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: 'page',
+        eventType: EventTypes.PAGE_EXIT,
         value: currentPageId,
         time: new Date().toISOString()
       });
@@ -39,13 +51,35 @@ const Page03Background: React.FC = () => {
   }, [logOperation, setPageStartTime, currentPageId]);
 
   useEffect(() => {
+    if (canProceed) {
+      return;
+    }
+
     if (countdown <= 0) {
-      if (!canProceed) {
-        collectAnswer({
-          targetElement: 'background_read',
-          value: 'true'
-        });
-      }
+      collectAnswer({
+        targetElement: 'background_read',
+        value: 'true'
+      });
+      logOperation({
+        targetElement: 'background_timer',
+        eventType: EventTypes.TIMER_COMPLETE,
+        value: {
+          duration: 5,
+          unit: 'seconds',
+          remaining: 0,
+        },
+        time: new Date().toISOString(),
+      });
+      logOperation({
+        targetElement: 'system',
+        eventType: EventTypes.AUTO_SUBMIT,
+        value: {
+          reason: 'timer_expired',
+          trigger: 'auto_submit',
+          duration_seconds: 5,
+        },
+        time: new Date().toISOString(),
+      });
       return;
     }
 
@@ -58,32 +92,58 @@ const Page03Background: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* 主内容区域 */}
-      <div className={styles.mainContent}>
-        <h1 className={styles.title}>光伏治沙</h1>
+      {/* 标题区域 */}
+      <div className={styles.header}>
+        <h1 className={styles.title}>🌞 光伏治沙 🌿</h1>
+      </div>
 
-        <div className={styles.contentArea}>
-          <div className={styles.textSection}>
-            <p className={styles.description}>
-              2024年11月，中国库布齐沙漠通过"光伏项目"成功使6000多平方公里沙漠变为"能源绿洲"。这一成就引发了同学们的思考：光伏板为何能有效减少水分蒸发，以实现保水治沙？他们推测，<strong>改变地表风速可能是关键机制</strong>。为此，同学们设计了一项实地观测研究，以探究光伏板对风速的影响。
-            </p>
+      {/* 卡片容器 */}
+      <div className={styles.cardContainer}>
+        {/* 文字卡片 */}
+        <div className={styles.card}>
+          <span className={styles.cardIcon}>📖</span>
+          <h2 className={styles.cardTitle}>项目背景</h2>
+          <div className={styles.cardContent}>
+            <p>2024年11月，中国库布齐沙漠通过"光伏项目"成功使6000多平方公里沙漠变为"能源绿洲"。</p>
+            <br />
+            <p>这一成就引发了同学们的思考：光伏板为何能有效减少水分蒸发，以实现保水治沙？他们推测，<strong>改变地表风速可能是关键机制</strong>。</p>
+            <br />
+            <p>为此，同学们设计了一项实地观测研究，以探究光伏板对风速的影响。</p>
           </div>
+        </div>
 
-          <div className={styles.imageSection}>
+        {/* 图片卡片 */}
+        <div className={`${styles.card} ${styles.imageCard}`}>
+          <span className={styles.cardIcon}>🏜️</span>
+          <h2 className={styles.cardTitle}>光伏治沙现场</h2>
+          <div className={styles.imageWrapper}>
             <img
               src={backgroundImage}
               alt="光伏治沙项目示意图"
               className={styles.pvImage}
             />
           </div>
-        </div>
-
-        {!canProceed && (
-          <div style={{ textAlign: 'center', marginTop: '20px', color: '#666' }}>
-            请仔细阅读... {countdown}s
+          <div className={styles.imageCaption}>
+            📍 库布齐沙漠光伏项目 · 6000+平方公里能源绿洲
           </div>
-        )}
+        </div>
       </div>
+
+      {/* 高亮框 */}
+      <div className={styles.highlightBox}>
+        <p className={styles.highlightText}>
+          🔬 <strong>研究假设：</strong>光伏板通过改变地表风速，减少水分蒸发，实现保水治沙效果
+        </p>
+      </div>
+
+      {/* 倒计时提示 */}
+      {!canProceed && (
+        <div className={styles.countdownContainer}>
+          <div className={styles.countdown}>
+            ⏱️ 请仔细阅读材料... {countdown}s
+          </div>
+        </div>
+      )}
     </div>
   );
 };

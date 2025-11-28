@@ -1,0 +1,58 @@
+{
+  "pageNumber": "0.5",
+  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/0] 问题2-焦距分析",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "page",
+      "eventType": "page_enter",
+      "value": "Page05_FocalAnalysis",
+      "time": "2025-02-01 09:10:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "flow_context",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"g8-assessment-flow\",\"stepIndex\":0,\"submoduleId\":\"g8-drone-imaging\",\"moduleName\":\"g8-drone-imaging\",\"pageId\":\"focal_analysis\"}",
+      "time": "2025-02-01 09:10:00"
+    },
+    {
+      "code": 3,
+      "targetElement": "P0.5_最小GSD焦距",
+      "eventType": "radio_select",
+      "value": "B",
+      "time": "2025-02-01 09:10:05"
+    },
+    {
+      "code": 4,
+      "targetElement": "next_button",
+      "eventType": "next_click",
+      "value": "navigate_to_height_analysis",
+      "time": "2025-02-01 09:10:08"
+    },
+    {
+      "code": 5,
+      "targetElement": "page",
+      "eventType": "page_exit",
+      "value": "Page05_FocalAnalysis",
+      "time": "2025-02-01 09:10:08"
+    },
+    {
+      "code": 6,
+      "targetElement": "flow_context",
+      "eventType": "page_submit_success",
+      "value": "{\"pageNumber\":\"0.5\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/0] 问题2-焦距分析\",\"auto_submit\":false}",
+      "time": "2025-02-01 09:10:08"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "问题2：根据模拟实验，当飞行高度为100米时，使用何种焦距可以使地面采样距离（GSD）达到最小？",
+      "value": "B. 24毫米"
+    }
+  ],
+  "beginTime": "2025-02-01 09:10:00",
+  "endTime": "2025-02-01 09:10:08",
+  "imgList": []
+}

@@ -14,13 +14,17 @@ import styles from '../styles/Page01_Cover.module.css';
  * - CLICK_BLOCKED event on validation failure
  */
 export default function Page01_Cover() {
-  const { logOperation, navigateToPage, setAnswer } = useDroneImagingContext();
+  const { logOperation, navigateToPage, setAnswer, questionIds, getPagePrefix } = useDroneImagingContext();
+  const confirmReadId = questionIds.confirmRead;
+  const pagePrefix = getPagePrefix(1);
 
   // State for countdown and checkbox
   const [countdown, setCountdown] = useState(40);
   const [isChecked, setIsChecked] = useState(false);
   const [error, setError] = useState('');
+  const [isCountdownFinished, setCountdownFinished] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Page enter/exit logging
   useEffect(() => {
@@ -31,7 +35,27 @@ export default function Page01_Cover() {
       time: formatTimestamp(new Date()),
     });
 
+    logOperation({
+      targetElement: `${pagePrefix}countdown`,
+      eventType: EventTypes.TIMER_START,
+      value: JSON.stringify({ duration: 40, unit: 'seconds' }),
+      time: formatTimestamp(new Date()),
+    });
+
+    countdownStopRef.current = setTimeout(() => {
+      logOperation({
+        targetElement: `${pagePrefix}countdown`,
+        eventType: EventTypes.TIMER_STOP,
+        value: JSON.stringify({ reason: 'countdown_finished', elapsed: 40 }),
+        time: formatTimestamp(new Date()),
+      });
+      setCountdownFinished(true);
+    }, 40000);
+
     return () => {
+      if (countdownStopRef.current) {
+        clearTimeout(countdownStopRef.current);
+      }
       logOperation({
         targetElement: 'page',
         eventType: EventTypes.PAGE_EXIT,
@@ -39,11 +63,11 @@ export default function Page01_Cover() {
         time: formatTimestamp(new Date()),
       });
     };
-  }, [logOperation]);
+  }, [logOperation, pagePrefix]);
 
   // Countdown timer
   useEffect(() => {
-    if (countdown <= 0) {
+    if (countdown <= 0 || isCountdownFinished) {
       return undefined;
     }
 
@@ -56,7 +80,7 @@ export default function Page01_Cover() {
         clearTimeout(timerRef.current);
       }
     };
-  }, [countdown]);
+  }, [countdown, isCountdownFinished]);
 
   // Handle checkbox change
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,14 +89,14 @@ export default function Page01_Cover() {
     setError('');
 
     logOperation({
-      targetElement: 'P1_确认阅读',
+      targetElement: confirmReadId,
       eventType: checked ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
       value: checked ? 'checked' : 'unchecked',
       time: formatTimestamp(new Date()),
     });
 
     // Save answer for Flow-level validation
-    setAnswer('P1_确认阅读', checked ? '已确认' : '');
+    setAnswer(confirmReadId, checked ? '已确认' : '');
   };
 
   // Handle next button click (used by Flow frame fallback)
@@ -85,7 +109,10 @@ export default function Page01_Cover() {
       logOperation({
         targetElement: 'next_button',
         eventType: EventTypes.CLICK_BLOCKED,
-        value: 'checkbox_not_checked',
+        value: JSON.stringify({
+          reason: 'checkbox_not_checked',
+          missing: [confirmReadId],
+        }),
         time: formatTimestamp(new Date()),
       });
       return;
@@ -112,7 +139,7 @@ export default function Page01_Cover() {
   };
 
   // Determine countdown display state
-  const isCountdownActive = countdown > 0;
+  const isCountdownActive = countdown > 0 && !isCountdownFinished;
 
   return (
     <div className={styles.coverContainer} data-testid="page-cover">
@@ -133,18 +160,16 @@ export default function Page01_Cover() {
               作答时间为 <span className={styles.highlightBold}>20 分钟</span>，时间结束后，系统将自动跳转到下一个测评环节。
             </li>
             <li>
-              请按顺序回答每页问题，
-              <span className={styles.highlight}>上一页题目未完成作答，将无法点击进入下一页</span>。
+              请按顺序回答每页问题，上一页题目未完成作答，将无法点击进入下一页。
             </li>
-            <li>
+            <li style={{ fontSize: '18px' }}>
               答题时，
               <span className={styles.highlightBold}>不要提前点击“下一页”</span>
               查看后面的内容，
               <span className={styles.highlight}>否则将无法返回上一页</span>。
             </li>
             <li>
-              遇到系统故障、死机、死循环等特殊情况时，
-              <span className={styles.highlightBold}>请举手示意老师</span>。
+              遇到系统故障、死机、死循环等特殊情况时，请举手示意老师。
             </li>
           </ul>
         </div>
@@ -154,9 +179,8 @@ export default function Page01_Cover() {
           {/* Checkbox */}
           <div className={styles.checkboxWrapper}>
             <label
-              className={`${styles.checkboxLabel} ${
-                isCountdownActive ? styles.disabled : ''
-              }`}
+              className={`${styles.checkboxLabel} ${isCountdownActive ? styles.disabled : ''
+                }`}
             >
               <input
                 type="checkbox"

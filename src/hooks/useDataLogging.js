@@ -1,5 +1,11 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+
+const toInputString = (value) => {
+  if (value === null || value === undefined) return '';
+  return String(value);
+};
 
 /**
  * 数据记录自定义Hook
@@ -10,6 +16,15 @@ import { useAppContext } from '../context/AppContext';
  */
 export const useDataLogging = (pageId = null) => {
   const { logOperation, collectAnswer } = useAppContext();
+  const inputStateRef = useRef({});
+
+  const getInputState = useCallback((target) => {
+    if (!target) return { lastValue: '', hasFocused: false };
+    if (!inputStateRef.current[target]) {
+      inputStateRef.current[target] = { lastValue: '', hasFocused: false };
+    }
+    return inputStateRef.current[target];
+  }, []);
 
   /**
    * 记录输入事件
@@ -17,12 +32,42 @@ export const useDataLogging = (pageId = null) => {
    * @param {string} value - 输入值
    */
   const logInput = useCallback((targetElement, value) => {
+    const state = getInputState(targetElement);
+    const prevValue = state.lastValue ?? '';
+    const nextValue = toInputString(value);
+
+    if (!state.hasFocused) {
+      logOperation({
+        targetElement,
+        eventType: EventTypes.INPUT_FOCUS,
+        value: '聚焦输入框'
+      });
+      state.hasFocused = true;
+    }
+
+    if (nextValue.length < prevValue.length) {
+      logOperation({
+        targetElement,
+        eventType: EventTypes.INPUT_DELETE,
+        value: {
+          action: 'delete',
+          prevLength: prevValue.length,
+          nextLength: nextValue.length
+        }
+      });
+    }
+
     logOperation({
       targetElement,
-      eventType: 'input',
-      value: value || ''
+      eventType: EventTypes.INPUT_CHANGE,
+      value: {
+        prev: prevValue,
+        next: nextValue
+      }
     });
-  }, [logOperation]);
+
+    state.lastValue = nextValue;
+  }, [getInputState, logOperation]);
 
   /**
    * 记录输入框失焦事件并收集答案
@@ -31,17 +76,22 @@ export const useDataLogging = (pageId = null) => {
    * @param {string} answerElement - 答案元素描述（可选，默认使用targetElement）
    */
   const logInputBlur = useCallback((targetElement, value, answerElement = null) => {
+    const state = getInputState(targetElement);
+    const normalizedValue = toInputString(value);
+
     logOperation({
       targetElement,
-      eventType: 'input_blur',
-      value: value || ''
+      eventType: EventTypes.INPUT_BLUR,
+      value: normalizedValue
     });
+    state.lastValue = normalizedValue;
+    state.hasFocused = false;
     
     collectAnswer({
       targetElement: answerElement || targetElement,
-      value: value || ''
+      value: normalizedValue
     });
-  }, [logOperation, collectAnswer]);
+  }, [collectAnswer, getInputState, logOperation]);
 
   /**
    * 记录按钮点击事件

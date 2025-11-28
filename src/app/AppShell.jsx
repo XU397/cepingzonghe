@@ -5,6 +5,7 @@ import { FlowModule } from '@/flows/FlowModule.jsx';
 import { AppProvider } from '@/context/AppContext.jsx';
 import G8DroneImagingDevPage from '@/dev/G8DroneImagingDevPage.jsx';
 import UserInfoBar from '@/components/common/UserInfoBar.jsx';
+import FullscreenEnforcer from '@/components/FullscreenEnforcer.jsx';
 import PvSandDevHarness from '@/submodules/g8-pv-sand-experiment/dev/PvSandDevHarness';
 
 function AppProviders({ children }) {
@@ -39,6 +40,7 @@ export default function AppShell() {
   return (
     <AppProviders>
       <AppProvider>
+        <FullscreenEnforcer />
         {/* Global UserInfoBar (fixed position); shared across all routes */}
         {!isLoginPage && <UserInfoBar />}
         <Routes>

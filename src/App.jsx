@@ -7,17 +7,12 @@ import StepNavigation from './components/common/StepNavigation';
 import QuestionnaireNavigation from './components/questionnaire/QuestionnaireNavigation';
 import ApiConfigDebug from './components/debug/ApiConfigDebug';
 // import DevToolsPanel from './components/dev/DevToolsPanel';  // 文件不存在，暂时注释
-import useFullscreen from './hooks/useFullscreen';
-import FullscreenPrompt from './components/FullscreenPrompt';
 import { isQuestionnairePage, getQuestionnaireStepNumber, TOTAL_QUESTIONNAIRE_STEPS } from './utils/pageMappings';
 // import { initGlobalErrorHandling } from './utils/errorHandler'; // 可选：启用错误过滤
 import './styles/global.css'; // Ensure global styles are imported
 
 // 导入模块路由器
 const ModuleRouter = React.lazy(() => import('./modules/ModuleRouter.jsx'));
-const isDevEnvironment = typeof process !== 'undefined'
-  ? process.env.NODE_ENV === 'development'
-  : Boolean(import.meta.env?.DEV);
 
 /**
  * 主应用内容组件
@@ -69,9 +64,6 @@ const AppContent = () => {
 
   // 用于防止重复日志输出
   const moduleLoggedRef = useRef(false);
-
-  // 全屏管理
-  const { isFullscreen, enterFullscreen } = useFullscreen();
 
   // 🚀 性能优化：提前声明 useMemo，避免 Hook 顺序问题
   // 必须在所有条件语句之前调用，符合 React Hooks 规则
@@ -213,10 +205,7 @@ const AppContent = () => {
   if (!isAuthenticated) {
     return (
       <div className="app-container">
-        {/* 全屏提示 - 仅在已登录但未通过认证时显示 */}
-        {isLoggedIn && !isFullscreen && (
-          <FullscreenPrompt onEnterFullscreen={enterFullscreen} />
-        )}
+        {/* 全屏提示现在使用DOM管理器处理，不再使用React组件 */}
         <div className="task-wrapper">
           <PageRouter />
         </div>
@@ -252,13 +241,9 @@ const AppContent = () => {
       console.log('[App] 📦 渲染模块系统界面');
       moduleLoggedRef.current = true;
     }
-    
     return (
       <div className="app-container">
-        {/* 全屏提示 - 当用户退出全屏时显示 */}
-        {!isFullscreen && (
-          <FullscreenPrompt onEnterFullscreen={enterFullscreen} />
-        )}
+        {/* 全屏提示现在使用DOM管理器处理，不再使用React组件 */}
 
         {/* UserInfoBar 已移到 AppShell 全局渲染 */}
         {showTimer && (isCurrentPageQuestionnaire ? <QuestionnaireTimer /> : <Timer />)}
@@ -295,10 +280,7 @@ const AppContent = () => {
   // 默认情况：使用传统页面路由器
   return (
     <div className="app-container">
-      {/* 全屏提示 - 当用户退出全屏时显示 */}
-      {!isFullscreen && (
-        <FullscreenPrompt onEnterFullscreen={enterFullscreen} />
-      )}
+      {/* 全屏提示现在使用DOM管理器处理，不再使用React组件 */}
 
       {/* UserInfoBar 已移到 AppShell 全局渲染 */}
       {/* 根据当前页面类型显示不同的计时器 */}
@@ -333,7 +315,7 @@ function App() {
     <>
       <AppContent />
       {showDebug && <ApiConfigDebug />}
-      {/* {isDevEnvironment && <DevToolsPanel />} */}  {/* 临时注释，DevToolsPanel组件不存在 */}
+      {/* DevToolsPanel disabled: component is not available */}
     </>
   );
 }

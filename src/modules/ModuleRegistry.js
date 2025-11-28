@@ -10,6 +10,7 @@ class ModuleRegistry {
     this.modules = new Map();
     this.urlToModuleMap = new Map();
     this.initialized = false;
+    this.initializingPromise = null;
   }
 
   register(module) {
@@ -196,33 +197,44 @@ class ModuleRegistry {
       return;
     }
 
+    // 并发防护：如果已有进行中的初始化，复用该 Promise
+    if (this.initializingPromise) {
+      console.log('[ModuleRegistry] ⏳ 正在初始化，等待完成...');
+      return this.initializingPromise;
+    }
+
     console.log('[ModuleRegistry] 🚀 开始初始化模块系统...');
 
-    try {
-      // 动态导入并注册7年级模块（包装器）
-      const { Grade7Module } = await import('./grade-7/index.jsx');
-      this.register(Grade7Module);
+    this.initializingPromise = (async () => {
+      try {
+        // 动态导入并注册7年级模块（包装器）
+        const { Grade7Module } = await import('./grade-7/index.jsx');
+        this.register(Grade7Module);
 
-      // 动态导入并注册4年级模块
-      const { Grade4Module_Definition } = await import('./grade-4/index.jsx');
-      this.register(Grade4Module_Definition);
+        // 动态导入并注册4年级模块
+        const { Grade4Module_Definition } = await import('./grade-4/index.jsx');
+        this.register(Grade4Module_Definition);
 
-      // 动态导入并注册7年级追踪测评模块
-      const { Grade7TrackingModule_Definition } = await import('./grade-7-tracking/index.jsx');
-      this.register(Grade7TrackingModule_Definition);
+        // 动态导入并注册7年级追踪测评模块
+        const { Grade7TrackingModule_Definition } = await import('./grade-7-tracking/index.jsx');
+        this.register(Grade7TrackingModule_Definition);
 
-      // 动态导入并注册 Flow 模块
-      const { FlowModule_Definition } = await import('../flows/FlowModule.jsx');
-      this.register(FlowModule_Definition);
+        // 动态导入并注册 Flow 模块
+        const { FlowModule_Definition } = await import('../flows/FlowModule.jsx');
+        this.register(FlowModule_Definition);
 
-      this.initialized = true;
-      console.log('[ModuleRegistry] ✅ 模块系统初始化完成');
-      console.log('[ModuleRegistry] 📋 已注册模块:', this.getAllUrlMappings());
+        this.initialized = true;
+        console.log('[ModuleRegistry] ✅ 模块系统初始化完成');
+        console.log('[ModuleRegistry] 📋 已注册模块:', this.getAllUrlMappings());
+      } catch (error) {
+        console.error('[ModuleRegistry] ❌ 模块系统初始化失败:', error);
+        throw error;
+      } finally {
+        this.initializingPromise = null;
+      }
+    })();
 
-    } catch (error) {
-      console.error('[ModuleRegistry] ❌ 模块系统初始化失败:', error);
-      throw error;
-    }
+    return this.initializingPromise;
   }
 
   /**

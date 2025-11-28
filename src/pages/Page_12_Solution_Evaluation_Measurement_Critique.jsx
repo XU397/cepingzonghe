@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import TextInput from '../components/common/TextInput';
 import NavigationButton from '../components/common/NavigationButton';
 
@@ -15,44 +16,52 @@ import method3Image from '../assets/images/06-3.png';
  * 
  * @returns {React.ReactElement} 方案评估测量方法评价页面
  */
+const DEFAULT_CRITIQUES = {
+  method1: { advantages: '', disadvantages: '' },
+  method2: { advantages: '', disadvantages: '' },
+  method3: { advantages: '', disadvantages: '' }
+};
+
+const DEFAULT_INPUT_STATE = {
+  method1_advantages: { focused: false, lastValue: '' },
+  method1_disadvantages: { focused: false, lastValue: '' },
+  method2_advantages: { focused: false, lastValue: '' },
+  method2_disadvantages: { focused: false, lastValue: '' },
+  method3_advantages: { focused: false, lastValue: '' },
+  method3_disadvantages: { focused: false, lastValue: '' }
+};
+
 const Page_12_Solution_Evaluation_Measurement_Critique = () => {
   const {
     navigateToPage,
-    submitPageData,
     currentPageId,
     setPageEnterTime
   } = useAppContext();
+  const { submitPage, logOperation } = usePageSubmissionContext();
   
-  // 数据记录Hook
-  const {
-    logInput,
-    logInputBlur,
-    logButtonClick,
-    logPageEnter,
-    collectDirectAnswer
-  } = useDataLogging('Page_12_Solution_Evaluation_Measurement_Critique');
-  
-  const [critiques, setCritiques] = useState({
-    method1: { advantages: '', disadvantages: '' },
-    method2: { advantages: '', disadvantages: '' },
-    method3: { advantages: '', disadvantages: '' }
-  });
+  const [critiques, setCritiques] = useState(() => ({ ...DEFAULT_CRITIQUES }));
   const [isNextEnabled, setIsNextEnabled] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
-  const prevCritiquesRef = useRef({});
+  const operationsRef = useRef([]);
+  const inputStatesRef = useRef({ ...DEFAULT_INPUT_STATE });
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
 
   // 页面进入记录 - 只执行一次
   useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      setPageEnterTime(new Date());
-      logPageEnter('方案评估测量方法评价页面');
-    }
-  }, []);
+    if (pageLoadedRef.current) return;
+    pageLoadedRef.current = true;
+    operationsRef.current = [];
+    inputStatesRef.current = { ...DEFAULT_INPUT_STATE };
+    setPageEnterTime(new Date());
+  }, [setPageEnterTime]);
 
   // 缓存是否所有字段都填写完成的计算
   const allFieldsFilled = useMemo(() => {
@@ -72,60 +81,120 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
    * 处理评价输入变化
    */
   const handleCritiqueChange = useCallback((key, fieldType, value) => {
+    const inputKey = `${key}_${fieldType}`;
+    const prevValue = inputStatesRef.current[inputKey]?.lastValue || '';
+    const nextValue = value;
+
     setCritiques(prevCritiques => ({
       ...prevCritiques,
       [key]: {
         ...prevCritiques[key],
-        [fieldType]: value
+        [fieldType]: nextValue
       }
     }));
     
-    // 记录输入操作
-    const methodNumber = key.replace('method', '');
-    const fieldName = fieldType === 'advantages' ? '优点' : '缺点';
-    logInput(`方法${methodNumber}${fieldName}输入框`, value);
-  }, [logInput]);
+    if (nextValue.length < prevValue.length) {
+      recordOperation({
+        eventType: EventTypes.INPUT_DELETE,
+        targetElement: `input_${inputKey}`,
+        value: { action: 'delete', prevLength: prevValue.length, nextLength: nextValue.length }
+      });
+    }
+
+    recordOperation({
+      eventType: EventTypes.INPUT_CHANGE,
+      targetElement: `input_${inputKey}`,
+      value: { prev: prevValue, next: nextValue }
+    });
+
+    inputStatesRef.current[inputKey] = {
+      ...(inputStatesRef.current[inputKey] || { focused: false, lastValue: '' }),
+      lastValue: nextValue
+    };
+  }, [recordOperation]);
+
+  /**
+   * 处理输入框聚焦
+   */
+  const handleInputFocus = useCallback((methodKey, fieldType) => {
+    const inputKey = `${methodKey}_${fieldType}`;
+    const currentState = inputStatesRef.current[inputKey] || { focused: false, lastValue: '' };
+
+    if (!currentState.focused) {
+      recordOperation({
+        eventType: EventTypes.INPUT_FOCUS,
+        targetElement: `input_${inputKey}`,
+        value: '聚焦'
+      });
+    }
+
+    inputStatesRef.current[inputKey] = {
+      ...currentState,
+      focused: true,
+      lastValue: critiques[methodKey][fieldType] || ''
+    };
+  }, [critiques, recordOperation]);
 
   /**
    * 处理输入框失焦
    */
   const handleInputBlur = useCallback((methodKey, fieldType) => {
-    const value = critiques[methodKey][fieldType];
-    const methodNumber = methodKey.replace('method', '');
-    const fieldName = fieldType === 'advantages' ? '优点' : '缺点';
-    
-    // 使用缓存机制避免重复提交相同答案
-    const currentCritiques = JSON.stringify(critiques);
-    const prevCritiques = JSON.stringify(prevCritiquesRef.current);
-    
-    if (currentCritiques !== prevCritiques) {
-      prevCritiquesRef.current = { ...critiques };
-      logInputBlur(`方法${methodNumber}${fieldName}输入框`, value, `方法${methodNumber}${fieldName}答案`);
-    }
-  }, [critiques, logInputBlur]);
+    const inputKey = `${methodKey}_${fieldType}`;
+    const value = critiques[methodKey][fieldType] || '';
+
+    recordOperation({
+      eventType: EventTypes.INPUT_BLUR,
+      targetElement: `input_${inputKey}`,
+      value
+    });
+
+    inputStatesRef.current[inputKey] = {
+      ...(inputStatesRef.current[inputKey] || { focused: false, lastValue: '' }),
+      focused: false,
+      lastValue: value
+    };
+  }, [critiques, recordOperation]);
 
   const handleNextPage = useCallback(async () => {
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: isNextEnabled ? '提交测量方法评价' : '点击失败 - 未完成所有评价'
+    });
+
     if (!isNextEnabled) {
       setAlertMessage('请对每种方法的优点和缺点都进行评价。');
       setShowAlert(true);
-      logButtonClick('下一页', '点击失败 - 未完成所有评价');
       return false;
     }
 
-    logButtonClick('下一页', '点击成功');
-    
-    // 收集所有评价作为答案
-    Object.entries(critiques).forEach(([methodKey, fields], index) => {
+    const answers = Object.entries(critiques).flatMap(([methodKey, fields], index) => {
       const methodNumber = index + 1;
-      if (fields.advantages.trim()) { 
-        collectDirectAnswer(`测量方法${methodNumber}优点`, fields.advantages.trim());
+      const trimmedAdvantages = fields.advantages.trim();
+      const trimmedDisadvantages = fields.disadvantages.trim();
+      const methodAnswers = [];
+
+      if (trimmedAdvantages) {
+        methodAnswers.push({
+          targetElement: `measurement_method_${methodNumber}_advantage`,
+          value: trimmedAdvantages
+        });
       }
-      if (fields.disadvantages.trim()) {
-        collectDirectAnswer(`测量方法${methodNumber}缺点`, fields.disadvantages.trim());
+
+      if (trimmedDisadvantages) {
+        methodAnswers.push({
+          targetElement: `measurement_method_${methodNumber}_disadvantage`,
+          value: trimmedDisadvantages
+        });
       }
-    });
+
+      return methodAnswers;
+    }).filter(Boolean);
     
-    const submissionSuccess = await submitPageData();
+    const submissionSuccess = await submitPage({
+      answers,
+      operations: operationsRef.current,
+    });
     if (submissionSuccess) {
       navigateToPage('Page_13_Transition_To_Simulation', { skipSubmit: true });
       return true;
@@ -134,7 +203,7 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
       setShowAlert(true);
       return false;
     }
-  }, [isNextEnabled, logButtonClick, critiques, collectDirectAnswer, submitPageData, navigateToPage]);
+  }, [critiques, isNextEnabled, navigateToPage, recordOperation, submitPage]);
   
   // 缓存方法数据
   const methodsData = useMemo(() => [
@@ -257,11 +326,12 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
               <label style={{ fontSize: '0.9em', color: '#333', marginTop: '-10px',fontWeight: 'bold', display: 'block' }}>优点：</label>
               <TextInput
                 value={critiques[method.key].advantages}
-                onChange={(value) => handleCritiqueChange(method.key, 'advantages', value)}
+              onChange={(value) => handleCritiqueChange(method.key, 'advantages', value)}
                 placeholder={method.advantagesPlaceholder}
                 isMultiline={true}
                 elementDesc={method.advantagesInputDesc}
                 rows={3}
+                onFocus={() => handleInputFocus(method.key, 'advantages')}
                 onBlur={() => handleInputBlur(method.key, 'advantages')}
                 style={{
                   width: '100%',
@@ -283,6 +353,7 @@ const Page_12_Solution_Evaluation_Measurement_Critique = () => {
                 isMultiline={true}
                 elementDesc={method.disadvantagesInputDesc}
                 rows={3}
+                onFocus={() => handleInputFocus(method.key, 'disadvantages')}
                 onBlur={() => handleInputBlur(method.key, 'disadvantages')}
                 style={{
                   width: '100%',

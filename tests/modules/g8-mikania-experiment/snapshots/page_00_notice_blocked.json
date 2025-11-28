@@ -1,0 +1,18 @@
+{
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_00_notice",
+      "time": "2025-11-22 10:00:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "下一页按钮",
+      "eventType": "click_blocked",
+      "value": "{\"reason\":\"validation_failed\",\"missing\":[\"倒计时未结束\",\"注意事项确认\"]}",
+      "time": "2025-11-22 10:00:10"
+    }
+  ]
+}

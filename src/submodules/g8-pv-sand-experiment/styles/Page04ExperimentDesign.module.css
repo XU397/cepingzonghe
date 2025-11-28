@@ -1,91 +1,248 @@
+/* Page04_ExperimentDesign.module.css - Experiment design page with Page03_Hypothesis layout */
+
+/* CSS Variables - Global color standards */
+:root {
+  --cartoon-primary: #59c1ff;
+  /* Primary color: buttons, selected state */
+  --cartoon-secondary: #ffce6b;
+  /* Secondary color */
+  --cartoon-border: #ffd99e;
+  /* Border color: card borders, input borders */
+  --cartoon-green: #67d5b5;
+  /* Success green */
+  --cartoon-red: #ff8a80;
+  /* Warning red */
+  --text-color: #333333;
+  /* Body text: questions, descriptions */
+  --warning-bg: #fff8e1;
+  /* Warning background */
+  --warning-border: #ff9800;
+  /* Warning border */
+  --warning-text: #e65100;
+  /* Warning text */
+}
+
 /* Main container */
-.container {
+.designContainer {
+  padding: 12px 20px;
+  max-width: 100%;
+  margin: 0 auto;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100%;
-  background-color: #ffffff;
-  font-family: 'Microsoft YaHei', sans-serif;
-  overflow: hidden;
-  user-select: none;
 }
 
-/* Title at top */
-.title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #2e5c4f;
-  text-align: center;
-  padding: 16px 20px;
-  background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
-  border-bottom: 1px solid #ddd;
-  margin: 0;
+/* Page title */
+.pageTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0 0 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f0f0f0;
+  flex-shrink: 0;
 }
 
-/* Two-column layout */
-.contentWrapper {
+/* Split layout container: 3/4 left + 1/4 right */
+.splitLayout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 3fr 1fr;
+  gap: 16px;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
-/* Left section - Instructions */
-.leftSection {
-  padding: 16px;
-  background: #f8fafc;
-  border-right: 1px solid #e0e0e0;
+/* ==================== LEFT CONTENT: EXPERIMENT STEPS ==================== */
+
+.leftContent {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
   overflow-y: auto;
+  padding-right: 8px;
 }
 
-.instructionBox {
-  background-color: #e8f5e9;
-  border: 1px solid #c8e6c9;
-  padding: 16px;
-  line-height: 1.8;
+/* Experimental Background Section */
+.backgroundSection {
+  background: var(--warning-bg);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 0;
+  border-left: 3px solid var(--warning-border);
+  border: 2px solid var(--cartoon-border);
+  flex-shrink: 0;
+}
+
+.backgroundTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--warning-text);
+  margin-bottom: 4px;
+}
+
+.backgroundText {
+  font-size: 14px;
+  color: var(--warning-text);
+  text-indent: 2em;
+  line-height: 1.6;
+}
+
+/* Experiment Steps Section */
+.stepsSection {
+  background: #f8f9fa;
+  padding: 12px;
   border-radius: 8px;
+  margin-bottom: 8px;
+  border: 2px solid #e9ecef;
+  flex-shrink: 0;
 }
 
-.instructionText {
-  margin: 0 0 8px 0;
-  font-size: 16px;
-  color: #333;
-  text-indent: 2em;
+/* Steps Title with decorative lines */
+.stepsTitle {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #495057;
+  margin-bottom: 15px;
+  position: relative;
+  line-height: 2;
 }
 
-.stepText {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  color: #333;
-  text-indent: 2em;
+.stepsTitle::before,
+.stepsTitle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #dee2e6);
 }
 
-.imageContainer {
-  display: flex;
+.stepsTitle::before {
+  left: 10px;
+}
+
+.stepsTitle::after {
+  right: 10px;
+  background: linear-gradient(to left, transparent, #dee2e6);
+}
+
+/* Steps Container - 3 horizontal cards */
+.stepsContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  justify-content: flex-start;
-  flex-wrap: wrap;
 }
 
-.imageWrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* Step Card */
+.stepCard {
+  background: white;
+  padding: 10px 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  border: 2px solid var(--cartoon-border);
 }
 
-.imagePlaceholder {
-  width: 140px;
-  height: 120px;
-  background-color: #fff;
-  border: 1px solid #ddd;
+.stepCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  border-color: var(--cartoon-primary);
+}
+
+/* Step Number Badge */
+.stepNumber {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  background: var(--cartoon-primary);
+  color: white;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(89, 193, 255, 0.4);
+}
+
+/* Step Icon */
+.stepIcon {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+/* Step Title */
+.stepTitle {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #495057;
+  margin-bottom: 4px;
+}
+
+/* Step Content */
+.stepContent {
+  font-size: 14px;
+  color: #6c757d;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Step Highlight */
+.stepHighlight {
+  color: var(--cartoon-primary);
+  font-weight: 600;
+}
+
+/* Steps Footer Note */
+.stepsFooterNote {
+  text-align: center;
+  font-size: 14px;
+  color: #6c757d;
+  line-height: 1.6;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Images Section - Below steps */
+.imagesSection {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.imageCard {
+  background: white;
+  padding: 8px;
   border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  border: 2px solid var(--cartoon-border);
+}
+
+.imageCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  border-color: var(--cartoon-primary);
+}
+
+.imageWrapper {
+  width: 100%;
+  height: 220px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  border: 1px solid #e9ecef;
 }
 
 .experimentImage {
@@ -95,164 +252,220 @@
   display: block;
 }
 
-.anemometerSvg {
-  width: 100%;
-  height: 100%;
-}
-
 .imageLabel {
-  margin-top: 6px;
-  font-size: 16px;
-  color: #333;
+  text-align: center;
+  font-size: 11px;
+  color: #495057;
+  font-weight: 600;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
 }
 
 .bullet {
-  font-size: 16px;
-  color: #333;
+  font-size: 11px;
+  color: var(--cartoon-primary);
 }
 
-/* Right section - Question area */
-.rightSection {
-  padding: 16px;
-  background: #ffffff;
+/* ==================== RIGHT CONTENT: QUESTION & INPUT ==================== */
+
+.rightContent {
   display: flex;
   flex-direction: column;
+  gap: 10px;
   overflow-y: auto;
 }
 
-.questionBox {
+/* Question Section */
+.questionSection {
+  background: #3b9fd9;
+  padding: 12px 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(59, 159, 217, 0.35);
+  position: relative;
+  border: 2px solid var(--cartoon-border);
+  margin-top: 30px;
+  flex-shrink: 0;
+}
+
+.questionBadge {
+  position: absolute;
+  top: -25px;
+  left: 14px;
+  background: var(--cartoon-red);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(255, 138, 128, 0.4);
+}
+
+.questionContent {
+  color: white;
+  font-size: 16px;
+  line-height: 2;
+  font-weight: 500;
+  text-indent: 2em;
+}
+
+.questionContent strong {
+  font-weight: 700;
+}
+
+/* Textarea wrapper */
+.textareaWrapper {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
-.questionText {
-  margin: 0 0 15px 0;
-  font-size: 18px;
-  color: #333;
-  line-height: 2;
-}
-
-.questionLabel {
-  color: #c00;
-  font-weight: bold;
-}
-
-.textArea {
+/* Textarea */
+.textarea {
   width: 100%;
-  height: 180px;
-  padding: 16px;
-  border: 2px solid #1a3a5c;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  line-height: 1.6;
+
+  height: 150px;
+  padding: 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 2px solid var(--cartoon-border);
   resize: none;
   box-sizing: border-box;
-  background-color: #fff;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: inherit;
+  line-height: 1.5;
 }
 
-.textArea:focus {
+.textarea:focus {
   outline: none;
-  border-color: #2a5a8c;
+  border-color: var(--cartoon-primary);
+  box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.1);
 }
 
-.navigation {
-  position: fixed;
-  bottom: 30px;
-  right: 50px;
-  z-index: 100;
+.textarea.error {
+  border-color: #d32f2f;
 }
 
-.nextButton {
-  background-color: #fff;
-  color: #333;
-  border: 2px solid #333;
-  padding: 8px 20px;
-  font-size: 16px;
-  font-weight: normal;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.textarea::placeholder {
+  color: #adb5bd;
 }
 
-.nextButton:hover:not(.disabled) {
-  background-color: #f0f0f0;
+/* Character count indicator */
+.charCounter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  padding: 0 4px;
+  font-size: 11px;
+  flex-shrink: 0;
 }
 
-.nextButton.disabled {
-  background-color: #f5f5f5;
-  color: #999;
-  border-color: #ccc;
-  cursor: not-allowed;
+.charCount {
+  color: #6c757d;
+  font-weight: 500;
 }
 
+.charCount.warning {
+  color: #ff9800;
+}
+
+.charCount.valid {
+  color: var(--cartoon-green);
+}
+
+.minCharsHint {
+  color: #adb5bd;
+  font-size: 11px;
+}
+
+/* Error message */
 .errorMessage {
-  background: #fff5f5;
-  border: 2px solid #e74c3c;
-  border-radius: 8px;
-  padding: 12px 20px;
-  color: #e74c3c;
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  animation: errorShake 0.5s ease-out;
-  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
-  margin-top: 10px;
+  color: #d32f2f;
+  font-size: 11px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: #ffebee;
+  border-radius: 4px;
+  border-left: 2px solid #d32f2f;
+  animation: shake 0.6s ease-in-out;
+  flex-shrink: 0;
 }
 
-@keyframes errorShake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-  20%, 40%, 60%, 80% { transform: translateX(5px); }
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-8px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(8px);
+  }
 }
+
+/* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 1024px) {
-  .contentWrapper {
-    flex-direction: column;
+  .stepsContainer {
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
 
-  .rightSection {
-    width: 100%;
-  }
-
-  .imageContainer {
-    justify-content: center;
+  .stepCard {
+    margin-top: 20px;
   }
 }
 
 @media (max-width: 768px) {
-  .container {
-    flex-direction: column;
+  .splitLayout {
+    grid-template-columns: 1fr;
   }
 
-  .mainContent {
-    padding: 15px;
+  .stepsContainer {
+    grid-template-columns: 1fr;
   }
 
-  .title {
-    font-size: 32px;
-    text-align: center;
+  .imagesSection {
+    grid-template-columns: 1fr;
   }
 
-  .imagePlaceholder {
-    width: 140px;
-    height: 120px;
+  .designContainer {
+    padding: 16px;
   }
 
-  .navigation {
-    position: relative;
-    bottom: auto;
-    right: auto;
-    text-align: center;
-    margin-top: 30px;
+  .textarea {
+    min-height: 150px;
   }
 }
 
 @media (max-width: 480px) {
-  .title {
-    font-size: 28px;
+  .pageTitle {
+    font-size: 20px;
+  }
+
+  .stepsTitle {
+    font-size: 16px;
+  }
+
+  .stepTitle {
+    font-size: 14px;
+  }
+
+  .questionContent {
+    font-size: 14px;
   }
 }

@@ -1,0 +1,86 @@
+{
+  "pageNumber": "1.3",
+  "pageDesc": "[flow-g8-experiment-2024/g8-mikania-experiment/1] 实验步骤",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_02_step_q1",
+      "time": "2025-11-22 10:01:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "P1.3_Q1_控制变量原因",
+      "eventType": "input_focus",
+      "value": "",
+      "time": "2025-11-22 10:01:05"
+    },
+    {
+      "code": 3,
+      "targetElement": "P1.3_Q1_控制变量原因",
+      "eventType": "input_change",
+      "value": "{\"prev\":\"\",\"next\":\"为了\"}",
+      "time": "2025-11-22 10:01:08"
+    },
+    {
+      "code": 4,
+      "targetElement": "P1.3_Q1_控制变量原因",
+      "eventType": "input_delete",
+      "value": "{\"action\":\"delete\",\"prev\":\"为了\",\"next\":\"为\"}",
+      "time": "2025-11-22 10:01:10"
+    },
+    {
+      "code": 5,
+      "targetElement": "P1.3_Q1_控制变量原因",
+      "eventType": "input_change",
+      "value": "{\"prev\":\"为\",\"next\":\"为控制变量\"}",
+      "time": "2025-11-22 10:01:15"
+    },
+    {
+      "code": 6,
+      "targetElement": "P1.3_Q1_控制变量原因",
+      "eventType": "input_blur",
+      "value": "为控制变量",
+      "time": "2025-11-22 10:01:20"
+    },
+    {
+      "code": 7,
+      "targetElement": "下一页按钮",
+      "eventType": "next_click",
+      "value": "navigate_to_sim_exp",
+      "time": "2025-11-22 10:01:25"
+    },
+    {
+      "code": 8,
+      "targetElement": "页面",
+      "eventType": "page_exit",
+      "value": "page_02_step_q1",
+      "time": "2025-11-22 10:01:25"
+    },
+    {
+      "code": 9,
+      "targetElement": "系统",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"flow-g8-experiment-2024\",\"submoduleId\":\"g8-mikania-experiment\",\"stepIndex\":1,\"pageId\":\"page_02_step_q1\"}",
+      "time": "2025-11-22 10:01:25"
+    },
+    {
+      "code": 10,
+      "targetElement": "系统",
+      "eventType": "page_submit_success",
+      "value": "{\"duration_ms\":95}",
+      "time": "2025-11-22 10:01:25"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "问题1：为什么在每组实验中，都要确保其他条件一致？",
+      "value": "为控制变量"
+    }
+  ],
+  "beginTime": "2025-11-22 10:01:00",
+  "endTime": "2025-11-22 10:01:25",
+  "imgList": []
+}

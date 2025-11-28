@@ -3,85 +3,84 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   background-color: #ffffff;
   font-family: 'Microsoft YaHei', sans-serif;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   overflow: hidden;
   user-select: none;
-}
-
-/* Title at top */
-.title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #2e5c4f;
-  text-align: center;
-  padding: 16px 20px;
-  background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
-  border-bottom: 1px solid #ddd;
-  margin: 0;
+  height: 100%;
 }
 
 /* Two-column layout */
-.contentArea {
+.mainContent {
   display: grid;
   grid-template-columns: 30% 70%;
+  min-height: 400px;
   flex: 1;
-  min-height: 0;
 }
 
-/* Left section - Instructions */
-.leftContent {
-  padding: 16px;
+/* Left panel - Instructions */
+.leftPanel {
+  padding: 24px 20px;
   background: #f8fafc;
   border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
+  justify-content: flex-start;
 }
 
-.instructionBox {
-  padding: 16px;
-  border-radius: 8px;
-  line-height: 1.8;
+/* Panel title in left column */
+.panelTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 20px 0;
 }
 
 .instructionIntro {
-  margin: 0 0 12px 0;
-  font-size: 18px;
-  color: #333;
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #37474f;
   line-height: 2;
   text-indent: 2em;
 }
 
 .stepList {
-  margin-bottom: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .stepItem {
-  margin: 0 0 10px 0;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 0;
+  position: relative;
+  font-size: 16px;
+  color: #455a64;
+  line-height: 2.2;
+  padding: 10px 0 10px 24px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #e8e8e8;
 }
 
 .stepItem:last-child {
-  margin-bottom: 0;
+  border-bottom: none;
 }
 
-.checkmark {
-  color: #333;
+.stepItem::before {
+  content: '\2713';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  color: #4caf50;
+  font-weight: bold;
   font-size: 14px;
-  font-weight: 600;
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .stepText {
   font-size: 16px;
-  color: #333;
+  color: #455a64;
   line-height: 2;
 }
 
@@ -90,11 +89,83 @@
   color: #000;
 }
 
-.inlineIcon {
+/* ========================================
+   内联样式 - 模拟控件外观
+   ======================================== */
+
+/* 加号按钮 */
+.arrowBtnPlus {
   display: inline-block;
-  height: 1.6em;
-  vertical-align: middle;
+  width: 20px;
+  height: 16px;
   margin: 0 2px;
+  background: linear-gradient(to bottom, #666, #333);
+  color: white;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 2px;
+  border: 1px solid #999;
+  vertical-align: middle;
+}
+
+/* 减号按钮 */
+.arrowBtnMinus {
+  display: inline-block;
+  width: 20px;
+  height: 16px;
+  margin: 0 2px;
+  background: linear-gradient(to bottom, #666, #333);
+  color: white;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 2px;
+  border: 1px solid #999;
+  vertical-align: middle;
+}
+
+/* 开始按钮 - 绿色圆角 */
+.sampleStart {
+  display: inline-block;
+  padding: 3px 14px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #4CAF50, #388E3C);
+  border-radius: 12px;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  box-shadow: 0 2px 0 #2e7d32;
+  vertical-align: baseline;
+}
+
+/* 绿色风速显示框 */
+.sampleDisplay {
+  display: inline-block;
+  padding: 3px 10px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #c8e6c9, #a5d6a7);
+  border-radius: 5px;
+  color: #1b5e20;
+  font-weight: 900;
+  font-size: 13px;
+  border: 2px solid #81c784;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  vertical-align: baseline;
+}
+
+/* 重置按钮 - 橙红色圆角 */
+.sampleReset {
+  display: inline-block;
+  padding: 3px 14px;
+  margin: 0 4px;
+  background: linear-gradient(to bottom, #FF8C42, #FF6B35);
+  border-radius: 12px;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  box-shadow: 0 2px 0 #d84315;
+  vertical-align: baseline;
 }
 
 /* Radio group container */
@@ -143,17 +214,20 @@
   line-height: 2;
 }
 
-/* Right section - Experiment area */
-.experimentContainer {
+/* Right panel - Experiment area */
+.rightPanel {
   padding: 16px;
   background: #ffffff;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Experiment unit wrapper */
 .experimentUnit {
+  width: 100%;
+  height: 90%;
   background: linear-gradient(180deg, #FFF8DC 0%, #F5DEB3 100%);
   border: 2px solid #DAA520;
   border-radius: 16px;
@@ -167,10 +241,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-top: 10px;
 }
 
-.panelTitle {
+.experimentPanelTitle {
   font-size: 16px;
   font-weight: 600;
   color: #333;
@@ -183,12 +257,14 @@
   justify-content: center;
   align-items: center;
   flex: 1;
-  min-height: 0;
+  width: 100%;
+  min-height: 400px;
 }
 
 .windSimulator {
   width: 100%;
-  height: 100%;
+  max-width: 100%;
+  height: auto;
 }
 
 /* 移除不再使用的样式，控件已整合到 SVG 内部 */
@@ -198,34 +274,26 @@
 /* Unused experiment area styles removed */
 
 /* 响应式设计 */
-@media (max-width: 1024px) {
-  .contentArea {
+@media (max-width: 768px) {
+  .container {
+    border-radius: 0;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  /* Stack columns on mobile */
+  .mainContent {
     grid-template-columns: 1fr;
   }
 
-  .leftContent {
+  .leftPanel {
     border-right: none;
     border-bottom: 1px solid #e0e0e0;
-  }
-}
-
-@media (max-width: 768px) {
-  .title {
-    font-size: 24px;
+    padding: 16px;
   }
 
-  .leftContent {
+  .rightPanel {
     padding: 12px;
-  }
-
-  .experimentContainer {
-    padding: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .title {
-    font-size: 20px;
   }
 }
 
@@ -234,5 +302,44 @@
   .svgButton {
     animation: none;
     transition: none;
+  }
+}
+
+.errorMessage {
+  color: #d32f2f;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 24px;
+  padding: 12px 20px;
+  background: #ffebee;
+  border-radius: 8px;
+  border-left: 4px solid #d32f2f;
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
+  animation: shake 0.6s ease-in-out;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-8px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(8px);
   }
 }

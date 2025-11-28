@@ -39,5 +39,33 @@
         ]
       }
     ]
-  }
+  },
+  // g8-mikania-experiment: guard submission + logging conventions inside submodules
+  "overrides": [
+    {
+      "files": ["src/submodules/**/*.{js,jsx,ts,tsx}"],
+      "rules": {
+        // Prevent direct submission to backend
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "MemberExpression[object.name='apiService'][property.name='submitMark']",
+            "message": "禁止直接调用 apiService.submitMark，应使用 AssessmentPageFrame 的统一提交"
+          },
+          {
+            "selector": "CallExpression[callee.name='logOperation'] ObjectExpression > Property[key.name='eventType'] > Literal",
+            "message": "logOperation 的 eventType 必须使用 EventTypes 枚举，禁止使用字符串字面量"
+          }
+        ],
+        // Prevent direct fetch to submission endpoint
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "fetch",
+            "message": "在 submodules 中禁止直接使用 fetch 提交数据，应使用 AssessmentPageFrame"
+          }
+        ]
+      }
+    }
+  ]
 } 

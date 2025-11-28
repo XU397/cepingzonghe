@@ -1,0 +1,84 @@
+{
+  "pageNumber": "1.7",
+  "pageDesc": "[flow-g8-experiment-2024/g8-mikania-experiment/1] 结论",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "page_06_q4_conc",
+      "time": "2025-11-22 10:05:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "P1.7_Q4a_菟丝子有效性",
+      "eventType": "radio_select",
+      "value": "是",
+      "time": "2025-11-22 10:05:10"
+    },
+    {
+      "code": 3,
+      "targetElement": "P1.7_Q4b_结论理由",
+      "eventType": "input_focus",
+      "value": "",
+      "time": "2025-11-22 10:05:15"
+    },
+    {
+      "code": 4,
+      "targetElement": "P1.7_Q4b_结论理由",
+      "eventType": "input_change",
+      "value": "{\"prev\":\"\",\"next\":\"菟丝子提取物能显著抑制薇甘菊种子的发芽\"}",
+      "time": "2025-11-22 10:05:30"
+    },
+    {
+      "code": 5,
+      "targetElement": "P1.7_Q4b_结论理由",
+      "eventType": "input_blur",
+      "value": "菟丝子提取物能显著抑制薇甘菊种子的发芽",
+      "time": "2025-11-22 10:05:35"
+    },
+    {
+      "code": 6,
+      "targetElement": "提交按钮",
+      "eventType": "next_click",
+      "value": "submit_final",
+      "time": "2025-11-22 10:05:40"
+    },
+    {
+      "code": 7,
+      "targetElement": "页面",
+      "eventType": "page_exit",
+      "value": "page_06_q4_conc",
+      "time": "2025-11-22 10:05:40"
+    },
+    {
+      "code": 8,
+      "targetElement": "系统",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"flow-g8-experiment-2024\",\"submoduleId\":\"g8-mikania-experiment\",\"stepIndex\":1,\"pageId\":\"page_06_q4_conc\"}",
+      "time": "2025-11-22 10:05:40"
+    },
+    {
+      "code": 9,
+      "targetElement": "系统",
+      "eventType": "page_submit_success",
+      "value": "{\"duration_ms\":110}",
+      "time": "2025-11-22 10:05:40"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "问题4a：菟丝子能否有效防治薇甘菊？",
+      "value": "A. 是"
+    },
+    {
+      "code": 2,
+      "targetElement": "问题4b：请说明你的理由",
+      "value": "菟丝子提取物能显著抑制薇甘菊种子的发芽"
+    }
+  ],
+  "beginTime": "2025-11-22 10:05:00",
+  "endTime": "2025-11-22 10:05:40",
+  "imgList": []
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
+import EventTypes from '@shared/services/submission/eventTypes.js';
 import styles from '../styles/Page04ExperimentDesign.module.css';
 import withPanelImg from '../assets/images/experiment-with-panel.png';
 import noPanelImg from '../assets/images/experiment-no-panel.png';
@@ -31,6 +32,16 @@ const Page04ExperimentDesign: React.FC = () => {
       const isValid = (designText || '').toString().trim().length >= minChars;
       if (!isValid) {
         setShowError(true);
+        logOperation({
+          targetElement: 'next_button',
+          eventType: EventTypes.CLICK_BLOCKED,
+          value: {
+            reason: 'input_too_short',
+            missing: ['designReason'],
+            timestamp: new Date().toISOString(),
+          },
+          time: new Date().toISOString(),
+        });
         // Auto-hide error after 3 seconds
         setTimeout(() => setShowError(false), 3000);
       }
@@ -47,16 +58,16 @@ const Page04ExperimentDesign: React.FC = () => {
     setPageStartTime(startTime);
 
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: 'page',
+      eventType: EventTypes.PAGE_ENTER,
       value: currentPageId,
       time: startTime.toISOString()
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: 'page',
+        eventType: EventTypes.PAGE_EXIT,
         value: currentPageId,
         time: new Date().toISOString()
       });
@@ -64,6 +75,7 @@ const Page04ExperimentDesign: React.FC = () => {
   }, [logOperation, setPageStartTime, currentPageId]);
 
   const handleTextChange = (text: string) => {
+    const prev = designText;
     setDesignText(text);
 
     collectAnswer({
@@ -71,10 +83,41 @@ const Page04ExperimentDesign: React.FC = () => {
       value: text
     });
 
+    const isDelete = text.length < prev.length;
+    const eventType = isDelete ? EventTypes.INPUT_DELETE : EventTypes.INPUT_CHANGE;
+    const value = isDelete
+      ? {
+          action: 'delete',
+          prevLength: prev.length,
+          nextLength: text.length,
+        }
+      : {
+          prev,
+          next: text,
+        };
+
     logOperation({
-      targetElement: '问题1输入框',
-      eventType: 'change',
-      value: text,
+      targetElement: 'designReason',
+      eventType,
+      value,
+      time: new Date().toISOString()
+    });
+  };
+
+  const handleFocus = () => {
+    logOperation({
+      targetElement: 'designReason',
+      eventType: EventTypes.INPUT_FOCUS,
+      value: designText ?? '',
+      time: new Date().toISOString(),
+    });
+  };
+
+  const handleBlur = () => {
+    logOperation({
+      targetElement: 'designReason',
+      eventType: EventTypes.INPUT_BLUR,
+      value: designText ?? '',
       time: new Date().toISOString()
     });
   };
@@ -82,82 +125,141 @@ const Page04ExperimentDesign: React.FC = () => {
   const isValid = designText.length >= minChars;
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>光伏治沙</h1>
+    <div className={styles.designContainer} data-testid="page-experiment-design">
+      <h2 className={styles.pageTitle}>光伏治沙</h2>
 
-      <div className={styles.contentWrapper}>
-          <div className={styles.leftSection}>
-            <div className={styles.instructionBox}>
-              <p className={styles.instructionText}>
-                本实验旨在探究光伏板是否通过影响风速来调节土壤水分蒸发。实验步骤如下：
-              </p>
-              <p className={styles.stepText}>
-                1）在光伏治沙基地内，选取相邻的两块区域，分别位于光伏板正下方和无光伏板覆盖的裸露地带；
-              </p>
-              <p className={styles.stepText}>
-                2）在每个区域内，分别于20厘米、50厘米、100厘米高度设置风速仪；
-              </p>
-              <p className={styles.stepText}>
-                3）实验开始，记录各风速仪测得的风速值。
-              </p>
-            </div>
-
-            <div className={styles.imageContainer}>
-              <div className={styles.imageWrapper}>
-                <div className={styles.imagePlaceholder}>
-                  <img
-                    src={withPanelImg}
-                    alt="有光伏板区域实验场景"
-                    className={styles.experimentImage}
-                  />
-                </div>
-                <div className={styles.imageLabel}>
-                  <span className={styles.bullet}>•</span>
-                  有板区
-                </div>
-              </div>
-
-              <div className={styles.imageWrapper}>
-                <div className={styles.imagePlaceholder}>
-                  <img
-                    src={noPanelImg}
-                    alt="无光伏板区域实验场景"
-                    className={styles.experimentImage}
-                  />
-                </div>
-                <div className={styles.imageLabel}>
-                  <span className={styles.bullet}>•</span>
-                  无板区
-                </div>
-              </div>
+      {/* Split layout: 3/4 left (experiment steps) + 1/4 right (question & input) */}
+      <div className={styles.splitLayout}>
+        {/* Left content - Experiment Steps */}
+        <div className={styles.leftContent}>
+          {/* Experimental Background */}
+          <div className={styles.backgroundSection}>
+            <div className={styles.backgroundTitle}>📋 实验背景</div>
+            <div className={styles.backgroundText}>
+              本实验旨在探究光伏板是否通过影响风速来调节土壤水分蒸发。实验步骤如下：
             </div>
           </div>
 
-          <div className={styles.rightSection}>
-            <div className={styles.questionBox}>
-              <p className={styles.questionText}>
-                <span className={styles.questionLabel}>问题1：</span>
-                为什么要在无板区和有板区分别放置两套相同的测量仪器？请写出原因。
-              </p>
+          {/* Experiment Steps Section */}
+          <div className={styles.stepsSection}>
+            <div className={styles.stepsTitle}>📋 实验步骤提示</div>
 
-              <textarea
-                value={designText}
-                onChange={(e) => handleTextChange(e.target.value)}
-                className={styles.textArea}
-                placeholder="请输入您的回答..."
-              />
-              <div style={{ textAlign: 'right', fontSize: '12px', color: isValid ? 'green' : 'red', marginTop: '5px' }}>
-                {designText.length}/{minChars} 字符
+            <div className={styles.stepsContainer}>
+              {/* Step 1 */}
+              <div className={styles.stepCard}>
+                <div className={styles.stepNumber}>①</div>
+                <div className={styles.stepIcon}>📍</div>
+                <div className={styles.stepTitle}>选择实验区域</div>
+                <div className={styles.stepContent}>
+                  在光伏治沙基地内<br />
+                  选取相邻的两块区域<br />
+                  <span className={styles.stepHighlight}>光伏板正下方 & 裸露地带</span>
+                </div>
               </div>
 
-              {showError && (
-                <div className={styles.errorMessage}>
-                  实验设计原因至少需要 {minChars} 个字符
+              {/* Step 2 */}
+              <div className={styles.stepCard}>
+                <div className={styles.stepNumber}>②</div>
+                <div className={styles.stepIcon}>🌡️</div>
+                <div className={styles.stepTitle}>设置测量仪器</div>
+                <div className={styles.stepContent}>
+                  在每个区域内<br />
+                  分别于不同高度设置风速仪<br />
+                  <span className={styles.stepHighlight}>20cm、50cm、100cm</span>
                 </div>
-              )}
+              </div>
+
+              {/* Step 3 */}
+              <div className={styles.stepCard}>
+                <div className={styles.stepNumber}>③</div>
+                <div className={styles.stepIcon}>📊</div>
+                <div className={styles.stepTitle}>记录实验数据</div>
+                <div className={styles.stepContent}>
+                  实验开始后<br />
+                  记录各风速仪测得的<br />
+                  <span className={styles.stepHighlight}>风速值</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.stepsFooterNote}>
+              通过对比两个区域不同高度的风速数据，分析光伏板对风速的影响规律。
+            </div>
+          </div>
+
+          {/* Images Section - Below steps */}
+          <div className={styles.imagesSection}>
+            <div className={styles.imageCard}>
+              <div className={styles.imageWrapper}>
+                <img
+                  src={withPanelImg}
+                  alt="有光伏板区域实验场景"
+                  className={styles.experimentImage}
+                />
+              </div>
+              <div className={styles.imageLabel}>
+                <span className={styles.bullet}>•</span>
+                有板区实验场景
+              </div>
+            </div>
+
+            <div className={styles.imageCard}>
+              <div className={styles.imageWrapper}>
+                <img
+                  src={noPanelImg}
+                  alt="无光伏板区域实验场景"
+                  className={styles.experimentImage}
+                />
+              </div>
+              <div className={styles.imageLabel}>
+                <span className={styles.bullet}>•</span>
+                无板区实验场景
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Right content - Question & Input (1/4 width) */}
+        <div className={styles.rightContent}>
+          {/* Question Section */}
+          <div className={styles.questionSection}>
+            <div className={styles.questionBadge}>💡 问题 1</div>
+            <div className={styles.questionContent}>
+              <strong>为什么要在无板区和有板区分别放置两套相同的测量仪器？</strong>请写出原因。
+            </div>
+          </div>
+
+          {/* Input Area */}
+          <div className={styles.textareaWrapper}>
+            <textarea
+              value={designText}
+              onChange={(e) => handleTextChange(e.target.value)}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              placeholder="请写下你的思考..."
+              className={`${styles.textarea} ${showError ? styles.error : ''}`}
+              data-testid="design-textarea"
+            />
+
+            {/* Character counter */}
+            <div className={styles.charCounter}>
+              <span className={isValid ? `${styles.charCount} ${styles.valid}` : styles.charCount}>
+                已输入 {designText.length} 字
+              </span>
+              <span className={styles.minCharsHint}>
+                最少 {minChars} 字
+              </span>
+            </div>
+
+            {/* Error message */}
+            {showError && (
+              <div className={styles.errorMessage} data-testid="error-message">
+                实验设计原因至少需要 {minChars} 个字符
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

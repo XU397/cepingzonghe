@@ -356,7 +356,7 @@ export const AppProvider = ({ children }) => {
     }
 
     return {
-      pageNumber: pageDetails.number,
+      pageNumber: pageDetails.compositeNumber || pageDetails.number,
       pageDesc: pageDetails.desc,
       operationList: currentPageData.operationList || [],
       answerList: currentPageData.answerList || [],
@@ -538,6 +538,7 @@ export const AppProvider = ({ children }) => {
     handleSessionExpired,
     allowProceedOnFailureInDev: allowDevBypass,
     logger: console,
+    logOperation,
   });
 
   // 使用浏览器关闭监听Hook
@@ -566,9 +567,13 @@ export const AppProvider = ({ children }) => {
           imgList: Array.isArray(customData.imgList) ? customData.imgList : [],
         };
       } else {
-        const pageDetails = pageInfoMapping[currentPageId] || { number: '0', desc: '未知页面' };
+        const pageDetails = pageInfoMapping[currentPageId] || {
+          number: '0',
+          compositeNumber: '0.0',
+          desc: '未知页面'
+        };
         markData = {
-          pageNumber: pageDetails.number,
+          pageNumber: pageDetails.compositeNumber || pageDetails.number,
           pageDesc: pageDetails.desc,
           operationList: customData.operationList || [],
           answerList: customData.answerList || [],

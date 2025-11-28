@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
+import EventTypes from '@shared/services/submission/eventTypes.js';
 import styles from '../styles/Page01bTaskCover.module.css';
 import backgroundImage from '../assets/images/pv-sand-background.jpg';
 
@@ -14,7 +15,8 @@ const Page01bTaskCover: React.FC = () => {
 
   const [countdown, setCountdown] = useState(30); // Reduced to 5s for testing, originally 38
   const [canCheck, setCanCheck] = useState(false);
-  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const timerCompletedRef = useRef(false);
 
   // Sync local state with answers
   const isChecked = answers['instructions_read'] === 'true';
@@ -22,10 +24,34 @@ const Page01bTaskCover: React.FC = () => {
   // Listen for validation errors from frame
   useEffect(() => {
     const handleValidationError = () => {
-      if (!isChecked && canCheck) {
-        setShowError(true);
+      let message = '';
+      let reason = '';
+      let missing: string[] = [];
+
+      if (!canCheck) {
+        message = '请仔细阅读注意事项，倒计时结束后才能继续';
+        reason = 'countdown_not_finished';
+        missing = ['timer_completed'];
+      } else if (!isChecked) {
+        message = '请勾选我已阅读并理解上述注意事项';
+        reason = 'checkbox_not_checked';
+        missing = ['instructions_read'];
+      }
+
+      if (message) {
+        setErrorMessage(message);
+        logOperation({
+          targetElement: 'next_button',
+          eventType: EventTypes.CLICK_BLOCKED,
+          value: {
+            reason,
+            missing,
+            timestamp: new Date().toISOString(),
+          },
+          time: new Date().toISOString(),
+        });
         // Auto-hide error after 3 seconds
-        setTimeout(() => setShowError(false), 3000);
+        setTimeout(() => setErrorMessage(''), 3000);
       }
     };
 
@@ -33,23 +59,34 @@ const Page01bTaskCover: React.FC = () => {
     return () => {
       window.removeEventListener('pv-sand-validation-error', handleValidationError);
     };
-  }, [isChecked, canCheck]);
+  }, [canCheck, isChecked, logOperation]);
 
   useEffect(() => {
     const startTime = new Date();
     setPageStartTime(startTime);
 
+    // 计时开始埋点
     logOperation({
-      targetElement: '页面',
-      eventType: 'page_enter',
+      targetElement: 'task_timer',
+      eventType: EventTypes.TIMER_START,
+      value: {
+        duration: 30,
+        unit: 'seconds',
+      },
+      time: startTime.toISOString(),
+    });
+
+    logOperation({
+      targetElement: 'page',
+      eventType: EventTypes.PAGE_ENTER,
       value: currentPageId,
       time: startTime.toISOString()
     });
 
     return () => {
       logOperation({
-        targetElement: '页面',
-        eventType: 'page_exit',
+        targetElement: 'page',
+        eventType: EventTypes.PAGE_EXIT,
         value: currentPageId,
         time: new Date().toISOString()
       });
@@ -58,6 +95,23 @@ const Page01bTaskCover: React.FC = () => {
 
   useEffect(() => {
     if (countdown <= 0) {
+      if (!timerCompletedRef.current) {
+        timerCompletedRef.current = true;
+        logOperation({
+          targetElement: 'task_timer',
+          eventType: EventTypes.TIMER_COMPLETE,
+          value: {
+            duration: 30,
+            unit: 'seconds',
+            remaining: 0,
+          },
+          time: new Date().toISOString(),
+        });
+        collectAnswer({
+          targetElement: 'timer_completed',
+          value: 'true',
+        });
+      }
       setCanCheck(true);
       return;
     }
@@ -70,7 +124,19 @@ const Page01bTaskCover: React.FC = () => {
   }, [countdown]);
 
   const handleCheckboxChange = () => {
-    if (!canCheck) return;
+    if (!canCheck) {
+      logOperation({
+        targetElement: 'confirmCheckbox',
+        eventType: EventTypes.CLICK_BLOCKED,
+        value: {
+          reason: 'countdown_not_finished',
+          missing: ['instructions_read'],
+          timestamp: new Date().toISOString(),
+        },
+        time: new Date().toISOString(),
+      });
+      return;
+    }
 
     const newChecked = !isChecked;
 
@@ -80,8 +146,8 @@ const Page01bTaskCover: React.FC = () => {
     });
 
     logOperation({
-      targetElement: '确认复选框',
-      eventType: 'click',
+      targetElement: 'instructions_checkbox',
+      eventType: newChecked ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
       value: newChecked ? '已勾选' : '取消勾选',
       time: new Date().toISOString()
     });
@@ -144,9 +210,9 @@ const Page01bTaskCover: React.FC = () => {
             </button>
           )}
 
-          {showError && (
+          {errorMessage && (
             <div className={styles.errorMessage}>
-              请先勾选"我已阅读并理解上述注意事项"
+              {errorMessage}
             </div>
           )}
         </div>
@@ -156,4 +222,3 @@ const Page01bTaskCover: React.FC = () => {
 };
 
 export default Page01bTaskCover;
-

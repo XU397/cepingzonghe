@@ -18,6 +18,7 @@ import {
   TOTAL_USER_STEPS,
 } from '../../utils/pageMappings';
 import { AssessmentPageFrame } from '@shared/ui/PageFrame';
+import { encodeCompositePageNum } from '@shared/utils/pageMapping';
 
 /**
  * 7年级包装器组件
@@ -133,12 +134,21 @@ export const Grade7Wrapper = ({ userContext, initialPageId, flowContext }) => {
 
   const pageMeta = useMemo(() => {
     const meta = pageInfoMapping[currentPageId] || {};
+    // 获取 stepIndex：优先使用 flowContext，否则使用 meta 中的值，默认为 0
+    const stepIndex = flowContext?.stepIndex ?? meta.stepIndex ?? 0;
+    // 获取 subPageNum：优先使用 meta.subPageNum，否则使用 meta.number，默认为 '1'
+    const subPageNum = meta.subPageNum ?? meta.number ?? '1';
+    // 生成点分格式的 pageNumber（如 "0.1"）
+    const pageNumber = encodeCompositePageNum(stepIndex, parseInt(subPageNum, 10) || 1);
+
     return {
-      pageId: currentPageId,
-      pageNumber: meta.number || currentPageId,
+      pageId: currentPageId || 'unknown',
+      pageNumber,
       pageDesc: meta.desc || '',
+      stepIndex,
+      subPageNum: parseInt(subPageNum, 10) || 1,
     };
-  }, [currentPageId]);
+  }, [currentPageId, flowContext]);
 
   return (
     <AssessmentPageFrame

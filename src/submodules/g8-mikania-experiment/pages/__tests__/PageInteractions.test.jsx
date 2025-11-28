@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, expect, it } from 'vitest';
 import Page00Notice from '../Page00_Notice.jsx';
@@ -22,6 +22,7 @@ const defaultExperimentState = {
   days: 1,
   hasStarted: false,
   currentResult: null,
+  history: [],
 };
 
 const buildMockContext = (overrides = {}) => {

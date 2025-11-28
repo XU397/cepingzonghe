@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useDroneImagingContext } from '../context/DroneImagingContext';
 import { EventTypes } from '@shared/services/submission/eventTypes';
 import { formatTimestamp } from '@shared/services/dataLogger.js';
@@ -23,8 +23,8 @@ interface RadioOption {
 
 // Only A and B options (removed C)
 const RADIO_OPTIONS: RadioOption[] = [
-  { value: 'A', label: 'A. 飞行高度' },
-  { value: 'B', label: 'B. 镜头焦距' },
+  { value: 'A', label: 'A. 是' },
+  { value: 'B', label: 'B. 否' },
 ];
 
 // Chart data based on experiment data table (from gsdLookup.ts)
@@ -35,11 +35,14 @@ const chartData = [
 ];
 
 export default function Page07_Conclusion() {
-  const { logOperation, setAnswer, getAnswer, saveToStorage } = useDroneImagingContext();
+  const { logOperation, setAnswer, getAnswer, saveToStorage, questionIds } = useDroneImagingContext();
+  const priorityFactorId = questionIds.priorityFactor;
+  const priorityReasonId = questionIds.priorityReason;
 
-  const [selectedRadio, setSelectedRadio] = useState(getAnswer('P7_优先调整因素') || '');
-  const [reasonText, setReasonText] = useState(getAnswer('P7_理由说明') || '');
+  const [selectedRadio, setSelectedRadio] = useState(getAnswer(priorityFactorId) || '');
+  const [reasonText, setReasonText] = useState(getAnswer(priorityReasonId) || '');
   const [error, setError] = useState('');
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     logOperation({
@@ -56,15 +59,28 @@ export default function Page07_Conclusion() {
         value: 'Page07_Conclusion',
         time: formatTimestamp(new Date()),
       });
+
+      // Clear any pending error timeout
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
     };
   }, [logOperation]);
 
-  const handleRadioChange = (value: string) => {
+  const handleRadioChange = (option: RadioOption) => {
+    const value = option.value;
     setSelectedRadio(value);
+
+    // Clear error and its timeout if exists
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = null;
+    }
     setError('');
-    setAnswer('P7_优先调整因素', value);
+
+    setAnswer(priorityFactorId, option.label);
     logOperation({
-      targetElement: 'P7_优先调整因素',
+      targetElement: priorityFactorId,
       eventType: EventTypes.RADIO_SELECT,
       value,
       time: formatTimestamp(new Date()),
@@ -73,35 +89,95 @@ export default function Page07_Conclusion() {
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
+    const prevValue = reasonText;
     setReasonText(value);
+
+    // Clear error and its timeout if exists
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = null;
+    }
     setError('');
-    setAnswer('P7_理由说明', value);
+
+    setAnswer(priorityReasonId, value);
     logOperation({
-      targetElement: 'P7_理由说明',
+      targetElement: priorityReasonId,
       eventType: EventTypes.INPUT_CHANGE,
-      value,
+      value: JSON.stringify({ prev: prevValue, next: value }),
+      time: formatTimestamp(new Date()),
+    });
+  };
+
+  const handleTextareaFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    logOperation({
+      targetElement: priorityReasonId,
+      eventType: EventTypes.INPUT_FOCUS,
+      value: e.target.value || '',
+      time: formatTimestamp(new Date()),
+    });
+  };
+
+  const handleTextareaBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    logOperation({
+      targetElement: priorityReasonId,
+      eventType: EventTypes.INPUT_BLUR,
+      value: e.target.value || '',
       time: formatTimestamp(new Date()),
     });
   };
 
   const handleComplete = () => {
     if (!selectedRadio) {
+      // Clear any existing error timeout
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+
+      // Set error message with shake animation
       setError('请选择一个答案');
+
+      // Auto-clear error after 10 seconds
+      errorTimeoutRef.current = setTimeout(() => {
+        setError('');
+        errorTimeoutRef.current = null;
+      }, 10000);
+
       logOperation({
         targetElement: 'submit_button',
         eventType: EventTypes.CLICK_BLOCKED,
-        value: 'radio_not_selected',
+        value: JSON.stringify({
+          reason: 'radio_not_selected',
+          missing: [priorityFactorId],
+        }),
         time: formatTimestamp(new Date()),
       });
       return;
     }
 
     if (reasonText.length <= MIN_CHARS) {
+      // Clear any existing error timeout
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+
+      // Set error message with shake animation
       setError('请输入至少 5 个字符的理由说明');
+
+      // Auto-clear error after 10 seconds
+      errorTimeoutRef.current = setTimeout(() => {
+        setError('');
+        errorTimeoutRef.current = null;
+      }, 10000);
+
       logOperation({
         targetElement: 'submit_button',
         eventType: EventTypes.CLICK_BLOCKED,
-        value: 'reason_too_short',
+        value: JSON.stringify({
+          reason: 'reason_too_short',
+          missing: [priorityReasonId],
+          currentLength: reasonText.length,
+          requiredLength: MIN_CHARS + 1,
+        }),
         time: formatTimestamp(new Date()),
       });
       return;
@@ -139,70 +215,8 @@ export default function Page07_Conclusion() {
     <div className={styles.conclusionContainer} data-testid="page-conclusion">
       {/* Two-column layout */}
       <div className={styles.twoColumnLayout}>
-        {/* Left column: Questions */}
+        {/* Left column: Chart */}
         <div className={styles.leftPanel}>
-          <h2 className={styles.panelTitle}>总结结论</h2>
-
-          {/* Task box */}
-          <div className={styles.taskBox}>
-            <p className={styles.taskText}>
-              <strong>问题4：</strong> 右图展示了飞行高度、镜头焦距与地面采样距离（GSD）的关系曲线。请问在航拍中，为获取更高精度的影像，应优先考虑降低飞行高度还是调整镜头焦距？
-            </p>
-          </div>
-
-          {/* Radio section */}
-          <div className={styles.radioSection}>
-            <div className={styles.radioGroup} data-testid="conclusion-radio-group">
-              {RADIO_OPTIONS.map((option) => (
-                <label
-                  key={option.value}
-                  className={`${styles.radioOption} ${
-                    selectedRadio === option.value ? styles.selected : ''
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="priority_factor"
-                    value={option.value}
-                    checked={selectedRadio === option.value}
-                    onChange={() => handleRadioChange(option.value)}
-                    className={styles.radioInput}
-                    data-testid={`radio-conclusion-${option.value}`}
-                  />
-                  <span className={styles.radioLabel}>{option.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Textarea section */}
-          <div className={styles.textareaSection}>
-            <p className={styles.sectionLabel}>请说明你的理由：</p>
-            <textarea
-              value={reasonText}
-              onChange={handleTextareaChange}
-              placeholder="请写下你的理由..."
-              className={`${styles.textarea} ${
-                error && reasonText.length <= MIN_CHARS ? styles.error : ''
-              }`}
-              data-testid="conclusion-textarea"
-            />
-            <div className={styles.charCounter}>
-              <span className={charCountClass}>已输入 {charCount} 字</span>
-              <span className={styles.minCharsHint}>至少 {MIN_CHARS} 字</span>
-            </div>
-          </div>
-
-          {/* Error message */}
-          {error && (
-            <div className={styles.errorMessage} data-testid="error-message">
-              {error}
-            </div>
-          )}
-        </div>
-
-        {/* Right column: Chart */}
-        <div className={styles.rightPanel}>
           <div className={styles.chartContainer}>
             <div className={styles.chartWrapper}>
               <ResponsiveContainer width="100%" height="100%">
@@ -257,6 +271,70 @@ export default function Page07_Conclusion() {
             </div>
             <p className={styles.chartNote}>注：GSD 数值越大，图像就越模糊</p>
           </div>
+        </div>
+
+        {/* Right column: Questions */}
+        <div className={styles.rightPanel}>
+          <h2 className={styles.panelTitle}>总结结论</h2>
+
+          {/* Task box */}
+          <div className={styles.taskBox}>
+            <p className={styles.taskText}>
+              <strong>问题4：</strong> 右图展示了飞行高度、镜头焦距与地面采样距离(GSD)的关系曲线。请问在不同飞行高度下，镜头焦距与GSD的变化关系是否遵循相同的模式？
+            </p>
+          </div>
+
+          {/* Radio section */}
+          <div className={styles.radioSection}>
+            <div className={styles.radioGroup} data-testid="conclusion-radio-group">
+              {RADIO_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className={`${styles.radioOption} ${
+                    selectedRadio === option.value ? styles.selected : ''
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="priority_factor"
+                    value={option.value}
+                    checked={selectedRadio === option.value}
+                    onChange={() => handleRadioChange(option)}
+                    className={styles.radioInput}
+                    data-testid={`radio-conclusion-${option.value}`}
+                  />
+                  <span className={styles.radioLabel}>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Textarea section */}
+          <div className={styles.textareaSection}>
+            <p className={styles.sectionLabel}>请结合图中数据说明理由：</p>
+            <textarea
+              value={reasonText}
+              onChange={handleTextareaChange}
+              onFocus={handleTextareaFocus}
+              onBlur={handleTextareaBlur}
+              placeholder="请写下你的理由..."
+              className={`${styles.textarea} ${
+                error && reasonText.length <= MIN_CHARS ? styles.error : ''
+              }`}
+              data-testid="conclusion-textarea"
+            />
+            <div className={styles.charCounter}>
+              <span className={charCountClass}>已输入 {charCount} 字</span>
+              <span className={styles.minCharsHint}>至少 {MIN_CHARS} 字</span>
+            </div>
+          </div>
+
+          {/* Error message */}
+          {error && (
+            <div className={styles.errorMessage} data-testid="error-message">
+              {error}
+            </div>
+          )}
         </div>
       </div>
 

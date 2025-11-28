@@ -418,6 +418,7 @@ export const Grade4Provider = ({ children, globalContext, authInfo, initialPageI
     buildMark: () => buildMarkForSubmission(),
     allowProceedOnFailureInDev: allowDevBypass,
     logger: console,
+    logOperation,
   });
 
   // 页面恢复Effect

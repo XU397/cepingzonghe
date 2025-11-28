@@ -1,0 +1,8 @@
+const fs = require('fs');
+const path = 'src/flows/FlowModule.jsx';
+let text = fs.readFileSync(path, 'binary');
+const old = `    if (shouldAbort?.()) {\r\n      return;\r\n    }\r\n\r\n      const resolved = orchestrator.resolve(definition, progress);\r\n\r\n      if (!resolved.submoduleDefinition) {`;
+const neu = `    if (shouldAbort?.()) {\r\n      return;\r\n    }\r\n\r\n    let progressForResolve = progress;\r\n\r\n    if (loginPageNum) {\r\n      const composite = parseFlowPageNum(String(loginPageNum));\r\n      if (composite) {\r\n        const desiredStep = composite.stepIndex;\r\n        const desiredPage = String(composite.subPageNum);\r\n        const currentStep = progress?.stepIndex ?? 0;\r\n        const currentPage = progress?.modulePageNum ?? null;\r\n        const changed = desiredStep !== currentStep || desiredPage !== currentPage;\r\n        if (changed) {\r\n          try {\r\n            orchestrator.updateProgress(desiredStep, desiredPage);\r\n          } catch (err) {\r\n            console.warn('[FlowModule] Failed to apply login pageNum to progress', err);\r\n          }\r\n          progressForResolve = {\r\n            ...(progress || { stepIndex: 0, modulePageNum: null }),\r\n            stepIndex: desiredStep,\r\n            modulePageNum: desiredPage,\r\n            lastUpdated: new Date().toISOString(),\r\n          };\r\n        }\r\n      }\r\n    }\r\n\r\n      const resolved = orchestrator.resolve(definition, progressForResolve);\r\n\r\n      if (!resolved.submoduleDefinition) {`;
+if (!text.includes(old)) { console.error('target block not found'); process.exit(1);} 
+text = text.replace(old, neu);
+fs.writeFileSync(path, Buffer.from(text, 'binary'));

@@ -1,0 +1,306 @@
+● pageNumber 格式规则详解
+
+  ❌ 禁止使用的格式
+
+  1. M 前缀格式（已废弃）
+
+  // ❌ 错误 - 旧格式，Schema 会拒绝
+  const pageNumber = 'M0:3';
+  const pageNumber = 'M1:5';
+
+  为什么废弃？
+  - 冒号分隔不符合统一规范
+  - 'M' 前缀无明确语义
+  - 与点分格式不一致
+
+  2. 单数字格式（已禁止）
+
+  // ❌ 错误 - 不符合 Flow 规范，Schema 会拒绝
+  const pageNumber = '1';
+  const pageNumber = '10';
+
+  为什么禁止？
+  - 无法表达 Flow 步骤信息
+  - 与 Flow 统一架构不兼容
+  - 后续所有模块都将并入 Flow，不再有独立模块
+
+  ---
+  ✅ 正确格式
+
+  Flow 点分格式（唯一正确）
+
+  // ✅ 正确 - 使用编码函数
+  import { encodeCompositePageNum } from '@shared/utils/pageMapping';
+
+  const pageNumber = encodeCompositePageNum(0, 3);  // "0.3"
+  const pageNumber = encodeCompositePageNum(1, 5);  // "1.5"
+
+  ---
+  🔢 编号规则详解
+
+  stepIndex（步骤索引）
+
+  | 规则  | 说明            |
+  |-----|---------------|
+  | 起始值 | 从 0 开始        |
+  | 含义  | Flow 流程中的步骤序号 |
+  | 范围  | 0 ~ 步骤总数 - 1  |
+  | 示例  | 三步流程：0, 1, 2  |
+
+  代码示例：
+  // Flow 定义
+  const flow = {
+    steps: [
+      { stepIndex: 0, submodule: 'experiment' },   // 第 0 步
+      { stepIndex: 1, submodule: 'questionnaire' },// 第 1 步
+      { stepIndex: 2, submodule: 'summary' }       // 第 2 步
+    ]
+  };
+
+  // 获取当前步骤
+  const currentStep = flow.steps[stepIndex];
+
+  ---
+  subPageNum（子页码）
+
+  | 规则  | 说明                 |
+  |-----|--------------------|
+  | 起始值 | 通常从 1 开始（部分模块从 0）  |
+  | 含义  | 当前步骤内的页码序号         |
+  | 范围  | 0/1 ~ 该步骤的页面总数     |
+  | 重置  | 每个步骤独立计数，切换步骤时重新开始 |
+
+  代码示例：
+  // 子模块页码映射（从 0 开始）
+  const MAPPING_A = {
+    '0': 'notice',     // subPageNum = 0
+    '1': 'intro',      // subPageNum = 1
+    '2': 'question'    // subPageNum = 2
+  };
+
+  // 子模块页码映射（从 1 开始）
+  const MAPPING_B = {
+    '1': 'intro',      // subPageNum = 1
+    '2': 'question',   // subPageNum = 2
+    '3': 'summary'     // subPageNum = 3
+  };
+
+  // 生成完整 pageNumber
+  // 第 0 步的第 2 页
+  encodeCompositePageNum(0, 2); // "0.2"
+
+  // 第 1 步的第 3 页
+  encodeCompositePageNum(1, 3); // "1.3"
+
+  ---
+  🎯 使用场景示例
+
+  场景 1：AssessmentPageFrame 自动编码
+
+  import { AssessmentPageFrame } from '@shared/ui/PageFrame';
+
+  function MyPage() {
+    return (
+      <AssessmentPageFrame
+        pageId="hypothesis"
+        pageTitle="提出假设"
+        stepIndex={0}      // Flow 第 0 步
+        subPageNum={5}     // 该步骤的第 5 页
+        getFlowContext={() => ({
+          flowId: 'g7a-mix-001',
+          submoduleId: 'g7-experiment',
+          stepIndex: 0,
+          pageId: 'hypothesis'
+        })}
+      >
+        {/* 页面内容 */}
+      </AssessmentPageFrame>
+    );
+  }
+
+  // Frame 内部会自动调用：
+  // const pageNumber = encodeCompositePageNum(0, 5); // "0.5"
+
+  场景 2：手动构建 Mark
+
+  import { encodeCompositePageNum } from '@shared/utils/pageMapping';
+  import { usePageSubmission } from '@shared/services/submission';
+
+  function MyComponent() {
+    const stepIndex = 1;   // 当前在第 1 步
+    const subPageNum = 8;  // 该步骤的第 8 页
+
+    // 生成 pageNumber
+    const pageNumber = encodeCompositePageNum(stepIndex, subPageNum); // "1.8"
+
+    const { submit } = usePageSubmission({
+      pageMeta: {
+        pageId: 'question-8',
+        pageTitle: '第8题',
+        stepIndex,
+        subPageNum
+      },
+      getUserContext,
+      getFlowContext
+    });
+
+    // 提交时会自动使用正确的 pageNumber
+  }
+
+  场景 3：后端恢复逻辑
+
+  // 后端返回的恢复点
+  const resumeData = {
+    flowId: 'g7a-mix-001',
+    pageNum: '1.5'  // 字符串格式
+  };
+
+  // 前端解析
+  import { parseCompositePageNum } from '@shared/utils/pageMapping';
+
+  const parsed = parseCompositePageNum(resumeData.pageNum);
+  // {
+  //   stepIndex: 1,   // 解析出步骤索引
+  //   subPageNum: 5   // 解析出子页码
+  // }
+
+  // 使用解析结果
+  const flowDef = getFlowDefinition(resumeData.flowId);
+  const step = flowDef.steps[parsed.stepIndex];
+  const submodule = loadSubmodule(step.submoduleId);
+  const pageId = submodule.getInitialPage(String(parsed.subPageNum));
+
+  // 导航到正确位置
+  navigate(pageId);
+
+  ---
+  ⚙️ Schema 校验规则
+
+  当前 Schema 会执行以下严格校验：
+
+  // src/shared/services/submission/schema.ts
+
+  // 正则：仅允许点分格式
+  const PAGE_NUMBER_PATTERN = /^\d+\.\d+$/;
+
+  function isValidPageNumber(pageNum: string): boolean {
+    return PAGE_NUMBER_PATTERN.test(pageNum);
+  }
+
+  // 校验示例
+  isValidPageNumber('0.3')   // ✅ true
+  isValidPageNumber('1.5')   // ✅ true
+  isValidPageNumber('2.10')  // ✅ true
+
+  isValidPageNumber('1')     // ❌ false - 单数字
+  isValidPageNumber('M0:3')  // ❌ false - M 前缀
+  isValidPageNumber('0-3')   // ❌ false - 错误分隔符
+
+  违规提交会被拒绝：
+  ❌ ZodError: pageNumber 必须为 Flow 点分格式 <stepIndex>.<subPageNum>（如 "0.3"），
+     不再支持 M 前缀或单数字格式
+
+  ---
+  📊 完整示例：三步 Flow
+
+  // Flow 定义
+  const flowDefinition = {
+    flowId: 'g7a-mix-001',
+    title: '七年级混合评估',
+    steps: [
+      {
+        stepIndex: 0,
+        submoduleId: 'g7-experiment',
+        title: '薇甘菊实验',
+        pages: 10  // 0.1 ~ 0.10
+      },
+      {
+        stepIndex: 1,
+        submoduleId: 'questionnaire',
+        title: '问卷调查',
+        pages: 8   // 1.1 ~ 1.8
+      },
+      {
+        stepIndex: 2,
+        submoduleId: 'summary',
+        title: '总结反馈',
+        pages: 1   // 2.1
+      }
+    ]
+  };
+
+  // 用户完整流程的 pageNumber 序列
+  const userJourney = [
+    // === 第 0 步：薇甘菊实验 ===
+    '0.1',  // 注意事项
+    '0.2',  // 实验介绍
+    '0.3',  // 提出问题
+    '0.4',  // 阅读资料
+    '0.5',  // 形成假设
+    '0.6',  // 设计实验
+    '0.7',  // 评估方案
+    '0.8',  // 过渡页
+    '0.9',  // 实验操作
+    '0.10', // 数据分析
+
+    // === 第 1 步：问卷 ===
+    '1.1',  // 问卷说明
+    '1.2',  // 第 1 题
+    '1.3',  // 第 2 题
+    '1.4',  // 第 3 题
+    '1.5',  // 第 4 题
+    '1.6',  // 第 5 题
+    '1.7',  // 第 6 题
+    '1.8',  // 第 7 题
+
+    // === 第 2 步：总结 ===
+    '2.1'   // 总结页
+  ];
+
+  ---
+  🔍 调试技巧
+
+  1. 验证 pageNumber 格式
+
+  import { isValidPageNumber } from '@shared/services/submission/schema';
+
+  const pageNumber = '1.5';
+  if (!isValidPageNumber(pageNumber)) {
+    console.error('❌ pageNumber 格式不符合规范');
+  } else {
+    console.log('✅ pageNumber 格式正确');
+  }
+
+  2. 解析和重建
+
+  import {
+    parseCompositePageNum,
+    encodeCompositePageNum
+  } from '@shared/utils/pageMapping';
+
+  const pageNumber = '1.5';
+
+  // 解析
+  const parsed = parseCompositePageNum(pageNumber);
+  console.log(parsed); // { stepIndex: 1, subPageNum: 5 }
+
+  // 重建
+  const rebuilt = encodeCompositePageNum(parsed.stepIndex, parsed.subPageNum);
+  console.log(rebuilt === pageNumber); // true
+
+  3. 检查提交数据
+
+  // 在提交前打印
+  console.log('提交数据预览：', {
+    pageNumber,
+    targetElement: `P${pageNumber}_button_next`, // 应该带前缀
+    pageDesc: buildPageDescPrefix(flowId, submoduleId, stepIndex) + pageTitle
+  });
+
+  ---
+  📚 相关文档
+
+  - Schema 定义：src/shared/services/submission/schema.ts:113-125
+  - 编码函数：src/shared/utils/pageMapping.ts:113-131
+  - 使用示例：docs/migration-guide-unified-submission.md:68-74
+  - 测试用例：src/shared/services/submission/__tests__/validate-prefixes.test.js

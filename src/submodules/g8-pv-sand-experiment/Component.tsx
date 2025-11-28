@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from 'react';
 import { PvSandProvider, usePvSandContext } from './context/PvSandContext';
 import type { SubmoduleProps } from './types';
@@ -17,6 +18,7 @@ import {
   PAGE_CONFIGS,
   PageId,
 } from './mapping';
+import useHeartbeat from '@/hooks/useHeartbeat';
 
 const Page01InstructionsCover = lazy(() => import('./pages/Page01bTaskCover'));
 const Page03Background = lazy(() => import('./pages/Page03Background'));
@@ -55,40 +57,26 @@ const formatPageNumber = (stepIndex: number | undefined, subPageNum: number) => 
   return `${safeStep}.${subPageNum}`;
 };
 
-const normalizeEventType = (eventType?: string) => {
-  const value = (eventType || '').toLowerCase();
-  switch (value) {
-    case 'change':
-      return EventTypes.INPUT_CHANGE;
-    case EventTypes.INPUT_CHANGE:
-      return EventTypes.INPUT_CHANGE;
-    case EventTypes.INPUT:
-      return EventTypes.INPUT;
-    case EventTypes.CLICK:
-      return EventTypes.CLICK;
-    case EventTypes.PAGE_ENTER:
-      return EventTypes.PAGE_ENTER;
-    case EventTypes.PAGE_EXIT:
-      return EventTypes.PAGE_EXIT;
-    case EventTypes.AUTO_SUBMIT:
-      return EventTypes.AUTO_SUBMIT;
-    case EventTypes.CLICK_BLOCKED:
-      return EventTypes.CLICK_BLOCKED;
-    default:
-      return value || EventTypes.CLICK;
-  }
-};
-
 const validatePage = (
   pageId: PageId,
   answers: Record<string, any>,
   experimentState: any,
 ) => {
   switch (pageId) {
-    case 'instructions_cover':
-      return answers['instructions_read'] === 'true'
-        ? { ok: true }
-        : { ok: false, message: '请阅读完注意事项并勾选确认后再继续' };
+    case 'instructions_cover': {
+      const timerCompleted = answers['timer_completed'] === 'true';
+      const instructionsChecked = answers['instructions_read'] === 'true';
+
+      if (!timerCompleted) {
+        return { ok: false, message: '请仔细阅读注意事项，倒计时结束后才能继续' };
+      }
+
+      if (!instructionsChecked) {
+        return { ok: false, message: '请勾选我已阅读并理解上述注意事项' };
+      }
+
+      return { ok: true };
+    }
     case 'background_notice':
       return answers['background_read'] === 'true'
         ? { ok: true }
@@ -148,7 +136,6 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
   const {
     currentPageId,
     operations,
-    pageStartTime,
     navigateToPage,
     logOperation,
     clearOperations,
@@ -162,7 +149,9 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
   const currentStep = pageConfig?.stepIndex ?? 0;
   const totalSteps = PAGE_CONFIGS.filter((cfg) => cfg.stepIndex > 0).length;
   const subPageNum = getSubPageNumByPageId(currentPageId as PageId);
-  const pageNumber = formatPageNumber(flowContext?.stepIndex, subPageNum);
+  const submissionStepIndex =
+    typeof flowContext?.stepIndex === 'number' ? flowContext.stepIndex : pageConfig?.stepIndex ?? 0;
+  const pageNumber = formatPageNumber(submissionStepIndex, subPageNum);
   const pageDesc = pageConfig?.pageDesc ?? currentPageId;
   const showTimer = navigationMode !== 'hidden';
 
@@ -182,50 +171,67 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     }
   }, [flowContext, subPageNum]);
 
-  const ensurePrefixed = useCallback(
-    (id: string) => {
-      const base = id || 'field';
-      const prefix = `P${pageNumber}_`;
-      return base.startsWith(prefix) ? base : `${prefix}${base}`;
+  // === Progress heartbeat兜底：Flow未启用时仍保持进度同步 ===
+  const stepIndexRef = useRef(submissionStepIndex);
+  const modulePageNumRef = useRef(String(subPageNum));
+
+  useEffect(() => {
+    stepIndexRef.current = submissionStepIndex;
+    modulePageNumRef.current = String(subPageNum);
+  }, [submissionStepIndex, subPageNum]);
+
+  const heartbeatExamNo =
+    (userContext as any)?.examNo || (userContext as any)?.user?.examNo || '';
+  const heartbeatBatchCode =
+    (userContext as any)?.batchCode || (userContext as any)?.user?.batchCode || '';
+  const heartbeatEnabled =
+    Boolean(flowContext?.flowId) && Boolean(heartbeatExamNo) && Boolean(heartbeatBatchCode);
+
+  useHeartbeat({
+    flowId: flowContext?.flowId || '',
+    stepIndexRef,
+    modulePageNumRef,
+    examNo: heartbeatExamNo,
+    batchCode: heartbeatBatchCode,
+    enabled: heartbeatEnabled,
+    intervalMs: 15000,
+    onError: (err) => {
+      console.warn('[PvSand] Heartbeat failed', err);
     },
-    [pageNumber],
+  });
+
+  const operationsForSubmission = useMemo(
+    () => operations.filter((op) => !op.pageId || op.pageId === currentPageId),
+    [currentPageId, operations],
   );
 
-  const normalizedOperations = useMemo(() => {
-    return operations
-      .filter((op) => !op.pageId || op.pageId === currentPageId)
-      .map((op, index) => ({
-        code: index + 1,
-        eventType: normalizeEventType(op.eventType),
-        targetElement: ensurePrefixed(op.targetElement),
-        value: op.value,
-        time: formatTimestamp(op.time || new Date()),
-        pageId: currentPageId,
-      }));
-  }, [currentPageId, ensurePrefixed, operations]);
-
-  const normalizedAnswers = useMemo(() => {
-    const entries = Object.entries(answers).filter(
-      ([, value]) => value !== undefined && value !== null && String(value).trim() !== '',
-    );
-    const answerList = entries.map(([key, value], index) => ({
-      code: index + 1,
-      targetElement: ensurePrefixed(key),
-      value: String(value),
+  const answersForSubmission = useMemo(() => {
+    const entries = Object.entries(pageAnswers).map(([key, meta]) => ({
+      targetElement: key,
+      value: (meta as any)?.value,
       pageId: currentPageId,
     }));
 
+    const filtered = entries.filter(({ value }) => {
+      if (value === undefined || value === null) {
+        return false;
+      }
+      if (typeof value === 'string') {
+        return value.trim() !== '';
+      }
+      return String(value).trim() !== '';
+    });
+
     if (experimentState?.collectedData) {
-      answerList.push({
-        code: answerList.length + 1,
-        targetElement: ensurePrefixed('experiment_data'),
+      filtered.push({
+        targetElement: 'experiment_data',
         value: JSON.stringify(experimentState.collectedData),
         pageId: currentPageId,
       });
     }
 
-    return answerList;
-  }, [answers, currentPageId, ensurePrefixed, experimentState?.collectedData]);
+    return filtered;
+  }, [currentPageId, experimentState?.collectedData, pageAnswers]);
 
   const submissionConfig = useMemo(() => {
     const getUserContext = () => {
@@ -240,16 +246,6 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       };
     };
 
-    const buildMark = () => ({
-      pageNumber,
-      pageDesc,
-      operationList: normalizedOperations,
-      answerList: normalizedAnswers,
-      beginTime: pageStartTime ? formatTimestamp(pageStartTime) : formatTimestamp(new Date()),
-      endTime: formatTimestamp(new Date()),
-      imgList: [],
-    });
-
     const getFlowContext =
       flowContext && flowContext.flowId
         ? () => ({
@@ -262,18 +258,16 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
 
     return {
       getUserContext,
-      buildMark,
       getFlowContext,
+      operations: () => operationsForSubmission,
+      answers: () => answersForSubmission,
       allowProceedOnFailureInDev: Boolean(import.meta.env?.DEV),
     };
   }, [
+    answersForSubmission,
     currentPageId,
     flowContext,
-    normalizedAnswers,
-    normalizedOperations,
-    pageDesc,
-    pageNumber,
-    pageStartTime,
+    operationsForSubmission,
     userContext,
   ]);
 
@@ -291,6 +285,18 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
 
   const handleFrameNext = useCallback(
     async ({ defaultSubmit }: { defaultSubmit?: () => Promise<boolean> }) => {
+      console.log('[PvSand] handleFrameNext called', {
+        currentPageId,
+        operationsCount: operationsForSubmission.length,
+        answersCount: answersForSubmission.length,
+        pageMeta: {
+          pageNumber,
+          pageDesc,
+          stepIndex: submissionStepIndex,
+          subPageNum,
+        },
+      });
+
       const validation = validatePage(currentPageId as PageId, answers, experimentState);
       if (!validation.ok) {
         const message = validation.message || '请完成当前页面必填项';
@@ -313,8 +319,14 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
 
       setValidationError('');
 
+      console.log('[PvSand] Calling defaultSubmit with data:', {
+        operations: operationsForSubmission,
+        answers: answersForSubmission,
+      });
+
       if (typeof defaultSubmit === 'function') {
         const ok = await defaultSubmit();
+        console.log('[PvSand] defaultSubmit result:', ok);
         if (!ok) {
           return false;
         }
@@ -324,7 +336,7 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       goToNextPage();
       return true;
     },
-    [answers, clearOperations, currentPageId, experimentState, goToNextPage, logOperation],
+    [answers, answersForSubmission, clearOperations, currentPageId, experimentState, goToNextPage, logOperation, operationsForSubmission, pageDesc, pageNumber, subPageNum, submissionStepIndex],
   );
 
   const handleTimerTimeout = useCallback(() => {
@@ -333,11 +345,62 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     }
   }, [flowContext]);
 
+  // Keep pageId unprefixed so AssessmentPageFrame/DataLogger can map it correctly
+  const fallbackPageId: PageId = PAGE_CONFIGS[0]?.pageId ?? 'instructions_cover';
+  const rawPageId = pageConfig?.pageId ?? currentPageId ?? fallbackPageId;
+  const normalizedPageId =
+    typeof rawPageId === 'string' && rawPageId.startsWith('P_')
+      ? rawPageId.slice(2)
+      : rawPageId;
+  const safePageId =
+    typeof normalizedPageId === 'string' && normalizedPageId.trim()
+      ? normalizedPageId.trim()
+      : fallbackPageId;
+
+  const guardedPageId =
+    typeof safePageId === 'string' && safePageId.trim() ? safePageId : fallbackPageId;
+
+  const pageIdDiagnostics = {
+    currentPageId,
+    rawPageId,
+    normalizedPageId,
+    safePageId,
+    guardedPageId,
+    fallbackPageId,
+    pageConfigPageId: pageConfig?.pageId,
+    hasPageConfig: Boolean(pageConfig),
+  };
+
+  if (!guardedPageId || typeof guardedPageId !== 'string') {
+    console.error('[PvSand] guardedPageId resolved to an invalid value', pageIdDiagnostics);
+  } else if (guardedPageId === fallbackPageId && normalizedPageId !== fallbackPageId) {
+    console.warn('[PvSand] pageId fallback applied', pageIdDiagnostics);
+  }
+
   const pageMeta = {
-    pageId: ensurePrefixed(pageConfig?.pageId ?? currentPageId),
+    pageId: guardedPageId || fallbackPageId,
     pageNumber,
     pageDesc,
+    stepIndex: submissionStepIndex,
+    subPageNum,
   };
+
+  if (!pageMeta.pageId) {
+    console.error('[PvSand] pageMeta.pageId is missing before render', {
+      pageMeta,
+      ...pageIdDiagnostics,
+    });
+  }
+
+  console.log(
+    '[PvSand] pageMeta.pageId',
+    pageMeta.pageId,
+    typeof pageMeta.pageId,
+    {
+      pageMeta,
+      ...pageIdDiagnostics,
+    },
+  );
 
   // Validation errors are now handled by page-specific UI (e.g., Page01bTaskCover)
   // No need to show footer validation error
@@ -345,6 +408,7 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
 
   return (
     <AssessmentPageFrame
+      pageId={guardedPageId}
       navigationMode={navigationMode}
       currentStep={currentStep}
       totalSteps={totalSteps}

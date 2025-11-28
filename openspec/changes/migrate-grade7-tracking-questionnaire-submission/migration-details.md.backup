@@ -1,0 +1,830 @@
+# G7-Tracking-Questionnaire 迁移详细清单与样例快照
+
+本文档补全 `migrate-grade7-tracking-questionnaire-submission` 提案，提供迁移页清单、期望数据快照样例及验证计划。
+
+---
+
+## 一、迁移页清单
+
+### 1.1 页面总览
+
+| 旧页码 | 新页码 (stepIndex.subPageNum) | pageId | 页面标题 | 题目数量 | 题目类型 | 特殊处理 |
+|--------|------------------------------|--------|----------|---------|---------|---------|
+| 14 | **2.0** | Questionnaire_01 | 科学探究态度问卷 (1/8) | 9 | likert4 (4选项) | **首页**：启动10分钟问卷计时器 |
+| 15 | **2.1** | Questionnaire_02 | 科学探究态度问卷 (2/8) | 9 | likert4 (4选项) | - |
+| 16 | **2.2** | Questionnaire_03 | 科学探究态度问卷 (3/8) | 10 | likert4 (4选项) | - |
+| 17 | **2.3** | Questionnaire_04 | 科学探究态度问卷 (4/8) | 5 | confidence (4选项) | - |
+| 18 | **2.4** | Questionnaire_05 | 科学探究态度问卷 (5/8) | 11 | likert4 (4选项) | - |
+| 19 | **2.5** | Questionnaire_06 | 校内科学活动参与频率 (6/8) | 7 | frequency5 (5选项) | - |
+| 20 | **2.6** | Questionnaire_07 | 校外科学活动参与频率 (7/8) | 7 | frequency5 (5选项) | - |
+| 21 | **2.7** | Questionnaire_08 | 学习努力程度评估 (8/8) | 3 | scale10 (10选项) | **尾页**：计时到期自动提交；必答完整 |
+
+### 1.2 页面分类
+
+**按类型分类**：
+- **纯问卷页**（标准流程）：2.0 - 2.7（全部8页）
+- **计时页**：2.0（首页启动计时器）
+- **自动提交页**：2.7（计时到期或手动完成后跳转完成页）
+
+**按交互特点分类**：
+- **单选题页面**：全部（每题必选一个选项）
+- **阻断校验页**：全部（未完成必答题时阻断"下一页"点击）
+
+### 1.3 特殊处理标注
+
+#### 2.0 - 问卷首页（计时启动）
+- **计时器逻辑**：
+  - 启动 10 分钟倒计时（`QUESTIONNAIRE_DURATION = 600 秒`）
+  - 同时启动 AppContext 的 `startQuestionnaireTimer`（显示用）和 TrackingProvider 的内部计时器（超时跳转用）
+  - 记录 `timer_start` 事件
+- **事件要求**：
+  - 必须包含 `page_enter`、`timer_start`、选择事件、`next_click`、`page_exit`
+
+#### 2.7 - 问卷尾页（自动提交或超时）
+- **提交逻辑**：
+  - 用户完成所有题目后点击"提交问卷"按钮 → 记录 `next_click`（value: "提交问卷"）
+  - 计时到期自动提交 → 记录 `timer_complete` + `auto_submit`
+  - 提交成功后跳转到完成页（pageId: Page_22_Completion）
+- **答案处理**：
+  - 超时未作答的题目：填充 `"超时未回答"`
+  - 已作答题目：正常记录选项标签文本
+- **事件要求**：
+  - 正常完成：`page_enter` → 选择事件 → `next_click` → `page_submit_success` → `page_exit`
+  - 超时提交：`page_enter` → 选择事件 → `timer_complete` → `auto_submit` → `page_submit_success`/`page_submit_failed` → `page_exit`
+
+#### 全部页面 - 阻断校验
+- **校验规则**：所有题目必答（每题必选一个选项）
+- **阻断行为**：
+  - 用户点击"下一页"但未完成所有题目 → 记录 `click_blocked`
+  - `click_blocked.value` 必须包含 `{ missing: ["P2.0_问题1", "P2.0_问题3"] }` 格式的缺失项列表
+  - 显示警告提示："请完成本页所有必答题后再继续"
+
+---
+
+## 二、样例快照（期望 MarkObject）
+
+### 样例 1：2.0 - 问卷首页（likert4 类型，计时启动）
+
+**场景描述**：用户进入问卷第1页，回答9个问题（4选项李克特量表），点击"下一页"成功提交。
+
+**期望 MarkObject**：
+
+```json
+{
+  "pageNumber": "2.0",
+  "pageDesc": "[g7-tracking/questionnaire/2] 科学探究态度问卷 (1/8)",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "Questionnaire_01",
+      "time": "2025-11-23 10:05:30",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 2,
+      "targetElement": "问卷计时器",
+      "eventType": "timer_start",
+      "value": "600",
+      "time": "2025-11-23 10:05:31",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 3,
+      "targetElement": "P2.0_问题1",
+      "eventType": "input_focus",
+      "value": "我对许多不同事物有好奇心。",
+      "time": "2025-11-23 10:05:35",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 4,
+      "targetElement": "P2.0_问题1",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"C\",\"label\":\"比较同意\"}",
+      "time": "2025-11-23 10:05:37",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 5,
+      "targetElement": "P2.0_问题1",
+      "eventType": "input_blur",
+      "value": "C",
+      "time": "2025-11-23 10:05:38",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 6,
+      "targetElement": "P2.0_问题2",
+      "eventType": "input_focus",
+      "value": "我喜欢发问。",
+      "time": "2025-11-23 10:05:40",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 7,
+      "targetElement": "P2.0_问题2",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"D\",\"label\":\"非常同意\"}",
+      "time": "2025-11-23 10:05:42",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 8,
+      "targetElement": "P2.0_问题2",
+      "eventType": "input_blur",
+      "value": "D",
+      "time": "2025-11-23 10:05:43",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 9,
+      "targetElement": "P2.0_问题3",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"B\",\"label\":\"比较不同意\"}",
+      "time": "2025-11-23 10:05:50"
+    },
+    {
+      "comment": "... 省略问题4-8的选择事件（每题3-4个事件：focus → select_change → blur）..."
+    },
+    {
+      "code": 28,
+      "targetElement": "P2.0_问题9",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"C\",\"label\":\"比较同意\"}",
+      "time": "2025-11-23 10:06:15"
+    },
+    {
+      "code": 29,
+      "targetElement": "下一页按钮",
+      "eventType": "next_click",
+      "value": "下一页",
+      "time": "2025-11-23 10:06:20",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 30,
+      "targetElement": "页面",
+      "eventType": "page_exit",
+      "value": "Questionnaire_01",
+      "time": "2025-11-23 10:06:20",
+      "pageId": "Questionnaire_01"
+    },
+    {
+      "code": 31,
+      "targetElement": "提交管道",
+      "eventType": "page_submit_success",
+      "value": "{\"pageNumber\":\"2.0\",\"questionCount\":9,\"answerCount\":9}",
+      "time": "2025-11-23 10:06:21",
+      "pageId": "Questionnaire_01"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "P2.0_问题1",
+      "value": "比较同意"
+    },
+    {
+      "code": 2,
+      "targetElement": "P2.0_问题2",
+      "value": "非常同意"
+    },
+    {
+      "code": 3,
+      "targetElement": "P2.0_问题3",
+      "value": "比较不同意"
+    },
+    {
+      "code": 4,
+      "targetElement": "P2.0_问题4",
+      "value": "非常同意"
+    },
+    {
+      "code": 5,
+      "targetElement": "P2.0_问题5",
+      "value": "比较同意"
+    },
+    {
+      "code": 6,
+      "targetElement": "P2.0_问题6",
+      "value": "比较同意"
+    },
+    {
+      "code": 7,
+      "targetElement": "P2.0_问题7",
+      "value": "非常不同意"
+    },
+    {
+      "code": 8,
+      "targetElement": "P2.0_问题8",
+      "value": "比较同意"
+    },
+    {
+      "code": 9,
+      "targetElement": "P2.0_问题9",
+      "value": "比较同意"
+    }
+  ],
+  "beginTime": "2025-11-23 10:05:30",
+  "endTime": "2025-11-23 10:06:20",
+  "imgList": []
+}
+```
+
+**关键验证点**：
+- ✅ `pageNumber` 使用新格式 `2.0`
+- ✅ `pageDesc` 包含前缀 `[g7-tracking/questionnaire/2]`
+- ✅ `targetElement` 使用前缀 `P2.0_问题N`
+- ✅ `operationList` 包含最小事件集合：`page_enter` + `timer_start` + `select_change`（9次）+ `next_click` + `page_exit` + `page_submit_success`
+- ✅ 每个选择事件包含 `focus` → `select_change`（含 prev/next/label）→ `blur`
+- ✅ `answerList` 仅包含 9 个非空答案，值为选项标签文本（非 A/B/C/D）
+- ✅ `code` 连续自增，由提交层生成
+
+---
+
+### 样例 2：2.5 - 校内科学活动参与频率（frequency5 类型，5选项）
+
+**场景描述**：用户进入问卷第6页，回答7个问题（5选项频率量表），有2题未作答，点击"下一页"被阻断，补充答案后成功提交。
+
+**期望 MarkObject**：
+
+```json
+{
+  "pageNumber": "2.5",
+  "pageDesc": "[g7-tracking/questionnaire/2] 校内科学活动参与频率 (6/8)",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "Questionnaire_06",
+      "time": "2025-11-23 10:12:00",
+      "pageId": "Questionnaire_06"
+    },
+    {
+      "code": 2,
+      "targetElement": "P2.5_问题1",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"C\",\"label\":\"大约每月一次或两次\"}",
+      "time": "2025-11-23 10:12:10"
+    },
+    {
+      "code": 3,
+      "targetElement": "P2.5_问题2",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"A\",\"label\":\"没有或几乎没有\"}",
+      "time": "2025-11-23 10:12:15"
+    },
+    {
+      "code": 4,
+      "targetElement": "P2.5_问题3",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"B\",\"label\":\"大约每年一次或两次\"}",
+      "time": "2025-11-23 10:12:20"
+    },
+    {
+      "comment": "... 问题4未作答，跳过 ..."
+    },
+    {
+      "code": 5,
+      "targetElement": "P2.5_问题5",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"D\",\"label\":\"大约每星期一次或两次\"}",
+      "time": "2025-11-23 10:12:30"
+    },
+    {
+      "comment": "... 问题6未作答，跳过 ..."
+    },
+    {
+      "code": 6,
+      "targetElement": "P2.5_问题7",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"C\",\"label\":\"大约每月一次或两次\"}",
+      "time": "2025-11-23 10:12:35"
+    },
+    {
+      "code": 7,
+      "targetElement": "下一页按钮",
+      "eventType": "click_blocked",
+      "value": "{\"reason\":\"未完成所有必答题\",\"missing\":[\"P2.5_问题4\",\"P2.5_问题6\"]}",
+      "time": "2025-11-23 10:12:40",
+      "pageId": "Questionnaire_06"
+    },
+    {
+      "code": 8,
+      "targetElement": "P2.5_问题4",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"E\",\"label\":\"每天或几乎每天\"}",
+      "time": "2025-11-23 10:12:50"
+    },
+    {
+      "code": 9,
+      "targetElement": "P2.5_问题6",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"B\",\"label\":\"大约每年一次或两次\"}",
+      "time": "2025-11-23 10:12:55"
+    },
+    {
+      "code": 10,
+      "targetElement": "下一页按钮",
+      "eventType": "next_click",
+      "value": "下一页",
+      "time": "2025-11-23 10:13:00",
+      "pageId": "Questionnaire_06"
+    },
+    {
+      "code": 11,
+      "targetElement": "页面",
+      "eventType": "page_exit",
+      "value": "Questionnaire_06",
+      "time": "2025-11-23 10:13:00",
+      "pageId": "Questionnaire_06"
+    },
+    {
+      "code": 12,
+      "targetElement": "提交管道",
+      "eventType": "page_submit_success",
+      "value": "{\"pageNumber\":\"2.5\",\"questionCount\":7,\"answerCount\":7}",
+      "time": "2025-11-23 10:13:01",
+      "pageId": "Questionnaire_06"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "P2.5_问题1",
+      "value": "大约每月一次或两次"
+    },
+    {
+      "code": 2,
+      "targetElement": "P2.5_问题2",
+      "value": "没有或几乎没有"
+    },
+    {
+      "code": 3,
+      "targetElement": "P2.5_问题3",
+      "value": "大约每年一次或两次"
+    },
+    {
+      "code": 4,
+      "targetElement": "P2.5_问题4",
+      "value": "每天或几乎每天"
+    },
+    {
+      "code": 5,
+      "targetElement": "P2.5_问题5",
+      "value": "大约每星期一次或两次"
+    },
+    {
+      "code": 6,
+      "targetElement": "P2.5_问题6",
+      "value": "大约每年一次或两次"
+    },
+    {
+      "code": 7,
+      "targetElement": "P2.5_问题7",
+      "value": "大约每月一次或两次"
+    }
+  ],
+  "beginTime": "2025-11-23 10:12:00",
+  "endTime": "2025-11-23 10:13:00",
+  "imgList": []
+}
+```
+
+**关键验证点**：
+- ✅ `click_blocked` 事件包含 `missing` 数组，列出未完成的题目
+- ✅ 阻断后补充答案，再次点击成功
+- ✅ `answerList` 最终包含全部 7 个答案（补充后）
+- ✅ 5选项类型（frequency5）的标签文本正确映射
+
+---
+
+### 样例 3：2.7 - 问卷尾页（scale10 类型，计时到期自动提交）
+
+**场景描述**：用户进入问卷最后一页，回答3个问题（10分制评分），计时到期触发自动提交。
+
+**期望 MarkObject**：
+
+```json
+{
+  "pageNumber": "2.7",
+  "pageDesc": "[g7-tracking/questionnaire/2] 学习努力程度评估 (8/8)",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "页面",
+      "eventType": "page_enter",
+      "value": "Questionnaire_08",
+      "time": "2025-11-23 10:14:30",
+      "pageId": "Questionnaire_08"
+    },
+    {
+      "code": 2,
+      "targetElement": "P2.7_问题1",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"H\",\"label\":\"8\"}",
+      "time": "2025-11-23 10:14:40"
+    },
+    {
+      "code": 3,
+      "targetElement": "P2.7_问题2",
+      "eventType": "select_change",
+      "value": "{\"prev\":null,\"next\":\"I\",\"label\":\"9\"}",
+      "time": "2025-11-23 10:14:50"
+    },
+    {
+      "comment": "... 问题3未作答，计时到期 ..."
+    },
+    {
+      "code": 4,
+      "targetElement": "问卷计时器",
+      "eventType": "timer_complete",
+      "value": "600",
+      "time": "2025-11-23 10:15:30",
+      "pageId": "Questionnaire_08"
+    },
+    {
+      "code": 5,
+      "targetElement": "提交管道",
+      "eventType": "auto_submit",
+      "value": "{\"reason\":\"问卷计时到期\",\"remainingQuestions\":[\"P2.7_问题3\"]}",
+      "time": "2025-11-23 10:15:30",
+      "pageId": "Questionnaire_08"
+    },
+    {
+      "code": 6,
+      "targetElement": "页面",
+      "eventType": "page_exit",
+      "value": "Questionnaire_08",
+      "time": "2025-11-23 10:15:30",
+      "pageId": "Questionnaire_08"
+    },
+    {
+      "code": 7,
+      "targetElement": "提交管道",
+      "eventType": "page_submit_success",
+      "value": "{\"pageNumber\":\"2.7\",\"questionCount\":3,\"answerCount\":3,\"timeoutSubmit\":true}",
+      "time": "2025-11-23 10:15:31",
+      "pageId": "Questionnaire_08"
+    }
+  ],
+  "answerList": [
+    {
+      "code": 1,
+      "targetElement": "P2.7_问题1",
+      "value": "8"
+    },
+    {
+      "code": 2,
+      "targetElement": "P2.7_问题2",
+      "value": "9"
+    },
+    {
+      "code": 3,
+      "targetElement": "P2.7_问题3",
+      "value": "超时未回答"
+    }
+  ],
+  "beginTime": "2025-11-23 10:14:30",
+  "endTime": "2025-11-23 10:15:30",
+  "imgList": []
+}
+```
+
+**关键验证点**：
+- ✅ `timer_complete` 事件标记计时到期
+- ✅ `auto_submit` 事件说明自动提交原因
+- ✅ `answerList` 中未作答题目填充 `"超时未回答"` 占位文本
+- ✅ `page_submit_success.value` 包含 `timeoutSubmit: true` 标识
+- ✅ 10分制选项标签为数字字符串（"1"-"10"）
+
+---
+
+## 三、验证/测试计划
+
+### 3.1 快照验证策略
+
+#### 3.1.1 快照覆盖范围
+
+**必须包含的快照**：
+1. **2.0 - 问卷首页（完整流程）** ✅
+   - 验证：计时器启动、focus/blur/change 序列、答案完整
+2. **2.5 - 阻断与补充（错误恢复）** ✅
+   - 验证：`click_blocked` 含 missing 列表、补充后成功提交
+3. **2.7 - 超时自动提交** ✅
+   - 验证：`timer_complete` + `auto_submit`、超时占位答案
+
+**可选增补快照**：
+4. **2.3 - confidence 类型**（不同选项标签）
+5. **2.1 - 快速完成**（最小事件集合验证）
+
+#### 3.1.2 Fixture 文件结构
+
+```
+src/shared/services/submission/__tests__/fixtures/
+├── g7-tracking-questionnaire/
+│   ├── page-2.0-complete.json          # 样例1：首页完整流程
+│   ├── page-2.5-blocked-recovery.json  # 样例2：阻断恢复
+│   ├── page-2.7-timeout-submit.json    # 样例3：超时提交
+│   └── README.md                        # 快照说明文档
+```
+
+每个 fixture 文件包含：
+- `expected`：期望的 MarkObject（如上述样例）
+- `context`：测试上下文（batchCode, examNo, flowContext）
+- `scenario`：场景描述
+
+### 3.2 Schema 校验规则
+
+#### 3.2.1 必需字段校验
+
+```typescript
+// src/shared/services/submission/schema.ts
+
+import { z } from 'zod';
+
+const G7TrackingQuestionnaireSchema = z.object({
+  pageNumber: z.string().regex(/^2\.[0-7]$/), // 问卷页码：2.0 - 2.7
+  pageDesc: z.string().startsWith('[g7-tracking/questionnaire/2]'),
+  operationList: z.array(
+    z.object({
+      code: z.number().int().positive(),
+      targetElement: z.string(),
+      eventType: z.enum([
+        'page_enter', 'page_exit',
+        'input_focus', 'input_blur', 'select_change',
+        'next_click', 'click_blocked',
+        'timer_start', 'timer_complete', 'auto_submit',
+        'page_submit_success', 'page_submit_failed'
+      ]),
+      value: z.string(),
+      time: z.string().regex(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/),
+      pageId: z.string().optional()
+    })
+  ).min(1),
+  answerList: z.array(
+    z.object({
+      code: z.number().int().positive(),
+      targetElement: z.string().regex(/^P2\.[0-7]_问题\d+$/),
+      value: z.string().min(1) // 非空答案
+    })
+  ),
+  beginTime: z.string(),
+  endTime: z.string(),
+  imgList: z.array(z.any()).default([])
+});
+```
+
+#### 3.2.2 事件集合完整性校验
+
+**最小必需事件**（每页必须包含）：
+- ✅ `page_enter`（进入页面）
+- ✅ `page_exit`（离开页面）
+- ✅ `next_click` 或 `auto_submit`（提交触发）
+- ✅ 至少 1 次 `select_change`（用户选择）
+- ✅ `page_submit_success` 或 `page_submit_failed`（提交结果）
+
+**特殊页面额外要求**：
+- **2.0（首页）**：必须包含 `timer_start`
+- **阻断场景**：必须包含 `click_blocked`（含 missing 列表）
+- **2.7（尾页超时）**：必须包含 `timer_complete` + `auto_submit`
+
+### 3.3 targetElement 前缀校验
+
+**Lint 规则**（ESLint 插件或自定义脚本）：
+
+```javascript
+// .eslintrc.submission-rules.json
+
+{
+  "rules": {
+    "submission/valid-target-element-prefix": "error"
+  }
+}
+
+// 规则实现：
+// - 禁止手写 targetElement 不含 P2.{0-7}_ 前缀
+// - 禁止使用旧前缀（如 P14_, P15_, M*）
+```
+
+**检查脚本示例**：
+
+```bash
+# CI 检查：扫描代码中的 targetElement 字符串
+npm run lint:submission-prefixes
+
+# 输出示例：
+# ❌ BaseQuestionnairePage.jsx:173 - Invalid prefix: "P${pageNumber}_问题"
+#    Expected: "P2.0_问题" to "P2.7_问题"
+```
+
+### 3.4 Lint 守卫规则
+
+#### 3.4.1 禁止直连接口
+
+```javascript
+// CI 检查：禁止直接调用 /stu/saveHcMark
+grep -r "'/stu/saveHcMark'" src/modules/grade-7-tracking/pages/
+# 应返回 0 条结果（仅允许在 usePageSubmission 中调用）
+```
+
+#### 3.4.2 禁止手写 pageNumber/code
+
+```javascript
+// Lint 规则：禁止在组件中手写 pageNumber 构造逻辑
+// 必须使用 encodeCompositePageNum(stepIndex, subPageNum)
+```
+
+### 3.5 历史数据兼容性
+
+#### 3.5.1 兼容性策略
+
+**问题**：旧数据使用 `pageNumber: "14"` 格式，新数据使用 `"2.0"`，后端需要识别。
+
+**解决方案**：
+1. **迁移期**（2周）：
+   - 前端提交时在 `flow_context` 中添加 `legacyPageNum: "14"` 字段
+   - 后端同时支持新旧两种页码格式的查询
+2. **过渡期后**：
+   - 后端数据清洗脚本：将旧格式数据转换为新格式（可选）
+   - 前端停止写入 `legacyPageNum`
+
+#### 3.5.2 数据清洗需求
+
+**是否需要**：**否**（历史数据保持原样，仅新提交使用新格式）
+
+**原因**：
+- 旧数据已入库，修改风险高
+- 分析时可通过 `pageNumber` 格式区分新旧数据
+- 新旧数据可并存，按批次（batchCode）区分
+
+---
+
+## 四、测试执行清单
+
+### 4.1 单元测试
+
+```bash
+# 测试文件位置
+src/shared/services/submission/__tests__/g7-tracking-questionnaire.test.js
+
+# 测试用例：
+- [x] Schema 校验：合法 MarkObject 通过
+- [x] Schema 校验：非法页码被拒绝（2.8, 3.0, M2:0）
+- [x] Schema 校验：缺失必需事件被拒绝
+- [x] targetElement 前缀：P2.0_问题1 通过，P14_问题1 被拒绝
+- [x] 答案过滤：空答案不入列
+- [x] 超时占位：未作答题目填充"超时未回答"
+- [x] code 自增：提交层生成连续 code
+```
+
+### 4.2 集成测试
+
+```bash
+# 测试环境：Mock 模式
+npm run dev
+
+# 手动测试步骤：
+1. 登录 → 选择 g7-tracking 模块
+2. 完成实验部分（1-13页）→ 进入问卷说明（0.2）
+3. 进入问卷第1页（2.0）→ 验证计时器启动
+4. 不完整答题 → 点击"下一页" → 验证阻断提示
+5. 补充答案 → 成功进入下一页
+6. 完成所有问卷 → 验证跳转到完成页
+7. 检查提交数据：
+   - 打开浏览器 DevTools → Network → 查看 /stu/saveHcMark 请求
+   - 验证 pageNumber 格式为 "2.0" - "2.7"
+   - 验证 operationList 包含 focus/blur/change/next_click
+   - 验证 answerList 仅包含非空答案
+```
+
+### 4.3 快照测试
+
+```bash
+# 快照测试文件
+src/shared/services/submission/__tests__/submission-format.snapshot.test.js
+
+# 测试逻辑：
+describe('G7-Tracking-Questionnaire Submission Format', () => {
+  it('should match snapshot for page 2.0 (complete)', () => {
+    const fixture = require('./fixtures/g7-tracking-questionnaire/page-2.0-complete.json');
+    const result = buildMarkObject(fixture.context, fixture.inputs);
+    expect(result).toMatchSnapshot();
+  });
+
+  it('should match snapshot for page 2.5 (blocked recovery)', () => {
+    // ...
+  });
+
+  it('should match snapshot for page 2.7 (timeout submit)', () => {
+    // ...
+  });
+});
+```
+
+---
+
+## 五、迁移验收标准
+
+### 5.1 代码质量
+
+- [ ] 所有问卷页面使用 `usePageSubmission` Hook
+- [ ] 移除所有直连 `/stu/saveHcMark` 的代码
+- [ ] 移除手写 `pageNumber`/`targetElement` 前缀逻辑
+- [ ] Lint 检查通过（0 warnings, 0 errors）
+
+### 5.2 数据格式
+
+- [ ] 所有提交的 `pageNumber` 为 `2.0` - `2.7` 格式
+- [ ] 所有 `targetElement` 使用 `P2.{0-7}_` 前缀
+- [ ] 所有 `pageDesc` 包含 `[g7-tracking/questionnaire/2]` 前缀
+- [ ] Schema 校验通过率 100%
+
+### 5.3 事件完整性
+
+- [ ] 每页至少包含：`page_enter` + `page_exit` + `next_click`/`auto_submit` + `page_submit_success`
+- [ ] 选择控件记录：`input_focus` → `select_change` → `input_blur`
+- [ ] 阻断场景记录：`click_blocked`（含 missing 列表）
+- [ ] 计时页面记录：`timer_start`（2.0）、`timer_complete`（2.7超时）
+
+### 5.4 答案处理
+
+- [ ] `answerList` 仅包含非空答案（选项标签文本）
+- [ ] 超时未作答题目填充 `"超时未回答"`
+- [ ] 答案数量与题目数量一致（包括占位答案）
+
+### 5.5 测试覆盖
+
+- [ ] 单元测试：Schema 校验、前缀验证、答案过滤 - 覆盖率 ≥ 80%
+- [ ] 快照测试：3个典型场景（完整/阻断/超时）- 快照匹配 100%
+- [ ] 集成测试：手动验证完整问卷流程 - 通过
+
+---
+
+## 六、附录
+
+### 6.1 问卷题目清单（61题）
+
+| 页码 | 题目ID | 题目文本（示例） | 选项类型 | 选项数量 |
+|------|--------|-----------------|---------|---------|
+| 2.0 | 1-9 | 我对许多不同事物有好奇心... | likert4 | 4 |
+| 2.1 | 10-18 | 做有创造性的事情让我有满足感... | likert4 | 4 |
+| 2.2 | 19-28 | 我很难运用自己的想像力... | likert4 | 4 |
+| 2.3 | 29-33 | 为学校的科学探究项目，提出有创造性的想法... | confidence | 4 |
+| 2.4 | 34-44 | 老师给我足够的时间去提出有关作业的有创造性的解决方案... | likert4 | 4 |
+| 2.5 | 45-51 | 科学实验课/活动... | frequency5 | 5 |
+| 2.6 | 52-58 | 科学实验课/活动（校外）... | frequency5 | 5 |
+| 2.7 | 59-61 | 你为做好探究任务付出了多少努力? | scale10 | 10 |
+
+**完整题目列表**：见 [src/modules/grade-7-tracking/assets/data/questionnaire.json](../../src/modules/grade-7-tracking/assets/data/questionnaire.json)
+
+### 6.2 选项标签映射
+
+#### likert4（李克特4级量表）
+- A: 非常不同意
+- B: 比较不同意
+- C: 比较同意
+- D: 非常同意
+
+#### confidence（自信程度4级）
+- A: 一点也不自信
+- B: 不太自信
+- C: 自信
+- D: 非常自信
+
+#### frequency5（频率5级量表）
+- A: 没有或几乎没有
+- B: 大约每年一次或两次
+- C: 大约每月一次或两次
+- D: 大约每星期一次或两次
+- E: 每天或几乎每天
+
+#### scale10（10分制评分）
+- A: 1
+- B: 2
+- C: 3
+- D: 4
+- E: 5
+- F: 6
+- G: 7
+- H: 8
+- I: 9
+- J: 10
+
+### 6.3 相关文档链接
+
+- [统一提交数据格式规范](../../../docs/submission-format-standard.md)
+- [数据格式规格](../specs/data-format/spec.md)
+- [提交流程规格](../specs/submission/spec.md)
+- [问卷数据配置](../../src/modules/grade-7-tracking/assets/data/questionnaire.json)
+- [BaseQuestionnairePage 组件](../../src/modules/grade-7-tracking/components/questionnaire/BaseQuestionnairePage.jsx)
+
+---
+
+**文档版本**：v1.0
+**最后更新**：2025-11-23
+**维护人**：Claude Code
+**审核状态**：待评审

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
+import EventTypes from '@shared/services/submission/eventTypes.js';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import NavigationButton from '../components/common/NavigationButton';
 // 直接使用静态导入
 import P1Image from '../assets/images/P1.jpg';
@@ -12,30 +13,31 @@ import P1Image from '../assets/images/P1.jpg';
 const IntroductionPage = () => {
   const { 
     navigateToPage, 
-    submitPageData, 
     currentPageId,
     setPageEnterTime 
   } = useAppContext();
-  
-  // 数据记录Hook
-  const {
-    logButtonClick,
-    logPageEnter
-  } = useDataLogging('Page_02_Introduction');
+  const { submitPage, logOperation } = usePageSubmissionContext();
   
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
+  const operationsRef = useRef([]);
+
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
   
-  // 页面进入记录 - 只执行一次，使用空依赖数组
+  // 页面进入记录 - 借助 ref 确保只执行一次
   useEffect(() => {
     if (!pageLoadedRef.current) {
       pageLoadedRef.current = true;
+      operationsRef.current = [];
       setPageEnterTime(new Date());
-      logPageEnter('任务引言页面');
     }
-  }, []); // 空依赖数组，确保只执行一次
+  }, [setPageEnterTime]);
   
   // 确保图片加载完成
   useEffect(() => {
@@ -53,11 +55,16 @@ const IntroductionPage = () => {
    * 处理下一页按钮点击
    */
   const handleNextPage = useCallback(async () => {
-    // 记录按钮点击操作
-    logButtonClick('继续', '跳转到对话问题页面');
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: '继续'
+    });
     
-    // 提交页面数据
-    const submissionSuccess = await submitPageData();
+    const submissionSuccess = await submitPage({
+      answers: [],
+      operations: operationsRef.current,
+    });
 
     if (submissionSuccess) {
       // 数据已经提交，跳转时跳过重复提交
@@ -69,7 +76,7 @@ const IntroductionPage = () => {
     }
     
     return submissionSuccess;
-  }, [logButtonClick, submitPageData, navigateToPage]);
+  }, [navigateToPage, recordOperation, submitPage]);
 
   // 定义背景样式
   const backgroundStyle = {

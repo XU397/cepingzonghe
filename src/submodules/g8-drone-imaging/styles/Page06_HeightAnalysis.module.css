@@ -17,21 +17,22 @@
 /* Two-column layout */
 .twoColumnLayout {
   display: grid;
-  grid-template-columns: 30% 70%;
+  grid-template-columns: 70% 30%;
   min-height: 400px;
 }
 
-/* Left panel - Questions */
+/* Left panel - Experiment unit container */
 .leftPanel {
-  padding: 24px 20px;
-  background: #f8fafc;
+  padding: 16px;
+  background: #ffffff;
   border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: flex-start;
 }
 
-/* Panel title in left column */
+/* Panel title in right column */
 .panelTitle {
   font-size: 24px;
   font-weight: 700;
@@ -39,13 +40,12 @@
   margin: 0 0 20px 0;
 }
 
-/* Right panel - Experiment unit container */
+/* Right panel - Questions */
 .rightPanel {
-  padding: 16px;
-  background: #ffffff;
+  padding: 24px 20px;
+  background: #f8fafc;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: flex-start;
 }
 
@@ -149,14 +149,21 @@
 }
 
 /* Error message */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
 .errorMessage {
   color: #d32f2f;
-  font-size: 13px;
-  margin-bottom: 16px;
+  font-size: 16px;
+  margin-top: 30px;
   padding: 8px 12px;
   background: #ffebee;
   border-radius: 6px;
   border-left: 3px solid #d32f2f;
+  animation: shake 0.6s ease-in-out;
 }
 
 /* Button area */
@@ -310,11 +317,11 @@
   .leftPanel {
     border-right: none;
     border-bottom: 1px solid #e0e0e0;
-    padding: 16px;
+    padding: 12px;
   }
 
   .rightPanel {
-    padding: 12px;
+    padding: 16px;
   }
 
   .controlBar {

@@ -1,8 +1,34 @@
-/* Page03_Hypothesis.module.css - Hypothesis page styles */
+/* Page03_Hypothesis.module.css - Hypothesis page with Proposal A layout */
+
+/* CSS Variables - Global color standards */
+:root {
+  --cartoon-primary: #59c1ff;
+  /* Primary color: buttons, selected state */
+  --cartoon-secondary: #ffce6b;
+  /* Secondary color */
+  --cartoon-border: #ffd99e;
+  /* Border color: card borders, input borders */
+  --cartoon-green: #67d5b5;
+  /* Success green */
+  --cartoon-red: #ff8a80;
+  /* Warning red */
+  --text-color: #333333;
+  /* Body text: questions, descriptions */
+  --bg-gradient-start: #667eea;
+  /* Gradient start */
+  --bg-gradient-end: #764ba2;
+  /* Gradient end */
+  --warning-bg: #fff8e1;
+  /* Warning background */
+  --warning-border: #ff9800;
+  /* Warning border */
+  --warning-text: #e65100;
+  /* Warning text */
+}
 
 /* Main container */
 .hypothesisContainer {
-  padding: 24px;
+  padding: 24px 32px;
   max-width: 100%;
   margin: 0 auto;
 }
@@ -11,11 +37,372 @@
 .pageTitle {
   font-size: 24px;
   font-weight: 700;
-  color: #333;
-  margin: 0 0 16px 0;
+  color: var(--text-color);
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
-/* Description text */
+/* Split layout container: 3/4 left + 1/4 right */
+.splitLayout {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* ==================== LEFT CONTENT: EXPERIMENT STEPS (Proposal A) ==================== */
+
+.leftContent {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Experimental Background Section */
+.backgroundSection {
+  background: var(--warning-bg);
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin-bottom: 0;
+  border-left: 4px solid var(--warning-border);
+  border: 2px solid var(--cartoon-border);
+}
+
+.backgroundTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--warning-text);
+  margin-bottom: 8px;
+}
+
+.backgroundText {
+  font-size: 14px;
+  color: var(--warning-text);
+  text-indent: 2em;
+  line-height: 1.7;
+}
+
+/* Experiment Steps Section - Pixel-perfect replication from preview */
+.stepsSection {
+  background: #f8f9fa;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 2px solid #e9ecef;
+}
+
+/* Steps Title with decorative lines */
+.stepsTitle {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #495057;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.stepsTitle::before,
+.stepsTitle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #dee2e6);
+}
+
+.stepsTitle::before {
+  left: 20px;
+}
+
+.stepsTitle::after {
+  right: 20px;
+  background: linear-gradient(to left, transparent, #dee2e6);
+}
+
+/* Steps Container - 3 horizontal cards */
+.stepsContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* Step Card */
+.stepCard {
+  background: white;
+  padding: 20px 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  border: 2px solid var(--cartoon-border);
+}
+
+.stepCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  border-color: var(--cartoon-primary);
+}
+
+/* Step Number Badge - Using cartoon primary color */
+.stepNumber {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
+  background: var(--cartoon-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 4px 8px rgba(89, 193, 255, 0.4);
+}
+
+/* Step Icon */
+.stepIcon {
+  text-align: center;
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+/* Step Title */
+.stepTitle {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+/* Step Content */
+.stepContent {
+  font-size: 14px;
+  color: #6c757d;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Step Highlight */
+.stepHighlight {
+  color: var(--cartoon-primary);
+  font-weight: 600;
+}
+
+/* Steps Footer Note - Additional info text */
+.stepsFooterNote {
+  text-align: center;
+  font-size: 14px;
+  color: #6c757d;
+  line-height: 1.6;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Arrow Guide */
+.arrowDown {
+  text-align: center;
+  margin: 12px 0;
+  font-size: 24px;
+  color: var(--cartoon-primary);
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-6px);
+  }
+
+  60% {
+    transform: translateY(-3px);
+  }
+}
+
+/* ==================== RIGHT CONTENT: QUESTION & INPUT ==================== */
+
+.rightContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Question Section - Using unified color variables with solid deep blue */
+.questionSection {
+  background: #3b9fd9;
+  padding: 16px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(59, 159, 217, 0.35);
+  position: relative;
+  border: 2px solid var(--cartoon-border);
+  margin-top: 10px;
+}
+
+.questionBadge {
+  position: absolute;
+  top: -20px;
+  left: 20px;
+  background: var(--cartoon-red);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(255, 138, 128, 0.4);
+}
+
+.questionContent {
+  color: white;
+  font-size: 16px;
+  line-height: 1.7;
+  font-weight: 500;
+  text-indent: 2em;
+}
+
+.questionContent strong {
+  font-weight: 700;
+}
+
+/* Hint Box */
+.hintBox {
+  background: #fff3cd;
+  border-left: 3px solid #ffc107;
+  padding: 10px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid var(--cartoon-border);
+}
+
+.hintIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.hintText {
+  font-size: 13px;
+  color: #856404;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Textarea wrapper */
+.textareaWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Textarea */
+.textarea {
+  width: 100%;
+  min-height: 180px;
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 2px solid var(--cartoon-border);
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--cartoon-primary);
+  box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.1);
+}
+
+.textarea.error {
+  border-color: #d32f2f;
+}
+
+.textarea::placeholder {
+  color: #adb5bd;
+}
+
+/* Character count indicator */
+.charCounter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 0 4px;
+  font-size: 13px;
+}
+
+.charCount {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.charCount.warning {
+  color: #ff9800;
+}
+
+.charCount.valid {
+  color: var(--cartoon-green);
+}
+
+.minCharsHint {
+  color: #adb5bd;
+  font-size: 13px;
+}
+
+/* Error message */
+.errorMessage {
+  color: #d32f2f;
+  font-size: 13px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #ffebee;
+  border-radius: 6px;
+  border-left: 3px solid #d32f2f;
+  animation: shake 0.6s ease-in-out;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-8px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(8px);
+  }
+}
+
+/* ==================== DEPRECATED STYLES (kept for compatibility) ==================== */
+
+/* Old description style - deprecated */
 .description {
   font-size: 18px;
   color: #666;
@@ -24,28 +411,7 @@
   text-indent: 2em;
 }
 
-/* Split layout container */
-.splitLayout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-/* Left content - question text */
-.leftContent {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* Right content - textarea */
-.rightContent {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Question box */
+/* Old question box - deprecated */
 .questionBox {
   background: #fff8e1;
   padding: 16px;
@@ -65,148 +431,14 @@
   font-weight: 700;
 }
 
-/* Hint box */
-.hintBox {
-  background: #f5f5f5;
-  padding: 12px 16px;
-  border-radius: 8px;
-}
+/* ==================== RESPONSIVE ==================== */
 
-.hintText {
-  font-size: 18px;
-  color: #666;
-  margin: 0;
-  line-height: 2;
-  text-indent: 2em;
-}
-
-/* Textarea wrapper */
-.textareaWrapper {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-/* Textarea */
-.textarea {
-  width: 100%;
-  min-height: 180px;
-  padding: 12px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 2px solid #ddd;
-  resize: vertical;
-  box-sizing: border-box;
-  transition: border-color 0.2s;
-  font-family: inherit;
-  line-height: 1.6;
-}
-
-.textarea:focus {
-  outline: none;
-  border-color: #1976d2;
-}
-
-.textarea.error {
-  border-color: #d32f2f;
-}
-
-.textarea::placeholder {
-  color: #999;
-}
-
-/* Character count indicator */
-.charCounter {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-  padding: 0 4px;
-}
-
-.charCount {
-  font-size: 14px;
-  color: #999;
-}
-
-.charCount.warning {
-  color: #f57c00;
-}
-
-.charCount.valid {
-  color: #4caf50;
-}
-
-.minCharsHint {
-  font-size: 14px;
-  color: #999;
-}
-
-/* Error message */
-.errorMessage {
-  color: #d32f2f;
-  font-size: 13px;
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: #ffebee;
-  border-radius: 6px;
-  border-left: 3px solid #d32f2f;
-}
-
-/* Button area */
-.buttonArea {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  padding-top: 16px;
-}
-
-/* Previous button */
-.prevButton {
-  padding: 10px 24px;
-  font-size: 16px;
-  font-weight: 600;
-  background: #fff;
-  color: #666;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.prevButton:hover {
-  background: #f5f5f5;
-  border-color: #bbb;
-}
-
-/* Next button */
-.nextButton {
-  padding: 10px 28px;
-  font-size: 16px;
-  font-weight: bold;
-  background: linear-gradient(180deg, #6ecfff 0%, #38a4ff 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(56, 164, 255, 0.4);
-  transition: all 0.2s;
-}
-
-.nextButton:hover:not(:disabled) {
-  background: linear-gradient(180deg, #89d9ff 0%, #5bb5ff 100%);
-  transform: translateY(-1px);
-}
-
-.nextButton:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
   .splitLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .stepsContainer {
     grid-template-columns: 1fr;
   }
 

@@ -59,34 +59,60 @@ isValidPageNum('999', mapping);  // false
 
 #### `parseCompositePageNum(pageNumStr): CompositePageNum | null`
 
-解析 Flow 中的复合页码，支持两种格式：
-- `M<stepIndex>:<subPageNum>` - 如 "M1:5" 表示第1步的第5页
+解析 Flow 中的复合页码，优先支持如下格式：
 - `<stepIndex>.<subPageNum>` - 如 "1.5" 表示第1步的第5页
+- `M<stepIndex>:<subPageNum>` - legacy 格式，如 "M1:5"（解析时会输出废弃警告）
 
 **示例**：
 
 ```typescript
 import { parseCompositePageNum } from '@/shared/utils/pageMapping';
 
-// 格式1：M前缀
-parseCompositePageNum('M1:5');  // { stepIndex: 1, subPageNum: 5 }
-
-// 格式2：点号分隔
+// 格式1：点号分隔（推荐）
 parseCompositePageNum('2.10');  // { stepIndex: 2, subPageNum: 10 }
+
+// 格式2：M前缀（兼容，会输出 console.warn）
+parseCompositePageNum('M1:5');  // { stepIndex: 1, subPageNum: 5 }
 
 // 无效格式
 parseCompositePageNum('invalid');  // null
 ```
 
-#### `buildCompositePageNum(stepIndex, subPageNum, format?): string`
+#### `buildCompositePageNum(stepIndex, subPageNum): string`
 
-构造复合页码字符串。
+使用点分格式构造复合页码字符串。
 
 ```typescript
 import { buildCompositePageNum } from '@/shared/utils/pageMapping';
 
-buildCompositePageNum(1, 5);           // "M1:5" (默认格式)
-buildCompositePageNum(2, 10, 'dot');   // "2.10"
+buildCompositePageNum(1, 5);  // "1.5"
+```
+
+#### `encodeCompositePageNum(stepIndex, subPageNum): string`
+
+统一提交管道使用的标准编码函数，与 `buildCompositePageNum` 完全一致。
+
+```typescript
+import { encodeCompositePageNum } from '@/shared/utils/pageMapping';
+
+encodeCompositePageNum(2, 10);  // "2.10"
+```
+
+#### `buildTargetElementPrefix(pageNumber): string`
+
+用于生成以 `P<pageNumber>_` 开头的目标元素ID前缀。
+
+```typescript
+buildTargetElementPrefix('1.5'); // "P1.5_"
+```
+
+#### `buildPageDescPrefix(flowId?, submoduleId?, stepIndex?): string`
+
+根据 Flow 信息生成 "[flow/submodule/step] " 前缀，参数缺失则返回空串。
+
+```typescript
+buildPageDescPrefix('flowA', 'subM1', 3); // "[flowA/subM1/3] "
+buildPageDescPrefix('flowA');             // ""
 ```
 
 ### 3. 工具函数

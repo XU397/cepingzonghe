@@ -11,11 +11,28 @@ function CurrentPageIdIndicator() {
   return <div data-testid="current-page-id">{currentPageId}</div>;
 }
 
+function FrameNextButton() {
+  const { experimentState, navigateToPage } = useDroneImagingContext();
+  const canProceed = experimentState.captureHistory.length > 0;
+
+  return (
+    <button
+      type="button"
+      data-testid="frame-next-button"
+      onClick={() => navigateToPage('focal_analysis')}
+      disabled={!canProceed}
+    >
+      下一步
+    </button>
+  );
+}
+
 function renderPage(initialPageId: PageId = 'experiment_free') {
   return render(
     <DroneImagingProvider initialPageId={initialPageId}>
       <CurrentPageIdIndicator />
       <Page04_ExperimentFree />
+      <FrameNextButton />
     </DroneImagingProvider>
   );
 }
@@ -33,20 +50,42 @@ describe('Page04_ExperimentFree', () => {
     renderPage();
 
     expect(screen.getByText('自由探索实验')).toBeInTheDocument();
-    expect(screen.getByText('操作说明')).toBeInTheDocument();
+    expect(
+      screen.getByText('接下来，我们将在计算机上通过模拟实验的方式开展探究。右侧为实验互动界面。'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '重置实验' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '拍照记录' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '继续下一页' })).toBeInTheDocument();
+    expect(screen.getByTestId('next-button')).toBeInTheDocument();
   });
 
-  it('无强制校验时应始终允许点击“下一步”进入焦距分析页面（对应 Page 4 校验规则：无强制要求）', async () => {
+  it('未完成拍照时应阻止进入下一页，完成一次拍照后允许继续（对应 Page 4 校验规则：需至少一次实验操作）', async () => {
     renderPage();
 
-    const nextButton = screen.getByRole('button', { name: '继续下一页' });
+    const nextButton = screen.getByTestId('next-button');
+    const frameNextButton = screen.getByTestId('frame-next-button');
     const currentPage = screen.getByTestId('current-page-id');
 
     expect(currentPage).toHaveTextContent('experiment_free');
-    expect(nextButton).not.toBeDisabled();
+    expect(frameNextButton).toBeDisabled();
+
+    fireEvent.click(nextButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('请至少完成一次实验操作后再继续')).toBeInTheDocument();
+      expect(screen.getByTestId('current-page-id')).toHaveTextContent('experiment_free');
+    });
+
+    // 完成一次拍照
+    fireEvent.click(screen.getByRole('button', { name: '设置飞行高度为100米' }));
+
+    const captureButton = screen.getByTestId('capture-button');
+    expect(captureButton).not.toBeDisabled();
+    fireEvent.click(captureButton);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('error-message')).not.toBeInTheDocument();
+      expect(screen.getByTestId('frame-next-button')).not.toBeDisabled();
+    });
 
     fireEvent.click(nextButton);
 

@@ -17,7 +17,7 @@ import styles from '../styles/Page06_HeightAnalysis.module.css';
  * - Question: '当镜头焦距相同时，飞行高度升高，GSD会如何变化？'
  * - Options: A. 增大, B. 减小, C. 不变
  * - Validation: must select to proceed
- * - targetElement: 'P6_GSD变化趋势'
+ * - targetElement: P<pageNumber>_GSD变化趋势（随 stepIndex 动态生成）
  * - RADIO_SELECT event logging
  */
 
@@ -33,14 +33,16 @@ const RADIO_OPTIONS: RadioOption[] = [
 ];
 
 export default function Page06_HeightAnalysis() {
-  const { experimentState, logOperation, setAnswer, getAnswer, capture, resetExperiment } =
+  const { experimentState, logOperation, setAnswer, getAnswer, capture, resetExperiment, questionIds } =
     useDroneImagingContext();
+  const gsdTrendQuestionId = questionIds.gsdTrend;
 
   // State
-  const [selectedValue, setSelectedValue] = useState(getAnswer('P6_GSD变化趋势') || '');
+  const [selectedValue, setSelectedValue] = useState(getAnswer(gsdTrendQuestionId) || '');
   const [error, setError] = useState('');
   const [showFovCone, setShowFovCone] = useState(false);
   const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { currentHeight } = experimentState;
   const canCapture = currentHeight !== 0;
@@ -66,20 +68,30 @@ export default function Page06_HeightAnalysis() {
       if (flashTimeoutRef.current) {
         clearTimeout(flashTimeoutRef.current);
       }
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
     };
   }, [logOperation]);
 
   // Handle radio selection
-  const handleRadioChange = (value: string) => {
+  const handleRadioChange = (option: RadioOption) => {
+    const value = option.value;
     setSelectedValue(value);
+
+    // Clear error and its timeout if exists
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = null;
+    }
     setError('');
 
     // Save answer
-    setAnswer('P6_GSD变化趋势', value);
+    setAnswer(gsdTrendQuestionId, option.label);
 
     // Log RADIO_SELECT event
     logOperation({
-      targetElement: 'P6_GSD变化趋势',
+      targetElement: gsdTrendQuestionId,
       eventType: EventTypes.RADIO_SELECT,
       value: value,
       time: formatTimestamp(new Date()),
@@ -95,7 +107,12 @@ export default function Page06_HeightAnalysis() {
     logOperation({
       targetElement: 'capture_button',
       eventType: EventTypes.SIMULATION_OPERATION,
-      value: `capture_h${experimentState.currentHeight}_f${experimentState.currentFocalLength}_gsd${experimentState.currentGSD.toFixed(2)}`,
+      value: JSON.stringify({
+        action: 'capture',
+        height: experimentState.currentHeight,
+        focal: experimentState.currentFocalLength,
+        gsd: Number(experimentState.currentGSD.toFixed(2)),
+      }),
       time: formatTimestamp(new Date()),
     });
 
@@ -111,7 +128,7 @@ export default function Page06_HeightAnalysis() {
     logOperation({
       targetElement: 'reset_button',
       eventType: EventTypes.SIMULATION_OPERATION,
-      value: 'reset_experiment',
+      value: JSON.stringify({ action: 'reset_experiment' }),
       time: formatTimestamp(new Date()),
     });
 
@@ -127,13 +144,28 @@ export default function Page06_HeightAnalysis() {
   const handleNext = () => {
     // Validate selection
     if (!selectedValue) {
+      // Clear any existing error timeout
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+
+      // Set error message with shake animation
       setError('请选择一个答案后再继续');
+
+      // Auto-clear error after 10 seconds
+      errorTimeoutRef.current = setTimeout(() => {
+        setError('');
+        errorTimeoutRef.current = null;
+      }, 10000);
 
       // Log CLICK_BLOCKED event
       logOperation({
         targetElement: 'next_button',
         eventType: EventTypes.CLICK_BLOCKED,
-        value: 'no_selection',
+        value: JSON.stringify({
+          reason: 'no_selection',
+          missing: [gsdTrendQuestionId],
+        }),
         time: formatTimestamp(new Date()),
       });
       return;
@@ -158,48 +190,8 @@ export default function Page06_HeightAnalysis() {
     <div className={styles.analysisContainer} data-testid="page-height-analysis">
       {/* Two-column layout */}
       <div className={styles.twoColumnLayout}>
-        {/* Left column: Questions */}
+        {/* Left column: Experiment unit */}
         <div className={styles.leftPanel}>
-          <h2 className={styles.panelTitle}>高度分析</h2>
-
-          {/* Question box */}
-          <div className={styles.questionBox}>
-            <p className={styles.questionText}>
-              <strong>问题3：</strong> 根据模拟实验，随着飞行高度的增加，地面采样距离（GSD）呈现出怎样的变化趋势？
-            </p>
-          </div>
-
-          {/* Radio group */}
-          <div className={styles.radioGroup} data-testid="height-radio-group">
-            {RADIO_OPTIONS.map((option) => (
-              <label
-                key={option.value}
-                className={`${styles.radioOption} ${selectedValue === option.value ? styles.selected : ''}`}
-              >
-                <input
-                  type="radio"
-                  name="height_analysis"
-                  value={option.value}
-                  checked={selectedValue === option.value}
-                  onChange={() => handleRadioChange(option.value)}
-                  className={styles.radioInput}
-                  data-testid={`radio-height-${option.value}`}
-                />
-                <span className={styles.radioLabel}>{option.label}</span>
-              </label>
-            ))}
-          </div>
-
-          {/* Error message */}
-          {error && (
-            <div className={styles.errorMessage} data-testid="error-message">
-              {error}
-            </div>
-          )}
-        </div>
-
-        {/* Right column: Experiment unit */}
-        <div className={styles.rightPanel}>
           <div className={styles.experimentUnit}>
             {/* Simulator wrapper with HeightSelector and GSDDisplay overlays */}
             <div className={styles.simulatorWrapper}>
@@ -230,6 +222,46 @@ export default function Page06_HeightAnalysis() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Right column: Questions */}
+        <div className={styles.rightPanel}>
+          <h2 className={styles.panelTitle}>高度分析</h2>
+
+          {/* Question box */}
+          <div className={styles.questionBox}>
+            <p className={styles.questionText}>
+              <strong>问题3：</strong> 根据模拟实验，随着飞行高度的增加，地面采样距离（GSD）呈现出怎样的变化趋势？
+            </p>
+          </div>
+
+          {/* Radio group */}
+          <div className={styles.radioGroup} data-testid="height-radio-group">
+            {RADIO_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                className={`${styles.radioOption} ${selectedValue === option.value ? styles.selected : ''}`}
+              >
+                <input
+                  type="radio"
+                  name="height_analysis"
+                  value={option.value}
+                  checked={selectedValue === option.value}
+                  onChange={() => handleRadioChange(option)}
+                  className={styles.radioInput}
+                  data-testid={`radio-height-${option.value}`}
+                />
+                <span className={styles.radioLabel}>{option.label}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* Error message */}
+          {error && (
+            <div className={styles.errorMessage} data-testid="error-message">
+              {error}
+            </div>
+          )}
         </div>
       </div>
 

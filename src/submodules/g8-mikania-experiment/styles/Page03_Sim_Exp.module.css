@@ -185,15 +185,34 @@
   vertical-align: middle;
 }
 
-/* Error message */
+/* Shake animation for error message */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-8px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(8px);
+  }
+}
+
+/* Error message - placed below experiment area */
 .errorMessage {
   color: #d32f2f;
-  font-size: 13px;
-  margin-top: 16px;
-  padding: 8px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 24px;
+  padding: 12px 20px;
   background: #ffebee;
-  border-radius: 6px;
-  border-left: 3px solid #d32f2f;
+  border-radius: 8px;
+  border-left: 4px solid #d32f2f;
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
+  animation: shake 0.6s ease-in-out;
 }
 
 /* Right panel - Experiment area */

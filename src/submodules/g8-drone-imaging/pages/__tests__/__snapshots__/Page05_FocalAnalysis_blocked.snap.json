@@ -1,0 +1,52 @@
+{
+  "pageNumber": "0.5",
+  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/0] 问题2-焦距分析",
+  "operationList": [
+    {
+      "code": 1,
+      "targetElement": "page",
+      "eventType": "page_enter",
+      "value": "Page05_FocalAnalysis",
+      "time": "2025-02-01 09:11:00"
+    },
+    {
+      "code": 2,
+      "targetElement": "flow_context",
+      "eventType": "flow_context",
+      "value": "{\"flowId\":\"g8-assessment-flow\",\"stepIndex\":0,\"submoduleId\":\"g8-drone-imaging\",\"moduleName\":\"g8-drone-imaging\",\"pageId\":\"focal_analysis\"}",
+      "time": "2025-02-01 09:11:00"
+    },
+    {
+      "code": 3,
+      "targetElement": "next_button",
+      "eventType": "next_click",
+      "value": "attempt_next",
+      "time": "2025-02-01 09:11:03"
+    },
+    {
+      "code": 4,
+      "targetElement": "next_button",
+      "eventType": "click_blocked",
+      "value": "{\"reason\":\"no_selection\",\"missing\":[\"P0.5_最小GSD焦距\"]}",
+      "time": "2025-02-01 09:11:03"
+    },
+    {
+      "code": 5,
+      "targetElement": "page",
+      "eventType": "page_exit",
+      "value": "Page05_FocalAnalysis",
+      "time": "2025-02-01 09:11:03"
+    },
+    {
+      "code": 6,
+      "targetElement": "flow_context",
+      "eventType": "page_submit_success",
+      "value": "{\"pageNumber\":\"0.5\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/0] 问题2-焦距分析\",\"auto_submit\":false,\"blocked\":true}",
+      "time": "2025-02-01 09:11:03"
+    }
+  ],
+  "answerList": [],
+  "beginTime": "2025-02-01 09:11:00",
+  "endTime": "2025-02-01 09:11:03",
+  "imgList": []
+}

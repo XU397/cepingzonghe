@@ -1,0 +1,35 @@
+{
+  "extends": "./.eslintrc.json",
+  "overrides": [
+    {
+      "files": ["src/shared/services/submission/**/*.{js,jsx,ts,tsx}"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "project": null
+      },
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "Literal[value='/stu/saveHcMark']",
+            "message": "禁止直接调用 /stu/saveHcMark，请复用 usePageSubmission Hook 的 submit 能力。"
+          },
+          {
+            "selector": "Literal[value=/^M\\\\d+:\\\\d+$/]",
+            "message": "检测到手写 M 前缀页码，请使用 encodeCompositePageNum 生成 '模块.页码' 格式。"
+          },
+          {
+            "selector": "CallExpression[callee.name='fetch'][arguments.0.value^='/stu/']",
+            "message": "组件中禁止直接 fetch('/stu/...')，请下沉为 usePageSubmission Hook 或封装的 service。"
+          },
+          {
+            "selector": "CallExpression[callee.name='fetch'][arguments.0.value^='http'][arguments.0.value*='/stu/']",
+            "message": "请勿绕过 usePageSubmission 直接访问 /stu 接口，统一交由 Hook 处理鉴权与格式化。"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useRef } from 'react';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
 import { useAppContext } from '../context/AppContext';
-import { useDataLogging } from '../hooks/useDataLogging';
 import NavigationButton from '../components/common/NavigationButton';
 import xiaomingImage from '../assets/images/04-2.png';
 import mamaImage from '../assets/images/04-1.png';
@@ -12,41 +13,42 @@ import mamaImage from '../assets/images/04-1.png';
 const HypothesisFocusPage = () => {
   const {
     navigateToPage,
-    logOperation,
-    submitPageData,
     currentPageId,
     setPageEnterTime
   } = useAppContext();
-  
-  // 数据记录Hook
-  const {
-    logButtonClick,
-    logPageEnter
-  } = useDataLogging('Page_10_Hypothesis_Focus');
+  const { submitPage, logOperation } = usePageSubmissionContext();
   
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
+  const operationsRef = useRef([]);
+  const recordOperation = useCallback((operation) => {
+    const normalizedOperation = { ...operation };
+    logOperation(normalizedOperation);
+    operationsRef.current = [...operationsRef.current, normalizedOperation];
+  }, [logOperation]);
   
   // 页面进入记录 - 只执行一次
   useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      console.log('[HypothesisFocusPage] 页面挂载，设置页面进入时间');
-      setPageEnterTime(new Date());
-      logPageEnter('假设聚焦页面');
-      console.log('[HypothesisFocusPage] 页面进入记录完成');
-    }
-  }, []);
+    if (pageLoadedRef.current) return;
+    pageLoadedRef.current = true;
+    operationsRef.current = [];
+    setPageEnterTime(new Date());
+  }, [setPageEnterTime]);
 
   /**
    * 处理下一页按钮点击
    */
   const handleNextPage = useCallback(async () => {
-    // 记录按钮点击操作
-    logButtonClick('下一页', '跳转到方案设计页面');
+    recordOperation({
+      eventType: EventTypes.CLICK,
+      targetElement: 'btn_next',
+      value: '跳转到方案设计页面'
+    });
     
-    // 提交页面数据
-    const submissionSuccess = await submitPageData();
+    const submissionSuccess = await submitPage({
+      answers: [],
+      operations: operationsRef.current
+    });
 
     if (submissionSuccess) {
       navigateToPage('Page_11_Solution_Design_Measurement_Ideas', { skipSubmit: true }); 
@@ -57,7 +59,7 @@ const HypothesisFocusPage = () => {
     }
     
     return submissionSuccess;
-  }, [logButtonClick, submitPageData, navigateToPage]);
+  }, [navigateToPage, recordOperation, submitPage]);
 
   return (
     <div className="page-container page-fade-in hypothesis-focus-page" style={{ padding: '20px',  margin: '0 auto' }}>
