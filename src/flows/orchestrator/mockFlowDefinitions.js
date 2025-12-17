@@ -7,7 +7,7 @@
 /** @typedef {import('@/shared/types/flow').FlowStep} FlowStep */
 
 /**
- * 测试 Flow 1 的步骤定义（7年级实验 -> 4年级实验）。
+ * 测试 Flow 1 的步骤定义（7年级实验 -> 7年级问卷）。
  * @type {FlowStep[]}
  */
 const TEST_FLOW_1_STEPS = [
@@ -17,13 +17,13 @@ const TEST_FLOW_1_STEPS = [
     transitionPage: {
       title: '第一部分已完成',
       content:
-        '您已完成7年级蒸馒头实验部分，稍后将进入4年级火车票规划任务。',
+        '您已完成7年级蒸馒头实验部分，稍后将进入问卷。',
       autoNextSeconds: 5,
     },
   },
   {
-    submoduleId: 'g4-experiment',
-    displayName: '4年级火车票规划任务',
+    submoduleId: 'g7-questionnaire',
+    displayName: '7年级蒸馒头-问卷',
     transitionPage: null,
   },
 ];
@@ -61,17 +61,40 @@ const defineFlow = (definition) => ({
 });
 
 /**
+ * G4 火车购票实验 Flow（单模块，用于手工测试）
+ * @type {FlowStep[]}
+ */
+const G4_EXPERIMENT_STEPS = [
+  {
+    submoduleId: 'g4-experiment',
+    displayName: '4年级火车购票交互',
+    transitionPage: null,
+  },
+];
+
+/**
  * Mock Flow 定义 Map。
  * @type {Map<string, FlowDefinition & { displayName?: string }>}
  */
 export const mockFlowDefinitions = new Map([
   [
+    'g4-train-ticket',
+    defineFlow({
+      flowId: 'g4-train-ticket',
+      name: '4年级火车购票实验',
+      displayName: '4年级火车购票交互课堂',
+      description: '4年级火车购票场景化问题解决评测',
+      url: '/flow/g4-train-ticket',
+      steps: G4_EXPERIMENT_STEPS,
+    }),
+  ],
+  [
     'test-flow-1',
     defineFlow({
       flowId: 'test-flow-1',
-      name: '测试 Flow - 7年级实验+4年级实验',
-      displayName: '测试 Flow - 7年级实验+4年级实验',
-      description: '用于开发测试的混合 Flow',
+      name: '测试 Flow - 7年级实验+问卷',
+      displayName: '测试 Flow - 7年级实验+问卷',
+      description: '用于开发测试的 7 年级实验 + 问卷 Flow',
       url: '/flow/test-flow-1',
       steps: TEST_FLOW_1_STEPS,
     }),

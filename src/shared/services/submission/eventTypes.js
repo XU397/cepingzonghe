@@ -33,6 +33,18 @@ export const EventTypes = Object.freeze({
   CLICK_BLOCKED: 'click_blocked',
   AUTO_SUBMIT: 'auto_submit',
   READING_COMPLETE: 'reading_complete',
+  // G4 拖拽交互事件
+  DRAG_START: 'drag_start',
+  DRAG_END: 'drag_end',
+  TASK_DROP: 'task_drop',
+  TASK_REMOVE: 'task_remove',
+  // G4 对话/演示事件
+  DIALOGUE_PLAY: 'dialogue_play',
+  DIALOGUE_REPLAY: 'dialogue_replay',
+  DEMO_PLAY: 'demo_play',
+  DEMO_COMPLETE: 'demo_complete',
+  // G4 虚拟键盘事件
+  KEY_PRESS: 'key_press',
 });
 
 export const EventTypeValues = Object.freeze(Object.values(EventTypes));

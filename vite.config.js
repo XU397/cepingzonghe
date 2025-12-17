@@ -7,12 +7,20 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const useMock = String(env.VITE_USE_MOCK ?? '1') === '1' || String(env.VITE_USE_MOCK).toLowerCase() === 'true'
   const apiTarget = env.VITE_API_TARGET || 'http://117.72.14.166:9002'
+  const isPasswordFreeMode = String(env.VITE_PASSWORD_FREE ?? '0') === '1' || String(env.VITE_PASSWORD_FREE).toLowerCase() === 'true'
+  const basePath = (() => {
+    const rawBase = env.VITE_BASE
+    if (!rawBase) return '/'
+    if (rawBase.startsWith('.')) return '/'
+    return rawBase.endsWith('/') ? rawBase : `${rawBase}/`
+  })()
 
   // 启动时打印 Mock 状态
   console.log('\n🔧 ==================== Vite 配置 ====================')
   console.log(`📦 运行模式: ${mode}`)
   console.log(`🎭 Mock 模式: ${useMock ? '✅ 启用（前端独立调试）' : '❌ 禁用（真实后端联调）'}`)
   console.log(`🌐 后端地址: ${useMock ? 'N/A (使用 Mock)' : apiTarget}`)
+  console.log(`🔑 登录模式: ${isPasswordFreeMode ? '🔓 无密码（默认1234）' : '🔒 标准密码'}`)
   console.log('====================================================\n')
 
   // 简易 Mock：开发时拦截 /stu/login 与 /stu/saveHcMark，避免后端不可达
@@ -110,11 +118,27 @@ export default defineConfig(({ mode }) => {
 
         if (url.startsWith('/stu/login')) {
           console.log('🎭 [Mock API] 拦截登录请求: /stu/login')
-          res.setHeader('Content-Type', 'application/json; charset=utf-8')
-          res.end(JSON.stringify({
-            code: 200,
-            msg: '成功',
-            obj: {
+
+          // 解析 URL 查询参数获取 accountName
+          const urlObj = new URL(req.url || '', 'http://localhost')
+          const accountName = urlObj.searchParams.get('accountName') || '1001'
+
+          console.log('🎭 [Mock API] 登录账号:', accountName)
+
+          // 根据 accountName 返回不同的 Flow
+          const mockUsers = {
+            'g4test': {
+              batchCode: '250619',
+              examNo: 'g4test',
+              pageNum: '0.1',
+              pwd: '1234',
+              schoolCode: '24146',
+              schoolName: 'G4测试环境',
+              studentCode: 'G4001',
+              studentName: 'G4测试用户',
+              url: '/flow/g4-train-ticket'
+            },
+            'default': {
               batchCode: '250619',
               examNo: '1001',
               pageNum: '0.1',
@@ -125,6 +149,15 @@ export default defineConfig(({ mode }) => {
               studentName: '本地模拟用户',
               url: '/flow/g8-physics-assessment'
             }
+          }
+
+          const userInfo = mockUsers[accountName] || mockUsers['default']
+
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+          res.end(JSON.stringify({
+            code: 200,
+            msg: '成功',
+            obj: userInfo
           }))
           return
         }
@@ -154,8 +187,8 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    // 构建基路径：默认相对路径，支持通过 VITE_BASE 覆盖
-    base: env.VITE_BASE || './',
+    // 构建基路径：默认使用绝对根路径 /，可通过 VITE_BASE 设置（需要以 / 开头）
+    base: basePath,
     plugins: [react(), mockStuApi],
     resolve: {
       alias: {

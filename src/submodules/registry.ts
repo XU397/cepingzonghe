@@ -40,9 +40,6 @@ class SubmoduleRegistry {
       const { G7TrackingQuestionnaireSubmodule } = await import('./g7-tracking-questionnaire');
       this.register(G7TrackingQuestionnaireSubmodule);
 
-      const { G4ExperimentSubmodule } = await import('./g4-experiment');
-      this.register(G4ExperimentSubmodule);
-
       const { G8DroneImagingSubmodule } = await import('./g8-drone-imaging');
       this.register(G8DroneImagingSubmodule);
 
@@ -51,6 +48,10 @@ class SubmoduleRegistry {
 
       const { g8PvSandExperimentSubmodule } = await import('./g8-pv-sand-experiment');
       this.register(g8PvSandExperimentSubmodule);
+
+      // 4年级火车购票交互
+      const { G4ExperimentSubmodule } = await import('./g4-experiment');
+      this.register(G4ExperimentSubmodule);
 
       this.initialized = true;
       console.log(
