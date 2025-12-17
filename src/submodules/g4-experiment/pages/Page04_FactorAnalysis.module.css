@@ -1,0 +1,93 @@
+.page {
+  padding: 24px;
+  background: var(--cartoon-bg);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--cartoon-dark);
+}
+
+.prompt {
+  font-size: 16px;
+  color: var(--text-color);
+}
+
+.tip {
+  font-size: 14px;
+  color: var(--cartoon-dark);
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  background: var(--cartoon-light);
+  border: 2px solid var(--cartoon-border);
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px var(--cartoon-shadow);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.option input {
+  width: 18px;
+  height: 18px;
+}
+
+.option span {
+  font-size: 15px;
+  color: var(--text-color);
+}
+
+.checked {
+  border-color: var(--cartoon-primary);
+  box-shadow: 0 8px 16px var(--cartoon-shadow);
+  background: rgba(89, 193, 255, 0.12);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.nextButton {
+  background: var(--cartoon-primary);
+  color: var(--cartoon-bg);
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 12px var(--cartoon-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nextButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 16px var(--cartoon-shadow);
+}
+
+.nextButton:disabled {
+  background: var(--border-color);
+  color: var(--text-color);
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}

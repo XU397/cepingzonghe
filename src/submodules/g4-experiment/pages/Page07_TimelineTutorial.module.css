@@ -1,0 +1,171 @@
+.container {
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.header h2 {
+  color: var(--cartoon-dark, #2d5b8e);
+  margin-bottom: 8px;
+}
+
+.header p {
+  color: #666;
+}
+
+.demoArea {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.toolbar {
+  margin-bottom: 24px;
+}
+
+.toolbarLabel {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #666;
+}
+
+.taskList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.taskBlock {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.timeline {
+  border: 2px solid var(--cartoon-border, #ffd99e);
+  border-radius: 8px;
+  padding: 16px;
+  background-color: var(--cartoon-light, #e6f7ff);
+}
+
+.axisContainer {
+  margin-bottom: 16px;
+}
+
+.axisContainer:last-child {
+  margin-bottom: 0;
+}
+
+.axisLabel {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.axis {
+  position: relative;
+  height: 44px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.placedTask {
+  position: absolute;
+  top: 4px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: white;
+  font-size: 12px;
+  transition: left 0.3s ease;
+}
+
+.totalTime {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 18px;
+  color: #333;
+}
+
+.timeValue {
+  font-weight: 700;
+  color: var(--cartoon-primary, #59c1ff);
+  font-size: 24px;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.playBtn,
+.resetBtn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.playBtn {
+  background-color: var(--cartoon-primary, #59c1ff);
+  color: white;
+  border: none;
+}
+
+.playBtn:hover:not(:disabled) {
+  background-color: #3db1ff;
+}
+
+.playBtn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.resetBtn {
+  background-color: white;
+  color: #666;
+  border: 2px solid #ddd;
+}
+
+.resetBtn:hover:not(:disabled) {
+  border-color: #999;
+}
+
+.navigation {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nextBtn {
+  padding: 12px 32px;
+  background-color: var(--cartoon-primary, #59c1ff);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nextBtn:hover {
+  background-color: #3db1ff;
+}

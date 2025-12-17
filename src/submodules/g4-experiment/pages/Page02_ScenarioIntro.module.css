@@ -1,0 +1,127 @@
+.page {
+  padding: 24px;
+  background: var(--cartoon-bg);
+  min-height: 100%;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--cartoon-dark);
+  margin-bottom: 16px;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.mapCard,
+.textCard {
+  background: var(--cartoon-light);
+  border: 2px solid var(--cartoon-border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 18px var(--cartoon-shadow);
+}
+
+.mapHeader {
+  font-weight: 700;
+  color: var(--cartoon-dark);
+  margin-bottom: 12px;
+}
+
+.mapPlaceholder {
+  position: relative;
+  height: 240px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(89, 193, 255, 0.12),
+    rgba(255, 206, 107, 0.16)
+  );
+  border: 2px dashed var(--cartoon-primary);
+  overflow: hidden;
+}
+
+.markerHome,
+.markerNanchong,
+.markerChengdu {
+  position: absolute;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: var(--cartoon-primary);
+  color: var(--cartoon-bg);
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 6px 12px var(--cartoon-shadow);
+}
+
+.markerHome {
+  top: 20%;
+  left: 12%;
+}
+
+.markerNanchong {
+  top: 45%;
+  left: 38%;
+  background: var(--cartoon-green);
+}
+
+.markerChengdu {
+  bottom: 18%;
+  right: 10%;
+  background: var(--cartoon-accent);
+}
+
+.mapHint {
+  margin-top: 12px;
+  color: var(--cartoon-dark);
+  font-size: 14px;
+}
+
+.scenarioText {
+  font-size: 16px;
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.note {
+  margin-top: 12px;
+  color: var(--cartoon-dark);
+  font-weight: 600;
+}
+
+.actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nextButton {
+  background: var(--cartoon-primary);
+  color: var(--cartoon-bg);
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 12px var(--cartoon-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nextButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 16px var(--cartoon-shadow);
+}
+
+.nextButton:disabled {
+  background: var(--border-color);
+  color: var(--text-color);
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}

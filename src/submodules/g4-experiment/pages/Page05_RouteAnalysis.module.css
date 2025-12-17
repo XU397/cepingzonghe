@@ -1,0 +1,209 @@
+.page {
+  padding: 24px;
+  background: var(--cartoon-bg);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--cartoon-dark);
+}
+
+.subtitle {
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.2fr) minmax(300px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.mapColumn,
+.tableColumn {
+  min-width: 0;
+}
+
+.tableCard {
+  background: var(--cartoon-light);
+  border: 2px solid var(--cartoon-border);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 8px 18px var(--cartoon-shadow);
+}
+
+.tableHeader {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cartoon-dark);
+  margin-bottom: 10px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--cartoon-bg);
+}
+
+.table th,
+.table td {
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  vertical-align: top;
+  color: var(--text-color);
+}
+
+.table th {
+  background: rgba(89, 193, 255, 0.12);
+  color: var(--cartoon-dark);
+  text-align: left;
+}
+
+.tableRow {
+  transition: background 0.2s ease;
+}
+
+.tableRow:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.activeRow {
+  background: rgba(89, 193, 255, 0.08);
+}
+
+.routeCell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.routeName {
+  font-weight: 700;
+  color: var(--cartoon-dark);
+}
+
+.stationName {
+  font-size: 13px;
+  color: var(--text-color);
+}
+
+.segmentHint {
+  font-size: 12px;
+  color: var(--cartoon-dark);
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputField {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--cartoon-border);
+  background: var(--cartoon-bg);
+  font-size: 15px;
+  color: var(--text-color);
+  box-shadow: 0 6px 12px var(--cartoon-shadow);
+}
+
+.inputField:focus {
+  outline: none;
+  border-color: var(--cartoon-primary);
+  box-shadow: 0 0 0 4px rgba(89, 193, 255, 0.2);
+}
+
+.inputError {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
+.helperRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.helperText {
+  color: var(--text-color);
+}
+
+.errorText {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.readonlyValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--cartoon-dark);
+}
+
+.readonlyText {
+  color: var(--cartoon-dark);
+}
+
+.readonlyTag {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 8px;
+  background: var(--cartoon-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.tip {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--cartoon-dark);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nextButton {
+  background: var(--cartoon-primary);
+  color: var(--cartoon-bg);
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 12px var(--cartoon-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nextButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 16px var(--cartoon-shadow);
+}
+
+.nextButton:disabled {
+  background: var(--border-color);
+  color: var(--text-color);
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}

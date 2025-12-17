@@ -1,0 +1,69 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.toolbar {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+.toolbarLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.taskList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.solutionsArea {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.clearBtn,
+.resetBtn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clearBtn {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.clearBtn:hover {
+  background-color: #f5f5f5;
+  border-color: #ccc;
+}
+
+.resetBtn {
+  background-color: var(--cartoon-red, #ff8a80);
+  border: none;
+  color: white;
+}
+
+.resetBtn:hover {
+  background-color: #ff6b6b;
+}

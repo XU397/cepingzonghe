@@ -1,0 +1,60 @@
+.page {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cartoon-bg);
+  padding: 24px;
+}
+
+.card {
+  background: var(--cartoon-light);
+  border: 2px solid var(--cartoon-border);
+  border-radius: 18px;
+  padding: 24px 28px;
+  text-align: center;
+  max-width: 640px;
+  width: 100%;
+  box-shadow: 0 10px 20px var(--cartoon-shadow);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--cartoon-dark);
+  margin-bottom: 12px;
+}
+
+.message {
+  font-size: 16px;
+  color: var(--text-color);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.finishButton {
+  background: var(--cartoon-primary);
+  color: var(--cartoon-bg);
+  border: none;
+  padding: 12px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 8px 16px var(--cartoon-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.finishButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px var(--cartoon-shadow);
+}
+
+.finishButton:disabled {
+  background: var(--border-color);
+  color: var(--text-color);
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}

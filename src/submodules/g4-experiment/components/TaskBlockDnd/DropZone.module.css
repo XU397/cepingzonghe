@@ -1,0 +1,46 @@
+.dropZone {
+  border: 2px dashed var(--cartoon-border, #ffd99e);
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 120px;
+  background-color: var(--cartoon-light, #e6f7ff);
+  position: relative;
+}
+
+.solutionLabel {
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  background-color: white;
+  padding: 0 8px;
+  font-weight: 600;
+  color: var(--cartoon-dark, #2d5b8e);
+}
+
+.axis {
+  margin-bottom: 16px;
+}
+
+.axis:last-child {
+  margin-bottom: 0;
+}
+
+.axisLabel {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.timeline {
+  position: relative;
+  height: 44px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.placedTask {
+  position: absolute;
+  top: 4px;
+}

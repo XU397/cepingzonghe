@@ -1,0 +1,152 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.routeButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.routeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid var(--cartoon-border);
+  background: var(--cartoon-light);
+  color: var(--cartoon-dark);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 12px var(--cartoon-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.routeButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 16px var(--cartoon-shadow);
+}
+
+.routeButtonActive {
+  border-color: var(--cartoon-primary);
+  background: rgba(89, 193, 255, 0.14);
+  box-shadow: 0 10px 18px var(--cartoon-shadow);
+}
+
+.routeLabel {
+  font-size: 14px;
+}
+
+.routeCode {
+  font-size: 12px;
+  color: var(--text-color);
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: var(--cartoon-bg);
+  border: 1px solid var(--border-color);
+}
+
+.mapCard {
+  background: var(--cartoon-light);
+  border: 2px solid var(--cartoon-border);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 8px 18px var(--cartoon-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mapHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mapTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--cartoon-dark);
+}
+
+.mapSubtitle {
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+.distanceBadge {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(89, 193, 255, 0.16);
+  color: var(--cartoon-dark);
+  font-weight: 700;
+  border: 1px solid var(--cartoon-primary);
+}
+
+.canvasWrapper {
+  position: relative;
+  min-height: 260px;
+  border: 2px dashed var(--cartoon-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: radial-gradient(circle at 30% 40%, rgba(89, 193, 255, 0.16), transparent 50%),
+    radial-gradient(circle at 70% 60%, rgba(255, 196, 112, 0.16), transparent 50%),
+    var(--cartoon-bg);
+}
+
+.mapSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mapBackdrop {
+  fill: rgba(255, 255, 255, 0.6);
+}
+
+.marker {
+  position: absolute;
+  padding: 10px 12px;
+  background: var(--cartoon-bg);
+  border: 2px solid var(--cartoon-border);
+  border-radius: 12px;
+  font-weight: 700;
+  color: var(--cartoon-dark);
+  box-shadow: 0 8px 18px var(--cartoon-shadow);
+}
+
+.home {
+  left: 24px;
+  bottom: 22px;
+}
+
+.northStation {
+  right: 26px;
+  top: 26px;
+}
+
+.station {
+  right: 26px;
+  bottom: 26px;
+}
+
+.segmentPanel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.segmentChip {
+  padding: 8px 10px;
+  background: var(--cartoon-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-color);
+  font-size: 13px;
+  box-shadow: 0 6px 12px var(--cartoon-shadow);
+}

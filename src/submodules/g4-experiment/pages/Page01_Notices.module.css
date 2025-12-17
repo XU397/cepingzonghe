@@ -1,0 +1,226 @@
+.container {
+  min-height: 100%;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  background: var(--cartoon-bg);
+}
+
+.contentWrapper {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.titleSection {
+  background: var(--cartoon-light);
+  border: 2px solid var(--cartoon-border);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 8px 20px var(--cartoon-shadow);
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--cartoon-dark);
+}
+
+.subtitle {
+  margin: 10px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+.noticeCard {
+  position: relative;
+  background: var(--cartoon-light);
+  border: 2px solid var(--cartoon-border);
+  border-left: 6px solid var(--cartoon-accent);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 20px var(--cartoon-shadow);
+}
+
+.readLabel {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cartoon-bg);
+  background: var(--cartoon-primary);
+}
+
+.noticeList {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.noticeItem {
+  font-size: 16px;
+}
+
+.checkboxCard {
+  background: linear-gradient(
+    135deg,
+    rgba(89, 193, 255, 0.12),
+    rgba(255, 206, 107, 0.16)
+  );
+  border: 2px solid var(--cartoon-border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 8px 20px var(--cartoon-shadow);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cartoon-dark);
+}
+
+.checkboxLabel.disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--cartoon-primary);
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.checkboxText {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.countdownBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--cartoon-light);
+  border: 2px solid var(--cartoon-border);
+  font-weight: 800;
+  color: var(--cartoon-primary);
+}
+
+.countdownText {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--cartoon-dark);
+}
+
+.errorText {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 2px solid rgba(185, 28, 28, 0.25);
+  background: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nextButton {
+  background: var(--cartoon-primary);
+  color: var(--cartoon-bg);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 12px var(--cartoon-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nextButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 16px var(--cartoon-shadow);
+}
+
+.nextButton:disabled {
+  background: var(--border-color);
+  color: var(--text-color);
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.hiddenNextButton {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .noticeItem {
+    font-size: 14px;
+  }
+
+  .checkboxLabel {
+    font-size: 14px;
+  }
+
+  .countdownBadge {
+    min-width: 70px;
+    height: 32px;
+  }
+}

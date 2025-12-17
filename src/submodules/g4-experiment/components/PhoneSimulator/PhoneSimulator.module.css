@@ -1,0 +1,57 @@
+.wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.phone {
+  position: relative;
+  width: 380px;
+  height: 680px;
+  border: 8px solid var(--g4-phone-border);
+  border-radius: 48px;
+  background: #fff;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.notch {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 24px;
+  background: var(--g4-phone-border);
+  border-radius: 12px;
+  z-index: 2;
+}
+
+.navbar {
+  position: relative;
+  height: 64px;
+  background: var(--cartoon-primary);
+  color: #fff;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  z-index: 1;
+}
+
+.navTitle {
+  font-size: 16px;
+}
+
+.screen {
+  flex: 1;
+  background: var(--g4-chat-bg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
