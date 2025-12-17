@@ -56,6 +56,60 @@ export function getNavigationMode(pageId: string): NavigationMode {
   return entry.mode === 'hidden' ? 'hidden' : 'experiment';
 }
 
+export function getSubPageNumByPageId(pageId: string | null | undefined): number {
+  if (!pageId) {
+    return MIN_PAGE;
+  }
+  const entry = PAGE_ID_MAP[pageId];
+  if (!entry) {
+    return MIN_PAGE;
+  }
+  return entry.subPageNum;
+}
+
+/**
+ * 返回当前页面对应的可见步骤索引（用于左侧导航高亮）。
+ * - hidden 页面返回 0
+ * - experiment 页面从 1 开始递增
+ */
+export function getStepIndex(pageId: string | null | undefined): number {
+  if (!pageId) {
+    return 0;
+  }
+  const entry = PAGE_ID_MAP[pageId];
+  if (!entry || entry.mode === 'hidden') {
+    return 0;
+  }
+
+  let visibleIndex = 0;
+  const currentSubPageNum = entry.subPageNum;
+  for (let pageNum = MIN_PAGE; pageNum <= currentSubPageNum; pageNum += 1) {
+    const config = PAGE_CONFIG_MAP[pageNum];
+    if (config && config.mode !== 'hidden') {
+      visibleIndex += 1;
+    }
+  }
+  return visibleIndex;
+}
+
+export function getNextPageId(pageId: string | null | undefined): string | null {
+  if (!pageId) {
+    return null;
+  }
+  const entry = PAGE_ID_MAP[pageId];
+  if (!entry) {
+    return null;
+  }
+
+  const nextSubPageNum = entry.subPageNum + 1;
+  if (nextSubPageNum > MAX_PAGE) {
+    return null;
+  }
+
+  const nextConfig = PAGE_CONFIG_MAP[nextSubPageNum];
+  return nextConfig?.pageId || null;
+}
+
 export function getDefaultTimers(): { task: number } {
   return { task: EXPERIMENT_DURATION_SECONDS };
 }
