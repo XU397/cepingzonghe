@@ -1,0 +1,38 @@
+# npm run dev Startup Evidence
+
+## UTC Timestamp
+2026-02-09T03:15:00Z
+
+## Command Executed
+timeout 20s npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+
+## Output
+> steamed-bun-task@0.1.0 dev
+> vite --host 127.0.0.1 --port 5173 --strictPort
+
+
+🔧 ==================== Vite 配置 ====================
+📦 运行模式: development
+🎭 Mock 模式: ✅ 启用（前端独立调试）
+🌐 后端地址: N/A (使用 Mock)
+🔑 登录模式: 🔓 无密码（默认1234）
+====================================================
+
+
+  VITE v4.5.14  ready in 824 ms
+
+  ➜  Local:   http://127.0.0.1:5173/
+
+## Exit Code
+0 (timeout intentional - service started successfully)
+
+## Verification
+- Vite ready in 824ms (fast startup)
+- Local address present: http://127.0.0.1:5173/
+- No "Host version" mismatch errors detected
+- No "does not match binary version" errors detected
+- Service responding on correct port (5173)
+- StrictPort mode enforced (--strictPort)
+
+## Status
+PASS

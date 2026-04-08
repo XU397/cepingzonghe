@@ -1,0 +1,13 @@
+2026-04-07 Task 3 diagnostics summary
+
+- Before:
+  - G8BananaBrowningContext.tsx had TS2345 at flow-context adapter calls because local OperationLog.value allowed non-string objects.
+  - G8BananaBrowningContext.tsx had TS6133 because isInjectableFlowContext was dead code.
+- Local fix:
+  - Widened banana OperationLog.eventType to string.
+  - Widened banana OperationLog.value to string | Record<string, unknown>.
+  - Added local adapter-boundary normalization helpers in G8BananaBrowningContext.tsx.
+  - Converted adapter-injected flow_context operation back into local OperationLog before dispatch.
+- After:
+  - LSP diagnostics: src/submodules/g8-banana-browning-experiment/types.ts -> clean.
+  - LSP diagnostics: src/submodules/g8-banana-browning-experiment/context/G8BananaBrowningContext.tsx -> clean.

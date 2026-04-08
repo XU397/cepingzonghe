@@ -1,0 +1,7 @@
+npx vitest run "src/submodules/g8-banana-browning-experiment/components/__tests__/SimulationPanel.test.tsx" -t "semantic operation sequence"
+
+Result: PASS
+- Test Files: 1 passed
+- Tests: 1 passed, 1 skipped
+- Verified semantic sequence: simulation_operation → simulation_timing_started → simulation_run_result
+- Verified simulation_run_result.value.results contains 6 condition entries

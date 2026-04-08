@@ -1,0 +1,7 @@
+npx vitest run "src/submodules/g8-banana-browning-experiment/components/__tests__/SimulationPanel.test.tsx" -t "reset"
+
+Result: PASS
+- Test Files: 1 passed
+- Tests: 1 passed, 1 skipped
+- Verified reset emits simulation_operation with { action: 'reset', fromDay: 6, toDay: 0 }
+- Verified UI returns to day 0 and percentages reset to 0%

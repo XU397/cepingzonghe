@@ -1,0 +1,14 @@
+{
+  "active_plan": "/mnt/d/myproject/cp/.sisyphus/plans/unify-submission-docs-and-references.md",
+  "started_at": "2026-04-08T14:20:00.000Z",
+  "session_ids": [
+    "ses_29c7f8215ffetmMEZc59QTFJ94",
+    "ses_29be5b8e5ffe5ptB7pFbQ7BVfi",
+    "ses_29b85dee3ffeKz4qM2I9VPs6Ei",
+    "ses_296f51123ffecEwJSYSddpwTFJ",
+    "ses_296f51123ffecEwJSYSddpwTFJ-docs"
+  ],
+  "plan_name": "unify-submission-docs-and-references",
+  "agent": "atlas",
+  "task_sessions": {}
+}

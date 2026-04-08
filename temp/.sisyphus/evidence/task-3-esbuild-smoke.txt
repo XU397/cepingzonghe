@@ -1,0 +1,22 @@
+# esbuild Smoke Test Evidence
+
+## UTC Timestamp
+2026-02-09T03:15:00Z
+
+## Command Executed
+node -e "const e=require('esbuild'); e.transformSync('const x=1'); console.log('esbuild-ok', e.version)"
+
+## Output
+esbuild-ok 0.18.20
+
+## Exit Code
+0
+
+## Verification
+- esbuild transformSync executed successfully
+- Version detected: 0.18.20
+- No "Host version" mismatch errors
+- No "does not match binary version" errors
+
+## Status
+PASS

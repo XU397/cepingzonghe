@@ -1,0 +1,46 @@
+# Task 1 Baseline Evidence
+# Generated: 2026-02-09T02:57:33Z (UTC)
+
+## Environment Baseline
+
+### Node.js Version
+Command: node -v
+Output: v22.19.0
+
+### npm Version
+Command: npm -v
+Output: 11.9.0
+
+### npm Registry
+Command: npm config get registry
+Output: https://registry.npmjs.org/
+
+## Execution Boundary
+
+Package Manager Strategy:
+- PRIMARY: npm (v11.9.0)
+- SECONDARY: NONE (strictly npm-only)
+- EXPLICITLY FORBIDDEN: pnpm, yarn
+
+Rationale:
+- Current package-lock.json uses npm lockfile format
+- README.md shows npm-first documentation
+- User-selected strategy: "仅使用 npm，不混用 pnpm/yarn"
+
+## Registry Configuration
+
+Source: https://registry.npmjs.org/
+Status: Default npm registry (official)
+Notes: No custom registry configured
+
+## Timestamps
+
+Baseline captured: 2026-02-09T02:57:33Z
+Evidence file created: 2026-02-09T02:57:33Z
+
+## Validation Status
+
+- [x] Node version detected (v22.19.0)
+- [x] npm version detected (v11.9.0)
+- [x] Registry detected (https://registry.npmjs.org/)
+- [x] All outputs non-empty

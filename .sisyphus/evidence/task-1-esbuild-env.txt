@@ -1,0 +1,58 @@
+# Task 1 esbuild Environment Check Evidence
+# Generated: 2026-02-09T02:57:33Z (UTC)
+
+## ESBUILD_BINARY_PATH Check
+
+Command:
+node -e "console.log(process.env.ESBUILD_BINARY_PATH || 'EMPTY')"
+
+Output:
+EMPTY
+
+## Risk Assessment
+
+Status: NO RISK DETECTED
+
+Interpretation:
+- ESBUILD_BINARY_PATH environment variable is NOT set
+- No custom binary path override detected
+- esbuild will use default binary resolution mechanism
+- This is the expected and safe state
+
+## Why EMPTY is Safe
+
+esbuild uses the following resolution order:
+1. ESBUILD_BINARY_PATH (if set) - OVERRIDES all other logic
+2. Platform-specific binary from node_modules
+3. Platform-specific binary from global npm cache
+
+When ESBUILD_BINARY_PATH is EMPTY:
+- Standard package manager resolution applies
+- Version mismatch is likely from inconsistent installation
+- Cleanup + reinstall strategy (Task 2) should resolve this
+
+## Mismatch Root Cause Hypothesis (from plan)
+
+Based on plan analysis:
+- package-lock.json contains esbuild@0.18.20 (Vite 4 chain)
+- vitest subtree has esbuild@0.25.12 (test chain)
+- ERROR version 0.25.4 is NOT in lock file
+- Conclusion: Local node_modules state is CORRUPTED
+
+## Next Steps (Task 2)
+
+Since ESBUILD_BINARY_PATH is EMPTY:
+- No need to unset environment variables
+- Proceed directly to cleanup: delete node_modules + package-lock.json
+- Run npm install to regenerate clean dependency tree
+
+## Timestamps
+
+Check performed: 2026-02-09T02:57:33Z
+Evidence file created: 2026-02-09T02:57:33Z
+
+## Validation Status
+
+- [x] ESBUILD_BINARY_PATH checked
+- [x] Value is EMPTY (safe)
+- [x] Risk assessment complete
