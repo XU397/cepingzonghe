@@ -5,23 +5,19 @@
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // 验证结果收集
 const verificationResults = {
   passed: [],
   failed: [],
-  warnings: []
+  warnings: [],
 };
 
 // 添加验证结果
 function addResult(type, category, message, details = null) {
   const result = { category, message, details, timestamp: new Date().toISOString() };
   verificationResults[type].push(result);
-  
+
   const symbol = type === 'passed' ? '✅' : type === 'failed' ? '❌' : '⚠️';
   console.log(`${symbol} [${category}] ${message}`);
   if (details) {
@@ -48,7 +44,7 @@ function verifyFileExists(filePath, category, description) {
 // 验证模块系统文件结构
 function verifyModuleSystemStructure() {
   console.log('\n🔍 验证模块系统文件结构...');
-  
+
   const requiredFiles = [
     { path: 'src/modules/ModuleRegistry.js', desc: '模块注册中心' },
     { path: 'src/modules/ErrorBoundary.jsx', desc: '错误边界组件' },
@@ -57,7 +53,7 @@ function verifyModuleSystemStructure() {
     { path: 'src/modules/grade-7/config.js', desc: '7年级配置' },
     { path: 'src/ModuleRouter.jsx', desc: '模块路由器' },
     { path: '.env.development', desc: '开发环境配置' },
-    { path: '.env.production', desc: '生产环境配置' }
+    { path: '.env.production', desc: '生产环境配置' },
   ];
 
   let allFilesExist = true;
@@ -73,7 +69,7 @@ function verifyModuleSystemStructure() {
 // 验证环境变量配置
 function verifyEnvironmentConfig() {
   console.log('\n🔧 验证环境变量配置...');
-  
+
   try {
     // 检查开发环境配置
     const devEnvPath = '.env.development';
@@ -109,7 +105,7 @@ function verifyEnvironmentConfig() {
 // 验证构建文件
 function verifyBuildOutput() {
   console.log('\n📦 验证构建输出...');
-  
+
   const distPath = 'dist';
   if (!fs.existsSync(distPath)) {
     addResult('warnings', '构建输出', '未找到构建输出目录，请运行 npm run build');
@@ -132,18 +128,19 @@ function verifyBuildOutput() {
     const assetsFiles = fs.readdirSync(path.join(distPath, 'assets'));
     const jsFiles = assetsFiles.filter(file => file.endsWith('.js'));
     const cssFiles = assetsFiles.filter(file => file.endsWith('.css'));
-    
-    addResult('passed', '构建输出', `资源文件正常 (JS: ${jsFiles.length}, CSS: ${cssFiles.length})`);
-    
-    // 检查是否有模块相关的代码分割文件
-    const moduleFiles = jsFiles.filter(file => 
-      file.includes('Module') || file.includes('module')
+
+    addResult(
+      'passed',
+      '构建输出',
+      `资源文件正常 (JS: ${jsFiles.length}, CSS: ${cssFiles.length})`
     );
-    
+
+    // 检查是否有模块相关的代码分割文件
+    const moduleFiles = jsFiles.filter(file => file.includes('Module') || file.includes('module'));
+
     if (moduleFiles.length > 0) {
       addResult('passed', '构建输出', `模块系统代码分割正常: ${moduleFiles.join(', ')}`);
     }
-    
   } else {
     addResult('failed', '构建输出', '资源目录缺失');
   }
@@ -160,12 +157,12 @@ function verifyBuildOutput() {
 // 验证代码质量
 function verifyCodeQuality() {
   console.log('\n📋 验证代码质量...');
-  
+
   // 检查关键文件的语法正确性
   const criticalFiles = [
     'src/modules/ModuleRegistry.js',
     'src/modules/grade-7/index.jsx',
-    'src/ModuleRouter.jsx'
+    'src/ModuleRouter.jsx',
   ];
 
   let allFilesValid = true;
@@ -173,21 +170,20 @@ function verifyCodeQuality() {
     try {
       if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');
-        
+
         // 基本语法检查
         if (content.includes('import') && content.includes('export')) {
           addResult('passed', '代码质量', `${filePath} 模块语法正确`);
         } else {
           addResult('warnings', '代码质量', `${filePath} 可能缺少导入/导出语句`);
         }
-        
+
         // 检查错误处理
         if (content.includes('try') && content.includes('catch')) {
           addResult('passed', '代码质量', `${filePath} 包含错误处理`);
         } else {
           addResult('warnings', '代码质量', `${filePath} 可能缺少错误处理`);
         }
-        
       }
     } catch (error) {
       addResult('failed', '代码质量', `检查 ${filePath} 时出错: ${error.message}`);
@@ -201,13 +197,13 @@ function verifyCodeQuality() {
 // 验证向后兼容性
 function verifyBackwardCompatibility() {
   console.log('\n🔄 验证向后兼容性...');
-  
+
   // 检查关键的现有文件是否未被修改（路径完整性）
   const criticalExistingFiles = [
     'src/components/PageRouter.jsx',
     'src/context/AppContext.jsx',
     'src/utils/pageMappings.js',
-    'src/services/apiService.js'
+    'src/services/apiService.js',
   ];
 
   let compatibilityMaintained = true;
@@ -226,19 +222,22 @@ function verifyBackwardCompatibility() {
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
       const dependencies = Object.keys(packageJson.dependencies || {});
       const devDependencies = Object.keys(packageJson.devDependencies || {});
-      
-      addResult('passed', '向后兼容', `依赖项数量正常 (生产: ${dependencies.length}, 开发: ${devDependencies.length})`);
-      
+
+      addResult(
+        'passed',
+        '向后兼容',
+        `依赖项数量正常 (生产: ${dependencies.length}, 开发: ${devDependencies.length})`
+      );
+
       // 检查是否有新的破坏性依赖
       const knownSafeDeps = ['react', 'react-dom', 'jsencrypt', 'vite'];
       const unknownDeps = dependencies.filter(dep => !knownSafeDeps.includes(dep));
-      
+
       if (unknownDeps.length === 0) {
         addResult('passed', '向后兼容', '未发现新的依赖项');
       } else {
         addResult('warnings', '向后兼容', `发现新依赖项: ${unknownDeps.join(', ')}`);
       }
-      
     } catch (error) {
       addResult('failed', '向后兼容', `检查依赖项时出错: ${error.message}`);
       compatibilityMaintained = false;
@@ -251,28 +250,31 @@ function verifyBackwardCompatibility() {
 // 生成验证报告
 function generateReport() {
   console.log('\n📊 生成验证报告...');
-  
+
   const report = {
     timestamp: new Date().toISOString(),
     summary: {
-      total: verificationResults.passed.length + verificationResults.failed.length + verificationResults.warnings.length,
+      total:
+        verificationResults.passed.length +
+        verificationResults.failed.length +
+        verificationResults.warnings.length,
       passed: verificationResults.passed.length,
       failed: verificationResults.failed.length,
-      warnings: verificationResults.warnings.length
+      warnings: verificationResults.warnings.length,
     },
     results: verificationResults,
-    recommendations: []
+    recommendations: [],
   };
 
   // 生成建议
   if (report.summary.failed > 0) {
     report.recommendations.push('❌ 存在关键问题，建议修复后再部署');
   }
-  
+
   if (report.summary.warnings > 0) {
     report.recommendations.push('⚠️ 存在警告项，建议检查但不阻止部署');
   }
-  
+
   if (report.summary.failed === 0 && report.summary.warnings === 0) {
     report.recommendations.push('✅ 验证通过，可以安全部署');
   }
@@ -280,9 +282,9 @@ function generateReport() {
   // 保存报告到文件
   const reportPath = 'deployment-verification-report.json';
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-  
+
   console.log(`\n📄 完整报告已保存至: ${reportPath}`);
-  
+
   return report;
 }
 
@@ -297,7 +299,7 @@ async function runVerification() {
     verifyEnvironmentConfig,
     verifyBuildOutput,
     verifyCodeQuality,
-    verifyBackwardCompatibility
+    verifyBackwardCompatibility,
   ];
 
   for (const check of checks) {
@@ -310,16 +312,16 @@ async function runVerification() {
 
   // 生成最终报告
   const report = generateReport();
-  
+
   console.log('\n=========================================');
   console.log('📋 验证汇总:');
   console.log(`   ✅ 通过: ${report.summary.passed}`);
   console.log(`   ❌ 失败: ${report.summary.failed}`);
   console.log(`   ⚠️  警告: ${report.summary.warnings}`);
-  
+
   console.log('\n🎯 建议:');
   report.recommendations.forEach(rec => console.log(`   ${rec}`));
-  
+
   // 返回验证是否通过
   return report.summary.failed === 0;
 }
@@ -334,7 +336,4 @@ runVerification()
     process.exit(1);
   });
 
-export {
-  runVerification,
-  verificationResults
-};
+export { runVerification, verificationResults };
