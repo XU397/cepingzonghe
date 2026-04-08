@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import useDialoguePlayer from '../../hooks/useDialoguePlayer';
 import { DIALOGUE_MESSAGES, ROLE_CONFIG } from '../../constants/dialogueMessages';
 import styles from './DialoguePlayer.module.css';
@@ -65,6 +65,20 @@ function DialoguePlayer({
   const typingAlignRight = (combinedRoles[typingRole]?.align || 'left') === 'right';
   const typingBubbleColor = combinedRoles[typingRole]?.bubbleColor || combinedRoles.uncle?.bubbleColor;
 
+  const renderAvatar = (role) => {
+    const avatar = role?.avatar;
+    if (React.isValidElement(avatar)) {
+      return avatar;
+    }
+    if (typeof avatar === 'function' || (avatar && typeof avatar === 'object' && '$$typeof' in avatar)) {
+      return React.createElement(avatar);
+    }
+    if (typeof avatar === 'string' && avatar) {
+      return <img src={avatar} alt={role?.name || '角色头像'} />;
+    }
+    return <span className={styles.avatarFallback}>{(role?.name || '?').slice(0, 1)}</span>;
+  };
+
   return (
     <div
       className={`${styles.player} ${className}`}
@@ -100,11 +114,7 @@ function DialoguePlayer({
             >
               <div className={styles.avatarWrapper}>
                 <div className={styles.avatar}>
-                  {role?.avatar ? (
-                    <img src={role.avatar} alt={role?.name || '角色头像'} />
-                  ) : (
-                    <span className={styles.avatarFallback}>{(role?.name || '?').slice(0, 1)}</span>
-                  )}
+                  {renderAvatar(role)}
                 </div>
                 <span className={styles.avatarName}>{role?.name || message.role}</span>
               </div>

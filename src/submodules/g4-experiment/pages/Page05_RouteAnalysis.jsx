@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
-import MapInteractive from '../components/MapInteractive';
+import TrainRouteMap from '../components/TrainRouteMap';
 import { ROUTES } from '../constants/routeData';
 import { useG4Context } from '../context/G4Context';
 import useG4Navigation from '../hooks/useG4Navigation';
 import styles from './Page05_RouteAnalysis.module.css';
 
-const isPositiveNumber = (value) => {
+const isPositiveNumber = value => {
   const text = String(value ?? '').trim();
   if (!text) return false;
   const parsed = Number(text);
@@ -14,16 +14,11 @@ const isPositiveNumber = (value) => {
 };
 
 function Page05_RouteAnalysis() {
-  const {
-    state,
-    updateRouteInput,
-    logOperation,
-    collectAnswer,
-    flowContext,
-  } = useG4Context();
-  const { handleNextPage, isSubmitting, subPageNum } = useG4Navigation();
+  const { state, updateRouteInput, logOperation, collectAnswer, flowContext } = useG4Context();
+  const { handleNextPage, subPageNum } = useG4Navigation();
   const initialRouteId = useMemo(() => ROUTES[0]?.id || 1, []);
   const [selectedRouteId, setSelectedRouteId] = useState(initialRouteId);
+  const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
     logOperation({
@@ -39,7 +34,7 @@ function Page05_RouteAnalysis() {
     }
   }, [flowContext, subPageNum]);
 
-  const handleRouteSelect = (routeId) => {
+  const handleRouteSelect = routeId => {
     setSelectedRouteId(routeId);
     logOperation({
       targetElement: 'route_button',
@@ -51,6 +46,9 @@ function Page05_RouteAnalysis() {
   const handleInputChange = (routeId, event) => {
     const value = event.target.value;
     updateRouteInput(routeId, value);
+    if (validationError) {
+      setValidationError('');
+    }
     logOperation({
       targetElement: `${routeId}_input`,
       eventType: EventTypes.INPUT_CHANGE,
@@ -60,21 +58,26 @@ function Page05_RouteAnalysis() {
 
   const route1Value = state.routeInputs?.route1 ?? '';
   const route5Value = state.routeInputs?.route5 ?? '';
-  const route1Error = route1Value.trim().length > 0 && !isPositiveNumber(route1Value);
-  const route5Error = route5Value.trim().length > 0 && !isPositiveNumber(route5Value);
   const canProceed = isPositiveNumber(route1Value) && isPositiveNumber(route5Value);
 
   const handleNext = async () => {
     const validRoute1 = isPositiveNumber(route1Value);
     const validRoute5 = isPositiveNumber(route5Value);
     if (!validRoute1 || !validRoute5) {
+      const route1Empty = String(route1Value ?? '').trim().length === 0;
+      const route5Empty = String(route5Value ?? '').trim().length === 0;
+      setValidationError(
+        route1Empty || route5Empty ? '请填写线路1、线路5里程' : '请输入线路1、线路5的有效数字里程'
+      );
       logOperation({
         targetElement: 'next_button',
         eventType: EventTypes.CLICK_BLOCKED,
-        value: !validRoute1 ? 'route1_invalid' : 'route5_invalid',
+        value: 'route_inputs_invalid',
       });
       return;
     }
+
+    setValidationError('');
 
     collectAnswer({ targetElement: 'route1_total', value: String(route1Value).trim() });
     collectAnswer({ targetElement: 'route5_total', value: String(route5Value).trim() });
@@ -99,103 +102,52 @@ function Page05_RouteAnalysis() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={styles.title}>出发站交互</h1>
-        <p className={styles.subtitle}>查看5条路线并填写路线1和路线5的路程</p>
-      </div>
-
-      <div className={styles.layout}>
-        <div className={styles.mapColumn}>
-          <MapInteractive
-            routes={ROUTES}
-            selectedRouteId={selectedRouteId}
-            onRouteSelect={handleRouteSelect}
-          />
+        <div className={styles.titleRow}>
+          <span className={styles.badge}>4</span>
+          <h1 className={styles.title}>出发站交互</h1>
         </div>
-
-        <div className={styles.tableColumn}>
-          <div className={styles.tableCard}>
-            <div className={styles.tableHeader}>路线路程表</div>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>路线</th>
-                  <th>路程</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ROUTES.map((route) => {
-                  const isRoute1 = route.id === 1;
-                  const isRoute5 = route.id === 5;
-                  const isEditable = route.isEditable;
-                  const value = isRoute1 ? route1Value : isRoute5 ? route5Value : '';
-                  const hasError = (isRoute1 && route1Error) || (isRoute5 && route5Error);
-
-                  return (
-                    <tr
-                      key={route.id}
-                      className={`${styles.tableRow} ${
-                        selectedRouteId === route.id ? styles.activeRow : ''
-                      }`}
-                    >
-                      <td className={styles.routeCell}>
-                        <div className={styles.routeName}>路线{route.id}</div>
-                        <div className={styles.stationName}>{route.station}</div>
-                        {route.segments.length ? (
-                          <div className={styles.segmentHint}>
-                            分段：{route.segments.join(' + ')}
-                          </div>
-                        ) : (
-                          <div className={styles.segmentHint}>总路程：{route.totalDistance}km</div>
-                        )}
-                      </td>
-                      <td>
-                        {isEditable ? (
-                          <div className={styles.inputGroup}>
-                            <input
-                              type='number'
-                              min='0'
-                              step='0.01'
-                              value={value}
-                              onChange={(event) =>
-                                handleInputChange(isRoute1 ? 'route1' : 'route5', event)
-                              }
-                              placeholder='请输入路程'
-                              className={`${styles.inputField} ${
-                                hasError ? styles.inputError : ''
-                              }`}
-                            />
-                            <div className={styles.helperRow}>
-                              <span className={styles.helperText}>请输入大于0的数字</span>
-                              {hasError ? <span className={styles.errorText}>格式不正确</span> : null}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className={styles.readonlyValue}>
-                            <span className={styles.readonlyText}>{route.totalDistance}km</span>
-                            <span className={styles.readonlyTag}>只读</span>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <div className={styles.tip}>路线1和路线5需填写，其余路线仅供参考。</div>
-          </div>
-        </div>
+        <p className={styles.description}>
+          买火车票首先要考虑出发站。小明家附近有2个火车站：南充站和南充北站。
+        </p>
+        <p className={styles.description}>
+          小明家到这2个火车站共有5条路线。请依次点击左下图【路线】按钮，查看这5条路线，计算【路线1】和【路线5】的路程，并将结果填在右侧表格相应的空格内。
+        </p>
       </div>
 
-      <div className={styles.actions}>
-        <button
-          type='button'
-          className={styles.nextButton}
-          onClick={handleNext}
-          disabled={!canProceed || isSubmitting}
-        >
-          下一页
-        </button>
+      <div className={styles.content}>
+        <TrainRouteMap
+          selectedRouteId={selectedRouteId}
+          onRouteSelect={handleRouteSelect}
+          route1Value={route1Value}
+          route5Value={route5Value}
+          onInputChange={handleInputChange}
+        />
+        {validationError && (
+          <p className={styles.inlineError} role="alert" data-testid="route-analysis-error">
+            {validationError}
+          </p>
+        )}
       </div>
+
+      <button
+        type="button"
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: 0,
+          opacity: 0,
+          pointerEvents: 'none',
+          border: 0,
+        }}
+        tabIndex={-1}
+        onClick={handleNext}
+        data-testid="next-button"
+        aria-hidden="true"
+      >
+        下一页
+      </button>
     </div>
   );
 }

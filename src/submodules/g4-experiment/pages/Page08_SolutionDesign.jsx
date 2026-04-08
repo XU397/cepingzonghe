@@ -1,20 +1,38 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useG4Context } from '../context/G4Context';
-import { useG4Navigation } from '../hooks/useG4Navigation';
-import TaskBlockDnd from '../components/TaskBlockDnd';
 import { TASK_BLOCKS } from '../constants/taskBlocks';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import { EventTypes } from '../constants/eventTypes';
+import { TimelineCanvas } from '../components/TimelineCanvas';
+import { useTimelineDragDrop } from '../hooks/useTimelineDragDrop';
 import styles from './Page08_SolutionDesign.module.css';
+
+const CANVAS_WIDTH = 1000;
+const CANVAS_HEIGHT = 580;
+const INITIAL_Y = 25;
+
+const ORDER_LABELS = {
+  'task-1': '①',
+  'task-2': '②',
+  'task-3': '③',
+  'task-4': '④',
+  'task-5': '⑤',
+};
+
+const SOLUTION_CONFIGS = [
+  { key: 'solution1', mainY: 145, subY: 215 },
+  { key: 'solution2', mainY: 375, subY: 445 },
+];
 
 export function Page08_SolutionDesign() {
   const { logOperation, collectAnswer } = useG4Context();
-  const { handleNextPage } = useG4Navigation();
-  
+
   const [solutions, setSolutions] = useState({
     solution1: { tasks: [], userInputTime: '' },
     solution2: { tasks: [], userInputTime: '' },
   });
-  const [error, setError] = useState('');
+
+  const svgRef = useRef(null);
+  const latestAnswerRef = useRef({ solution1: '', solution2: '' });
 
   useEffect(() => {
     logOperation({
@@ -34,164 +52,132 @@ export function Page08_SolutionDesign() {
     };
   }, [logOperation]);
 
-  const handleTaskPlaced = useCallback((e, rect, solutionId, axisY) => {
-    const taskId = e.dataTransfer.getData('taskId');
-    const isFromToolbar = e.dataTransfer.getData('isFromToolbar') === 'true';
-    const taskData = TASK_BLOCKS.find(t => t.id === taskId);
-    
-    if (!taskData) return;
+  useEffect(() => {
+    const solution1Value = JSON.stringify(solutions.solution1);
+    const solution2Value = JSON.stringify(solutions.solution2);
 
-    const dropX = e.clientX - rect.left;
-    const cloneId = isFromToolbar 
-      ? taskId + '-' + Date.now()
-      : e.dataTransfer.getData('cloneId');
+    if (latestAnswerRef.current.solution1 !== solution1Value) {
+      collectAnswer({ targetElement: '方案一', value: solution1Value });
+      latestAnswerRef.current.solution1 = solution1Value;
+    }
 
-    const newTask = {
-      ...taskData,
-      cloneId,
-      x: Math.max(0, dropX),
-      y: axisY,
-    };
+    if (latestAnswerRef.current.solution2 !== solution2Value) {
+      collectAnswer({ targetElement: '方案二', value: solution2Value });
+      latestAnswerRef.current.solution2 = solution2Value;
+    }
+  }, [collectAnswer, solutions]);
 
+  const initialBlocks = useMemo(() => {
+    let x = 40;
+    const gap = 20;
+    return TASK_BLOCKS.map(task => {
+      const pos = { ...task, x, y: INITIAL_Y, label: ORDER_LABELS[task.id] };
+      x += task.width + gap;
+      return pos;
+    });
+  }, []);
+
+  const handleTaskPlaced = useCallback(
+    (solutionKey, taskInfo) => {
+      logOperation({
+        targetElement: `${solutionKey}_任务条`,
+        eventType: EventTypes.TASK_DROP,
+        value: JSON.stringify({
+          taskId: taskInfo.taskId,
+          x: Math.round(taskInfo.x),
+          y: Math.round(taskInfo.y),
+        }),
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
+
+  const handleDragStart = useCallback(
+    (taskId, isPlaced) => {
+      logOperation({
+        targetElement: isPlaced ? '已放置任务条' : '任务条',
+        eventType: EventTypes.DRAG_START,
+        value: taskId,
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
+
+  const {
+    placedBlocks,
+    draggingBlock,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerLeave,
+  } = useTimelineDragDrop(svgRef, SOLUTION_CONFIGS, handleTaskPlaced, null, handleDragStart, false);
+
+  const handleTimeInput = useCallback((solutionKey, value) => {
+    const normalizedValue = value.replace(/\D/g, '').slice(0, 3);
     setSolutions(prev => ({
       ...prev,
-      [solutionId === 'solution-1' ? 'solution1' : 'solution2']: {
-        ...prev[solutionId === 'solution-1' ? 'solution1' : 'solution2'],
-        tasks: [...prev[solutionId === 'solution-1' ? 'solution1' : 'solution2'].tasks, newTask],
-      },
+      [solutionKey]: { ...prev[solutionKey], userInputTime: normalizedValue },
     }));
+  }, []);
 
-    logOperation({
-      targetElement: solutionId + '_任务条',
-      eventType: EventTypes.TASK_DROP,
-      value: JSON.stringify({ action: 'place', task: taskData.label, x: dropX, y: axisY }),
-      time: new Date().toISOString(),
-    });
-  }, [logOperation]);
+  const handleBlockPointerDown = useCallback(
+    (e, block, isPlaced = false, cloneId = null) => {
+      handlePointerDown(e, block, isPlaced, cloneId);
+    },
+    [handlePointerDown]
+  );
 
-  const handleClearSolution = useCallback((solutionId) => {
-    const key = solutionId === 'solution-1' ? 'solution1' : 'solution2';
-    setSolutions(prev => ({
-      ...prev,
-      [key]: { ...prev[key], tasks: [] },
-    }));
-    
-    logOperation({
-      targetElement: solutionId,
-      eventType: EventTypes.CLICK,
-      value: 'clear_solution',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation]);
-
-  const handleResetAll = useCallback(() => {
-    setSolutions({
-      solution1: { tasks: [], userInputTime: '' },
-      solution2: { tasks: [], userInputTime: '' },
-    });
-    
-    logOperation({
-      targetElement: '全部重置',
-      eventType: EventTypes.CLICK,
-      value: 'reset_all',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation]);
-
-  const handleTimeInput = (solutionKey, value) => {
-    setSolutions(prev => ({
-      ...prev,
-      [solutionKey]: { ...prev[solutionKey], userInputTime: value },
-    }));
-  };
-
-  const validateAndNext = async () => {
-    setError('');
-
-    if (solutions.solution1.tasks.length === 0) {
-      setError('方案一需要至少放置一个任务条');
-      return;
-    }
-    if (solutions.solution2.tasks.length === 0) {
-      setError('方案二需要至少放置一个任务条');
-      return;
-    }
-
-    const time1 = parseInt(solutions.solution1.userInputTime, 10);
-    const time2 = parseInt(solutions.solution2.userInputTime, 10);
-
-    if (!time1 || time1 < 1 || time1 > 999) {
-      setError('请输入方案一的总用时（1-999分钟）');
-      return;
-    }
-    if (!time2 || time2 < 1 || time2 > 999) {
-      setError('请输入方案二的总用时（1-999分钟）');
-      return;
-    }
-
-    const tasks1Str = JSON.stringify(solutions.solution1.tasks.map(t => t.id).sort());
-    const tasks2Str = JSON.stringify(solutions.solution2.tasks.map(t => t.id).sort());
-    if (tasks1Str === tasks2Str && time1 === time2) {
-      setError('请设计两种不同的方案');
-      return;
-    }
-
-    collectAnswer({ targetElement: '方案一', value: JSON.stringify(solutions.solution1) });
-    collectAnswer({ targetElement: '方案二', value: JSON.stringify(solutions.solution2) });
-
-    await handleNextPage({ nextPageId: 'plan-optimization' });
-  };
+  const solutionZones = SOLUTION_CONFIGS.map(config => ({
+    key: config.key,
+    mainY: config.mainY,
+    subY: config.subY,
+    label: config.key === 'solution1' ? '方案一（请拖入此处）' : '方案二（请拖入此处）',
+    showTimeInput: true,
+    timeInputProps: {
+      value: solutions[config.key].userInputTime,
+      onChange: e => handleTimeInput(config.key, e.target.value),
+      readOnly: false,
+    },
+  }));
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>设计你的时间规划方案</h2>
-        <p>请设计两种不同的方案来安排小明的出发准备任务</p>
+        <div className={styles.titleRow}>
+          <span className={styles.titleBadge}>7</span>
+          <h1 className={styles.title}>火车购票：出发时间</h1>
+        </div>
+        <p className={styles.prompt}>请你拖动长方条，帮小明设计两种不同的事情安排方案吧。</p>
+        <p className={styles.taskDesc}>
+          <span className={styles.taskBlue}>① 洗水壶（1分钟）</span>
+          <span className={styles.taskOrange}>② 用水壶烧热水（10分钟）</span>
+          <span className={styles.taskGray}>③ 灌水到保温杯（2分钟）</span>
+          <span className={styles.taskGreen}>④ 整理背包（2分钟）</span>
+          <span className={styles.taskPink}>⑤ 吃早饭（6分钟）</span>
+        </p>
       </div>
 
-      <TaskBlockDnd
-        solutions={solutions}
-        onTaskPlaced={handleTaskPlaced}
-        onClearSolution={handleClearSolution}
-        onResetAll={handleResetAll}
-        onDragOver={(e) => e.preventDefault()}
-        showDualSolutions={true}
-        showDualAxis={true}
-      />
-
-      <div className={styles.timeInputs}>
-        <div className={styles.timeInputGroup}>
-          <label>方案一总用时：</label>
-          <input
-            type="number"
-            min="1"
-            max="999"
-            value={solutions.solution1.userInputTime}
-            onChange={(e) => handleTimeInput('solution1', e.target.value)}
-            placeholder="分钟"
-          />
-          <span>分钟</span>
-        </div>
-        <div className={styles.timeInputGroup}>
-          <label>方案二总用时：</label>
-          <input
-            type="number"
-            min="1"
-            max="999"
-            value={solutions.solution2.userInputTime}
-            onChange={(e) => handleTimeInput('solution2', e.target.value)}
-            placeholder="分钟"
-          />
-          <span>分钟</span>
-        </div>
-      </div>
-
-      {error && <div className={styles.error}>{error}</div>}
-
-      <div className={styles.navigation}>
-        <button className={styles.nextBtn} onClick={validateAndNext}>
-          下一页
-        </button>
+      <div className={styles.svgPanel}>
+        <TimelineCanvas
+          ref={svgRef}
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          initialBlocks={initialBlocks}
+          placedBlocks={placedBlocks}
+          draggingBlock={draggingBlock}
+          solutionZones={solutionZones}
+          onBlockPointerDown={handleBlockPointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerLeave}
+          disabled={false}
+          svgProps={{
+            className: styles.svgCanvas,
+            'aria-label': '任务条拖放区域',
+          }}
+        />
       </div>
     </div>
   );

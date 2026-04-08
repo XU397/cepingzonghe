@@ -85,7 +85,7 @@ html:has(.login-page) {
     font-size: 24px;
     color: #FFF;
     font-weight: bold;
-    
+
 }
 
 .login-header-logo {
@@ -125,11 +125,12 @@ html:has(.login-page) {
 }
 
 .login-product-title {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: bold;
     color: #333;
     margin-bottom: 16px;
-    line-height: 1.3;
+    line-height: 2;
+    text-align: center;
 }
 
 .login-product-highlight {
@@ -352,8 +353,13 @@ html:has(.login-page) {
 }
 
 @keyframes loginSpinAnimation {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* 帮助文本 */
@@ -397,11 +403,11 @@ html:has(.login-page) {
     .login-product-intro {
         display: none;
     }
-    
+
     .login-content-container {
         justify-content: center;
     }
-    
+
     .login-form-container {
         width: 450px;
     }
@@ -411,21 +417,21 @@ html:has(.login-page) {
     .login-header {
         padding: 20px;
     }
-    
+
     .login-form-container {
         width: 100%;
         padding: 30px 20px;
         margin: 0 20px;
     }
-    
+
     .login-main-container {
         padding: 10px;
     }
-    
+
     .login-header-logo {
         height: 50px;
     }
-    
+
     .login-form-logo {
         width: 50px;
         height: 50px;
@@ -437,15 +443,15 @@ html:has(.login-page) {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .login-slogan-item:not(:last-child)::after {
         display: none;
     }
-    
+
     .login-form-container {
         padding: 25px 15px;
     }
-    
+
     .login-welcome-title {
         font-size: 18px;
     }
@@ -463,9 +469,9 @@ html:has(.login-page) {
     .login-demo-image:hover {
         transform: none;
     }
-    
+
     .login-bg-decoration-1,
     .login-bg-decoration-2 {
         display: none;
     }
-} 
+}

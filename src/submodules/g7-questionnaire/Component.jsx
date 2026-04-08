@@ -9,22 +9,31 @@ import { useAppContext } from '@/context/AppContext';
 import { getPageNumByPageId } from './mapping';
 
 export function G7QuestionnaireComponent({ userContext, initialPageId, flowContext }) {
-  const { currentPageId, isQuestionnaireTimeUp, isQuestionnaireCompleted } = useAppContext();
+  const {
+    currentPageId,
+    isQuestionnaireTimeUp,
+    questionnaireRemainingTime,
+    isQuestionnaireCompleted,
+  } = useAppContext();
   const lastProgressRef = useRef(null);
   const completionRef = useRef(false);
   const timeoutRef = useRef(false);
+  const isQuestionnaireSubmitPage = currentPageId === 'Page_28_Effort_Submit';
 
-  const handlePageChange = useCallback((pageId) => {
-    if (!flowContext?.updateModuleProgress || !pageId) {
-      return;
-    }
-    const subPageNum = getPageNumByPageId(pageId);
-    if (!subPageNum || lastProgressRef.current === subPageNum) {
-      return;
-    }
-    lastProgressRef.current = subPageNum;
-    flowContext.updateModuleProgress(subPageNum);
-  }, [flowContext]);
+  const handlePageChange = useCallback(
+    pageId => {
+      if (!flowContext?.updateModuleProgress || !pageId) {
+        return;
+      }
+      const subPageNum = getPageNumByPageId(pageId);
+      if (!subPageNum || lastProgressRef.current === subPageNum) {
+        return;
+      }
+      lastProgressRef.current = subPageNum;
+      flowContext.updateModuleProgress(subPageNum);
+    },
+    [flowContext]
+  );
 
   useEffect(() => {
     handlePageChange(currentPageId);
@@ -39,10 +48,10 @@ export function G7QuestionnaireComponent({ userContext, initialPageId, flowConte
   }, [flowContext]);
 
   useEffect(() => {
-    if (isQuestionnaireCompleted || currentPageId === 'Page_28_Effort_Submit') {
+    if (isQuestionnaireCompleted && isQuestionnaireSubmitPage) {
       handleComplete();
     }
-  }, [currentPageId, handleComplete, isQuestionnaireCompleted]);
+  }, [handleComplete, isQuestionnaireCompleted, isQuestionnaireSubmitPage]);
 
   const handleTimeout = useCallback(() => {
     if (!flowContext?.onTimeout || timeoutRef.current) {
@@ -53,12 +62,26 @@ export function G7QuestionnaireComponent({ userContext, initialPageId, flowConte
   }, [flowContext]);
 
   useEffect(() => {
-    if (isQuestionnaireTimeUp) {
+    const isActualTimeout =
+      isQuestionnaireTimeUp &&
+      typeof questionnaireRemainingTime === 'number' &&
+      questionnaireRemainingTime <= 0;
+
+    if (isActualTimeout) {
       handleTimeout();
     }
-  }, [handleTimeout, isQuestionnaireTimeUp]);
+  }, [handleTimeout, isQuestionnaireTimeUp, questionnaireRemainingTime]);
 
   useEffect(() => {
+    const flowScope = `${flowContext?.flowId ?? ''}:${flowContext?.stepIndex ?? ''}`;
+    if (
+      flowScope === '' &&
+      !completionRef.current &&
+      !timeoutRef.current &&
+      !lastProgressRef.current
+    ) {
+      return;
+    }
     completionRef.current = false;
     timeoutRef.current = false;
     lastProgressRef.current = null;

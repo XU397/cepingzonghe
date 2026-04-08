@@ -5,9 +5,9 @@
  * Q2: 哪种浓度对薇甘菊种子发芽的抑制作用最强？
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EventTypes } from '@shared/services/submission/eventTypes';
-import { getPageSubNum } from '../mapping';
+import { isReservedElement } from '@shared/services/submission/submoduleAdapter';
 import { useMikaniaExperiment } from '../Component';
 import ExperimentPanel from '../components/ExperimentPanel';
 import styles from '../styles/Page04_Q2_Data.module.css';
@@ -19,38 +19,15 @@ function Page04Q2Data() {
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
-    flowContext,
+    targetPrefix,
   } = useMikaniaExperiment();
 
   const [selectedOption, setSelectedOption] = useState(state.answers.Q2_抑制作用浓度 || '');
   const [error, setError] = useState('');
 
-  const subPageNum = getPageSubNum(state.currentPageId);
-  const flowStepIndex = flowContext?.stepIndex;
-  const pageNumber = useMemo(() => {
-    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
-  }, [flowStepIndex, subPageNum]);
-  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
-  const questionTarget = `${targetPrefix}Q2_抑制作用浓度`;
-  const nextButtonTarget = `${targetPrefix}下一页按钮`;
-  const pageTarget = `${targetPrefix}页面`;
-
-  // 记录页面进入
-  useEffect(() => {
-    logOperation({
-      targetElement: pageTarget,
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'page_04_q2_data',
-    });
-
-    return () => {
-      logOperation({
-        targetElement: pageTarget,
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'page_04_q2_data',
-      });
-    };
-  }, [logOperation, pageTarget]);
+  const pageTargetPrefix = targetPrefix || '';
+  const questionTarget = `${pageTargetPrefix}Q2_抑制作用浓度`;
+  const nextButtonTarget = isReservedElement('下一页按钮') ? '下一页按钮' : `${pageTargetPrefix}下一页按钮`;
 
   // 错误提示自动隐藏：10秒后清除
   useEffect(() => {

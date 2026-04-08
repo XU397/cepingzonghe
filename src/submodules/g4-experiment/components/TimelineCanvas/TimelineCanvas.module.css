@@ -1,0 +1,86 @@
+/* TimelineCanvas.module.css */
+
+.blockGroup {
+  cursor: grab;
+  transition: opacity 0.15s ease;
+}
+
+.blockGroup.draggable:hover {
+  filter: brightness(1.05);
+}
+
+.blockGroup.draggable:active {
+  cursor: grabbing;
+}
+
+.blockRect {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  transition: filter 0.15s ease;
+}
+
+.blockText {
+  fill: white;
+  font-size: 18px;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dropZoneRect {
+  fill: rgba(240, 248, 255, 0.6);
+  stroke: #b8d4e8;
+  stroke-width: 1.5;
+}
+
+.axisLine {
+  stroke: #c8d8e8;
+  stroke-width: 1;
+  stroke-dasharray: 4 2;
+}
+
+.zoneLabel {
+  fill: #6b7c8a;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.cursorLayer {
+  pointer-events: none;
+}
+
+.cursorHalo {
+  fill: rgba(59, 130, 246, 0.15);
+}
+
+.cursorIcon {
+  fill: #3b82f6;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+.timeInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.timeInput {
+  width: 50px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+}
+
+.timeInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.svgCanvas {
+  width: 100%;
+  height: auto;
+}

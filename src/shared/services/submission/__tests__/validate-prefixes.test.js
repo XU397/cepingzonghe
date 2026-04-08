@@ -24,22 +24,23 @@ describe('targetElement 前缀规则', () => {
     });
   });
 
-  it('拒绝遗留的 PM<step>:<sub> 格式', () => {
+  it('拒绝遗留的 PM<step>:<sub> 格式，新格式要求使用 P<submoduleIndex>.<pageIndexTwoDigits>_', () => {
     const { mark } = createSubmissionFixture();
     mark.operationList[1].targetElement = mark.operationList[1].targetElement.replace(
-      'P0.3_',
+      'P1.03_',
       'PM0:3_',
     );
 
     expect(() => validateMarkObject(mark)).toThrow(
-      /targetElement 必须以 "P" 开头（如 "P1_button"），系统保留字段除外/,
+      /targetElement 必须以 "P" 开头（如 "P1.03_button"），系统保留字段除外/,
     );
   });
 });
 
 describe('pageNumber 格式校验', () => {
   it('只接受点分格式', () => {
-    expect(isValidPageNumber('0.3')).toBe(true);
+    expect(isValidPageNumber('1.03')).toBe(true);
+    expect(isValidPageNumber('0.3')).toBe(false);
     expect(isValidPageNumber('2')).toBe(false);
   });
 
@@ -49,7 +50,7 @@ describe('pageNumber 格式校验', () => {
     const { mark } = createSubmissionFixture();
     mark.pageNumber = 'M0:3';
     expect(() => validateMarkObject(mark)).toThrow(
-      /pageNumber 必须为 Flow 点分格式 <stepIndex>.<subPageNum>/,
+      /pageNumber 必须为新格式 <submoduleIndex>\.<pageIndexTwoDigits>（如 "1\.03"），不再支持 0\.\* 前缀、M 前缀或无零填充格式/,
     );
   });
 
@@ -59,7 +60,7 @@ describe('pageNumber 格式校验', () => {
     const { mark } = createSubmissionFixture();
     mark.pageNumber = '5';
     expect(() => validateMarkObject(mark)).toThrow(
-      /pageNumber 必须为 Flow 点分格式 <stepIndex>.<subPageNum>/,
+      /pageNumber 必须为新格式 <submoduleIndex>\.<pageIndexTwoDigits>（如 "1\.03"），不再支持 0\.\* 前缀、M 前缀或无零填充格式/,
     );
   });
 });

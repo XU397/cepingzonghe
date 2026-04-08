@@ -1,3 +1,5 @@
+import { shouldEnforceFullscreen } from './fullscreenPreference';
+
 /**
  * 全屏提示管理器
  * 直接操作DOM，绕过React渲染问题
@@ -5,26 +7,7 @@
 
 let promptElement = null;
 
-// 检查是否应该强制全屏
-const shouldEnforceFullscreen = () => {
-  // 生产环境总是强制全屏
-  const isDevEnvironment = typeof process !== 'undefined'
-    ? process.env.NODE_ENV === 'development'
-    : Boolean(import.meta?.env?.DEV);
-
-  if (!isDevEnvironment) {
-    return true;
-  }
-
-  // 开发环境检查环境变量
-  const flag = import.meta?.env?.VITE_REQUIRE_FULLSCREEN_IN_DEV;
-  if (typeof flag === 'string') {
-    return flag.toLowerCase() === 'true' || flag === '1';
-  }
-  return Boolean(flag);
-};
-
-export const showFullscreenPrompt = (onEnterFullscreen) => {
+export const showFullscreenPrompt = onEnterFullscreen => {
   console.log('[FullscreenPromptManager] 准备显示全屏提示');
 
   // 检查是否应该强制全屏
@@ -145,7 +128,7 @@ export const hideFullscreenPrompt = () => {
   }
 };
 
-export const showInitialFullscreenGuide = (onEnterFullscreen) => {
+export const showInitialFullscreenGuide = onEnterFullscreen => {
   console.log('[FullscreenPromptManager] 准备显示初始全屏引导');
 
   // 检查是否应该强制全屏

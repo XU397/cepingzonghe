@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import styles from '../styles/Page04ExperimentDesign.module.css';
@@ -10,13 +10,18 @@ const Page04ExperimentDesign: React.FC = () => {
     logOperation,
     setPageStartTime,
     collectAnswer,
-    currentPageId,
-    answers
+    answers,
+    getPagePrefix,
   } = usePvSandContext();
+
+  // 规范化的 targetElement 前缀
+  const targetPrefix = getPagePrefix();
+  const questionTarget = `${targetPrefix}Q1_实验设计原因`;
 
   const [designText, setDesignText] = useState('');
   const [showError, setShowError] = useState(false);
   const minChars = 10; // Updated to 10 to match Component.tsx validation
+  const pageInitializedRef = useRef(false);
 
   // Initialize from saved answers
   useEffect(() => {
@@ -33,13 +38,12 @@ const Page04ExperimentDesign: React.FC = () => {
       if (!isValid) {
         setShowError(true);
         logOperation({
-          targetElement: 'next_button',
+          targetElement: `${targetPrefix}下一页按钮`,
           eventType: EventTypes.CLICK_BLOCKED,
-          value: {
+          value: JSON.stringify({
             reason: 'input_too_short',
-            missing: ['designReason'],
-            timestamp: new Date().toISOString(),
-          },
+            missing: ['Q1_实验设计原因'],
+          }),
           time: new Date().toISOString(),
         });
         // Auto-hide error after 3 seconds
@@ -51,28 +55,17 @@ const Page04ExperimentDesign: React.FC = () => {
     return () => {
       window.removeEventListener('pv-sand-validation-error', handleValidationError);
     };
-  }, [designText, minChars]);
+  }, [designText, minChars, targetPrefix, logOperation]);
 
   useEffect(() => {
+    if (pageInitializedRef.current) {
+      return;
+    }
+    pageInitializedRef.current = true;
+
     const startTime = new Date();
     setPageStartTime(startTime);
-
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: currentPageId,
-      time: startTime.toISOString()
-    });
-
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: currentPageId,
-        time: new Date().toISOString()
-      });
-    };
-  }, [logOperation, setPageStartTime, currentPageId]);
+  }, [setPageStartTime]);
 
   const handleTextChange = (text: string) => {
     const prev = designText;
@@ -97,16 +90,16 @@ const Page04ExperimentDesign: React.FC = () => {
         };
 
     logOperation({
-      targetElement: 'designReason',
+      targetElement: questionTarget,
       eventType,
-      value,
+      value: JSON.stringify(value),
       time: new Date().toISOString()
     });
   };
 
   const handleFocus = () => {
     logOperation({
-      targetElement: 'designReason',
+      targetElement: questionTarget,
       eventType: EventTypes.INPUT_FOCUS,
       value: designText ?? '',
       time: new Date().toISOString(),
@@ -115,7 +108,7 @@ const Page04ExperimentDesign: React.FC = () => {
 
   const handleBlur = () => {
     logOperation({
-      targetElement: 'designReason',
+      targetElement: questionTarget,
       eventType: EventTypes.INPUT_BLUR,
       value: designText ?? '',
       time: new Date().toISOString()
@@ -265,4 +258,3 @@ const Page04ExperimentDesign: React.FC = () => {
 };
 
 export default Page04ExperimentDesign;
-

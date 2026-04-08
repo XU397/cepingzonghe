@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePageSubmission } from '../usePageSubmission.js';
+import { encodeCompositePageNum } from '@shared/utils/pageMapping.ts';
 
 describe('usePageSubmission - pageDesc enhancement', () => {
   it('prefixes pageDesc with flow context data before submitting', async () => {
@@ -10,11 +11,12 @@ describe('usePageSubmission - pageDesc enhancement', () => {
       error: vi.fn(),
     };
     const submitImpl = vi.fn(async () => ({ code: 200 }));
+    const pageNumber = encodeCompositePageNum(1, 1);
 
     const { result } = renderHook(() =>
       usePageSubmission({
         buildMark: () => ({
-          pageNumber: '0.1',
+          pageNumber,
           pageDesc: '注意事项',
           operationList: [
             {
@@ -69,10 +71,13 @@ describe('usePageSubmission - pageDesc enhancement', () => {
       (operation) => operation.eventType === 'flow_context',
     );
     expect(flowContextEvent).toBeTruthy();
-    expect(flowContextEvent.value).toEqual({
+    expect(typeof flowContextEvent.value).toBe('string');
+    const parsedValue = JSON.parse(flowContextEvent.value);
+    expect(parsedValue).toEqual({
       flowId: 'test-flow-1',
       submoduleId: 'g7-experiment',
       stepIndex: 0,
+      moduleName: null,
       pageId: 'notice',
     });
   });

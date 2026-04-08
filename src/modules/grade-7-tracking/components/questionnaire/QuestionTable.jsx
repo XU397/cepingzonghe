@@ -35,7 +35,7 @@ const QuestionTable = ({ questions, answers, onAnswerChange, options }) => {
         <thead>
           <tr>
             <th className={styles.questionColumn}></th>
-            {options.map((option) => (
+            {options.map(option => (
               <th key={option.value} className={styles.optionColumn}>
                 {option.label}
               </th>
@@ -43,20 +43,20 @@ const QuestionTable = ({ questions, answers, onAnswerChange, options }) => {
           </tr>
         </thead>
         <tbody>
-          {questions.map((question) => {
+          {questions.map(question => {
             const questionKey = `q${question.id}`;
             const selectedValue = answers[questionKey];
 
             return (
               <tr key={question.id} className={styles.questionRow}>
                 <td className={styles.questionCell}>{question.text}</td>
-                {options.map((option) => {
+                {options.map(option => {
                   const isChecked = selectedValue === option.value;
                   const radioId = `q${question.id}_${option.value}`;
 
                   return (
                     <td key={option.value} className={styles.optionCell}>
-                      <label htmlFor={radioId} className={styles.radioWrapper}>
+                      <label htmlFor={radioId} className={styles.radioLabel}>
                         <input
                           type="radio"
                           id={radioId}
@@ -66,9 +66,7 @@ const QuestionTable = ({ questions, answers, onAnswerChange, options }) => {
                           onChange={() => handleRadioChange(question.id, option.value)}
                           className={styles.radioInput}
                         />
-                        <span className={styles.radioCustom}>
-                          {isChecked && <span className={styles.radioInner}></span>}
-                        </span>
+                        <span className={styles.radioCustom}></span>
                       </label>
                     </td>
                   );

@@ -4,9 +4,9 @@
  * 左侧显示实验步骤和培养皿图片，右侧为Q1填空题
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { EventTypes } from '@shared/services/submission/eventTypes';
-import { getPageSubNum } from '../mapping';
+import { isReservedElement } from '@shared/services/submission/submoduleAdapter';
 import { useMikaniaExperiment } from '../Component';
 import styles from '../styles/Page02_Step_Q1.module.css';
 import petriDishImage from '../assets/images/培养皿.jpg';
@@ -18,36 +18,16 @@ function Page02StepQ1() {
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
-    flowContext,
+    targetPrefix,
   } = useMikaniaExperiment();
 
   const [inputValue, setInputValue] = useState(state.answers.Q1_控制变量原因 || '');
   const [error, setError] = useState('');
   const prevValueRef = useRef(state.answers.Q1_控制变量原因 || '');
 
-  const subPageNum = getPageSubNum(state.currentPageId);
-  const flowStepIndex = flowContext?.stepIndex;
-  const pageNumber = useMemo(() => {
-    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
-  }, [flowStepIndex, subPageNum]);
-  const questionTarget = useMemo(() => `P${pageNumber}_Q1_控制变量原因`, [pageNumber]);
-
-  // 记录页面进入
-  useEffect(() => {
-    logOperation({
-      targetElement: '页面',
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'page_02_step_q1',
-    });
-
-    return () => {
-      logOperation({
-        targetElement: '页面',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'page_02_step_q1',
-      });
-    };
-  }, [logOperation]);
+  const pageTargetPrefix = targetPrefix || '';
+  const questionTarget = `${pageTargetPrefix}Q1_控制变量原因`;
+  const nextButtonTarget = isReservedElement('下一页按钮') ? '下一页按钮' : `${pageTargetPrefix}下一页按钮`;
 
   const handleInputFocus = () => {
     logOperation({
@@ -113,14 +93,14 @@ function Page02StepQ1() {
       // 显示错误提示
       setError('请输入至少5个字符的回答');
 
-      // 记录阻断事件
-      logOperation({
-        targetElement: '下一页按钮',
-        eventType: EventTypes.CLICK_BLOCKED,
-        value: JSON.stringify({
-          reason: 'validation_failed',
-          missing,
-        }),
+    // 记录阻断事件
+    logOperation({
+      targetElement: nextButtonTarget,
+      eventType: EventTypes.CLICK_BLOCKED,
+      value: JSON.stringify({
+        reason: 'validation_failed',
+        missing,
+      }),
       });
       return;
     }
@@ -130,7 +110,7 @@ function Page02StepQ1() {
 
     // 记录成功点击
     logOperation({
-      targetElement: '下一页按钮',
+      targetElement: nextButtonTarget,
       eventType: EventTypes.NEXT_CLICK,
       value: 'navigate_to_sim_exp',
     });
@@ -156,7 +136,7 @@ function Page02StepQ1() {
         <div className={styles.leftPanel}>
           <div className={styles.experimentCard}>
             <p className={styles.experimentIntro}>
-              本实验旨在探究菟丝子水浸液对薇甘菊种子发芽的抑制作用，并分析其浓度效应。实验步骤如下：
+              本实验旨在探究菟丝子（tù sī zǐ）水浸液对薇甘菊种子发芽的抑制作用，并分析其浓度效应。实验步骤如下：
             </p>
 
             <h3 className={styles.stepsTitle}>

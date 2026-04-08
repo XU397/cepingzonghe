@@ -65,7 +65,7 @@ export default function G8DroneImagingDevPage() {
     allowProceedOnFailureInDev: false,
     submitImpl: async (payload) => {
       // 本地调试：根据 submitMode 决定模拟成功/失败，方便 E2E 测试覆盖
-      // eslint-disable-next-line no-console
+       
       console.log('[G8DroneDev] Mock submit payload', {
         submitMode,
         payload,
@@ -102,15 +102,15 @@ export default function G8DroneImagingDevPage() {
     },
     helpers: {
       logOperation: (operation) => {
-        // eslint-disable-next-line no-console
+         
         console.log('[G8DroneDev] logOperation', operation);
       },
       collectAnswer: (answer) => {
-        // eslint-disable-next-line no-console
+         
         console.log('[G8DroneDev] collectAnswer', answer);
       },
       navigateToPage: (pageId) => {
-        // eslint-disable-next-line no-console
+         
         console.log('[G8DroneDev] navigateToPage', pageId);
       },
     },
@@ -122,15 +122,15 @@ export default function G8DroneImagingDevPage() {
     submoduleId: 'g8-drone-imaging',
     modulePageNum: String(subPageNum),
     onComplete: () => {
-      // eslint-disable-next-line no-console
+       
       console.log('[G8DroneDev] flowContext.onComplete called');
     },
     onTimeout: () => {
-      // eslint-disable-next-line no-console
+       
       console.log('[G8DroneDev] flowContext.onTimeout called');
     },
     updateModuleProgress: (nextModulePageNum) => {
-      // eslint-disable-next-line no-console
+       
       console.log('[G8DroneDev] updateModuleProgress', nextModulePageNum);
     },
   }), [subPageNum]);
@@ -138,7 +138,7 @@ export default function G8DroneImagingDevPage() {
   const handleNext = useCallback(async ({ defaultSubmit }) => {
     if (typeof defaultSubmit === 'function') {
       const ok = await defaultSubmit();
-      // eslint-disable-next-line no-console
+       
       console.log('[G8DroneDev] defaultSubmit result', ok);
       return ok;
     }

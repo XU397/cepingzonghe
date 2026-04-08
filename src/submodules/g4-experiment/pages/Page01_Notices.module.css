@@ -1,178 +1,247 @@
-.page {
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
+/* Page01_Notices.module.css - Adapted from Page01_Cover styles */
+
+/* Main container */
+.coverContainer {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  align-items: center;
+  min-height: 500px;
+  justify-content: center;
+  height: 100% !important;
+  padding: 20px 10px;
+  background: url('../../../assets/images/g4-1bg.jpg') no-repeat center center;
+  background-size: cover;
   position: relative;
-  padding: 12px 0;
 }
 
+/* Optional overlay for better text readability */
+.coverContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  /* Slightly more opaque as we are unsure of the bg image */
+  z-index: 0;
+}
+
+/* Content wrapper */
+.coverContent {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  width: 100%;
+}
+
+/* Title section */
 .titleSection {
-  background: var(--cartoon-light);
-  border: 2px solid var(--cartoon-border);
-  border-radius: 16px;
-  padding: 20px;
   text-align: center;
-  box-shadow: 0 8px 20px var(--cartoon-shadow);
+  margin-bottom: 32px;
 }
 
 .title {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--cartoon-dark);
-}
-
-.subtitle {
-  margin: 10px 0 0;
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--text-color);
-}
-
-.noticeCard {
-  position: relative;
-  background: var(--cartoon-light);
-  border: 2px solid var(--cartoon-border);
-  border-left: 6px solid var(--cartoon-accent);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 8px 20px var(--cartoon-shadow);
-}
-
-.readLabel {
-  display: inline-block;
-  margin-bottom: 12px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 14px;
+  font-size: 32px;
   font-weight: 700;
-  color: var(--cartoon-bg);
-  background: var(--cartoon-primary);
+  color: #333;
+  margin: 0 0 12px 0;
+  display: inline-block;
+  position: relative;
+}
+
+.titleUnderline {
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: #1976d2;
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
+
+/* Notice area - main content box */
+.noticeArea {
+  position: relative;
+  background: #fff;
+  padding: 32px 28px 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  margin-top: 20px;
+  text-align: left;
+  border: 2px solid #ffcc80;
+  border-left: 5px solid #ff9800;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
+}
+
+/* Notice badge - floating on top-left corner */
+.noticeBadge {
+  position: absolute;
+  top: -16px;
+  left: 20px;
+  display: inline-block;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(238, 90, 36, 0.3);
 }
 
 .noticeList {
+  list-style: none;
+  padding: 0;
   margin: 0;
-  padding-left: 20px;
+}
+
+.noticeList li {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: 16px;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.noticeList li:last-child {
+  margin-bottom: 0;
+}
+
+.noticeList li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #ff9800;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+/* Highlighted text in notice */
+.highlight {
+  color: #d32f2f;
+  font-weight: 600;
+}
+
+.highlightBold {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+/* Confirmation box */
+.confirmationBox {
+  background: #e3f2fd;
+  border: 2px solid #90caf9;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  color: var(--text-color);
-  line-height: 1.6;
+  align-items: center;
+  gap: 16px;
 }
 
-.noticeItem {
-  font-size: 16px;
-}
-
-.checkboxCard {
-  background: linear-gradient(
-    135deg,
-    rgba(89, 193, 255, 0.12),
-    rgba(255, 206, 107, 0.16)
-  );
-  border: 2px solid var(--cartoon-border);
-  border-radius: 16px;
-  padding: 18px 20px;
-  box-shadow: 0 8px 20px var(--cartoon-shadow);
-}
-
-.checkboxRow {
+/* Checkbox wrapper */
+.checkboxWrapper {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
 }
 
 .checkboxLabel {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  font-size: 16px;
+  color: #1565c0;
   cursor: pointer;
   user-select: none;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--cartoon-dark);
 }
 
 .checkboxLabel.disabled {
+  color: #90caf9;
   cursor: not-allowed;
-  opacity: 0.75;
 }
 
 .checkbox {
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: var(--cartoon-primary);
+  accent-color: #1976d2;
 }
 
 .checkbox:disabled {
   cursor: not-allowed;
-  opacity: 0.7;
 }
 
 .checkboxText {
-  font-weight: 600;
-  color: var(--text-color);
+  font-weight: 500;
 }
 
-.countdownBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 80px;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: var(--cartoon-light);
-  border: 2px solid var(--cartoon-border);
-  font-weight: 800;
-  color: var(--cartoon-primary);
+/* Countdown button */
+.countdownButton {
+  display: inline-block;
+  background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 12px 28px;
+  border-radius: 25px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+  cursor: default;
 }
 
-.countdownText {
-  margin: 14px 0 0;
+.countdownButton.hidden {
+  display: none;
+}
+
+/* Error message */
+.errorMessage {
+  color: #d32f2f;
   font-size: 14px;
-  color: var(--cartoon-dark);
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: #ffebee;
+  border-radius: 8px;
+  border-left: 4px solid #d32f2f;
+  text-align: center;
 }
 
-.errorText {
-  margin: 10px 0 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 2px solid rgba(185, 28, 28, 0.25);
-  background: rgba(255, 255, 255, 0.78);
-  font-size: 14px;
-  font-weight: 700;
-  color: #b91c1c;
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-  .page {
-    padding: 8px 0;
+  .coverContainer {
+    padding: 24px 16px;
+    min-height: 400px;
   }
 
   .title {
-    font-size: 22px;
+    font-size: 26px;
   }
 
-  .subtitle {
+  .noticeBadge {
     font-size: 14px;
+    padding: 8px 20px;
   }
 
-  .noticeItem {
+  .noticeArea {
+    padding: 16px 20px;
+  }
+
+  .noticeList li {
     font-size: 14px;
+    padding-left: 20px;
+  }
+
+  .confirmationBox {
+    padding: 16px;
   }
 
   .checkboxLabel {
     font-size: 14px;
   }
 
-  .countdownBadge {
-    min-width: 70px;
-    height: 32px;
+  .countdownButton {
+    font-size: 13px;
+    padding: 10px 20px;
   }
 }

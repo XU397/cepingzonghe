@@ -5,9 +5,9 @@
  * Q3: 根据实验数据分析发芽率趋势
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EventTypes } from '@shared/services/submission/eventTypes';
-import { getPageSubNum } from '../mapping';
+import { isReservedElement } from '@shared/services/submission/submoduleAdapter';
 import { useMikaniaExperiment } from '../Component';
 import ExperimentPanel from '../components/ExperimentPanel';
 import styles from '../styles/Page05_Q3_Trend.module.css';
@@ -19,38 +19,15 @@ function Page05Q3Trend() {
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
-    flowContext,
+    targetPrefix,
   } = useMikaniaExperiment();
 
   const [selectedOption, setSelectedOption] = useState(state.answers.Q3_发芽率趋势 || '');
   const [error, setError] = useState('');
 
-  const subPageNum = getPageSubNum(state.currentPageId);
-  const flowStepIndex = flowContext?.stepIndex;
-  const pageNumber = useMemo(() => {
-    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
-  }, [flowStepIndex, subPageNum]);
-  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
-  const questionTarget = `${targetPrefix}Q3_发芽率趋势`;
-  const nextButtonTarget = `${targetPrefix}下一页按钮`;
-  const pageTarget = `${targetPrefix}页面`;
-
-  // 记录页面进入
-  useEffect(() => {
-    logOperation({
-      targetElement: pageTarget,
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'page_05_q3_trend',
-    });
-
-    return () => {
-      logOperation({
-        targetElement: pageTarget,
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'page_05_q3_trend',
-      });
-    };
-  }, [logOperation, pageTarget]);
+  const pageTargetPrefix = targetPrefix || '';
+  const questionTarget = `${pageTargetPrefix}Q3_发芽率趋势`;
+  const nextButtonTarget = isReservedElement('下一页按钮') ? '下一页按钮' : `${pageTargetPrefix}下一页按钮`;
 
   // 错误提示自动隐藏：10秒后清除
   useEffect(() => {

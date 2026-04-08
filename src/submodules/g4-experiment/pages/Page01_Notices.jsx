@@ -116,70 +116,83 @@ function Page01_Notices() {
   };
 
   return (
-    <div className={styles.page} data-testid="page-notices">
-      <div className={styles.titleSection}>
-        <h1 className={styles.title}>4年级火车购票-交互课堂</h1>
-        <p className={styles.subtitle}>开始前请阅读并确认以下注意事项</p>
-      </div>
-
-      <div className={styles.noticeCard}>
-        <span className={styles.readLabel}>请仔细阅读</span>
-        <ul className={styles.noticeList}>
-          {NOTICE_ITEMS.map((item) => (
-            <li key={item.id} className={styles.noticeItem}>
-              {item.text}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className={styles.checkboxCard}>
-        <div className={styles.checkboxRow}>
-          <label className={`${styles.checkboxLabel} ${isCheckboxDisabled ? styles.disabled : ''}`}>
-            <input
-              type="checkbox"
-              checked={noticeConfirmed}
-              onChange={handleCheckboxChange}
-              disabled={isCheckboxDisabled}
-              className={styles.checkbox}
-              data-testid="confirm-checkbox"
-            />
-            <span className={styles.checkboxText}>{NOTICE_CHECKBOX_LABEL}</span>
-          </label>
-          <span className={styles.countdownBadge}>
-            {noticeCountdown > 0 ? `${noticeCountdown}s` : '已可继续'}
-          </span>
+    <div className={styles.coverContainer} data-testid="page-notices">
+      <div className={styles.coverContent}>
+        {/* Title section */}
+        <div className={styles.titleSection}>
+          <h1 className={styles.title}>
+            4年级火车购票-交互课堂
+            <span className={styles.titleUnderline} />
+          </h1>
         </div>
 
-        {noticeCountdown > 0 && <p className={styles.countdownText}>请认真阅读，倒计时结束后再勾选确认。</p>}
+        {/* Notice area with badge */}
+        <div className={styles.noticeArea}>
+          <span className={styles.noticeBadge}>注意事项</span>
+          <ul className={styles.noticeList}>
+            {NOTICE_ITEMS.map((item) => (
+              <li key={item.id}>
+                {item.text}
+              </li>
+            ))}
+          </ul>
+        </div>
 
+        {/* Confirmation box */}
+        <div className={styles.confirmationBox} data-testid="confirmation-box">
+          {/* Checkbox */}
+          <div className={styles.checkboxWrapper}>
+            <label
+              className={`${styles.checkboxLabel} ${isCheckboxDisabled ? styles.disabled : ''}`}
+            >
+              <input
+                type="checkbox"
+                className={styles.checkbox}
+                checked={noticeConfirmed}
+                onChange={handleCheckboxChange}
+                disabled={isCheckboxDisabled}
+                data-testid="confirm-checkbox"
+              />
+              <span className={styles.checkboxText}>{NOTICE_CHECKBOX_LABEL}</span>
+            </label>
+          </div>
+
+          {/* Countdown button - hidden once countdown completes */}
+          {noticeCountdown > 0 && (
+            <div className={styles.countdownButton}>
+              请仔细阅读注意事项，{noticeCountdown} 秒后可勾选确认……
+            </div>
+          )}
+        </div>
+
+        {/* Error message */}
         {showError && (
-          <p className={styles.errorText}>
+          <div className={styles.errorMessage} data-testid="error-message">
             {noticeCountdown > 0 ? '请等待倒计时结束后勾选确认' : '请勾选“我已阅读并理解火车购票注意事项”后继续'}
-          </p>
+          </div>
         )}
-      </div>
 
-      {/* 隐藏的下一页按钮，用于 Frame 回调 */}
-      <button
-        type="button"
-        style={{
-          position: 'absolute',
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: 0,
-          opacity: 0,
-          pointerEvents: 'none',
-          border: 0,
-        }}
-        tabIndex={-1}
-        onClick={handleNextClick}
-        data-testid="next-button"
-        aria-hidden="true"
-      >
-        下一页
-      </button>
+        {/* 隐藏的下一页按钮，用于 Frame 回调 */}
+        <button
+          type="button"
+          style={{
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            padding: 0,
+            margin: 0,
+            opacity: 0,
+            pointerEvents: 'none',
+            border: 0,
+          }}
+          tabIndex={-1}
+          onClick={handleNextClick}
+          data-testid="next-button"
+          aria-hidden="true"
+        >
+          下一页
+        </button>
+      </div>
     </div>
   );
 }

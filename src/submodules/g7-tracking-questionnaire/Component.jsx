@@ -10,7 +10,9 @@ function QuestionnaireFlowBridge({ flowContext }) {
   const completionRef = useRef(false);
   const timeoutRef = useRef(false);
 
-  const isQuestionnairePage = session.currentPage >= 14 && session.currentPage <= 21;
+  const isQuestionnairePage =
+    session.currentPage === 0.2 || (session.currentPage >= 14 && session.currentPage <= 21);
+  const isQuestionnaireNoticePage = session.currentPage === 0.2;
   const currentPageEntry = isQuestionnairePage ? PAGE_MAPPING[session.currentPage] : undefined;
   const currentPageId = currentPageEntry?.pageId;
   const questionnaireCompletionPageId = PAGE_MAPPING[22]?.pageId;
@@ -74,6 +76,11 @@ function QuestionnaireFlowBridge({ flowContext }) {
 
 export function G7TrackingQuestionnaireComponent({ userContext, initialPageId, flowContext }) {
   const { ModuleComponent: TrackingModule } = Grade7TrackingModuleDefinition || {};
+  const enhancedUserContext = {
+    ...userContext,
+    // 向 Tracking 模块提供 getFlowContext，供 useDataLogger 注入 flow_context
+    getFlowContext: () => (flowContext ? { ...flowContext } : null),
+  };
 
   useEffect(() => {
     console.log('[G7TrackingQuestionnaire] Submodule mounted', {
@@ -92,10 +99,7 @@ export function G7TrackingQuestionnaireComponent({ userContext, initialPageId, f
   }
 
   return (
-    <TrackingModule
-      userContext={userContext}
-      initialPageId={initialPageId}
-    >
+    <TrackingModule userContext={enhancedUserContext} initialPageId={initialPageId}>
       <QuestionnaireFlowBridge flowContext={flowContext} />
     </TrackingModule>
   );

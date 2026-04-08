@@ -26,7 +26,7 @@ const Page13_Analysis3 = () => {
     clearOperations,
     buildMarkObject,
     navigateToPage,
-    submitPageData
+    submitPageData,
   } = useTrackingContext();
 
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -38,7 +38,7 @@ const Page13_Analysis3 = () => {
       action: 'page_enter',
       target: '页面',
       value: 'Page13_Analysis3',
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
     });
 
     return () => {
@@ -46,52 +46,58 @@ const Page13_Analysis3 = () => {
         action: 'page_exit',
         target: '页面',
         value: 'Page13_Analysis3',
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
       });
     };
   }, [logOperation]);
 
   // 处理实验开始 - 计算所有量筒的下落时间
-  const handleExperimentStart = useCallback((waterContent, temperature) => {
-    // 🔧 修改：使用 simulation_timing_started eventType 以匹配7年级蒸馒头模块
-    logOperation({
-      action: 'simulation_timing_started',
-      target: '计时开始按钮_分析页3',
-      value: `温度${temperature}°C`,
-      time: new Date().toISOString()
-    });
+  const handleExperimentStart = useCallback(
+    (waterContent, temperature) => {
+      // 🔧 修改：使用 simulation_timing_started eventType 以匹配7年级蒸馒头模块
+      logOperation({
+        action: 'simulation_timing_started',
+        target: '计时开始按钮_分析页3',
+        value: `温度${temperature}°C`,
+        time: new Date().toISOString(),
+      });
 
-    // 使用物理模型计算下落时间
-    const fallTime = calculateFallTime(waterContent, temperature);
-    return fallTime;
-  }, [logOperation]);
+      // 使用物理模型计算下落时间
+      const fallTime = calculateFallTime(waterContent, temperature);
+      return fallTime;
+    },
+    [logOperation]
+  );
 
   // 处理实验完成
-  const handleExperimentComplete = useCallback((experimentData) => {
-    // experimentData 是一个数组，包含所有量筒的数据
-    // [{waterContent: 15, temperature: 30, fallTime: 16.5}, ...]
+  const handleExperimentComplete = useCallback(
+    experimentData => {
+      // experimentData 是一个数组，包含所有量筒的数据
+      // [{waterContent: 15, temperature: 30, fallTime: 16.5}, ...]
 
-    // 🔧 修改：构建符合7年级蒸馒头模块格式的 simulation_run_result
-    const temperature = experimentData[0]?.temperature || 25; // 获取当前实验的温度
-    const runId = `Analysis3_${Date.now()}`;
+      // 🔧 修改：构建符合7年级蒸馒头模块格式的 simulation_run_result
+      const temperature = experimentData[0]?.temperature || 25; // 获取当前实验的温度
+      const runId = `Analysis3_${Date.now()}`;
 
-    // 构建结果数组，格式与蒸馒头模块类似
-    const resultsForLog = experimentData.map(item => ({
-      WaterContent: item.waterContent, // 含水量
-      FallTime: item.fallTime          // 下落时间
-    }));
+      // 构建结果数组，格式与蒸馒头模块类似
+      const resultsForLog = experimentData.map(item => ({
+        WaterContent: item.waterContent, // 含水量
+        FallTime: item.fallTime, // 下落时间
+      }));
 
-    logOperation({
-      action: 'simulation_run_result',
-      target: '模拟实验运行结果',
-      value: {
-        Run_ID: `run_Page_13_Analysis3_${runId}`,
-        Set_Temperature: temperature,  // 设定温度
-        Results: resultsForLog
-      },
-      time: new Date().toISOString()
-    });
-  }, [logOperation]);
+      logOperation({
+        action: 'simulation_run_result',
+        target: '模拟实验运行结果',
+        value: {
+          Run_ID: `run_Page_13_Analysis3_${runId}`,
+          Set_Temperature: temperature, // 设定温度
+          Results: resultsForLog,
+        },
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
 
   // 处理重置
   const handleReset = useCallback(() => {
@@ -99,21 +105,24 @@ const Page13_Analysis3 = () => {
       action: '点击',
       target: '重置按钮_分析页',
       value: '重置实验',
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
     });
   }, [logOperation]);
 
   // 处理答案选择
-  const handleAnswerChange = useCallback((answer) => {
-    setSelectedAnswer(answer);
+  const handleAnswerChange = useCallback(
+    answer => {
+      setSelectedAnswer(answer);
 
-    logOperation({
-      action: '单选',
-      target: '实验分析',
-      value: answer,
-      time: new Date().toISOString()
-    });
-  }, [logOperation]);
+      logOperation({
+        action: '单选',
+        target: '实验分析',
+        value: answer,
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
 
   const handleNextPage = useCallback(async () => {
     if (!selectedAnswer || isNavigating) {
@@ -127,13 +136,11 @@ const Page13_Analysis3 = () => {
         action: '点击',
         target: '下一页按钮',
         value: '下一页',
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
       });
 
       // 同步构建答案列表，避免依赖异步的 collectAnswer 状态
-      const answerList = [
-        { targetElement: 'analysis_q3', value: selectedAnswer }
-      ];
+      const answerList = [{ targetElement: 'analysis_q3', value: selectedAnswer }];
 
       // 构建并提交MarkObject
       // 从session获取当前页码而不是硬编码
@@ -157,73 +164,99 @@ const Page13_Analysis3 = () => {
       alert(error.message || '页面跳转失败，请重试');
       setIsNavigating(false);
     }
-  }, [selectedAnswer, isNavigating, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage, session]);
+  }, [
+    selectedAnswer,
+    isNavigating,
+    logOperation,
+    collectAnswer,
+    buildMarkObject,
+    submitPageData,
+    clearOperations,
+    navigateToPage,
+    session,
+  ]);
 
   return (
     <PageLayout showNavigation={true} showTimer={true}>
       <div className={styles.container}>
-        <div className={styles.pageTitle}>
-          <h2>实验分析(3/3)</h2>
-        </div>
-
-      <div className={styles.contentLayout}>
-        {/* 左侧:实验操作区 - 4个量筒同时下落 */}
-        <div className={styles.leftPanel}>
-          <IntegratedExperimentPanel
-            waterContentOptions={WATER_CONTENT_OPTIONS}
-            temperatureOptions={TEMPERATURE_OPTIONS}
-            onExperimentStart={handleExperimentStart}
-            onExperimentComplete={handleExperimentComplete}
-            onReset={handleReset}
-          />
-        </div>
-
-        <div className={styles.rightPanel}>
-          <div className={styles.questionCard}>
-            <div className={styles.questionHeader}>
-              <span className={styles.questionNumber}>问题 3</span>
+        <header className={styles.header}>
+          <div className={styles.badge}>11</div>
+          <div className={styles.headerContent}>
+            <div className={styles.pageTitle}>
+              <h2>实验分析（3/3）</h2>
             </div>
+          </div>
+        </header>
 
-            <div className={styles.questionBody}>
-              <p className={styles.questionText}>
-                模拟实验表明,蜂蜜的含水量为多少时,小钢球的下落时间随温度升高而缩短,<strong>变化速度较慢</strong>?
-              </p>
+        <div className={styles.contentLayout}>
+          {/* 左侧:实验操作区 - 4个量筒同时下落 */}
+          <div className={styles.leftPanel}>
+            <IntegratedExperimentPanel
+              waterContentOptions={WATER_CONTENT_OPTIONS}
+              temperatureOptions={TEMPERATURE_OPTIONS}
+              onExperimentStart={handleExperimentStart}
+              onExperimentComplete={handleExperimentComplete}
+              onReset={handleReset}
+            />
+          </div>
 
-              <div className={styles.optionsGroup} role="radiogroup">
-                {WATER_CONTENT_OPTIONS.map((option) => (
-                  <label
-                    key={option}
-                    className={`${styles.optionLabel} ${
-                      selectedAnswer === `${option}%` ? styles.selected : ''
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="analysis_q3"
-                      value={`${option}%`}
-                      checked={selectedAnswer === `${option}%`}
-                      onChange={() => handleAnswerChange(`${option}%`)}
-                      className={styles.optionInput}
-                    />
-                    <span className={styles.optionText}>{option}%</span>
-                  </label>
-                ))}
+          <div className={styles.rightPanel}>
+            <div className={styles.questionCard}>
+              <div className={styles.questionHeader}>
+                <span className={styles.questionNumber}>问题 3</span>
+              </div>
+
+              <div className={styles.questionBody}>
+                <p className={styles.questionText}>
+                  模拟实验表明,蜂蜜的含水量为多少时,小钢球的下落时间随温度升高而缩短,
+                  <strong>变化速度较慢</strong>?
+                </p>
+
+                <div className={styles.optionsGroup} role="radiogroup">
+                  {WATER_CONTENT_OPTIONS.map(option => (
+                    <label
+                      key={option}
+                      className={`${styles.optionLabel} ${
+                        selectedAnswer === `${option}%` ? styles.selected : ''
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="analysis_q3"
+                        value={`${option}%`}
+                        checked={selectedAnswer === `${option}%`}
+                        onChange={() => handleAnswerChange(`${option}%`)}
+                        className={styles.optionInput}
+                      />
+                      <span className={styles.optionText}>{option}%</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className={styles.navigationFooter}>
-        <button
-          type="button"
-          className={styles.nextButton}
-          onClick={handleNextPage}
-          disabled={!selectedAnswer || isNavigating}
-        >
-          {selectedAnswer ? (isNavigating ? '跳转中...' : '下一页') : '请先回答问题'}
-        </button>
-      </div>
+        <footer className={styles.navigationFooter}>
+          <button
+            type="button"
+            className={styles.btnPrimary}
+            onClick={handleNextPage}
+            disabled={!selectedAnswer || isNavigating}
+          >
+            <span>{selectedAnswer ? (isNavigating ? '提交中...' : '下一页') : '请先回答问题'}</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </footer>
       </div>
     </PageLayout>
   );

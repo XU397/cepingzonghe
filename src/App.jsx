@@ -161,15 +161,15 @@ const AppContent = () => {
   }, [moduleUrl, pageNum, examNo, batchCode, isAuthenticated]);
 
   useEffect(() => {
-    if (isTimeUp && !isTaskFinished && currentPageId !== 'Page_19_Task_Completion') {
-      console.log("时间到，自动提交当前页面并导航到完成页...");
+    if (isTimeUp && !isTaskFinished && currentPageId !== 'Page_18_Solution_Selection') {
+      console.log("时间到，自动提交当前页面并标记完成...");
       
       // 使用AppContext的submitPageData，它已包含session过期处理
       const doTimeUpSubmission = async () => {
         await submitPageData();
-        // 无论提交成功与否，都导航到完成页（时间已到）
+        // 无论提交成功与否，都标记完成并回落到最后一页
         setIsTaskFinished(true);
-        setCurrentPageId('Page_19_Task_Completion');
+        setCurrentPageId('Page_18_Solution_Selection');
       };
       
       doTimeUpSubmission();
@@ -218,10 +218,9 @@ const AppContent = () => {
     return pageId && pageId.startsWith('Page_2') && ['Page_20_Questionnaire_Intro', 'Page_21_Curiosity_Questions', 'Page_22_Creativity_Questions', 'Page_23_Imagination_Questions', 'Page_24_Science_Efficacy_Questions', 'Page_25_Environment_Questions', 'Page_26_School_Activities', 'Page_27_Outschool_Activities', 'Page_28_Effort_Submit'].includes(pageId);
   };
 
-  if (isTaskFinished && currentPageId !== 'Page_19_Task_Completion' && !isQuestionnairePageId(currentPageId)) {
-    // 如果任务已标记为完成，但当前页面不是P19且不是问卷页面，则强制导航到P19
-    // 这可以处理刷新后回到错误页面的情况，但允许问卷页面正常显示
-    setCurrentPageId('Page_19_Task_Completion');
+  if (isTaskFinished && currentPageId !== 'Page_18_Solution_Selection' && !isQuestionnairePageId(currentPageId)) {
+    // 如果任务已标记为完成，但当前页面不是最终页且不是问卷页面，则强制回落到最终页
+    setCurrentPageId('Page_18_Solution_Selection');
   }
 
   // 任务进行中，显示计时器和页面路由器（注意事项页面开始显示计时器）

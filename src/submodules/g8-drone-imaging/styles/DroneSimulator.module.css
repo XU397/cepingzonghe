@@ -194,34 +194,47 @@
 }
 
 .arrowBtn {
-  width: 28px;
+  width: 24px;
   height: 18px;
-  background: #ddd;
-  border-radius: 4px;
-  border: 1px solid #999;
+  border: none;
+  border-radius: 2px;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: background 0.1s;
+  transition: all 0.2s ease;
 }
 
-.arrowBtn:active {
-  background: #bbb;
+.arrowBtn:disabled {
+  background: #cfd8dc;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .arrowBtn svg {
-  width: 12px;
-  height: 12px;
-  fill: #555;
+  width: 10px;
+  height: 10px;
+  fill: white;
 }
 
-.arrowUp svg {
-  fill: #d32f2f;
+/* 向上箭头 - 红色渐变 */
+.arrowUp {
+  background: linear-gradient(to bottom, #ff6b6b, #ee5a52);
 }
 
-.arrowDown svg {
-  fill: #1976d2;
+.arrowUp:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #ff8787, #ff6b6b);
+  transform: translateY(-1px);
+}
+
+/* 向下箭头 - 蓝色渐变 */
+.arrowDown {
+  background: linear-gradient(to bottom, #4fc3f7, #039be5);
+}
+
+.arrowDown:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #6dd5f9, #4fc3f7);
+  transform: translateY(-1px);
 }
 
 .focalDisplay {

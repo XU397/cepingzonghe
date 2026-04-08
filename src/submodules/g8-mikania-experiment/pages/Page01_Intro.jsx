@@ -4,42 +4,18 @@
  * 介绍薇甘菊入侵问题和菟丝子防治方法
  */
 
-import { useEffect, useMemo } from 'react';
 import { EventTypes } from '@shared/services/submission/eventTypes';
-import { getPageSubNum } from '../mapping';
+import { isReservedElement } from '@shared/services/submission/submoduleAdapter';
 import { useMikaniaExperiment } from '../Component';
 import styles from '../styles/Page01_Intro.module.css';
 import mikaniaImage from '../assets/images/薇甘菊.jpg';
 import cuscutaImage from '../assets/images/菟丝子.jpg';
 
 function Page01Intro() {
-  const { state, logOperation, flowContext } = useMikaniaExperiment();
+  const { logOperation, targetPrefix } = useMikaniaExperiment();
 
-  const subPageNum = getPageSubNum(state.currentPageId);
-  const flowStepIndex = flowContext?.stepIndex;
-  const pageNumber = useMemo(() => {
-    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
-  }, [flowStepIndex, subPageNum]);
-  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
-  const pageTarget = `${targetPrefix}页面`;
-  const nextButtonTarget = `${targetPrefix}下一页按钮`;
-
-  // 记录页面进入
-  useEffect(() => {
-    logOperation({
-      targetElement: pageTarget,
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'page_01_intro',
-    });
-
-    return () => {
-      logOperation({
-        targetElement: pageTarget,
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'page_01_intro',
-      });
-    };
-  }, [logOperation, pageTarget]);
+  const pageTargetPrefix = targetPrefix || '';
+  const nextButtonTarget = isReservedElement('下一页按钮') ? '下一页按钮' : `${pageTargetPrefix}下一页按钮`;
 
   // 处理下一页点击（由 Frame 调用）
   const handleNext = () => {
@@ -79,7 +55,7 @@ function Page01Intro() {
                 防治方案
               </h3>
               <p className={styles.highlightText}>
-                在研究其生物防治方法时，科学家们发现可以引入菟丝子（一种寄生植物）来抑制薇甘菊的生长。菟丝子会寄生在薇甘菊上，吸取其养分，从而达到控制薇甘菊蔓延的目的。让我们通过实验来探究菟丝子对薇甘菊种子萌发的影响。
+                在研究其生物防治方法时，科学家们发现可以引入菟丝子（读音：tù sī zǐ，一种寄生植物）来抑制薇甘菊的生长。菟丝子会寄生在薇甘菊上，吸取其养分，从而达到控制薇甘菊蔓延的目的。让我们通过实验来探究菟丝子对薇甘菊种子萌发的影响。
               </p>
             </div>
           </div>

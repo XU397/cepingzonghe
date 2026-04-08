@@ -1,6 +1,6 @@
 {
-  "pageNumber": "0.4",
-  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/0] 自由探索实验（超时自动提交）",
+  "pageNumber": "1.04",
+  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/1.04] 自由探索实验（超时自动提交）",
   "operationList": [
     {
       "code": 1,
@@ -27,7 +27,7 @@
       "code": 4,
       "targetElement": "flow_context",
       "eventType": "auto_submit",
-      "value": "{\"reason\":\"timer_expired\",\"currentPage\":\"0.4\"}",
+      "value": "{\"reason\":\"timer_expired\",\"currentPage\":\"1.04\"}",
       "time": "2025-02-01 09:20:00"
     },
     {
@@ -41,7 +41,7 @@
       "code": 6,
       "targetElement": "flow_context",
       "eventType": "page_submit_success",
-      "value": "{\"pageNumber\":\"0.4\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/0] 自由探索实验（超时自动提交）\",\"auto_submit\":true}",
+      "value": "{\"pageNumber\":\"1.04\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/1.04] 自由探索实验（超时自动提交）\",\"auto_submit\":true}",
       "time": "2025-02-01 09:20:00"
     }
   ],

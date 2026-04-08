@@ -4,9 +4,9 @@
  * 38秒倒计时后可勾选确认，勾选后可点击下一页
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EventTypes } from '@shared/services/submission/eventTypes';
-import { getPageSubNum } from '../mapping';
+import { isReservedElement } from '@shared/services/submission/submoduleAdapter';
 import { useMikaniaExperiment } from '../Component';
 import styles from '../styles/Page00_Notice.module.css';
 
@@ -18,38 +18,16 @@ function Page00Notice() {
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
-    flowContext,
+    targetPrefix,
+    taskDurationMinutes,
   } = useMikaniaExperiment();
 
   const { noticeCountdown, noticeConfirmed } = state;
   const [showError, setShowError] = useState(false);
 
-  const subPageNum = getPageSubNum(state.currentPageId);
-  const flowStepIndex = flowContext?.stepIndex;
-  const pageNumber = useMemo(() => {
-    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
-  }, [flowStepIndex, subPageNum]);
-  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
-  const checkboxTarget = `${targetPrefix}注意事项确认`;
-  const nextButtonTarget = `${targetPrefix}下一页按钮`;
-  const pageTarget = `${targetPrefix}页面`;
-
-  // 记录页面进入/退出
-  useEffect(() => {
-    logOperation({
-      targetElement: pageTarget,
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'page_00_notice',
-    });
-
-    return () => {
-      logOperation({
-        targetElement: pageTarget,
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'page_00_notice',
-      });
-    };
-  }, [logOperation, pageTarget]);
+  const pageTargetPrefix = targetPrefix || '';
+  const checkboxTarget = `${pageTargetPrefix}注意事项确认`;
+  const nextButtonTarget = isReservedElement('下一页按钮') ? '下一页按钮' : `${pageTargetPrefix}下一页按钮`;
 
   // 倒计时逻辑
   useEffect(() => {
@@ -124,7 +102,7 @@ function Page00Notice() {
       <div className={styles.contentWrapper}>
         {/* 标题区域 */}
         <div className={styles.titleSection}>
-          <h1 className={styles.title}>薇甘菊防治实验</h1>
+          <h1 className={styles.title}>薇甘菊防治科学探究</h1>
           <div className={styles.titleUnderline}></div>
         </div>
 
@@ -132,7 +110,7 @@ function Page00Notice() {
         <div className={styles.noticeCard}>
           <span className={styles.readLabel}>请仔细阅读</span>
           <ul className={styles.noticeList}>
-            <li>作答时间共<span className={styles.highlight}>20分钟</span>，时间结束后，系统将自动跳转到下一个测评环节。</li>
+            <li>本次测试一共两个任务，作答时间共<span className={styles.highlight}>{taskDurationMinutes}分钟</span>，当前是第一个任务，大约需要<span className={styles.highlight}>20分钟</span>完成，请注意时间分配。</li>
             <li>请按顺序回答每页问题，上一页题目未完成作答，将无法点击进入下一页。</li>
             <li style={{ fontSize: '20px' }}>答题时，<span className={styles.underline}>不要提前点击&quot;下一页&quot;</span>查看后面的内容，<span className={styles.underline}>否则将无法返回上一页</span>。</li>
             <li>遇到系统故障、死机、死循环等特殊情况时，请举手示意老师。</li>

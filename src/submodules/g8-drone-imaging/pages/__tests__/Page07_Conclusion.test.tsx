@@ -30,7 +30,7 @@ function renderPage(initialPageId: PageId = 'conclusion') {
 }
 
 const STEP_INDEX = 0;
-const CONCLUSION_PREFIX = `P${encodeCompositePageNum(STEP_INDEX, 7)}_`;
+const CONCLUSION_PREFIX = `P${encodeCompositePageNum(STEP_INDEX + 1, 7)}_`;
 const PRIORITY_FACTOR_ID = `${CONCLUSION_PREFIX}优先调整因素`;
 const PRIORITY_REASON_ID = `${CONCLUSION_PREFIX}理由说明`;
 

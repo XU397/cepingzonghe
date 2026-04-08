@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useRef } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 import { useAppContext } from '../context/AppContext';
 import NavigationButton from '../components/common/NavigationButton';
 import xiaomingImage from '../assets/images/04-2.png';
@@ -22,7 +23,10 @@ const HypothesisFocusPage = () => {
   const pageLoadedRef = useRef(false);
   const operationsRef = useRef([]);
   const recordOperation = useCallback((operation) => {
-    const normalizedOperation = { ...operation };
+    const normalizedOperation = {
+      ...operation,
+      time: formatTimestamp(new Date()),
+    };
     logOperation(normalizedOperation);
     operationsRef.current = [...operationsRef.current, normalizedOperation];
   }, [logOperation]);
@@ -41,7 +45,7 @@ const HypothesisFocusPage = () => {
   const handleNextPage = useCallback(async () => {
     recordOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_next',
+      targetElement: 'next_button',
       value: '跳转到方案设计页面'
     });
     

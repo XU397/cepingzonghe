@@ -13,8 +13,8 @@ describe('submission format snapshot', () => {
     const { pageNumber, targetPrefix } = createSubmissionFixture();
     const validatedMark = buildValidatedMark();
 
-    expect(pageNumber).toBe('0.3');
-    expect(pageNumber).toBe(encodeCompositePageNum(0, 3));
+    expect(pageNumber).toBe('1.03');
+    expect(pageNumber).toBe(encodeCompositePageNum(1, 3));
     expect(pageNumber).not.toBe('M0:3');
 
     const flowContextOperation = validatedMark.operationList.find(
@@ -82,16 +82,16 @@ describe('submission format snapshot', () => {
           "answers": [
             {
               "code": 1,
-              "targetElement": "P0.3_Q1",
+              "targetElement": "P1.03_Q1",
               "value": "50kg 尿素",
             },
             {
               "code": 2,
-              "targetElement": "P0.3_Q2",
+              "targetElement": "P1.03_Q2",
               "value": "保持土壤湿润",
             },
           ],
-          "encodedPageNumber": "0.3",
+          "encodedPageNumber": "1.03",
           "flowContextOperation": {
             "code": 5,
             "eventType": "flow_context",
@@ -110,7 +110,7 @@ describe('submission format snapshot', () => {
               "code": 2,
               "eventType": "input_focus",
               "pageId": "fertilizer-planning",
-              "targetElement": "P0.3_Q1",
+              "targetElement": "P1.03_Q1",
               "time": "2024-12-01 10:00:05",
               "value": "",
             },
@@ -118,7 +118,7 @@ describe('submission format snapshot', () => {
               "code": 3,
               "eventType": "input_change",
               "pageId": "fertilizer-planning",
-              "targetElement": "P0.3_Q1",
+              "targetElement": "P1.03_Q1",
               "time": "2024-12-01 10:00:08",
               "value": {
                 "next": "50kg 尿素",
@@ -129,7 +129,7 @@ describe('submission format snapshot', () => {
               "code": 4,
               "eventType": "input_blur",
               "pageId": "fertilizer-planning",
-              "targetElement": "P0.3_Q1",
+              "targetElement": "P1.03_Q1",
               "time": "2024-12-01 10:00:12",
               "value": "",
             },
@@ -141,25 +141,25 @@ describe('submission format snapshot', () => {
             "page_exit": true,
           },
           "nonFlowTargets": [
-            "P0.3_PAGE",
-            "P0.3_Q1",
-            "P0.3_Q1",
-            "P0.3_Q1",
-            "P0.3_NEXT",
-            "P0.3_EXIT",
+            "P1.03_PAGE",
+            "P1.03_Q1",
+            "P1.03_Q1",
+            "P1.03_Q1",
+            "P1.03_NEXT",
+            "P1.03_EXIT",
           ],
-          "targetPrefix": "P0.3_",
+          "targetPrefix": "P1.03_",
         },
         "mark": {
           "answerList": [
             {
               "code": 1,
-              "targetElement": "P0.3_Q1",
+              "targetElement": "P1.03_Q1",
               "value": "50kg 尿素",
             },
             {
               "code": 2,
-              "targetElement": "P0.3_Q2",
+              "targetElement": "P1.03_Q2",
               "value": "保持土壤湿润",
             },
           ],
@@ -171,7 +171,7 @@ describe('submission format snapshot', () => {
               "code": 1,
               "eventType": "page_enter",
               "pageId": "fertilizer-planning",
-              "targetElement": "P0.3_PAGE",
+              "targetElement": "P1.03_PAGE",
               "time": "2024-12-01 10:00:00",
               "value": "enter_page",
             },
@@ -179,7 +179,7 @@ describe('submission format snapshot', () => {
               "code": 2,
               "eventType": "input_focus",
               "pageId": "fertilizer-planning",
-              "targetElement": "P0.3_Q1",
+              "targetElement": "P1.03_Q1",
               "time": "2024-12-01 10:00:05",
               "value": "",
             },
@@ -187,7 +187,7 @@ describe('submission format snapshot', () => {
               "code": 3,
               "eventType": "input_change",
               "pageId": "fertilizer-planning",
-              "targetElement": "P0.3_Q1",
+              "targetElement": "P1.03_Q1",
               "time": "2024-12-01 10:00:08",
               "value": {
                 "next": "50kg 尿素",
@@ -198,7 +198,7 @@ describe('submission format snapshot', () => {
               "code": 4,
               "eventType": "input_blur",
               "pageId": "fertilizer-planning",
-              "targetElement": "P0.3_Q1",
+              "targetElement": "P1.03_Q1",
               "time": "2024-12-01 10:00:12",
               "value": "",
             },
@@ -219,7 +219,7 @@ describe('submission format snapshot', () => {
               "code": 6,
               "eventType": "next_click",
               "pageId": "fertilizer-planning",
-              "targetElement": "P0.3_NEXT",
+              "targetElement": "P1.03_NEXT",
               "time": "2024-12-01 10:00:25",
               "value": "go_next",
             },
@@ -227,13 +227,13 @@ describe('submission format snapshot', () => {
               "code": 7,
               "eventType": "page_exit",
               "pageId": "fertilizer-planning",
-              "targetElement": "P0.3_EXIT",
+              "targetElement": "P1.03_EXIT",
               "time": "2024-12-01 10:00:40",
               "value": "exit_to_next",
             },
           ],
           "pageDesc": "[flow-nitrogen/g7-lab/0] 氮肥施用逻辑",
-          "pageNumber": "0.3",
+          "pageNumber": "1.03",
         },
       }
     `);

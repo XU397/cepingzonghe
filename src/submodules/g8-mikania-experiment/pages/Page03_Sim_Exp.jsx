@@ -5,47 +5,24 @@
  * 用户可以操作变量控制实验
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EventTypes } from '@shared/services/submission/eventTypes';
-import { getPageSubNum } from '../mapping';
+import { isReservedElement } from '@shared/services/submission/submoduleAdapter';
 import { useMikaniaExperiment } from '../Component';
 import ExperimentPanel from '../components/ExperimentPanel';
 import styles from '../styles/Page03_Sim_Exp.module.css';
 
 function Page03SimExp() {
   const {
-    state,
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
-    flowContext,
+    targetPrefix,
   } = useMikaniaExperiment();
 
   const [error, setError] = useState('');
-  const subPageNum = getPageSubNum(state.currentPageId);
-  const flowStepIndex = flowContext?.stepIndex;
-  const pageNumber = useMemo(() => {
-    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
-  }, [flowStepIndex, subPageNum]);
-  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
-  const nextButtonTarget = `${targetPrefix}下一页按钮`;
-
-  // 记录页面进入
-  useEffect(() => {
-    logOperation({
-      targetElement: '页面',
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'page_03_sim_exp',
-    });
-
-    return () => {
-      logOperation({
-        targetElement: '页面',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'page_03_sim_exp',
-      });
-    };
-  }, [logOperation]);
+  const pageTargetPrefix = targetPrefix || '';
+  const nextButtonTarget = isReservedElement('下一页按钮') ? '下一页按钮' : `${pageTargetPrefix}下一页按钮`;
 
   // 错误提示自动隐藏：10秒后清除
   useEffect(() => {
@@ -108,7 +85,7 @@ function Page03SimExp() {
           </p>
           <ul className={styles.stepsList}>
             <li className={styles.stepItem}>
-              单击左上方橙色框<span className={styles.sampleConc}>(数字)mg/ml</span>，可设置菟丝子水浸液浓度。
+              单击左上方橙色框<span className={styles.sampleConc}>0mg/ml</span><span className={styles.sampleConc}>5mg/ml</span><span className={styles.sampleConc}>10mg/ml</span>，可设置菟丝子水浸液浓度。
             </li>
             <li className={styles.stepItem}>
               单击下方 <span className={styles.arrowBtnUp}>▲</span><span className={styles.arrowBtnDown}>▼</span> 按钮，可设置处理时间。
@@ -127,7 +104,7 @@ function Page03SimExp() {
 
         {/* Right panel: Experiment area */}
         <div className={styles.rightPanel}>
-          <ExperimentPanel pageNumber={pageNumber} />
+          <ExperimentPanel />
 
           {/* Error message for validation - placed below experiment area */}
           {error && (

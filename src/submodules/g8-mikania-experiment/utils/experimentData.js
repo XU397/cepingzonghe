@@ -32,7 +32,7 @@ export const CONCENTRATION_OPTIONS = [
 export const DAYS_RANGE = {
   min: 1,
   max: 7,
-  default: 1,
+  default: 4,
 };
 
 // 种子总数

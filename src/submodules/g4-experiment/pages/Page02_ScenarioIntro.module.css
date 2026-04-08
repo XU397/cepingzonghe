@@ -1,127 +1,62 @@
-.page {
-  padding: 24px;
-  background: var(--cartoon-bg);
-  min-height: 100%;
-}
+/* Page02_ScenarioIntro.module.css */
 
-.title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--cartoon-dark);
-  margin-bottom: 16px;
-}
-
-.content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.mapCard,
-.textCard {
-  background: var(--cartoon-light);
-  border: 2px solid var(--cartoon-border);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 8px 18px var(--cartoon-shadow);
-}
-
-.mapHeader {
-  font-weight: 700;
-  color: var(--cartoon-dark);
-  margin-bottom: 12px;
-}
-
-.mapPlaceholder {
+/* Main container matching Page01 styles with background */
+.introContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100% !important;
+  min-height: 500px;
+  padding: 20px;
+  background: url('../../../assets/images/g4-1bg.jpg') no-repeat top center;
+  background-size: 100% 100%;
   position: relative;
-  height: 240px;
-  border-radius: 14px;
-  background: linear-gradient(
-    135deg,
-    rgba(89, 193, 255, 0.12),
-    rgba(255, 206, 107, 0.16)
-  );
-  border: 2px dashed var(--cartoon-primary);
-  overflow: hidden;
 }
 
-.markerHome,
-.markerNanchong,
-.markerChengdu {
-  position: absolute;
-  padding: 6px 10px;
-  border-radius: 12px;
-  background: var(--cartoon-primary);
-  color: var(--cartoon-bg);
-  font-weight: 600;
-  font-size: 14px;
-  box-shadow: 0 6px 12px var(--cartoon-shadow);
+/* Content wrapper */
+.introContent {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
-.markerHome {
-  top: 20%;
-  left: 12%;
-}
-
-.markerNanchong {
-  top: 45%;
-  left: 38%;
-  background: var(--cartoon-green);
-}
-
-.markerChengdu {
-  bottom: 18%;
-  right: 10%;
-  background: var(--cartoon-accent);
-}
-
-.mapHint {
-  margin-top: 12px;
-  color: var(--cartoon-dark);
-  font-size: 14px;
+/* Semi-transparent text block */
+.textBlock {
+  background: rgba(255, 255, 255, 0.9);
+  /* Semi-transparent white */
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(5px);
+  /* specific glassmorphism touch */
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  margin-top: -230px;
+  height: 150px;
 }
 
 .scenarioText {
-  font-size: 16px;
-  color: var(--text-color);
-  line-height: 1.6;
+  font-size: 20px;
+  line-height: 1.8;
+  color: #333;
+  font-weight: 500;
+  margin: 0;
+  text-align: justify;
 }
 
-.note {
-  margin-top: 12px;
-  color: var(--cartoon-dark);
-  font-weight: 600;
-}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .textBlock {
+    padding: 24px;
+    margin: 0 16px;
+  }
 
-.actions {
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.nextButton {
-  background: var(--cartoon-primary);
-  color: var(--cartoon-bg);
-  border: none;
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: 700;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 6px 12px var(--cartoon-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.nextButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 16px var(--cartoon-shadow);
-}
-
-.nextButton:disabled {
-  background: var(--border-color);
-  color: var(--text-color);
-  opacity: 0.6;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+  .scenarioText {
+    font-size: 16px;
+  }
 }

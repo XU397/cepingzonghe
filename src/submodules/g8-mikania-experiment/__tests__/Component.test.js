@@ -14,11 +14,16 @@ const buildState = (overrides = {}) => {
     noticeCountdown: 38,
     noticeConfirmed: false,
     answers: { ...defaultAnswers },
+    experimentState: { history: [] },
     ...overrides,
   };
 
   if (overrides.answers) {
     state.answers = { ...defaultAnswers, ...overrides.answers };
+  }
+
+  if (overrides.experimentState) {
+    state.experimentState = { history: [], ...overrides.experimentState };
   }
 
   return state;
@@ -103,7 +108,12 @@ describe('Component exports', () => {
 
     it('always允许无必填要求的页面通过', () => {
       expect(validatePage('page_01_intro', buildState())).toBe(true);
-      expect(validatePage('page_03_sim_exp', buildState())).toBe(true);
+      expect(
+        validatePage(
+          'page_03_sim_exp',
+          buildState({ experimentState: { history: [{ concentration: '5mg/ml', days: 3 }] } }),
+        ),
+      ).toBe(true);
       expect(validatePage('unknown', buildState())).toBe(true);
     });
   });

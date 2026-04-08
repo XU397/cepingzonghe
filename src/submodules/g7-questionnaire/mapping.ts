@@ -30,7 +30,10 @@ export function getTotalSteps(): number {
   return getTotalPages(PAGE_MAPPING);
 }
 
-export function getNavigationMode(pageId: string): 'experiment' | 'questionnaire' {
+export function getNavigationMode(pageId: string): 'experiment' | 'questionnaire' | 'hidden' {
+  if (pageId === 'Page_20_Questionnaire_Intro') {
+    return 'hidden';
+  }
   return 'questionnaire';
 }
 

@@ -1,0 +1,1130 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px 40px;
+  background: #f5f7fb;
+  position: relative;
+}
+
+.pageContainer::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pageContainer::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+}
+
+.badge {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23px;
+  font-weight: 700;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(245, 158, 11, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.instructionCard {
+  background: white;
+  border: 2px solid #fde68a;
+  border-radius: 14px;
+  padding: 16px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(146, 64, 14, 0.06);
+  position: relative;
+  z-index: 1;
+  animation: slideInUp 0.5s ease-out 0.1s both;
+}
+
+.instructionText {
+  font-size: 20px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  text-indent: 2em;
+}
+
+.instructionText strong {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+}
+
+.leftPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideInUp 0.5s ease-out 0.2s both;
+}
+
+.infoCenter {
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 2px solid rgba(245, 158, 11, 0.2);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.1);
+}
+
+.infoButton {
+  background: #ffffff;
+  border: 2px solid #fde68a;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 20px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(146, 64, 14, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.infoButton:hover {
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.15);
+}
+
+.infoButton:active {
+  transform: translateY(0);
+}
+
+.buttonIcon {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.buttonText {
+  flex: 1;
+  text-align: left;
+}
+
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  animation: slideInUp 0.5s ease-out 0.3s both;
+}
+
+.taskSection {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border: 2px solid #fde68a;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(146, 64, 14, 0.04);
+}
+
+.taskDescription {
+  font-size: 18px;
+  color: #333;
+  line-height: 1.8;
+  margin: 0 0 16px;
+  text-indent: 2em;
+}
+
+.checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.checkboxOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #fefce8;
+  border: 2px solid #fde68a;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkboxOption:hover {
+  background: #fef9c3;
+  border-color: rgba(245, 158, 11, 0.3);
+  transform: translateX(4px);
+}
+
+.checkboxSelected {
+  background: #dcfce7;
+  border-color: #4ade80;
+  box-shadow: 0 2px 8px rgba(74, 222, 128, 0.25);
+}
+
+.checkboxSelected .factorLabel {
+  color: #166534;
+  font-weight: 700;
+}
+
+.factorCheckbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #22c55e;
+  flex-shrink: 0;
+}
+
+.factorLabel {
+  font-size: 18px;
+  color: #333;
+  cursor: pointer;
+  flex: 1;
+}
+
+.overlayBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: overlayFadeIn 0.3s ease;
+}
+
+.overlayCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 1000px;
+  max-height: 95vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease;
+  width: 95vw;
+}
+
+.overlayBackdropMap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0;
+}
+
+.overlayCardWide {
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  max-width: none;
+  max-height: none;
+  margin: 8px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.overlayCardWide .overlayHeader {
+  flex-shrink: 0;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+}
+
+.overlayCardWide .overlayBody {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.overlayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #fde68a;
+  padding-bottom: 16px;
+}
+
+.overlayTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+}
+
+.overlayCloseBtn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(255, 107, 107, 0.3);
+}
+
+.overlayCloseBtn:hover {
+  transform: rotate(90deg);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.overlayBody {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.layerOneGrid {
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.layerOneCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.layerOneText {
+  font-size: 17px;
+  line-height: 1.85;
+  color: #374151;
+  margin: 0;
+  text-indent: 2em;
+}
+
+.layerOneImage {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.layerTwoContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.layerTwoText {
+  font-size: 15px;
+  line-height: 1.85;
+  color: #374151;
+  margin: 0;
+  text-indent: 2em;
+}
+
+.layerTwoTextHighlight {
+  font-weight: 600;
+  color: #92400e;
+}
+
+.reviewContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reviewImage {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.reviewBlock {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.reviewUserRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.reviewAvatar {
+  width: auto;
+  height: auto;
+  max-width: 240px;
+  max-height: 74px;
+  object-fit: contain;
+}
+
+.reviewUserName {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 20px;
+}
+
+.reviewText {
+  font-size: 20px;
+  line-height: 1.7;
+  color: #374151;
+  margin: 0;
+  text-indent: 2em;
+}
+
+.reviewReplyBlock {
+  background: #fffbeb;
+  border-radius: 12px;
+  padding: 16px 20px;
+  border-left: 4px solid #f59e0b;
+}
+
+.replyLabel {
+  font-size: 20px;
+  font-weight: 700;
+  color: #d97706;
+  margin-bottom: 8px;
+}
+
+.guideContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.guideImage {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.guideSection {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fefce8;
+  border-radius: 10px;
+  border-left: 4px solid #f59e0b;
+}
+
+.guideSectionIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.guideSectionContent {
+  flex: 1;
+}
+
+.guideSectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0 0 4px;
+}
+
+.guideSectionText {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #374151;
+  margin: 0;
+}
+
+.newsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.newsImage {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.newsText {
+  font-size: 20px;
+  line-height: 1.85;
+  color: #374151;
+  margin: 0;
+  text-indent: 2em;
+}
+
+.temperatureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.temperatureCard {
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.temperatureCardCold {
+  background: #dbeafe;
+  border: 2px solid #93c5fd;
+}
+
+.temperatureCardHot {
+  background: #fee2e2;
+  border: 2px solid #fca5a5;
+}
+
+.temperatureCardIdeal {
+  background: #dcfce7;
+  border: 2px solid #86efac;
+}
+
+.temperatureLabel {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.temperatureLabelCold {
+  color: #1e40af;
+}
+
+.temperatureLabelHot {
+  color: #991b1b;
+}
+
+.temperatureLabelIdeal {
+  color: #166534;
+}
+
+.temperatureImage {
+  width: 100%;
+  max-height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.temperatureDesc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #374151;
+  margin: 0;
+}
+
+.infoButtonViewed {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+.layerTwoMapPlaceholder {
+  width: 100%;
+  min-height: 200px;
+  background: #eff6ff;
+  border: 2px dashed #93c5fd;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3b82f6;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 20px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .instructionCard,
+  .leftPanel,
+  .rightPanel {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .checkboxOption:hover,
+  .infoButton:hover {
+    transform: none;
+  }
+}
+
+@media (max-height: 800px) {
+  .pageContainer {
+    padding: 16px 30px;
+  }
+
+  .badge {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .instructionCard {
+    padding: 12px 18px;
+    margin-bottom: 14px;
+  }
+
+  .instructionText {
+    font-size: 13px;
+  }
+
+  .content {
+    gap: 16px;
+  }
+
+  .infoCenter {
+    padding: 16px;
+    gap: 10px;
+  }
+
+  .infoButton {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .taskSection {
+    padding: 16px;
+  }
+
+  .taskDescription {
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .checkboxOption {
+    padding: 8px 12px;
+  }
+
+  .factorLabel {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 16px 24px;
+  }
+
+  .content {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .leftPanel,
+  .rightPanel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 16px 20px;
+  }
+
+  .header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .infoCenter {
+    padding: 14px;
+    gap: 8px;
+  }
+
+  .infoButton {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .taskSection {
+    padding: 14px;
+  }
+
+  .taskDescription {
+    font-size: 13px;
+  }
+
+  .overlayCard {
+    padding: 20px;
+    margin: 16px;
+  }
+}
+
+/* ==========================================
+   翻书效果 - 果店员工宝典 (OverlayContentLayer4)
+   ========================================== */
+
+.bookContainer {
+  display: flex;
+  position: relative;
+  background: linear-gradient(135deg, #8b6f47 0%, #6b5335 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 32px rgba(107, 83, 53, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: bookAppear 0.5s ease-out;
+}
+
+.bookPage {
+  flex: 1;
+  background: #fefce8;
+  padding: 28px 32px;
+  position: relative;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.leftPage {
+  border-radius: 12px 0 0 12px;
+  box-shadow:
+    inset -8px 0 16px -4px rgba(0, 0, 0, 0.06),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.6);
+  background: linear-gradient(105deg, transparent 40%, rgba(139, 111, 71, 0.03) 100%), #fefce8;
+}
+
+.leftPage::after {
+  content: '37';
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  font-size: 13px;
+  color: #a8a29e;
+  font-style: italic;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.rightPage {
+  border-radius: 0 12px 12px 0;
+  box-shadow:
+    inset 8px 0 16px -4px rgba(0, 0, 0, 0.06),
+    inset -2px 2px 6px rgba(255, 255, 255, 0.6);
+  background: linear-gradient(255deg, transparent 40%, rgba(139, 111, 71, 0.03) 100%), #fefce8;
+}
+
+.rightPage::after {
+  content: '38';
+  position: absolute;
+  bottom: 16px;
+  left: 20px;
+  font-size: 13px;
+  color: #a8a29e;
+  font-style: italic;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.bookSpine {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(0, 0, 0, 0.04) 30%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(0, 0, 0, 0.04) 70%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+.bookSpine::before,
+.bookSpine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 12px;
+  height: 100%;
+}
+
+.bookSpine::before {
+  right: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05));
+}
+
+.bookSpine::after {
+  left: 100%;
+  background: linear-gradient(270deg, transparent, rgba(0, 0, 0, 0.05));
+}
+
+.pageHeader {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(139, 111, 71, 0.15);
+  position: relative;
+}
+
+.pageHeaderIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 8px;
+  font-size: 18px;
+  margin-right: 8px;
+  vertical-align: middle;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+}
+
+.pageHeaderText {
+  font-size: 18px;
+  font-weight: 700;
+  color: #78350f;
+  font-family: 'Georgia', 'Noto Serif SC', 'SimSun', serif;
+  letter-spacing: 2px;
+  vertical-align: middle;
+}
+
+.pageContent {
+  flex: 1;
+  padding: 0 4px;
+}
+
+.bookGuideSection {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(254, 243, 199, 0.6);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-left: 3px solid #d97706;
+  transition: background 0.2s ease;
+}
+
+.bookGuideSection:hover {
+  background: rgba(254, 243, 199, 0.9);
+}
+
+.bookGuideCheck {
+  font-size: 18px;
+  font-weight: 700;
+  color: #92400e;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.bookGuideSectionTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0 0 4px;
+}
+
+.bookGuideSectionText {
+  font-size: 20px;
+  line-height: 1.7;
+  color: #44403c;
+  margin: 0;
+}
+
+.bookSingleImage {
+  width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin: 8px 0 12px;
+}
+
+.bookRightPageImage {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.bookTemperatureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.bookTemperatureCard {
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s ease;
+}
+
+.bookTemperatureCard:hover {
+  transform: translateY(-2px);
+}
+
+.bookTemperatureCardCold {
+  background: #dbeafe;
+  border: 1.5px solid #93c5fd;
+}
+
+.bookTemperatureCardHot {
+  background: #fee2e2;
+  border: 1.5px solid #fca5a5;
+}
+
+.bookTemperatureCardIdeal {
+  background: #dcfce7;
+  border: 1.5px solid #86efac;
+}
+
+.bookTemperatureLabel {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.bookTemperatureLabelCold {
+  color: #1e40af;
+}
+
+.bookTemperatureLabelHot {
+  color: #991b1b;
+}
+
+.bookTemperatureLabelIdeal {
+  color: #166534;
+}
+
+.bookTemperatureImage {
+  width: 100%;
+  max-height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.bookTemperatureDesc {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #44403c;
+  margin: 0;
+}
+
+.bookImageRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.bookGuideImage {
+  flex: 1;
+  width: 100%;
+  max-height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes bookAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) perspective(800px) rotateY(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) perspective(800px) rotateY(0deg);
+  }
+}
+
+/* 翻书效果响应式 */
+@media (max-width: 768px) {
+  .bookContainer {
+    flex-direction: column;
+  }
+
+  .leftPage {
+    border-radius: 12px 12px 0 0;
+  }
+
+  .rightPage {
+    border-radius: 0 0 12px 12px;
+  }
+
+  .bookSpine {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.12) 0%,
+      rgba(0, 0, 0, 0.04) 30%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(0, 0, 0, 0.04) 70%,
+      rgba(0, 0, 0, 0.12) 100%
+    );
+  }
+
+  .bookSpine::before,
+  .bookSpine::after {
+    top: auto;
+    width: 100%;
+    height: 12px;
+  }
+
+  .bookSpine::before {
+    bottom: 100%;
+    right: auto;
+    background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.05));
+  }
+
+  .bookSpine::after {
+    top: 100%;
+    left: auto;
+    background: linear-gradient(0deg, transparent, rgba(0, 0, 0, 0.05));
+  }
+
+  .bookTemperatureGrid {
+    grid-template-columns: 1fr;
+  }
+}

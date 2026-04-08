@@ -5,7 +5,7 @@
  * 包含: 4个量筒(带小球动画) + 时间显示条 + 温度控制 + 控制按钮
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styles from '../../styles/IntegratedExperimentPanel.module.css';
 
@@ -14,7 +14,7 @@ const IntegratedExperimentPanel = ({
   temperatureOptions = [25, 30, 35, 40, 45],
   onExperimentStart,
   onExperimentComplete,
-  onReset
+  onReset,
 }) => {
   // 当前选中的温度
   const [selectedTemperature, setSelectedTemperature] = useState(25);
@@ -25,18 +25,20 @@ const IntegratedExperimentPanel = ({
       waterContent: wc,
       fallTime: 0,
       isAnimating: false,
-      hasCompleted: false
+      hasCompleted: false,
     }))
   );
 
   // 重置所有量筒
   const handleReset = useCallback(() => {
-    setBeakerStates(waterContentOptions.map(wc => ({
-      waterContent: wc,
-      fallTime: 0,
-      isAnimating: false,
-      hasCompleted: false
-    })));
+    setBeakerStates(
+      waterContentOptions.map(wc => ({
+        waterContent: wc,
+        fallTime: 0,
+        isAnimating: false,
+        hasCompleted: false,
+      }))
+    );
 
     if (onReset) {
       onReset();
@@ -53,23 +55,27 @@ const IntegratedExperimentPanel = ({
       });
 
       // 更新所有量筒状态为动画中
-      setBeakerStates(experimentData.map(data => ({
-        waterContent: data.waterContent,
-        fallTime: data.fallTime,
-        isAnimating: true,
-        hasCompleted: false
-      })));
+      setBeakerStates(
+        experimentData.map(data => ({
+          waterContent: data.waterContent,
+          fallTime: data.fallTime,
+          isAnimating: true,
+          hasCompleted: false,
+        }))
+      );
 
       // 找到最长的下落时间
       const maxFallTime = Math.max(...experimentData.map(d => d.fallTime));
 
       // 在最长时间后标记所有动画完成
       setTimeout(() => {
-        setBeakerStates(prev => prev.map(state => ({
-          ...state,
-          isAnimating: false,
-          hasCompleted: true
-        })));
+        setBeakerStates(prev =>
+          prev.map(state => ({
+            ...state,
+            isAnimating: false,
+            hasCompleted: true,
+          }))
+        );
 
         if (onExperimentComplete) {
           onExperimentComplete(experimentData);
@@ -88,7 +94,7 @@ const IntegratedExperimentPanel = ({
         {/* 横向管子 - 贯穿所有量筒上方 */}
         <div className={styles.horizontalBar}></div>
 
-        {beakerStates.map((beaker) => (
+        {beakerStates.map(beaker => (
           <BeakerWithBall
             key={beaker.waterContent}
             waterContent={beaker.waterContent}
@@ -103,7 +109,7 @@ const IntegratedExperimentPanel = ({
       <div className={styles.timeBar}>
         <div className={styles.timeLabel}>时间</div>
         <div className={styles.timeValues}>
-          {beakerStates.map((beaker) => (
+          {beakerStates.map(beaker => (
             <div key={beaker.waterContent} className={styles.timeValue}>
               {beaker.hasCompleted ? beaker.fallTime.toFixed(1) : '0.0'}
             </div>
@@ -150,12 +156,12 @@ const IntegratedExperimentPanel = ({
  * 含水量越高，黏度越低，颜色越浅
  * 使用更明亮的黄色系
  */
-const getHoneyColor = (waterContent) => {
+const getHoneyColor = waterContent => {
   const colorMap = {
     15: 'linear-gradient(180deg, #F0C05A 0%, #E5A839 100%)', // 明亮深金黄色
     17: 'linear-gradient(180deg, #F5D76E 0%, #EFBC47 100%)', // 明亮中深金黄色
     19: 'linear-gradient(180deg, #FFE082 0%, #FFD54F 100%)', // 明亮中浅金黄色
-    21: 'linear-gradient(180deg, #FFEB99 0%, #FFE066 100%)'  // 明亮浅金黄色
+    21: 'linear-gradient(180deg, #FFEB99 0%, #FFE066 100%)', // 明亮浅金黄色
   };
   return colorMap[waterContent] || 'linear-gradient(180deg, #F5D76E 0%, #EFBC47 100%)';
 };
@@ -165,11 +171,26 @@ const getHoneyColor = (waterContent) => {
  */
 const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) => {
   const [ballPosition, setBallPosition] = useState(0); // 0% to 100%
+  const beakerRef = useRef(null);
+  const ballRef = useRef(null);
+
+  const getMaxBallTopPercent = useCallback(() => {
+    const beakerHeight = beakerRef.current?.clientHeight;
+    const ballHeight = ballRef.current?.clientHeight;
+
+    if (!beakerHeight || !ballHeight || beakerHeight <= ballHeight) {
+      return 91;
+    }
+
+    return ((beakerHeight - ballHeight) / beakerHeight) * 100;
+  }, []);
 
   useEffect(() => {
     if (isAnimating && fallTime > 0) {
-      // 小球从量筒顶部（1%）开始下落到底部（94%）
-      setBallPosition(1);
+      const startTopPercent = 1;
+      const endTopPercent = getMaxBallTopPercent();
+
+      setBallPosition(startTopPercent);
 
       // 启动动画
       const startTime = Date.now();
@@ -178,8 +199,7 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
       const animate = () => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        // 从 1% 到 94%
-        setBallPosition(1 + progress * 93);
+        setBallPosition(startTopPercent + progress * (endTopPercent - startTopPercent));
 
         if (progress < 1) {
           requestAnimationFrame(animate);
@@ -188,7 +208,7 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
 
       requestAnimationFrame(animate);
     }
-  }, [isAnimating, fallTime]);
+  }, [isAnimating, fallTime, getMaxBallTopPercent]);
 
   // 重置或初始状态时，确保小球位于量筒顶部，清晰可见
   useEffect(() => {
@@ -205,7 +225,7 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
       </div>
 
       {/* 量筒外框 */}
-      <div className={styles.beaker}>
+      <div className={styles.beaker} ref={beakerRef}>
         {/* 刻度线 */}
         <div className={styles.scales}>
           {[200, 150, 100, 50].map(mark => (
@@ -220,18 +240,20 @@ const BeakerWithBall = ({ waterContent, fallTime, isAnimating, hasCompleted }) =
           className={styles.honeyLiquid}
           style={{
             height: '90%',
-            background: getHoneyColor(waterContent)
+            background: getHoneyColor(waterContent),
           }}
         />
 
         {/* 小球：初始在量筒外部上方（被夹子夹着），计时开始后下落 */}
         <div
           className={styles.ball}
+          ref={ballRef}
           style={{
-            top: (!isAnimating && !hasCompleted)
-              ? `calc(${ballPosition}% - var(--ball-offset, 44px) + var(--ball-seat, 6px))`
-              : `${ballPosition}%`,
-            transition: isAnimating ? 'none' : 'top 0.3s ease'
+            top:
+              !isAnimating && !hasCompleted
+                ? `calc(${ballPosition}% - var(--ball-offset, 44px) + var(--ball-seat, 6px))`
+                : `${ballPosition}%`,
+            transition: isAnimating ? 'none' : 'top 0.3s ease',
           }}
         />
       </div>
@@ -246,7 +268,7 @@ BeakerWithBall.propTypes = {
   waterContent: PropTypes.number.isRequired,
   fallTime: PropTypes.number.isRequired,
   isAnimating: PropTypes.bool.isRequired,
-  hasCompleted: PropTypes.bool.isRequired
+  hasCompleted: PropTypes.bool.isRequired,
 };
 
 /**
@@ -256,7 +278,7 @@ const TemperatureSelector = ({
   selectedTemperature,
   temperatureOptions,
   onTemperatureChange,
-  disabled
+  disabled,
 }) => {
   const handleDecreaseTemperature = () => {
     const currentIndex = temperatureOptions.indexOf(selectedTemperature);
@@ -288,7 +310,14 @@ const TemperatureSelector = ({
       </button>
       <span className={styles.temperatureDisplay}>
         <span className={styles.thermometerIcon}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+            focusable="false"
+          >
             <rect x="10" y="3" width="4" height="12" rx="2" />
             <circle cx="12" cy="18" r="3" />
           </svg>
@@ -312,7 +341,7 @@ TemperatureSelector.propTypes = {
   selectedTemperature: PropTypes.number.isRequired,
   temperatureOptions: PropTypes.arrayOf(PropTypes.number).isRequired,
   onTemperatureChange: PropTypes.func.isRequired,
-  disabled: PropTypes.bool
+  disabled: PropTypes.bool,
 };
 
 IntegratedExperimentPanel.propTypes = {
@@ -320,7 +349,7 @@ IntegratedExperimentPanel.propTypes = {
   temperatureOptions: PropTypes.arrayOf(PropTypes.number),
   onExperimentStart: PropTypes.func,
   onExperimentComplete: PropTypes.func,
-  onReset: PropTypes.func
+  onReset: PropTypes.func,
 };
 
 export default IntegratedExperimentPanel;

@@ -1,62 +1,45 @@
-/**
- * Page04_Resource - 收集资料与提出猜想页面 (页码 3)
- *
- * 功能:
- * - 显示平板电脑信息中心，包含5个可点击按钮
- * - 点击按钮弹出对应资料的模态窗口
- * - 右侧显示6个复选框选项，至少选择一个后可点击"下一页"
- */
-
 import { useEffect, useCallback, useState } from 'react';
 import { useTrackingContext } from '../context/TrackingContext';
 import PageLayout from '../components/layout/PageLayout';
-import styles from '../styles/ExplorationPages.module.css';
+import styles from '../styles/Page04_Resource.module.css';
 import { PAGE_MAPPING } from '../config.js';
 
-// 引入资料图片
 import brewingImage from '../../../assets/images/蜂蜜酿造流程.png';
 import viscosityImage from '../../../assets/images/黏度原理揭秘.png';
 import qaImage from '../../../assets/images/蜂蜜知识问答.png';
 import storageImage from '../../../assets/images/蜂蜜存储说明.png';
 import adulterationImage from '../../../assets/images/掺假蜂蜜探析.png';
 
-// 资料内容数据
 const RESOURCE_DATA = {
   brewing: {
     title: '蜂蜜酿造流程',
-    content: null, // 使用图片代替文字
-    image: brewingImage
+    image: brewingImage,
   },
   viscosity: {
     title: '黏度原理揭秘',
-    content: null, // 使用图片代替文字
-    image: viscosityImage
+    image: viscosityImage,
   },
   qa: {
     title: '蜂蜜知识问答',
-    content: null, // 使用图片代替文字
-    image: qaImage
+    image: qaImage,
   },
   storage: {
     title: '蜂蜜储存说明',
-    content: null, // 使用图片代替文字
-    image: storageImage
+    image: storageImage,
   },
   adulteration: {
     title: '掺假蜂蜜探析',
-    content: null, // 使用图片代替文字
-    image: adulterationImage
-  }
+    image: adulterationImage,
+  },
 };
 
-// 选项数据
 const OPTIONS = [
   { id: 'temperature', label: '环境温度' },
   { id: 'humidity', label: '环境湿度' },
   { id: 'stirring', label: '人为搅拌' },
   { id: 'fermentation', label: '微生物发酵' },
   { id: 'pourSpeed', label: '倾倒速度' },
-  { id: 'impurities', label: '掺入杂质' }
+  { id: 'impurities', label: '掺入杂质' },
 ];
 
 const Page04_Resource = () => {
@@ -65,22 +48,20 @@ const Page04_Resource = () => {
     logOperation,
     clearOperations,
     navigateToPage,
-    collectAnswer,
     buildMarkObject,
-    submitPageData
+    submitPageData,
   } = useTrackingContext();
-  const [pageStartTime] = useState(() => new Date());
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [currentModal, setCurrentModal] = useState(null);
   const [viewedResources, setViewedResources] = useState([]);
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  // 记录页面进入/退出
   useEffect(() => {
     logOperation({
       action: 'page_enter',
       target: 'Page_03_Resource',
       value: '资料阅读',
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
     });
 
     return () => {
@@ -88,75 +69,75 @@ const Page04_Resource = () => {
         action: 'page_exit',
         target: 'Page_03_Resource',
         value: '资料阅读',
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
       });
     };
   }, [logOperation]);
 
-  // 打开资料模态窗口
-  const handleOpenResource = useCallback((resourceKey) => {
-    setCurrentModal(resourceKey);
+  const handleOpenResource = useCallback(
+    resourceKey => {
+      setCurrentModal(resourceKey);
 
-    if (!viewedResources.includes(resourceKey)) {
-      setViewedResources([...viewedResources, resourceKey]);
-    }
+      if (!viewedResources.includes(resourceKey)) {
+        setViewedResources([...viewedResources, resourceKey]);
+      }
 
-    logOperation({
-      action: 'resource_view',
-      target: `resource_${resourceKey}`,
-      value: RESOURCE_DATA[resourceKey].title,
-      time: new Date().toISOString()
-    });
-  }, [viewedResources, logOperation]);
+      logOperation({
+        action: 'resource_view',
+        target: `resource_${resourceKey}`,
+        value: RESOURCE_DATA[resourceKey].title,
+        time: new Date().toISOString(),
+      });
+    },
+    [viewedResources, logOperation]
+  );
 
-  // 关闭模态窗口
   const handleCloseModal = useCallback(() => {
     if (currentModal) {
       logOperation({
         action: 'modal_close',
         target: `resource_${currentModal}`,
         value: '关闭资料窗口',
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
       });
     }
     setCurrentModal(null);
   }, [currentModal, logOperation]);
 
-  // 处理复选框变化
-  const handleCheckboxChange = useCallback((optionId) => {
-    const newSelected = selectedOptions.includes(optionId)
-      ? selectedOptions.filter(id => id !== optionId)
-      : [...selectedOptions, optionId];
+  const handleCheckboxChange = useCallback(
+    optionId => {
+      const newSelected = selectedOptions.includes(optionId)
+        ? selectedOptions.filter(id => id !== optionId)
+        : [...selectedOptions, optionId];
 
-    setSelectedOptions(newSelected);
+      setSelectedOptions(newSelected);
 
-    logOperation({
-      action: 'checkbox_toggle',
-      target: `option_${optionId}`,
-      value: newSelected.includes(optionId) ? '选中' : '取消选中',
-      time: new Date().toISOString()
-    });
-  }, [selectedOptions, logOperation]);
+      logOperation({
+        action: 'checkbox_toggle',
+        target: `option_${optionId}`,
+        value: newSelected.includes(optionId) ? '选中' : '取消选中',
+        time: new Date().toISOString(),
+      });
+    },
+    [selectedOptions, logOperation]
+  );
 
-  // 处理"下一页"点击
   const handleNextClick = useCallback(async () => {
-    if (selectedOptions.length === 0) {
-      alert('请至少选择一个影响因素');
-      return;
-    }
+    if (isNavigating || selectedOptions.length === 0) return;
 
-    logOperation({
-      action: 'button_click',
-      target: 'next_page_button',
-      value: '下一页',
-      time: new Date().toISOString()
-    });
+    setIsNavigating(true);
 
     try {
-      // 将多选结果逐项写入 answerList（每个选项各占一项）
-      const factorAnswers = selectedOptions.map((id) => ({
+      logOperation({
+        action: 'click_next',
+        target: 'next_button',
+        value: 'page_03_to_page_04',
+        time: new Date().toISOString(),
+      });
+
+      const factorAnswers = selectedOptions.map(id => ({
         targetElement: `factor_${id}`,
-        value: (OPTIONS.find(o => o.id === id)?.label) || id
+        value: OPTIONS.find(o => o.id === id)?.label || id,
       }));
 
       const pageInfo = PAGE_MAPPING[session.currentPage];
@@ -170,48 +151,59 @@ const Page04_Resource = () => {
       if (success) {
         clearOperations();
         await navigateToPage(4);
+      } else {
+        throw new Error('数据提交失败');
       }
     } catch (error) {
       console.error('[Page04_Resource] 导航失败:', error);
       alert(error.message || '页面跳转失败，请重试');
+      setIsNavigating(false);
     }
-  }, [session, selectedOptions, viewedResources, logOperation, submitPageData, clearOperations, navigateToPage, collectAnswer, buildMarkObject]);
+  }, [
+    session,
+    selectedOptions,
+    logOperation,
+    submitPageData,
+    clearOperations,
+    navigateToPage,
+    buildMarkObject,
+    isNavigating,
+  ]);
 
   const canGoNext = selectedOptions.length > 0;
 
   return (
     <PageLayout showNavigation={true} showTimer={true}>
       <div className={styles.pageContainer}>
-        <div className={styles.splitLayout}>
-          {/* 左侧: 信息中心平板 */}
+        <header className={styles.header}>
+          <div className={styles.badge}>3</div>
+          <div className={styles.headerContent}>
+            <h1 className={styles.title}>蜂蜜变稀：资料阅读</h1>
+          </div>
+        </header>
+
+        <div className={styles.instructionCard}>
+          <p className={styles.instructionText}>
+            为探究影响蜂蜜黏度的因素，小明搜集了左侧的五条资料。请点击并查看资料，思考蜂蜜黏度可能与以下哪些因素有关？单击选择你认为可能的选项，再次点击可取消选择（可多选）。
+          </p>
+        </div>
+
+        <div className={styles.content}>
           <div className={styles.leftPanel}>
-            <h2 className={styles.sectionTitle}>蜂蜜变稀：资料阅读</h2>
             <div className={styles.infoCenter}>
-              <button
-                onClick={() => handleOpenResource('brewing')}
-                className={styles.infoButton}
-              >
+              <button onClick={() => handleOpenResource('brewing')} className={styles.infoButton}>
                 <span className={styles.buttonIcon}>🐝</span>
                 <span className={styles.buttonText}>蜂蜜酿造流程</span>
               </button>
-              <button
-                onClick={() => handleOpenResource('qa')}
-                className={styles.infoButton}
-              >
+              <button onClick={() => handleOpenResource('qa')} className={styles.infoButton}>
                 <span className={styles.buttonIcon}>💬</span>
                 <span className={styles.buttonText}>蜂蜜知识问答</span>
               </button>
-              <button
-                onClick={() => handleOpenResource('viscosity')}
-                className={styles.infoButton}
-              >
+              <button onClick={() => handleOpenResource('viscosity')} className={styles.infoButton}>
                 <span className={styles.buttonIcon}>🔬</span>
                 <span className={styles.buttonText}>黏度原理揭秘</span>
               </button>
-              <button
-                onClick={() => handleOpenResource('storage')}
-                className={styles.infoButton}
-              >
+              <button onClick={() => handleOpenResource('storage')} className={styles.infoButton}>
                 <span className={styles.buttonIcon}>📦</span>
                 <span className={styles.buttonText}>蜂蜜储存说明</span>
               </button>
@@ -225,7 +217,6 @@ const Page04_Resource = () => {
             </div>
           </div>
 
-          {/* 右侧: 任务和选项 */}
           <div className={styles.rightPanel}>
             <div className={styles.taskSection}>
               <p className={styles.taskDescription}>
@@ -248,26 +239,33 @@ const Page04_Resource = () => {
           </div>
         </div>
 
-        {/* 下一页按钮 */}
-        <div className={styles.buttonContainer}>
+        <footer className={styles.footer}>
           <button
+            className={styles.btnPrimary}
             onClick={handleNextClick}
-            disabled={!canGoNext}
-            className={`${styles.nextButton} ${canGoNext ? styles.active : styles.disabled}`}
+            disabled={!canGoNext || isNavigating}
+            aria-label="进入下一页"
           >
-            下一页
+            <span>{isNavigating ? '提交中...' : '下一页'}</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </button>
-        </div>
+        </footer>
       </div>
 
-      {/* 资料模态窗口 */}
       {currentModal && (
         <div className={styles.modalOverlay} onClick={handleCloseModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>
-                {RESOURCE_DATA[currentModal].title}
-              </h3>
+              <h3 className={styles.modalTitle}>{RESOURCE_DATA[currentModal].title}</h3>
               <button onClick={handleCloseModal} className={styles.closeButton}>
                 ×
               </button>
@@ -280,9 +278,9 @@ const Page04_Resource = () => {
                   className={styles.modalImage}
                 />
               ) : (
-                RESOURCE_DATA[currentModal].content.split('\n\n').map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))
+                RESOURCE_DATA[currentModal].content
+                  ?.split('\n\n')
+                  .map((paragraph, index) => <p key={index}>{paragraph}</p>)
               )}
             </div>
           </div>
@@ -291,7 +289,5 @@ const Page04_Resource = () => {
     </PageLayout>
   );
 };
-
-// 统一改为由 Provider 进行时间与结构标准化
 
 export default Page04_Resource;

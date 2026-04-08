@@ -1,0 +1,583 @@
+/**
+ * Page04_Resource Styles
+ * 资料阅读页面样式 - 参考 Page07_Design 设计风格
+ */
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px 40px;
+  background: #f5f7fb;
+  position: relative;
+}
+
+/* 装饰背景 */
+.pageContainer::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(89, 193, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pageContainer::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(103, 213, 181, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================================================
+   Header Section
+   ============================================================================ */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+}
+
+.badge {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23px;
+  font-weight: 700;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(103, 213, 181, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #2d5b8e;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* ============================================================================
+   Instruction Card
+   ============================================================================ */
+
+.instructionCard {
+  background: white;
+  border: 2px solid #e3eaf3;
+  border-radius: 14px;
+  padding: 16px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(45, 91, 142, 0.06);
+  position: relative;
+  z-index: 1;
+  animation: slideInUp 0.5s ease-out 0.1s both;
+}
+
+.instructionText {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.instructionText strong {
+  color: #2d5b8e;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   Content Section - 左右分栏布局
+   ============================================================================ */
+
+.content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+}
+
+/* 左侧：信息中心 */
+.leftPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideInUp 0.5s ease-out 0.2s both;
+}
+
+/* 信息中心平板 */
+.infoCenter {
+  background: linear-gradient(135deg, #e8f4fd 0%, #f0e6f5 100%);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 2px solid rgba(89, 193, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(89, 193, 255, 0.1);
+}
+
+.infoButton {
+  background: #ffffff;
+  border: 2px solid #e3eaf3;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(45, 91, 142, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.infoButton:hover {
+  background: #f8fafc;
+  border-color: rgba(89, 193, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(89, 193, 255, 0.15);
+}
+
+.infoButton:active {
+  transform: translateY(0);
+}
+
+.buttonIcon {
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.buttonText {
+  flex: 1;
+  text-align: left;
+}
+
+/* 右侧：任务选项 */
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  animation: slideInUp 0.5s ease-out 0.3s both;
+}
+
+.taskSection {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: white;
+  border: 2px solid #e3eaf3;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(45, 91, 142, 0.04);
+}
+
+.taskDescription {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.8;
+  margin-bottom: 16px;
+  text-indent: 2em;
+}
+
+/* 复选框选项 */
+.checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.checkboxOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 2px solid #e3eaf3;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkboxOption:hover {
+  background: #f0f7ff;
+  border-color: rgba(89, 193, 255, 0.3);
+  transform: translateX(4px);
+}
+
+.checkboxOption input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #59c1ff;
+}
+
+.checkboxOption label {
+  font-size: 15px;
+  color: #333;
+  cursor: pointer;
+  flex: 1;
+}
+
+/* ============================================================================
+   Footer Section
+   ============================================================================ */
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 16px;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease-out 0.5s both;
+}
+
+.btnPrimary {
+  height: 44px;
+  padding: 0 36px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 8px 20px rgba(45, 143, 201, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  top: -2px;
+  box-shadow:
+    0 6px 0 #2d8fc9,
+    0 12px 28px rgba(45, 143, 201, 0.35);
+}
+
+.btnPrimary:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 0 0 #2d8fc9,
+    0 4px 12px rgba(45, 143, 201, 0.25);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnPrimary svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ============================================================================
+   Modal 弹窗
+   ============================================================================ */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modalContent {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 900px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e3eaf3;
+  padding-bottom: 16px;
+}
+
+.modalTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d5b8e;
+  margin: 0;
+}
+
+.closeButton {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(255, 107, 107, 0.3);
+}
+
+.closeButton:hover {
+  transform: rotate(90deg);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.modalBody {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.modalImage {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================================
+   动画关键帧
+   ============================================================================ */
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   减少动画偏好
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .instructionCard,
+  .leftPanel,
+  .rightPanel,
+  .footer {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .checkboxOption:hover,
+  .infoButton:hover,
+  .btnPrimary:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+@media (max-height: 800px) {
+  .pageContainer {
+    padding: 16px 30px;
+  }
+
+  .badge {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .instructionCard {
+    padding: 12px 18px;
+    margin-bottom: 14px;
+  }
+
+  .instructionText {
+    font-size: 13px;
+  }
+
+  .content {
+    gap: 16px;
+  }
+
+  .infoCenter {
+    padding: 16px;
+    gap: 10px;
+  }
+
+  .infoButton {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .taskSection {
+    padding: 16px;
+  }
+
+  .taskDescription {
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .checkboxOption {
+    padding: 8px 12px;
+  }
+
+  .checkboxOption label {
+    font-size: 14px;
+  }
+
+  .footer {
+    padding-top: 12px;
+  }
+
+  .btnPrimary {
+    height: 40px;
+    padding: 0 30px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 16px 24px;
+  }
+
+  .content {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .leftPanel,
+  .rightPanel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 16px 20px;
+  }
+
+  .header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+
+  .infoCenter {
+    padding: 14px;
+    gap: 8px;
+  }
+
+  .infoButton {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .taskSection {
+    padding: 14px;
+  }
+
+  .taskDescription {
+    font-size: 13px;
+  }
+
+  .modalContent {
+    padding: 20px;
+    margin: 16px;
+  }
+}

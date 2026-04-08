@@ -29,29 +29,33 @@ class SubmoduleRegistry {
 
       // 示例：7年级蒸馒头实验
       const { G7ExperimentSubmodule } = await import('./g7-experiment');
-      this.register(G7ExperimentSubmodule);
+      this.register(G7ExperimentSubmodule as unknown as SubmoduleDefinition);
 
       const { G7QuestionnaireSubmodule } = await import('./g7-questionnaire');
-      this.register(G7QuestionnaireSubmodule);
+      this.register(G7QuestionnaireSubmodule as unknown as SubmoduleDefinition);
 
       const { G7TrackingExperimentSubmodule } = await import('./g7-tracking-experiment');
-      this.register(G7TrackingExperimentSubmodule);
+      this.register(G7TrackingExperimentSubmodule as unknown as SubmoduleDefinition);
 
       const { G7TrackingQuestionnaireSubmodule } = await import('./g7-tracking-questionnaire');
-      this.register(G7TrackingQuestionnaireSubmodule);
+      this.register(G7TrackingQuestionnaireSubmodule as unknown as SubmoduleDefinition);
 
       const { G8DroneImagingSubmodule } = await import('./g8-drone-imaging');
-      this.register(G8DroneImagingSubmodule);
+      this.register(G8DroneImagingSubmodule as unknown as SubmoduleDefinition);
 
       const { g8MikaniaExperimentSubmodule } = await import('./g8-mikania-experiment');
-      this.register(g8MikaniaExperimentSubmodule);
+      this.register(g8MikaniaExperimentSubmodule as unknown as SubmoduleDefinition);
 
       const { g8PvSandExperimentSubmodule } = await import('./g8-pv-sand-experiment');
-      this.register(g8PvSandExperimentSubmodule);
+      this.register(g8PvSandExperimentSubmodule as unknown as SubmoduleDefinition);
+
+      const { g8BananaBrowningExperimentSubmodule } =
+        await import('./g8-banana-browning-experiment');
+      this.register(g8BananaBrowningExperimentSubmodule as unknown as SubmoduleDefinition);
 
       // 4年级火车购票交互
       const { G4ExperimentSubmodule } = await import('./g4-experiment');
-      this.register(G4ExperimentSubmodule);
+      this.register(G4ExperimentSubmodule as unknown as SubmoduleDefinition);
 
       this.initialized = true;
       console.log(

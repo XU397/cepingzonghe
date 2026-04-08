@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { CURIOSITY_QUESTIONS, LIKERT_OPTIONS_4 } from '../../utils/questionnaireData';
 import LikertScale from '../../components/questionnaire/LikertScale';
@@ -13,16 +13,14 @@ const PAGE_ID = 'Page_21_Curiosity_Questions';
  */
 function Page_21_Curiosity_Questions() {
   const {
-    currentPageId,
     navigateToPage,
-    questionnaireRemainingTime,
     isQuestionnaireTimeUp,
     saveQuestionnaireAnswer,
     getQuestionnaireAnswer,
     setPageEnterTime,
     logOperation,
     collectAnswer,
-    submitPageData
+    submitPageData,
   } = useAppContext();
 
   const [answers, setAnswers] = useState({});
@@ -52,33 +50,39 @@ function Page_21_Curiosity_Questions() {
   }, []);
 
   // 使用useCallback缓存handleAnswerChange函数，避免子组件不必要的重新渲染
-  const handleAnswerChange = useCallback((questionId, answer) => {
-    setAnswers(prevAnswers => {
-      const newAnswers = { ...prevAnswers, [questionId]: answer };
-      return newAnswers;
-    });
-    logOperation({
-      targetElement: `P21_LikertScale_${questionId}`,
-      eventType: 'change',
-      value: answer
-    });
-    
-    // 实时收集答案到answerList，确保即使用户没有点击下一页按钮也能提交答案
-    const questionIndex = CURIOSITY_QUESTIONS.findIndex(q => q.id === questionId);
-    if (questionIndex !== -1) {
-      collectAnswer({
-        code: questionIndex + 1,
-        targetElement: `P21_好奇心问题${questionIndex + 1}`,
-        value: answer
+  const handleAnswerChange = useCallback(
+    (questionId, answer) => {
+      setAnswers(prevAnswers => {
+        const newAnswers = { ...prevAnswers, [questionId]: answer };
+        return newAnswers;
       });
-    }
-  }, [logOperation, collectAnswer]);
+      logOperation({
+        targetElement: `P21_LikertScale_${questionId}`,
+        eventType: 'change',
+        value: answer,
+      });
+
+      // 实时收集答案到answerList，确保即使用户没有点击下一页按钮也能提交答案
+      const questionIndex = CURIOSITY_QUESTIONS.findIndex(q => q.id === questionId);
+      if (questionIndex !== -1) {
+        collectAnswer({
+          code: questionIndex + 1,
+          targetElement: `P21_好奇心问题${questionIndex + 1}`,
+          value: answer,
+        });
+      }
+    },
+    [logOperation, collectAnswer]
+  );
 
   // 使用useEffect来保存答案，避免在渲染期间调用setState
   // 使用ref来缓存上一次的answers，避免不必要的保存操作
   const prevAnswersRef = useRef({});
   useEffect(() => {
-    if (Object.keys(answers).length > 0 && JSON.stringify(answers) !== JSON.stringify(prevAnswersRef.current)) {
+    if (
+      Object.keys(answers).length > 0 &&
+      JSON.stringify(answers) !== JSON.stringify(prevAnswersRef.current)
+    ) {
       prevAnswersRef.current = answers;
       saveQuestionnaireAnswer(PAGE_ID, answers);
     }
@@ -97,7 +101,11 @@ function Page_21_Curiosity_Questions() {
   const handleNextPage = async () => {
     if (!allQuestionsAnswered && !isQuestionnaireTimeUp) {
       alert('请回答所有问题后再继续。');
-      logOperation({ targetElement: 'P21_NextButton', eventType: 'click_blocked', value: 'incomplete' });
+      logOperation({
+        targetElement: 'P21_NextButton',
+        eventType: 'click_blocked',
+        value: 'incomplete',
+      });
       return;
     }
     setIsSubmitting(true);
@@ -107,7 +115,7 @@ function Page_21_Curiosity_Questions() {
     const answerList = CURIOSITY_QUESTIONS.map((question, index) => ({
       code: index + 1,
       targetElement: `P21_好奇心问题${index + 1}`,
-      value: answers[question.id] || '未回答'
+      value: answers[question.id] || '未回答',
     }));
 
     // 手动将答案添加到AppContext，确保立即可用
@@ -115,7 +123,7 @@ function Page_21_Curiosity_Questions() {
       collectAnswer({
         targetElement: answer.targetElement,
         value: answer.value,
-        code: answer.code
+        code: answer.code,
       });
     });
 
@@ -130,8 +138,8 @@ function Page_21_Curiosity_Questions() {
         alert('数据提交失败，请重试');
       }
     } catch (error) {
-      console.error("提交P21数据失败:", error);
-      alert("提交答案失败，请稍后重试！");
+      console.error('提交P21数据失败:', error);
+      alert('提交答案失败，请稍后重试！');
     } finally {
       setIsSubmitting(false);
     }
@@ -144,13 +152,17 @@ function Page_21_Curiosity_Questions() {
     if (isQuestionnaireTimeUp && !isSubmitting && !timeoutHandledRef.current) {
       timeoutHandledRef.current = true;
       setIsSubmitting(true);
-      logOperation({ targetElement: 'P21_System', eventType: 'auto_submit', value: 'questionnaire_time_up' });
-      
+      logOperation({
+        targetElement: 'P21_System',
+        eventType: 'auto_submit',
+        value: 'questionnaire_time_up',
+      });
+
       // 同步收集超时时的答案
       const answerList = CURIOSITY_QUESTIONS.map((question, index) => ({
         code: index + 1,
         targetElement: `P21_好奇心问题${index + 1}`,
-        value: answers[question.id] || '超时未回答'
+        value: answers[question.id] || '超时未回答',
       }));
 
       // 手动将答案添加到AppContext
@@ -158,19 +170,22 @@ function Page_21_Curiosity_Questions() {
         collectAnswer({
           targetElement: answer.targetElement,
           value: answer.value,
-          code: answer.code
+          code: answer.code,
         });
       });
-      
+
       // 等待状态更新后提交
       setTimeout(() => {
-        submitPageData().then(() => {
-          navigateToPage('Page_22_Creativity_Questions', { skipSubmit: true });
-        }).catch(error => {
-          console.error("超时自动提交P21数据失败:", error);
-        }).finally(() => {
-          setIsSubmitting(false);
-        });
+        submitPageData()
+          .then(() => {
+            navigateToPage('Page_22_Creativity_Questions', { skipSubmit: true });
+          })
+          .catch(error => {
+            console.error('超时自动提交P21数据失败:', error);
+          })
+          .finally(() => {
+            setIsSubmitting(false);
+          });
       }, 0);
     }
   }, [isQuestionnaireTimeUp, isSubmitting]);
@@ -179,9 +194,9 @@ function Page_21_Curiosity_Questions() {
     <div className={styles.pageContainer}>
       <div className={styles.questionnaireContent}>
         <p className={styles.pageDescription}>请根据你对下列说法的同意程度进行选择。</p>
-        
+
         <div className={styles.tableContainer}>
-          <LikertScale 
+          <LikertScale
             questions={CURIOSITY_QUESTIONS}
             options={LIKERT_OPTIONS_4}
             answers={answers}
@@ -190,20 +205,22 @@ function Page_21_Curiosity_Questions() {
             tableMode={true}
           />
         </div>
-        
+
         <div className={styles.buttonContainer}>
-          <button 
+          <button
             className={styles.nextButton}
-            onClick={handleNextPage} 
+            onClick={handleNextPage}
             disabled={(!allQuestionsAnswered && !isQuestionnaireTimeUp) || isSubmitting}
           >
             {isSubmitting ? '提交中...' : '下一页'}
           </button>
-          {isQuestionnaireTimeUp && <p className={styles.timeUpMessage}>问卷时间已到，将自动提交您的答案。</p>}
+          {isQuestionnaireTimeUp && (
+            <p className={styles.timeUpMessage}>问卷时间已到，将自动提交您的答案。</p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-export default Page_21_Curiosity_Questions; 
+export default Page_21_Curiosity_Questions;

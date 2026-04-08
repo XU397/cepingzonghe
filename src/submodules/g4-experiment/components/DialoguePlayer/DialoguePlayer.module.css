@@ -3,6 +3,7 @@
   flex-direction: column;
   height: 100%;
   gap: 10px;
+  position: relative;
 }
 
 .topBar {
@@ -46,12 +47,31 @@
   gap: 12px;
 }
 
+/* Animation from reference */
+@keyframes popIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  80% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
 .messageRow {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   cursor: pointer;
   outline: none;
+  /* Apply animation to new messages */
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .messageRow:focus-visible {
@@ -72,19 +92,24 @@
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  /* Circular */
   overflow: hidden;
-  border: 2px solid var(--cartoon-border);
-  background: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  border: 2px solid #fff;
+  background: var(--color-white);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateZ(0);
+  /* Fix for overflow hidden on rounded corners */
 }
 
-.avatar img {
+.avatar img,
+.avatar svg {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .avatarFallback {
@@ -99,9 +124,10 @@
 
 .avatarName {
   font-size: 12px;
-  color: var(--cartoon-dark);
+  color: #6b7280;
   text-align: center;
   line-height: 1.2;
+  font-weight: 500;
 }
 
 .bubble {
@@ -109,18 +135,22 @@
   padding: 10px 14px;
   border-radius: 16px;
   line-height: 1.5;
-  font-size: 14px;
-  color: #111827;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--cartoon-border);
+  font-size: 15px;
+  color: #1f2937;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: white;
+  /* Default unless overridden by inline style */
 }
 
 .bubbleLeft {
-  border-top-left-radius: 6px;
+  border-top-left-radius: 0px;
+  /* Sharp corner for speech bubble feel if desired, or small radius */
+  border-top-left-radius: 4px;
 }
 
 .bubbleRight {
-  border-top-right-radius: 6px;
+  border-top-right-radius: 4px;
   margin-left: auto;
 }
 
@@ -168,10 +198,14 @@
 }
 
 @keyframes typingBounce {
-  0%, 80%, 100% {
+
+  0%,
+  80%,
+  100% {
     transform: translateY(0);
     opacity: 0.6;
   }
+
   40% {
     transform: translateY(-4px);
     opacity: 1;
@@ -184,25 +218,35 @@
 }
 
 .replayButton {
-  background: var(--cartoon-primary);
-  color: #fff;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(4px);
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+  padding: 8px;
+  border-radius: 9999px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 8px 14px var(--cartoon-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  /* Match reference absolute positioning if inside relative container */
+  bottom: 20px;
+  right: 20px;
 }
 
 .replayButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 16px var(--cartoon-shadow);
+  background: #eff6ff;
+  transform: rotate(-180deg);
+  /* Rotate effect on hover like reference */
 }
 
 .replayButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 0 6px 12px var(--cartoon-shadow);
+  opacity: 0;
+  /* Hide if playing */
+  pointer-events: none;
 }

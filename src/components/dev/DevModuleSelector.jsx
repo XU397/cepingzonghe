@@ -18,14 +18,6 @@ const DevModuleSelector = ({ onModuleSelect }) => {
       pageNum: '1'
     },
     {
-      id: 'grade-4',
-      name: '4年级-火车票',
-      url: '/four-grade',
-      color: '#2196F3',
-      emoji: '🚄',
-      pageNum: '1'
-    },
-    {
       id: 'grade-7-tracking',
       name: '7年级-蜂蜜探究',
       url: '/grade-7-tracking',

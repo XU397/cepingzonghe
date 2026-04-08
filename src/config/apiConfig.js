@@ -111,7 +111,18 @@ function getProductionApiUrl() {
       credentials: 'include'
     };
   } else {
-    // 其他环境，优先尝试同源模式
+    // 其他环境：检查是否通过环境变量指定了 API 地址
+    const customApiTarget = import.meta.env?.VITE_API_TARGET;
+    if (customApiTarget) {
+      console.log(`[API Config] 使用自定义 API 地址: ${customApiTarget}`);
+      const trimmed = customApiTarget.endsWith('/') ? customApiTarget.slice(0, -1) : customApiTarget;
+      return {
+        baseURL: trimmed.endsWith('/stu') ? trimmed : `${trimmed}/stu`,
+        corsMode: 'cors',
+        credentials: 'include'
+      };
+    }
+    // 默认使用同源模式
     console.log('[API Config] 其他环境，尝试同源模式');
     return PRODUCTION_CONFIG_OPTIONS.sameOrigin;
   }

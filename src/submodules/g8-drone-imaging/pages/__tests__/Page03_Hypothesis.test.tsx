@@ -37,7 +37,7 @@ function renderPage(initialPageId: PageId = 'hypothesis') {
 }
 
 const STEP_INDEX = 0;
-const HYPOTHESIS_PREFIX = `P${encodeCompositePageNum(STEP_INDEX, 3)}_`;
+const HYPOTHESIS_PREFIX = `P${encodeCompositePageNum(STEP_INDEX + 1, 3)}_`;
 const CONTROL_VARIABLE_REASON_ID = `${HYPOTHESIS_PREFIX}控制变量理由`;
 
 describe('Page03_Hypothesis', () => {

@@ -80,8 +80,8 @@ export function getRelativePageInfo(pageNum) {
   const num = parseFloat(pageNum);
 
   if (page.navigationMode === 'experiment') {
-    // 人机交互部分: 第1-13页
-    return { currentPage: num, totalPages: 13 };
+    const totalPages = page.totalPages || 12;
+    return { currentPage: Math.min(num, totalPages), totalPages };
   }
 
   if (page.navigationMode === 'questionnaire') {

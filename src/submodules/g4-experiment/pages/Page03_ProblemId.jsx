@@ -1,26 +1,23 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useCallback } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
-import PhoneSimulator from '../components/PhoneSimulator';
-import DialoguePlayer from '../components/DialoguePlayer';
-import { DIALOGUE_MESSAGES, ROLE_CONFIG } from '../constants/dialogueMessages';
+import DialogueChat from '@components/DialogueChat/DialogueChat';
+import { DIALOGUE_MESSAGES } from '../constants/dialogueMessages';
 import { useG4Context } from '../context/G4Context';
 import useG4Navigation from '../hooks/useG4Navigation';
 import styles from './Page03_ProblemId.module.css';
 
 const truncateText = (text = '', limit = 50) => {
   const safeText = String(text ?? '');
-  return safeText.length > limit ? safeText.slice(0, limit) : safeText;
+  return safeText.length > limit ? safeText.slice(0, limit) + '...' : safeText;
 };
 
 function Page03_ProblemId() {
-  const { state, setProblemAnswer, logOperation, collectAnswer, playDialogue, flowContext } =
+  const { state, setProblemAnswer, logOperation, collectAnswer, flowContext } =
     useG4Context();
   const { handleNextPage, isSubmitting, subPageNum } = useG4Navigation();
   const answerValue = state.problemAnswer || '';
   const trimmedAnswer = answerValue.trim();
   const canProceed = trimmedAnswer.length > 0 && !isSubmitting;
-
-  const messageRoles = useMemo(() => ROLE_CONFIG, []);
 
   useEffect(() => {
     logOperation({
@@ -36,44 +33,49 @@ function Page03_ProblemId() {
     }
   }, [flowContext, subPageNum]);
 
-  const handleDialogueFocus = () => {
+  const handleDialogueFocus = useCallback(() => {
     logOperation({
       targetElement: '对话容器',
       eventType: EventTypes.INPUT_FOCUS,
       value: '对话框聚焦',
     });
-  };
+  }, [logOperation]);
 
-  const handleDialogueBlur = () => {
+  const handleDialogueBlur = useCallback(() => {
     logOperation({
       targetElement: '对话容器',
       eventType: EventTypes.INPUT_BLUR,
       value: '对话框失焦',
     });
-  };
+  }, [logOperation]);
 
-  const handleMessageClick = (message, index) => {
-    const messageIndex = typeof index === 'number' ? index : (message?.index ?? 0) + 1;
+  const handleMessageClick = useCallback((message, index, roleName) => {
     logOperation({
-      targetElement: `对话消息_${messageIndex}`,
+      targetElement: `对话消息_${index}`,
       eventType: EventTypes.CLICK,
       value: {
-        role: message?.role,
-        messageIndex,
+        role: roleName,
+        messageIndex: index,
         messageText: truncateText(message?.text),
       },
     });
-  };
+  }, [logOperation]);
 
-  const handleMessageHover = (type) => (message, index) => {
-    const messageIndex = typeof index === 'number' ? index : (message?.index ?? 0) + 1;
-    const roleName = messageRoles[message?.role]?.name || message?.role || '角色';
+  const handleMessageFocus = useCallback((message, index, roleName) => {
     logOperation({
-      targetElement: `对话消息_${messageIndex}`,
-      eventType: type === 'focus' ? EventTypes.INPUT_FOCUS : EventTypes.INPUT_BLUR,
-      value: `${type}|role=${roleName}|idx=${messageIndex}|text=${truncateText(message?.text)}`,
+      targetElement: `对话消息_${index}`,
+      eventType: EventTypes.INPUT_FOCUS,
+      value: `focus|role=${roleName}|idx=${index}|text=${truncateText(message?.text)}`,
     });
-  };
+  }, [logOperation]);
+
+  const handleMessageBlur = useCallback((message, index, roleName) => {
+    logOperation({
+      targetElement: `对话消息_${index}`,
+      eventType: EventTypes.INPUT_BLUR,
+      value: `blur|role=${roleName}|idx=${index}|text=${truncateText(message?.text)}`,
+    });
+  }, [logOperation]);
 
   const handleAnswerFocus = () => {
     logOperation({
@@ -140,82 +142,58 @@ function Page03_ProblemId() {
     });
   };
 
-  const handlePlaybackStart = () => {
-    playDialogue();
-  };
-
-  const handleReplay = () => {
-    logOperation({
-      targetElement: '对话重播',
-      eventType: EventTypes.CLICK,
-      value: 'replay',
-    });
-    playDialogue();
-  };
-
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>问题识别</h1>
-        <p className={styles.subtitle}>查看家庭群聊，写出需要解决的问题。</p>
-      </div>
-
       <div className={styles.layout}>
+        {/* Left Column: Dialogue */}
         <div className={styles.phoneColumn}>
-          <PhoneSimulator>
-            <div className={styles.dialogueShell}>
-              <DialoguePlayer
-                messages={DIALOGUE_MESSAGES}
-                roleConfig={ROLE_CONFIG}
-                onContainerFocus={handleDialogueFocus}
-                onContainerBlur={handleDialogueBlur}
-                onMessageClick={handleMessageClick}
-                onMessageFocus={handleMessageHover('focus')}
-                onMessageBlur={handleMessageHover('blur')}
-                onReplay={handleReplay}
-                onPlaybackStart={handlePlaybackStart}
-              />
-            </div>
-          </PhoneSimulator>
+          <DialogueChat
+            messages={DIALOGUE_MESSAGES}
+            title="火车购票群聊"
+            autoPlay={true}
+            initialDelay={800}
+            onContainerFocus={handleDialogueFocus}
+            onContainerBlur={handleDialogueBlur}
+            onMessageClick={handleMessageClick}
+            onMessageFocus={handleMessageFocus}
+            onMessageBlur={handleMessageBlur}
+            headerStyle={{ background: '#3b82f6' }}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '30px',
+            }}
+          />
         </div>
 
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>火车购票</h2>
-            <span className={styles.cardBadge}>必答</span>
-          </div>
-          <p className={styles.prompt}>
-            根据左侧对话,请写出小明接下来要解决什么问题?
-          </p>
+        {/* Right Column: Content */}
+        <div className={styles.contentColumn}>
+          <div className={styles.card}>
 
-          <label className={styles.fieldLabel} htmlFor="problemAnswer">
-            你的回答
-          </label>
-          <textarea
-            id="problemAnswer"
-            maxLength={200}
-            rows={4}
-            value={answerValue}
-            onChange={handleAnswerChange}
-            onFocus={handleAnswerFocus}
-            onBlur={handleAnswerBlur}
-            placeholder="请输入需要解决的问题 (最多200字)"
-            className={styles.textarea}
-          />
-          <div className={styles.helperRow}>
-            <span className={styles.helperText}>请输入不超过200字的描述</span>
-            <span className={styles.counter}>{answerValue.length}/200</span>
-          </div>
 
-          <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.nextButton}
-              onClick={handleNext}
-              disabled={!canProceed}
-            >
-              下一页
-            </button>
+            <div className={styles.questionSection}>
+              <p className={styles.prompt}>
+                根据左侧对话，请写出接下来小明要探究的科学问题？
+              </p>
+            </div>
+
+            <div className={styles.textareaContainer}>
+              <textarea
+                id="problemAnswer"
+                maxLength={200}
+                rows={4}
+                value={answerValue}
+                onChange={handleAnswerChange}
+                onFocus={handleAnswerFocus}
+                onBlur={handleAnswerBlur}
+                placeholder="请在此处输入你的回答..."
+                className={styles.textarea}
+              />
+              <div className={styles.helperRow}>
+                <span className={styles.counter}>{answerValue.length}/200</span>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

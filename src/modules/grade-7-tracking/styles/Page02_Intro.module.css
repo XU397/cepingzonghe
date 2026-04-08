@@ -1,273 +1,237 @@
-/**
- * Page02_Intro.module.css
- * 情景引入页面 - 蜂蜜背景样式
- */
-
-/* 页面容器 - 带背景图，负margin抵消PageLayout的padding */
 .pageContainer {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* 改为flex-start避免居中导致底部被遮挡 */
+  justify-content: center;
   min-height: 100%;
-  /* 负margin抵消PageLayout的padding，让背景图填满整个区域 */
-  margin: -80px -40px -40px -40px;
-  padding: 80px 40px 80px 40px; /* 增加底部padding为按钮留出空间 */
-  background-image: url(../../../assets/images/蜂蜜图片.jpg);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  overflow-y: auto; /* 允许垂直滚动以防内容过多 */
-  overflow-x: hidden;
+  height: 100%;
+  padding: 40px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 0 16px 16px 0;
 }
 
-/* 半透明遮罩层，让文字更清晰 - 降低不透明度 */
-.pageContainer::before {
+.glassCard {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 20px 60px rgba(217, 119, 6, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  padding: 48px;
+  max-width: 640px;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.glassCard::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.15);
-  z-index: 1;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent);
+  border-radius: 0 0 4px 4px;
+  opacity: 0.8;
 }
 
-/* 内容容器 */
-.contentWrapper {
-  position: relative;
-  z-index: 2;
-  max-width: 900px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 32px; /* 减小间距 40px -> 32px */
-  padding: 40px 40px; /* 减小内部padding */
-}
-
-/* 文本内容区域 - 提高透明度，显示更多背景 */
-.textContent {
-  background: rgba(255, 255, 255, 0.75);
-  border-radius: 16px;
-  padding: 40px 48px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
-  width: 100%;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-}
-
-/* 标题样式 */
 .title {
-  font-size: 36px;
+  font-size: 2.5rem;
   font-weight: 700;
-  color: #1a252f;
-  margin: 0 0 32px 0;
-  text-align: center;
-  border-bottom: 3px solid #f39c12;
-  padding-bottom: 16px;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  color: #92400e;
+  margin: 0 0 24px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  text-align: left;
 }
 
-/* 段落样式 */
-.paragraph {
-  font-size: 20px;
+.titleIcon {
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.8rem;
+  animation: honeyDrip 3s ease-in-out infinite;
+}
+
+@keyframes honeyDrip {
+  0%,
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    transform: translateY(-40%) scale(1.1);
+  }
+}
+
+.contentText {
+  font-size: 1.125rem;
   line-height: 1.8;
-  color: #1a252f;
-  margin: 0 0 24px 0;
-  text-align: justify;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+  color: #78350f;
+  margin-bottom: 20px;
+  text-align: left;
   text-indent: 2em;
 }
 
-.paragraph:last-child {
-  margin-bottom: 0;
-}
-
-/* 强调文本 */
-.paragraph strong {
-  color: #e74c3c;
+.highlight {
+  color: #b45309;
   font-weight: 600;
+  background: linear-gradient(120deg, rgba(251, 191, 36, 0.3) 0%, rgba(251, 191, 36, 0.3) 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 40%;
+  background-position: 0 88%;
+  padding: 0 4px;
+  border-radius: 4px;
 }
 
-/* 按钮容器 */
-.buttonContainer {
+.footer {
   display: flex;
-  justify-content: center;
-  width: 100%;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 32px;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease-out 0.5s both;
 }
 
-/* 下一页按钮 */
-.nextButton {
-  padding: 18px 80px;
-  font-size: 22px;
+.btnPrimary {
+  height: 44px;
+  padding: 0 36px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
+  color: white;
+  font-size: 15px;
   font-weight: 600;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 8px 20px rgba(45, 143, 201, 0.3);
+  transition: all 0.2s ease;
   position: relative;
-  z-index: 2;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.nextButton:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(102, 126, 234, 0.5);
+.btnPrimary:hover:not(:disabled) {
+  top: -2px;
+  box-shadow:
+    0 6px 0 #2d8fc9,
+    0 12px 28px rgba(45, 143, 201, 0.35);
 }
 
-.nextButton:active {
-  transform: translateY(-1px);
+.btnPrimary:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 0px 0 #2d8fc9,
+    0 4px 12px rgba(45, 143, 201, 0.25);
 }
 
-/* 响应式设计 */
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
 
-/* 800p紧凑模式 - 关键修复 */
+.btnPrimary svg {
+  width: 16px;
+  height: 16px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glassCard,
+  .titleIcon,
+  .footer {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .btnPrimary:hover {
+    transform: none;
+  }
+}
+
 @media (max-height: 800px) {
   .pageContainer {
-    /* 匹配PageLayout 800p模式下的padding: 60px 30px 30px 30px */
-    margin: -60px -30px -30px -30px;
-    padding: 60px 30px 80px 30px; /* 保持底部80px给按钮留空间 */
-    justify-content: flex-start;
+    padding: 20px;
   }
 
-  .contentWrapper {
-    gap: 20px; /* 进一步减小间距 */
-    padding: 20px 30px; /* 减小内部padding */
-  }
-
-  .textContent {
-    padding: 24px 32px; /* 减小内边距 */
+  .glassCard {
+    padding: 32px;
+    border-radius: 20px;
   }
 
   .title {
-    font-size: 28px; /* 减小标题 */
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-  }
-
-  .paragraph {
-    font-size: 16px; /* 减小段落字体 */
-    line-height: 1.6;
+    font-size: 1.875rem;
     margin-bottom: 16px;
-    text-indent: 2em;
   }
 
-  .nextButton {
-    padding: 14px 60px; /* 减小按钮尺寸 */
-    font-size: 18px;
-  }
-}
-
-@media (max-width: 1400px) {
-  .pageContainer {
-    margin: -70px -30px -30px -30px;
-    padding: 70px 30px 30px 30px;
+  .titleIcon {
+    right: -32px;
+    font-size: 1.4rem;
   }
 
-  .contentWrapper {
-    padding: 50px 30px;
-  }
-}
-
-@media (max-width: 1280px) {
-  .pageContainer {
-    margin: -60px -25px -25px -25px;
-    padding: 60px 25px 25px 25px;
+  .contentText {
+    font-size: 1rem;
   }
 
-  .contentWrapper {
-    padding: 40px 25px;
+  .footer {
+    padding-top: 20px;
+  }
+
+  .btnPrimary {
+    height: 40px;
+    padding: 0 30px;
+    font-size: 14px;
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 640px) {
   .pageContainer {
-    margin: -50px -20px -20px -20px;
-    padding: 50px 20px 20px 20px;
+    padding: 16px;
   }
 
-  .contentWrapper {
-    max-width: 750px;
-  }
-
-  .textContent {
-    padding: 32px 40px;
+  .glassCard {
+    padding: 32px 24px;
+    border-radius: 20px;
   }
 
   .title {
-    font-size: 32px;
+    font-size: 1.875rem;
   }
 
-  .paragraph {
-    font-size: 18px;
-    text-indent: 2em;
+  .titleIcon {
+    right: -32px;
+    font-size: 1.4rem;
   }
 
-  .nextButton {
-    padding: 16px 64px;
-    font-size: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .pageContainer {
-    padding: 30px 20px;
-    background-position: center center;
+  .contentText {
+    font-size: 1rem;
   }
 
-  .contentWrapper {
-    max-width: 100%;
-  }
-
-  .textContent {
-    padding: 28px 32px;
-  }
-
-  .title {
-    font-size: 28px;
-    margin-bottom: 24px;
-  }
-
-  .paragraph {
-    font-size: 17px;
-    line-height: 1.7;
-    margin-bottom: 20px;
-    text-indent: 2em;
-  }
-
-  .nextButton {
-    padding: 14px 56px;
-    font-size: 18px;
-  }
-}
-
-@media (max-width: 480px) {
-  .pageContainer {
-    padding: 20px 16px;
-  }
-
-  .textContent {
-    padding: 24px 28px;
-  }
-
-  .title {
-    font-size: 24px;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-  }
-
-  .paragraph {
-    font-size: 16px;
-    margin-bottom: 18px;
-    text-indent: 2em;
-  }
-
-  .nextButton {
-    padding: 12px 48px;
-    font-size: 16px;
+  .footer {
+    justify-content: center;
   }
 }

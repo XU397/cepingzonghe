@@ -1,93 +1,132 @@
+/* Page04_FactorAnalysis.module.css */
+
 .page {
-  padding: 24px;
-  background: var(--cartoon-bg);
-  min-height: 100%;
+  /* Use full height and flex column layout */
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  background: var(--cartoon-bg);
+  overflow-y: auto;
 }
 
-.title {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--cartoon-dark);
+.imageContainer {
+  width: 100%;
+  flex-shrink: 0;
+  overflow: hidden;
+  /* Optional: visual separation or shadow if needed */
+  border-bottom: 2px solid var(--cartoon-border);
+  box-shadow: 0 4px 12px var(--cartoon-shadow);
+}
+
+.topImage {
+  width: 100%;
+  height: auto;
+  max-height: 450px;
+  /* Limit height to leave room for content */
+  object-fit: cover;
+  display: block;
+}
+
+.contentContainer {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .prompt {
-  font-size: 16px;
-  color: var(--text-color);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--cartoon-dark);
+  line-height: 1.5;
 }
 
 .tip {
   font-size: 14px;
-  color: var(--cartoon-dark);
+  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.6);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border-left: 4px solid var(--cartoon-primary);
+  align-self: flex-start;
 }
 
 .options {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
 }
 
 .option {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px;
+  gap: 12px;
+  padding: 16px;
   background: var(--cartoon-light);
   border: 2px solid var(--cartoon-border);
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 6px 14px var(--cartoon-shadow);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 8px var(--cartoon-shadow);
+  transition: all 0.2s ease;
+}
+
+.option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px var(--cartoon-shadow);
 }
 
 .option input {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--cartoon-primary);
 }
 
 .option span {
-  font-size: 15px;
-  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--cartoon-dark);
 }
 
 .checked {
   border-color: var(--cartoon-primary);
-  box-shadow: 0 8px 16px var(--cartoon-shadow);
-  background: rgba(89, 193, 255, 0.12);
+  background: rgba(89, 193, 255, 0.15);
+  box-shadow: 0 6px 12px rgba(89, 193, 255, 0.25);
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 12px;
+  margin-top: auto;
+  /* Push to bottom if space allows */
+  padding-top: 16px;
 }
 
 .nextButton {
   background: var(--cartoon-primary);
-  color: var(--cartoon-bg);
+  color: var(--color-white);
   border: none;
-  padding: 12px 24px;
+  padding: 12px 32px;
   font-size: 16px;
   font-weight: 700;
-  border-radius: 12px;
+  border-radius: 24px;
   cursor: pointer;
-  box-shadow: 0 6px 12px var(--cartoon-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 16px var(--cartoon-shadow);
+  transition: all 0.2s ease;
 }
 
 .nextButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 16px var(--cartoon-shadow);
+  box-shadow: 0 12px 20px var(--cartoon-shadow);
 }
 
 .nextButton:disabled {
-  background: var(--border-color);
-  color: var(--text-color);
-  opacity: 0.6;
+  background: #ccc;
   cursor: not-allowed;
-  box-shadow: none;
   transform: none;
+  box-shadow: none;
 }

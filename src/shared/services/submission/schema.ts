@@ -49,8 +49,8 @@ const DATETIME_REGEX = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 const ISO_8601_REGEX =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/;
 const LEGACY_PAGE_NUMBER_REGEX = /^M\d+:\d+$/;
-const PAGE_NUMBER_PATTERN = /^\d+\.\d+$/;
-const TARGET_ELEMENT_PREFIX_REGEX = /^P\d+(?:\.\d+)?_.+/;
+const PAGE_NUMBER_PATTERN = /^[1-9]\d*\.\d{2}$/;
+const TARGET_ELEMENT_PREFIX_REGEX = /^P[1-9]\d*\.\d{2}_.+/;
 
 export const RESERVED_TARGET_ELEMENTS = Object.freeze(
   [
@@ -110,7 +110,7 @@ const inputValueDeleteSchema = z.object({
 const genericObjectSchema = z.record(z.any());
 
 /**
- * pageNumber 统一使用 Flow 点分格式：<stepIndex>.<subPageNum>（如 "0.3"）。
+ * pageNumber 统一使用新格式：<submoduleIndex>.<pageIndexTwoDigits>（如 '1.03'）
  */
 export function isValidPageNumber(pageNum: string): boolean {
   if (typeof pageNum !== 'string') return false;
@@ -147,7 +147,7 @@ const operationSchema: z.ZodType<Operation> = z
       .string({ required_error: 'targetElement 必须为字符串' })
       .default('')
       .refine((value) => isValidTargetElement(value), {
-        message: 'targetElement 必须以 "P" 开头（如 "P1_button"），系统保留字段除外',
+        message: 'targetElement 必须以 "P" 开头（如 "P1.03_button"），系统保留字段除外',
       }),
     eventType: z
       .string({ required_error: 'eventType 不能为空' })
@@ -184,15 +184,32 @@ const operationSchema: z.ZodType<Operation> = z
       });
     }
 
-    if (
-      operation.eventType === EventTypes.FLOW_CONTEXT &&
-      !isPlainRecord(operation.value)
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'flow_context 事件的 value 必须为对象',
-        path: ['value'],
-      });
+    if (operation.eventType === EventTypes.FLOW_CONTEXT) {
+      // value 可以是对象或 JSON 字符串
+      if (typeof operation.value === 'string') {
+        try {
+          const parsed = JSON.parse(operation.value);
+          if (!isPlainRecord(parsed)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'flow_context 事件的 value 必须为对象或有效的 JSON 对象字符串',
+              path: ['value'],
+            });
+          }
+        } catch {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'flow_context 事件的 value 字符串必须是有效的 JSON',
+            path: ['value'],
+          });
+        }
+      } else if (!isPlainRecord(operation.value)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'flow_context 事件的 value 必须为对象或 JSON 字符串',
+          path: ['value'],
+        });
+      }
     }
   });
 
@@ -204,7 +221,7 @@ const answerSchema: z.ZodType<Answer> = z.object({
     .string({ required_error: 'answerList.targetElement 必须为字符串' })
     .default('')
     .refine((value) => isValidTargetElement(value), {
-      message: 'targetElement 必须以 "P" 开头（如 "P1_button"），系统保留字段除外',
+      message: 'targetElement 必须以 "P" 开头（如 "P1.03_button"），系统保留字段除外',
     }),
   value: z
     .string({ required_error: 'answerList.value 必须为字符串' })
@@ -221,7 +238,7 @@ const markObjectSchema: z.ZodType<MarkObject> = z
       .min(1, 'pageNumber 不能为空')
       .refine((value) => isValidPageNumber(value), {
         message:
-          'pageNumber 必须为 Flow 点分格式 <stepIndex>.<subPageNum>（如 "0.3"），不再支持 M 前缀或单数字格式',
+          'pageNumber 必须为新格式 <submoduleIndex>.<pageIndexTwoDigits>（如 "1.03"），不再支持 0.* 前缀、M 前缀或无零填充格式',
       }),
     pageDesc: z
       .string({ required_error: 'pageDesc 必须为字符串' })

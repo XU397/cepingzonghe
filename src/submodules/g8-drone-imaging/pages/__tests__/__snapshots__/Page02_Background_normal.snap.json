@@ -1,6 +1,6 @@
 {
-  "pageNumber": "0.2",
-  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/0] 背景知识介绍",
+  "pageNumber": "1.02",
+  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/1.02] 背景知识介绍",
   "operationList": [
     {
       "code": 1,
@@ -55,7 +55,7 @@
       "code": 8,
       "targetElement": "flow_context",
       "eventType": "page_submit_success",
-      "value": "{\"pageNumber\":\"0.2\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/0] 背景知识介绍\",\"auto_submit\":false}",
+      "value": "{\"pageNumber\":\"1.02\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/1.02] 背景知识介绍\",\"auto_submit\":false}",
       "time": "2025-02-01 09:04:07"
     }
   ],

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 import experimentImg from '../assets/images/experiment.png';
 import { useAppContext } from '../context/AppContext';
 import TextInput from '../components/common/TextInput';
@@ -34,7 +35,10 @@ const SolutionDesignPage = () => {
   const pageLoadedRef = useRef(false);
 
   const recordOperation = useCallback((operation) => {
-    const normalizedOperation = { ...operation };
+    const normalizedOperation = {
+      ...operation,
+      time: formatTimestamp(new Date()),
+    };
     logOperation(normalizedOperation);
     operationsRef.current = [...operationsRef.current, normalizedOperation];
   }, [logOperation]);
@@ -70,14 +74,14 @@ const SolutionDesignPage = () => {
     if (nextValue.length < prevValue.length) {
       recordOperation({
         eventType: EventTypes.INPUT_DELETE,
-        targetElement: `input_${key}`,
+        targetElement: `输入框_${key}`,
         value: { action: 'delete', prevLength: prevValue.length, nextLength: nextValue.length }
       });
     }
 
     recordOperation({
       eventType: EventTypes.INPUT_CHANGE,
-      targetElement: `input_${key}`,
+      targetElement: `输入框_${key}`,
       value: { prev: prevValue, next: nextValue }
     });
 
@@ -95,7 +99,7 @@ const SolutionDesignPage = () => {
   const handleInputBlur = useCallback((key, value) => {
     recordOperation({
       eventType: EventTypes.INPUT_BLUR,
-      targetElement: `input_${key}`,
+      targetElement: `输入框_${key}`,
       value: value || ''
     });
 
@@ -112,7 +116,7 @@ const SolutionDesignPage = () => {
 
     recordOperation({
       eventType: EventTypes.INPUT_FOCUS,
-      targetElement: `input_${key}`,
+      targetElement: `输入框_${key}`,
       value: '聚焦'
     });
 
@@ -132,7 +136,7 @@ const SolutionDesignPage = () => {
       setShowAlert(true);
       recordOperation({
         eventType: EventTypes.CLICK_BLOCKED,
-        targetElement: 'btn_next',
+        targetElement: 'next_button',
         value: { reason: '未输入想法', missing: ['measurement_ideas'] }
       });
       return false;
@@ -141,7 +145,7 @@ const SolutionDesignPage = () => {
     setShowAlert(false);
     recordOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_next',
+      targetElement: 'next_button',
       value: '提交测量方法构思'
     });
 
@@ -149,7 +153,7 @@ const SolutionDesignPage = () => {
       const trimmed = value.trim();
       if (!trimmed) return null;
       const index = parseInt(key.replace('idea', ''), 10);
-      const targetElement = Number.isFinite(index) ? `measurement_idea_${index}` : `measurement_idea_${key}`;
+      const targetElement = Number.isFinite(index) ? `测量想法_${index}` : `测量想法_${key}`;
       return { targetElement, value: trimmed };
     }).filter(Boolean);
     

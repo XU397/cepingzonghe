@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useRef } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 import { useAppContext } from '../context/AppContext';
 import NavigationButton from '../components/common/NavigationButton';
 import styles from './Page_19_Task_Completion.module.css';
@@ -25,7 +26,10 @@ const Page_19_Task_Completion = () => {
   const isSubmittingRef = useRef(false);
 
   const recordOperation = useCallback((operation) => {
-    const normalizedOperation = { ...operation };
+    const normalizedOperation = {
+      ...operation,
+      time: formatTimestamp(new Date()),
+    };
     logOperation(normalizedOperation);
     operationsRef.current = [...operationsRef.current, normalizedOperation];
   }, [logOperation]);
@@ -51,7 +55,7 @@ const Page_19_Task_Completion = () => {
 
     recordOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_next',
+      targetElement: 'next_button',
       value: '进入问卷调查'
     });
     
@@ -70,7 +74,7 @@ const Page_19_Task_Completion = () => {
     }
 
     const submissionSuccess = await submitPage({
-      answers: [{ targetElement: 'task_completion_ack', value: 'true' }],
+      answers: [{ targetElement: '任务完成确认', value: 'true' }],
       operations: operationsRef.current,
     });
 

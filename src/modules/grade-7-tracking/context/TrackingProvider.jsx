@@ -1,4 +1,12 @@
-import { useState, useCallback, useMemo, useEffect, useContext, useRef, useSyncExternalStore } from 'react';
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useContext,
+  useRef,
+  useSyncExternalStore,
+} from 'react';
 import TrackingContext from './TrackingContext';
 import {
   PAGE_MAPPING,
@@ -45,13 +53,14 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     }
 
     // 生成新的UUID v4（兼容不支持 crypto.randomUUID 的环境）
-    const newSessionId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
-      ? crypto.randomUUID()
-      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-          const r = (Math.random() * 16) | 0;
-          const v = c === 'x' ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        });
+    const newSessionId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = (Math.random() * 16) | 0;
+            const v = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          });
     localStorage.setItem('tracking_sessionId', newSessionId);
     console.log('[TrackingProvider] 生成新sessionId:', newSessionId);
     return newSessionId;
@@ -63,13 +72,19 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    */
   const initializeSession = useCallback(() => {
     const now = Date.now();
+    const flowContext =
+      typeof userContext?.getFlowContext === 'function' ? userContext.getFlowContext() : null;
+    const isFlowRuntime = Boolean(flowContext?.flowId);
 
     // 优先从localStorage恢复currentPage和navigationMode（刷新恢复功能）
     let restoredCurrentPage = null;
     let restoredNavigationMode = null;
     try {
+      if (isFlowRuntime) {
+        console.log('[TrackingProvider] Flow 模式下跳过 localStorage 页面恢复');
+      }
       const savedSession = localStorage.getItem('tracking_session');
-      if (savedSession) {
+      if (savedSession && !isFlowRuntime) {
         const parsed = JSON.parse(savedSession);
 
         // 校验用户身份，防止账号切换时使用旧数据
@@ -83,13 +98,13 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
           console.log('[TrackingProvider] ✅ 同一用户会话，恢复页面状态:', {
             currentPage: restoredCurrentPage,
             navigationMode: restoredNavigationMode,
-            examNo: currentExamNo
+            examNo: currentExamNo,
           });
         } else {
           // 不同用户，清除旧数据
           console.log('[TrackingProvider] ⚠️ 检测到用户切换，清除旧会话数据', {
             savedExamNo,
-            currentExamNo
+            currentExamNo,
           });
           // 清除所有tracking相关localStorage
           const trackingKeys = [
@@ -98,7 +113,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
             'tracking_experimentTrials',
             'tracking_chartData',
             'tracking_textResponses',
-            'tracking_questionnaireAnswers'
+            'tracking_questionnaireAnswers',
           ];
           trackingKeys.forEach(key => localStorage.removeItem(key));
 
@@ -115,14 +130,14 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     }
 
     // 确定currentPage: 优先使用localStorage的值，否则使用initialPageId计算
-    const currentPage = restoredCurrentPage !== null
-      ? restoredCurrentPage
-      : determinePageNumber(initialPageId);
+    const currentPage =
+      restoredCurrentPage !== null ? restoredCurrentPage : determinePageNumber(initialPageId);
 
     // 确定navigationMode: 优先使用localStorage的值，否则使用initialPageId计算
-    const navigationMode = restoredNavigationMode !== null
-      ? restoredNavigationMode
-      : determineNavigationMode(initialPageId);
+    const navigationMode =
+      restoredNavigationMode !== null
+        ? restoredNavigationMode
+        : determineNavigationMode(initialPageId);
 
     // 从userContext提取学生信息（ModuleRouter 提供为顶层字段）
     const session = {
@@ -173,12 +188,42 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     dataPoints: [],
     isCompleted: false,
     creationTime: Date.now(),
-    operationList: []
+    operationList: [],
   });
   const [textResponses, setTextResponses] = useState([
-    { questionNumber: 1, questionText: '', answerText: '', startEditTime: 0, lastEditTime: 0, editDuration: 0, characterCount: 0, isEmpty: true, isValid: false },
-    { questionNumber: 2, questionText: '', answerText: '', startEditTime: 0, lastEditTime: 0, editDuration: 0, characterCount: 0, isEmpty: true, isValid: false },
-    { questionNumber: 3, questionText: '', answerText: '', startEditTime: 0, lastEditTime: 0, editDuration: 0, characterCount: 0, isEmpty: true, isValid: false }
+    {
+      questionNumber: 1,
+      questionText: '',
+      answerText: '',
+      startEditTime: 0,
+      lastEditTime: 0,
+      editDuration: 0,
+      characterCount: 0,
+      isEmpty: true,
+      isValid: false,
+    },
+    {
+      questionNumber: 2,
+      questionText: '',
+      answerText: '',
+      startEditTime: 0,
+      lastEditTime: 0,
+      editDuration: 0,
+      characterCount: 0,
+      isEmpty: true,
+      isValid: false,
+    },
+    {
+      questionNumber: 3,
+      questionText: '',
+      answerText: '',
+      startEditTime: 0,
+      lastEditTime: 0,
+      editDuration: 0,
+      characterCount: 0,
+      isEmpty: true,
+      isValid: false,
+    },
   ]);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState({});
   const [operationLog, setOperationLog] = useState([]);
@@ -326,9 +371,9 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @param {Date|number} date - 日期对象或时间戳
    * @returns {string} 格式化的日期时间字符串
    */
-  const formatDateTime = useCallback((date) => {
+  const formatDateTime = useCallback(date => {
     const d = date instanceof Date ? date : new Date(date);
-    const pad = (num) => String(num).padStart(2, '0');
+    const pad = num => String(num).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }, []);
 
@@ -340,7 +385,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * 更新会话状态
    * @param {Object} updates - 要更新的字段
    */
-  const updateSession = useCallback((updates) => {
+  const updateSession = useCallback(updates => {
     setSession(prev => {
       const newSession = { ...prev, ...updates };
       console.log('[TrackingProvider] 会话状态已更新:', updates);
@@ -364,7 +409,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * 添加图表数据点
    * @param {Object} dataPoint - ChartDataPoint对象
    */
-  const addChartDataPoint = useCallback((dataPoint) => {
+  const addChartDataPoint = useCallback(dataPoint => {
     setChartData(prev => {
       // 检查是否已存在相同含水量的数据点
       const existingIndex = prev.dataPoints.findIndex(
@@ -387,7 +432,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       const operation = {
         timestamp: Date.now(),
         action: existingIndex !== -1 ? 'edit_point' : 'add_point',
-        dataPoint
+        dataPoint,
       };
 
       const newOperationList = [...prev.operationList, operation];
@@ -396,7 +441,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
         ...prev,
         dataPoints: newDataPoints,
         isCompleted: newDataPoints.length >= 2,
-        operationList: newOperationList
+        operationList: newOperationList,
       };
     });
   }, []);
@@ -405,28 +450,31 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * 添加实验试验记录
    * @param {Object} trial - ExperimentTrial对象
    */
-  const addExperimentTrial = useCallback((trial) => {
-    setExperimentTrials(prev => {
-      const newTrials = [...prev, trial];
-      console.log('[TrackingProvider] 新增实验试验记录:', trial);
-      return newTrials;
-    });
+  const addExperimentTrial = useCallback(
+    trial => {
+      setExperimentTrials(prev => {
+        const newTrials = [...prev, trial];
+        console.log('[TrackingProvider] 新增实验试验记录:', trial);
+        return newTrials;
+      });
 
-    // 自动将试验数据映射到图表数据点
-    const chartPoint = {
-      waterContent: trial.waterContent,
-      fallTime: trial.fallTime,
-      source: 'trial',
-      trialNumber: trial.trialNumber
-    };
-    addChartDataPoint(chartPoint);
-  }, [addChartDataPoint]);
+      // 自动将试验数据映射到图表数据点
+      const chartPoint = {
+        waterContent: trial.waterContent,
+        fallTime: trial.fallTime,
+        source: 'trial',
+        trialNumber: trial.trialNumber,
+      };
+      addChartDataPoint(chartPoint);
+    },
+    [addChartDataPoint]
+  );
 
   /**
    * 移除图表数据点
    * @param {number} waterContent - 要移除的数据点的含水量
    */
-  const removeChartDataPoint = useCallback((waterContent) => {
+  const removeChartDataPoint = useCallback(waterContent => {
     setChartData(prev => {
       const dataPoint = prev.dataPoints.find(point => point.waterContent === waterContent);
       const newDataPoints = prev.dataPoints.filter(point => point.waterContent !== waterContent);
@@ -435,7 +483,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       const operation = {
         timestamp: Date.now(),
         action: 'remove_point',
-        dataPoint
+        dataPoint,
       };
 
       const newOperationList = [...prev.operationList, operation];
@@ -446,7 +494,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
         ...prev,
         dataPoints: newDataPoints,
         isCompleted: newDataPoints.length >= 2,
-        operationList: newOperationList
+        operationList: newOperationList,
       };
     });
   }, []);
@@ -475,7 +523,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
             characterCount,
             isEmpty: characterCount === 0,
             isValid: characterCount > 0,
-            ...metadata
+            ...metadata,
           };
         }
         return response;
@@ -505,11 +553,16 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
           selectedOption,
           selectionTime: Date.now(),
           isAnswered: true,
-          ...metadata
-        }
+          ...metadata,
+        },
       };
 
-      console.log('[TrackingProvider] 更新问卷答案 - 问题', questionNumber, '选项:', selectedOption);
+      console.log(
+        '[TrackingProvider] 更新问卷答案 - 问题',
+        questionNumber,
+        '选项:',
+        selectedOption
+      );
       return newAnswers;
     });
   }, []);
@@ -526,15 +579,18 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @param {*} [operation.value] - 操作值
    * @param {string} [operation.time] - ISO时间字符串
    */
-  const logOperation = useCallback((operation) => {
+  const logOperation = useCallback(operation => {
     setOperationLog(prev => {
-      const newLog = [...prev, {
-        timestamp: operation.timestamp || Date.now(),
-        action: operation.action,
-        target: operation.target || '',
-        value: operation.value !== undefined ? operation.value : null,
-        time: operation.time || new Date().toISOString()
-      }];
+      const newLog = [
+        ...prev,
+        {
+          timestamp: operation.timestamp || Date.now(),
+          action: operation.action,
+          target: operation.target || '',
+          value: operation.value !== undefined ? operation.value : null,
+          time: operation.time || new Date().toISOString(),
+        },
+      ];
 
       // 可选：限制日志大小，防止内存溢出
       const MAX_LOG_SIZE = 1000;
@@ -553,12 +609,15 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @param {string} answer.targetElement - 目标元素
    * @param {*} answer.value - 答案值
    */
-  const collectAnswer = useCallback((answer) => {
-    setAnswers(prev => [...prev, {
-      targetElement: answer.targetElement,
-      value: answer.value,
-      timestamp: Date.now()
-    }]);
+  const collectAnswer = useCallback(answer => {
+    setAnswers(prev => [
+      ...prev,
+      {
+        targetElement: answer.targetElement,
+        value: answer.value,
+        timestamp: Date.now(),
+      },
+    ]);
   }, []);
 
   /**
@@ -578,125 +637,362 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @param {string} pageDesc - 页面描述
    * @returns {Object} MarkObject
    */
-  const buildMarkObject = useCallback((pageNumber, pageDesc, options = {}) => {
-    const { operationLog: opLog, questionnaireAnswers: qa, answers: ans, pageStartTime: pst } = stateRef.current;
-    const mapEventType = (action, value) => {
-      if (!action) return '';
-      switch (action) {
-        case '点击':
-        case 'button_click':
-        case 'click':
-        case 'click_next':
-        case 'click_start_experiment':
-          return 'click';
-        case 'page_enter':
-          return 'page_enter';
-        case 'page_exit':
-          return 'page_exit';
-        case '文本域输入':
-        case 'text_input':
-        case 'text_input_start':
-          return 'input';
-        case 'start_edit':
-          return 'input_focus';
-        case 'input_blur':
-          return 'input_blur';
-        case 'checkbox_toggle':
-          return (typeof value === 'string' && value.includes('取消')) ? 'checkbox_uncheck' : 'checkbox_check';
-        case '单选':
-          return 'radio_select';
-        case 'modal_open':
-          return 'modal_open';
-        case 'modal_close':
-          return 'modal_close';
-        case 'resource_view':
-          return 'view_material';
-        case '计时开始':
-        case 'timer_start':
-          return 'timer_start';
-        case 'timer_complete':
-        case 'timer_stop':
-          return 'timer_stop';
-        case '完成':
-        case 'simulation_operation':
-        case 'complete_design':
-          return 'simulation_operation';
-        case 'questionnaire_answer':
-          return 'questionnaire_answer';
-        // 🔧 新增：支持7年级蒸馒头模块的实验事件类型
-        case 'simulation_timing_started':
-          return 'simulation_timing_started';
-        case 'simulation_run_result':
-          return 'simulation_run_result';
-        default:
-          return String(action);
-      }
-    };
-    const pn = typeof pageNumber === 'string' ? parseFloat(pageNumber) : pageNumber;
+  const buildMarkObject = useCallback(
+    (pageNumber, pageDesc, options = {}) => {
+      const {
+        operationLog: opLog,
+        questionnaireAnswers: qa,
+        answers: ans,
+        pageStartTime: pst,
+      } = stateRef.current;
+      const uc = userContextRef.current || {};
+      const reservedTargetSet = new Set(['flow_context', 'page', 'page_submission']);
+      const normalizedPageDesc = String(pageDesc || '').trim() || '未命名页面';
+      const nowFormatted = formatDateTime(new Date());
 
-    // 统一操作列表规范化
-    // 🔧 修改：添加 code 和 pageId 字段以匹配7年级蒸馒头模块的数据格式
-    const opList = opLog.map((op, index) => ({
-      code: index + 1, // 操作序号，从1开始
-      targetElement: op.target,
-      eventType: mapEventType(op.action, op.value),
-      value: typeof op.value === 'object' ? op.value : String(op.value || ''),
-      time: formatDateTime(new Date(op.time || op.timestamp)),
-      pageId: op.pageId || `Page_${Math.floor(pn)}` // 页面ID，格式如 "Page_10"
-    }));
+      // 0.1/0.2 不是业务作答页，这里映射到高位 YY，避免与 1..13、1..9 产生冲突。
+      const specialLegacyPageMap = {
+        0.1: 90,
+        0.2: 91,
+      };
 
-    // 构造答案列表：
-    // - 问卷页(14-21)：从 questionnaireAnswers 构建
-    // - 其他页：优先使用 options.answerList（若提供），否则沿用内部 answers 收集
-    let ansList;
-    if (pn >= 14 && pn <= 21) {
-      const pageData = getQuestionnairePageData(pn);
-      const missingLabel = options.missingLabel || '未回答';
+      const parseLegacyPage = rawPageNumber => {
+        if (rawPageNumber === null || rawPageNumber === undefined) {
+          return null;
+        }
+        const normalized = String(rawPageNumber).trim();
+        if (!normalized) {
+          return null;
+        }
+        if (Object.prototype.hasOwnProperty.call(specialLegacyPageMap, normalized)) {
+          return normalized;
+        }
+        const parsed = Number(normalized);
+        if (!Number.isFinite(parsed)) {
+          return null;
+        }
+        return parsed;
+      };
 
-      ansList = (pageData?.questions || []).map((q, idx) => {
-        const selected = qa?.[q.id]?.selectedOption;
-        const label = (q.options || []).find(opt => opt.value === selected)?.label;
+      const mapLegacyToSubPageIndex = legacyPage => {
+        if (
+          typeof legacyPage === 'string' &&
+          Object.prototype.hasOwnProperty.call(specialLegacyPageMap, legacyPage)
+        ) {
+          return specialLegacyPageMap[legacyPage];
+        }
+        if (typeof legacyPage === 'number') {
+          if (legacyPage >= 1 && legacyPage <= 13) {
+            return legacyPage;
+          }
+          if (legacyPage >= 14 && legacyPage <= 21) {
+            return legacyPage - 13;
+          }
+          if (legacyPage === 22) {
+            return 9;
+          }
+        }
+        return 99;
+      };
+
+      const resolveFlowContext = () => {
+        if (typeof uc.getFlowContext === 'function') {
+          try {
+            return uc.getFlowContext() || null;
+          } catch (error) {
+            console.warn('[TrackingProvider] 读取 getFlowContext 失败:', error);
+          }
+        }
+        if (uc.flowContext && typeof uc.flowContext === 'object') {
+          return uc.flowContext;
+        }
+        return null;
+      };
+
+      const ensureCompositePageNumber = rawPageNumber => {
+        const normalizedRaw = String(rawPageNumber ?? '').trim();
+        if (/^[1-9]\d*\.\d{2}$/.test(normalizedRaw)) {
+          return normalizedRaw;
+        }
+
+        const flowContext = resolveFlowContext();
+        const parsedStepIndex = Number(flowContext?.stepIndex);
+        const submoduleIndex =
+          Number.isFinite(parsedStepIndex) && parsedStepIndex >= 0
+            ? Math.floor(parsedStepIndex) + 1
+            : 1;
+
+        const legacyPage = parseLegacyPage(rawPageNumber);
+        const subPageIndex = mapLegacyToSubPageIndex(legacyPage);
+        return `${submoduleIndex}.${String(subPageIndex).padStart(2, '0')}`;
+      };
+
+      const compositePageNumber = ensureCompositePageNumber(pageNumber);
+      const legacyPage = parseLegacyPage(pageNumber);
+      const legacyPageNumeric = typeof legacyPage === 'number' ? legacyPage : Number.NaN;
+      const pageMappingKey = Number.isFinite(legacyPageNumeric)
+        ? legacyPageNumeric
+        : Number(pageNumber);
+      const fallbackPageId =
+        PAGE_MAPPING[pageMappingKey]?.pageId || `Page_${compositePageNumber.replace('.', '_')}`;
+
+      const normalizeTargetElement = (targetElement, fallbackName) => {
+        const rawTarget = String(targetElement || fallbackName || '').trim();
+        if (!rawTarget) {
+          return `P${compositePageNumber}_${fallbackName || 'unknown_target'}`;
+        }
+        if (reservedTargetSet.has(rawTarget)) {
+          return rawTarget;
+        }
+
+        const strippedTarget = rawTarget.replace(/^P[0-9]+(?:\.[0-9]+)?_/, '');
+        return `P${compositePageNumber}_${strippedTarget || fallbackName || 'unknown_target'}`;
+      };
+
+      const hasNextIntent = (targetElement, value) => {
+        const targetText = String(targetElement || '');
+        const valueText = typeof value === 'string' ? value : '';
+        return /下一页|next/i.test(`${targetText} ${valueText}`);
+      };
+
+      const mapEventType = (actionLike, targetElement, value) => {
+        const action = String(actionLike || '').trim();
+        const nextIntent = hasNextIntent(targetElement, value);
+
+        switch (action) {
+          case 'page_enter':
+            return 'page_enter';
+          case 'page_exit':
+            return 'page_exit';
+          case 'next_click':
+          case 'click_next':
+            return 'next_click';
+          case 'auto_submit':
+            return 'auto_submit';
+          case '点击':
+          case 'button_click':
+          case 'click':
+          case 'click_start_experiment':
+            return nextIntent ? 'next_click' : 'click';
+          case '文本域输入':
+          case 'text_input':
+          case 'text_input_start':
+          case 'input':
+            return 'input';
+          case 'start_edit':
+          case 'input_focus':
+            return 'input_focus';
+          case 'input_blur':
+            return 'input_blur';
+          case 'input_change':
+            return 'input_change';
+          case 'input_delete':
+            return 'input_delete';
+          case 'focus':
+            return 'focus';
+          case 'blur':
+            return 'blur';
+          case 'hover_enter':
+            return 'hover_enter';
+          case 'hover_leave':
+            return 'hover_leave';
+          case 'checkbox_toggle':
+            return typeof value === 'string' && value.includes('取消')
+              ? 'checkbox_uncheck'
+              : 'checkbox_check';
+          case 'checkbox_check':
+            return 'checkbox_check';
+          case 'checkbox_uncheck':
+            return 'checkbox_uncheck';
+          case '单选':
+          case 'radio_select':
+            return 'radio_select';
+          case '下拉框选择':
+          case 'select_change':
+          case 'change':
+            return 'select_change';
+          case 'modal_open':
+            return 'modal_open';
+          case 'modal_close':
+            return 'modal_close';
+          case 'resource_view':
+            return 'view_material';
+          case '计时开始':
+          case 'timer_start':
+            return 'timer_start';
+          case 'timer_complete':
+            return 'timer_complete';
+          case 'timer_stop':
+            return 'timer_stop';
+          case '完成':
+          case 'simulation_operation':
+          case 'complete_design':
+          case 'complete_evaluation':
+            return 'simulation_operation';
+          case 'questionnaire_answer':
+            return 'questionnaire_answer';
+          case 'simulation_timing_started':
+            return 'simulation_timing_started';
+          case 'simulation_run_result':
+            return 'simulation_run_result';
+          case 'click_blocked':
+            return 'click_blocked';
+          case 'flow_context':
+            return 'flow_context';
+          default:
+            return nextIntent ? 'next_click' : 'click';
+        }
+      };
+
+      const normalizeOperationValue = value => {
+        if (value === null || value === undefined) {
+          return '';
+        }
+        return typeof value === 'object' ? value : String(value);
+      };
+
+      let opList = opLog.map(op => {
+        const targetElement = op?.target || op?.targetElement || '';
+        const actionLike = op?.action || op?.eventType || '';
+        const eventType = mapEventType(actionLike, targetElement, op?.value);
         return {
-          code: idx + 1,  // 🔧 添加答案序号，与蒸馒头模块保持一致
-          targetElement: `P${pn}_问题${idx + 1}`,
-          value: String(label || missingLabel)
+          targetElement,
+          eventType,
+          value: normalizeOperationValue(op?.value),
+          time: formatDateTime(new Date(op?.time || op?.timestamp || Date.now())),
+          pageId: op?.pageId || fallbackPageId,
         };
       });
-    } else {
-      if (Array.isArray(options.answerList)) {
-        ansList = options.answerList.map((ans, index) => ({
-          code: index + 1,  // 🔧 添加答案序号，与蒸馒头模块保持一致
-          targetElement: String(ans.targetElement || ('A' + (index + 1))),
-          value: String(ans.value || '')
-        }));
+
+      const ensureLifecycleEvents = () => {
+        const hasPageEnter = opList.some(op => op.eventType === 'page_enter');
+        const hasPageExit = opList.some(op => op.eventType === 'page_exit');
+        const hasNextOrAuto = opList.some(
+          op => op.eventType === 'next_click' || op.eventType === 'auto_submit'
+        );
+
+        if (!hasPageEnter) {
+          opList.unshift({
+            targetElement: 'page',
+            eventType: 'page_enter',
+            value: normalizedPageDesc,
+            time: formatDateTime(new Date(pst || Date.now())),
+            pageId: fallbackPageId,
+          });
+        }
+
+        if (!hasPageExit) {
+          opList.push({
+            targetElement: 'page',
+            eventType: 'page_exit',
+            value: 'navigate_or_submit',
+            time: nowFormatted,
+            pageId: fallbackPageId,
+          });
+        }
+
+        if (!hasNextOrAuto) {
+          opList.push({
+            targetElement: 'page',
+            eventType: 'next_click',
+            value: 'synthetic_next_click_for_schema',
+            time: nowFormatted,
+            pageId: fallbackPageId,
+          });
+        }
+      };
+
+      ensureLifecycleEvents();
+
+      const flowContext = resolveFlowContext();
+      if (flowContext && !opList.some(op => op.eventType === 'flow_context')) {
+        const flowValue = {
+          flowId: flowContext.flowId || null,
+          submoduleId: flowContext.submoduleId || null,
+          stepIndex: Number.isFinite(Number(flowContext.stepIndex))
+            ? Number(flowContext.stepIndex)
+            : null,
+          moduleName: flowContext.moduleName || null,
+          pageId: flowContext.pageId || null,
+        };
+        const pageEnterIndex = opList.findIndex(op => op.eventType === 'page_enter');
+        const insertIndex = pageEnterIndex >= 0 ? pageEnterIndex + 1 : 0;
+        opList.splice(insertIndex, 0, {
+          targetElement: 'flow_context',
+          eventType: 'flow_context',
+          value: flowValue,
+          time: nowFormatted,
+          pageId: fallbackPageId,
+        });
+      }
+
+      opList = opList.map((op, index) => ({
+        code: index + 1,
+        targetElement: normalizeTargetElement(op.targetElement, `operation_${index + 1}`),
+        eventType: op.eventType,
+        value: op.value,
+        time: op.time,
+        pageId: op.pageId,
+      }));
+
+      // 构造答案列表：
+      // - 问卷页(14-21)：从 questionnaireAnswers 构建
+      // - 其他页：优先使用 options.answerList（若提供），否则沿用内部 answers 收集
+      let rawAnswerList;
+      if (legacyPageNumeric >= 14 && legacyPageNumeric <= 21) {
+        const pageData = getQuestionnairePageData(legacyPageNumeric);
+        const missingLabel = options.missingLabel || '未回答';
+
+        rawAnswerList = (pageData?.questions || []).map((q, idx) => {
+          const selected = qa?.[q.id]?.selectedOption;
+          const label = (q.options || []).find(opt => opt.value === selected)?.label;
+          return {
+            targetElement: `问题${idx + 1}`,
+            value: String(label || missingLabel),
+          };
+        });
       } else {
-        ansList = ans.map((ans, index) => ({
-          code: index + 1,  // 🔧 添加答案序号，与蒸馒头模块保持一致
-          targetElement: ans.targetElement,
-          value: String(ans.value || '')
+        const sourceAnswers = Array.isArray(options.answerList) ? options.answerList : ans;
+        rawAnswerList = sourceAnswers.map((answerItem, index) => ({
+          targetElement: String(answerItem?.targetElement || `answer_${index + 1}`),
+          value: String(answerItem?.value || ''),
         }));
       }
-    }
 
-    const markObject = {
-      pageNumber: String(pageNumber),
-      pageDesc: pageDesc,
-      operationList: opList,
-      answerList: ansList,
-      beginTime: formatDateTime(pst),
-      endTime: formatDateTime(new Date()),
-      imgList: []
-    };
+      const ansList = rawAnswerList
+        .map(answerItem => ({
+          targetElement: normalizeTargetElement(answerItem.targetElement, 'answer'),
+          value: String(answerItem.value || ''),
+        }))
+        .filter(answerItem => answerItem.value.trim().length > 0)
+        .map((answerItem, index) => ({
+          code: index + 1,
+          targetElement: answerItem.targetElement,
+          value: answerItem.value,
+        }));
 
-    console.log('[TrackingProvider] 构建MarkObject:', {
-      pageNumber,
-      pageDesc,
-      operationCount: markObject.operationList.length,
-      answerCount: markObject.answerList.length
-    });
+      const markObject = {
+        pageNumber: compositePageNumber,
+        pageDesc: normalizedPageDesc,
+        operationList: opList,
+        answerList: ansList,
+        beginTime: formatDateTime(pst || Date.now()),
+        endTime: nowFormatted,
+        imgList: [],
+      };
 
-    return markObject;
-  }, [formatDateTime]);
+      console.log('[TrackingProvider] 构建MarkObject:', {
+        legacyPageNumber: pageNumber,
+        compositePageNumber,
+        pageDesc: normalizedPageDesc,
+        operationCount: markObject.operationList.length,
+        answerCount: markObject.answerList.length,
+      });
+
+      return markObject;
+    },
+    [formatDateTime]
+  );
 
   // ============================================================================
   // 9. 页面导航
@@ -707,47 +1003,50 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @param {number} pageNum - 目标页面编号
    *
    */
-  const navigateToPage = useCallback((pageNum) => {
-    const { session: s } = stateRef.current;
-    // 查找对应的 pageId
-    const pageInfo = PAGE_MAPPING[pageNum];
-    if (!pageInfo) {
-      console.error('[TrackingProvider] 未找到页面编号对应的页面信息:', pageNum);
-      return;
-    }
+  const navigateToPage = useCallback(
+    pageNum => {
+      const { session: s } = stateRef.current;
+      // 查找对应的 pageId
+      const pageInfo = PAGE_MAPPING[pageNum];
+      if (!pageInfo) {
+        console.error('[TrackingProvider] 未找到页面编号对应的页面信息:', pageNum);
+        return;
+      }
 
-    const pageId = pageInfo.pageId;
-    const navigationMode = pageInfo.navigationMode;
+      const pageId = pageInfo.pageId;
+      const navigationMode = pageInfo.navigationMode;
 
-    // 记录页面退出操作
-    logOperation({
-      timestamp: Date.now(),
-      action: 'page_exit',
-      target: '页面',
-      value: s.currentPage,
-      time: new Date().toISOString()
-    });
+      // 记录页面退出操作
+      logOperation({
+        timestamp: Date.now(),
+        action: 'page_exit',
+        target: '页面',
+        value: s.currentPage,
+        time: new Date().toISOString(),
+      });
 
-    // 更新会话状态
-    updateSession({
-      currentPage: pageNum,
-      navigationMode
-    });
+      // 更新会话状态
+      updateSession({
+        currentPage: pageNum,
+        navigationMode,
+      });
 
-    // 重置页面开始时间
-    setPageStartTime(Date.now());
+      // 重置页面开始时间
+      setPageStartTime(Date.now());
 
-    // 记录页面进入操作
-    logOperation({
-      timestamp: Date.now(),
-      action: 'page_enter',
-      target: '页面',
-      value: pageNum,
-      time: new Date().toISOString()
-    });
+      // 记录页面进入操作
+      logOperation({
+        timestamp: Date.now(),
+        action: 'page_enter',
+        target: '页面',
+        value: pageNum,
+        time: new Date().toISOString(),
+      });
 
-    console.log('[TrackingProvider] 导航至页面:', pageId, '页码:', pageNum);
-  }, [updateSession, logOperation]);
+      console.log('[TrackingProvider] 导航至页面:', pageId, '页码:', pageNum);
+    },
+    [updateSession, logOperation]
+  );
 
   // ============================================================================
   // 10. 数据提交
@@ -758,35 +1057,38 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
    * @param {Object} markObject - MarkObject数据结构
    * @returns {Promise<boolean>} 提交是否成功
    */
-  const submitPageData = useCallback(async (markObject) => {
-    try {
-      console.log('[TrackingProvider] 准备提交页面数据:', markObject);
+  const submitPageData = useCallback(
+    async markObject => {
+      try {
+        console.log('[TrackingProvider] 准备提交页面数据:', markObject);
 
-      // 使用userContext中的submitPageDataWithInfo提交数据
-      // submitPageDataWithInfo签名: (batchCode, examNo, customData)
-      const uc = userContextRef.current;
-      const { session: s } = stateRef.current;
-      if (uc?.submitPageDataWithInfo) {
-        const response = await uc.submitPageDataWithInfo(
-          s.batchCode,
-          s.examNo,
-          markObject  // 直接传入markObject对象，不需要JSON.stringify
-        );
-        console.log('[TrackingProvider] 数据提交成功:', response);
+        // 使用userContext中的submitPageDataWithInfo提交数据
+        // submitPageDataWithInfo签名: (batchCode, examNo, customData)
+        const uc = userContextRef.current;
+        const { session: s } = stateRef.current;
+        if (uc?.submitPageDataWithInfo) {
+          const response = await uc.submitPageDataWithInfo(
+            s.batchCode,
+            s.examNo,
+            markObject // 直接传入markObject对象，不需要JSON.stringify
+          );
+          console.log('[TrackingProvider] 数据提交成功:', response);
 
-        // 提交成功后清除操作日志
-        clearOperations();
+          // 提交成功后清除操作日志
+          clearOperations();
 
-        return response;
-      } else {
-        console.error('[TrackingProvider] submitPageDataWithInfo 不可用');
+          return response;
+        } else {
+          console.error('[TrackingProvider] submitPageDataWithInfo 不可用');
+          return false;
+        }
+      } catch (error) {
+        console.error('[TrackingProvider] 数据提交失败:', error);
         return false;
       }
-    } catch (error) {
-      console.error('[TrackingProvider] 数据提交失败:', error);
-      return false;
-    }
-  }, [clearOperations]);
+    },
+    [clearOperations]
+  );
 
   // ============================================================================
   // 11. 导航辅助方法
@@ -831,7 +1133,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     if (!s.taskTimerActive) {
       updateSession({
         taskTimerActive: true,
-        taskTimeRemaining: EXPERIMENT_DURATION // 重置为配置的时长
+        taskTimeRemaining: EXPERIMENT_DURATION, // 重置为配置的时长
       });
       console.log('[TrackingProvider] 探究任务计时器已启动');
 
@@ -853,7 +1155,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
     if (!s.questionnaireTimerActive) {
       updateSession({
         questionnaireTimerActive: true,
-        questionnaireTimeRemaining: QUESTIONNAIRE_DURATION // 重置为配置的时长
+        questionnaireTimeRemaining: QUESTIONNAIRE_DURATION, // 重置为配置的时长
       });
       console.log('[TrackingProvider] 问卷计时器已启动（内部）, 时长:', QUESTIONNAIRE_DURATION);
 
@@ -880,7 +1182,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
         const newTimeRemaining = Math.max(0, prev.taskTimeRemaining - 1);
         return {
           ...prev,
-          taskTimeRemaining: newTimeRemaining
+          taskTimeRemaining: newTimeRemaining,
         };
       });
     }, 1000);
@@ -901,7 +1203,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
         const newTimeRemaining = Math.max(0, prev.questionnaireTimeRemaining - 1);
         return {
           ...prev,
-          questionnaireTimeRemaining: newTimeRemaining
+          questionnaireTimeRemaining: newTimeRemaining,
         };
       });
     }, 1000);
@@ -934,10 +1236,23 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
 
   // Notify subscribers when any core state slice changes (for selector hook)
   useEffect(() => {
-    subscribersRef.current.forEach((fn) => {
-      try { fn(); } catch (e) { /* noop */ }
+    subscribersRef.current.forEach(fn => {
+      try {
+        fn();
+      } catch (e) {
+        /* noop */
+      }
     });
-  }, [session, experimentTrials, chartData, textResponses, questionnaireAnswers, operationLog, answers, pageStartTime]);
+  }, [
+    session,
+    experimentTrials,
+    chartData,
+    textResponses,
+    questionnaireAnswers,
+    operationLog,
+    answers,
+    pageStartTime,
+  ]);
 
   // ============================================================================
   // 13.5 监听计时器到期事件并执行自动跳转 (T098, T100)
@@ -958,11 +1273,17 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       taskTimerActive,
       isExperimentMode,
       currentPage: session.currentPage,
-      shouldJump: taskTimeRemaining === 0 && taskTimerActive && isExperimentMode && session.currentPage < 13
+      shouldJump:
+        taskTimeRemaining === 0 && taskTimerActive && isExperimentMode && session.currentPage < 13,
     });
 
     // 仅在实验模式下，计时器活跃，且倒计时为0时触发
-    if (taskTimeRemaining === 0 && taskTimerActive && isExperimentMode && session.currentPage < 13) {
+    if (
+      taskTimeRemaining === 0 &&
+      taskTimerActive &&
+      isExperimentMode &&
+      session.currentPage < 13
+    ) {
       console.log('[TrackingProvider] 🚨 实验时间已到，自动跳转到页面13（任务总结）');
 
       // 停止计时器
@@ -972,7 +1293,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       logOperation({
         targetElement: '系统事件',
         eventType: '实验超时',
-        value: '40分钟倒计时结束，自动跳转到任务总结页'
+        value: '40分钟倒计时结束，自动跳转到任务总结页',
       });
 
       // 延迟跳转，确保日志记录完成
@@ -980,7 +1301,15 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
         navigateToPage(13); // 跳转到任务总结页（Page_13_Summary）
       }, 500);
     }
-  }, [session.taskTimeRemaining, session.taskTimerActive, session.navigationMode, session.currentPage, navigateToPage, logOperation, updateSession]);
+  }, [
+    session.taskTimeRemaining,
+    session.taskTimerActive,
+    session.navigationMode,
+    session.currentPage,
+    navigateToPage,
+    logOperation,
+    updateSession,
+  ]);
 
   /**
    * 监听问卷倒计时到期（基于内部状态）
@@ -997,11 +1326,22 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       questionnaireTimerActive,
       isQuestionnaireMode,
       currentPage: session.currentPage,
-      shouldJump: questionnaireTimeRemaining === 0 && questionnaireTimerActive && isQuestionnaireMode && session.currentPage >= 14 && session.currentPage < 22
+      shouldJump:
+        questionnaireTimeRemaining === 0 &&
+        questionnaireTimerActive &&
+        isQuestionnaireMode &&
+        session.currentPage >= 14 &&
+        session.currentPage < 22,
     });
 
     // 仅在问卷模式下，计时器活跃，且倒计时为0时触发
-    if (questionnaireTimeRemaining === 0 && questionnaireTimerActive && isQuestionnaireMode && session.currentPage >= 14 && session.currentPage < 22) {
+    if (
+      questionnaireTimeRemaining === 0 &&
+      questionnaireTimerActive &&
+      isQuestionnaireMode &&
+      session.currentPage >= 14 &&
+      session.currentPage < 22
+    ) {
       console.log('[TrackingProvider] 🚨 问卷时间已到，自动跳转到页面22（问卷完成）');
 
       // 停止计时器
@@ -1011,7 +1351,7 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
       logOperation({
         targetElement: '系统事件',
         eventType: '问卷超时',
-        value: '问卷倒计时结束，自动跳转到问卷完成页'
+        value: '问卷倒计时结束，自动跳转到问卷完成页',
       });
 
       // 延迟跳转，确保日志记录完成
@@ -1019,102 +1359,109 @@ export const TrackingProvider = ({ userContext, initialPageId, children }) => {
         navigateToPage(22); // 跳转到问卷完成页（Page_22_Completion）
       }, 500);
     }
-  }, [session.questionnaireTimeRemaining, session.questionnaireTimerActive, session.navigationMode, session.currentPage, navigateToPage, logOperation, updateSession]);
+  }, [
+    session.questionnaireTimeRemaining,
+    session.questionnaireTimerActive,
+    session.navigationMode,
+    session.currentPage,
+    navigateToPage,
+    logOperation,
+    updateSession,
+  ]);
 
   // ============================================================================
   // 14. Context Value
   // ============================================================================
 
-  const contextValue = useMemo(() => ({
-    // 会话管理
-    session,
-    updateSession,
-    updateHeartbeat,
+  const contextValue = useMemo(
+    () => ({
+      // 会话管理
+      session,
+      updateSession,
+      updateHeartbeat,
 
-    // 实验数据
-    experimentTrials,
-    addExperimentTrial,
+      // 实验数据
+      experimentTrials,
+      addExperimentTrial,
 
-    // 图表数据
-    chartData,
-    addChartDataPoint,
-    removeChartDataPoint,
+      // 图表数据
+      chartData,
+      addChartDataPoint,
+      removeChartDataPoint,
 
-    // 文本回答
-    textResponses,
-    updateTextResponse,
+      // 文本回答
+      textResponses,
+      updateTextResponse,
 
-    // 问卷答案
-    questionnaireAnswers,
-    updateQuestionnaireAnswer,
+      // 问卷答案
+      questionnaireAnswers,
+      updateQuestionnaireAnswer,
 
-    // 操作日志
-    operationLog,
-    logOperation,
-    collectAnswer,
-    clearOperations,
-    buildMarkObject,
+      // 操作日志
+      operationLog,
+      logOperation,
+      collectAnswer,
+      clearOperations,
+      buildMarkObject,
 
-    // 导航
-    navigateToPage,
-    canNavigateNext,
-    getCurrentNavigationMode,
+      // 导航
+      navigateToPage,
+      canNavigateNext,
+      getCurrentNavigationMode,
 
-    // 数据提交
-    submitPageData,
+      // 数据提交
+      submitPageData,
 
-    // 计时器管理 (T097, T099)
-    startTaskTimer,
-    startQuestionnaireTimerInternal,
+      // 计时器管理 (T097, T099)
+      startTaskTimer,
+      startQuestionnaireTimerInternal,
 
-    // 工具函数
-    formatDateTime,
+      // 工具函数
+      formatDateTime,
 
-    // 提供给组件的当前页面操作记录
-    currentPageOperations: operationLog,
+      // 提供给组件的当前页面操作记录
+      currentPageOperations: operationLog,
 
-    // 暴露 userContext 以便页面组件访问
-    userContext,
+      // 暴露 userContext 以便页面组件访问
+      userContext,
 
-    // 供 selector 订阅/读取（稳定引用）
-    __subscribe: (listener) => {
-      subscribersRef.current.add(listener);
-      return () => subscribersRef.current.delete(listener);
-    },
-    __getStore: () => stateRef.current,
-  }), [
-    session,
-    updateSession,
-    updateHeartbeat,
-    // methods below are stable (callbacks without changing deps)
-    addExperimentTrial,
-    chartData,
-    addChartDataPoint,
-    removeChartDataPoint,
-    textResponses,
-    updateTextResponse,
-    questionnaireAnswers,
-    updateQuestionnaireAnswer,
-    operationLog,
-    logOperation,
-    collectAnswer,
-    clearOperations,
-    buildMarkObject,
-    navigateToPage,
-    canNavigateNext,
-    getCurrentNavigationMode,
-    submitPageData,
-    startTaskTimer,
-    startQuestionnaireTimerInternal,
-    formatDateTime,
-    userContext,
-  ]);
-
-  return (
-    <TrackingContext.Provider value={contextValue}>
-      {children}
-    </TrackingContext.Provider>
+      // 供 selector 订阅/读取（稳定引用）
+      __subscribe: listener => {
+        subscribersRef.current.add(listener);
+        return () => subscribersRef.current.delete(listener);
+      },
+      __getStore: () => stateRef.current,
+    }),
+    [
+      session,
+      updateSession,
+      updateHeartbeat,
+      // methods below are stable (callbacks without changing deps)
+      addExperimentTrial,
+      chartData,
+      addChartDataPoint,
+      removeChartDataPoint,
+      textResponses,
+      updateTextResponse,
+      questionnaireAnswers,
+      updateQuestionnaireAnswer,
+      operationLog,
+      logOperation,
+      collectAnswer,
+      clearOperations,
+      buildMarkObject,
+      navigateToPage,
+      canNavigateNext,
+      getCurrentNavigationMode,
+      submitPageData,
+      startTaskTimer,
+      startQuestionnaireTimerInternal,
+      formatDateTime,
+      userContext,
+    ]
   );
+
+  return <TrackingContext.Provider value={contextValue}>{children}</TrackingContext.Provider>;
 };
 
 /**
@@ -1132,7 +1479,7 @@ export function useTrackingContext() {
   if (!context) {
     throw new Error(
       '[useTrackingContext] Hook must be used within TrackingProvider. ' +
-      'Make sure to wrap your component tree with <TrackingProvider>.'
+        'Make sure to wrap your component tree with <TrackingProvider>.'
     );
   }
 

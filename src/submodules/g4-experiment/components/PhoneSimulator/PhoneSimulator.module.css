@@ -9,7 +9,7 @@
   height: 680px;
   border: 8px solid var(--g4-phone-border);
   border-radius: 48px;
-  background: #fff;
+  background: var(--color-white);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
   overflow: hidden;
   display: flex;
@@ -32,7 +32,7 @@
   position: relative;
   height: 64px;
   background: var(--cartoon-primary);
-  color: #fff;
+  color: var(--color-white);
   display: flex;
   align-items: flex-end;
   justify-content: center;

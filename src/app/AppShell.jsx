@@ -7,6 +7,7 @@ import G8DroneImagingDevPage from '@/dev/G8DroneImagingDevPage.jsx';
 import UserInfoBar from '@/components/common/UserInfoBar.jsx';
 import FullscreenEnforcer from '@/components/FullscreenEnforcer.jsx';
 import PvSandDevHarness from '@/submodules/g8-pv-sand-experiment/dev/PvSandDevHarness';
+import { isFullscreenFeatureEnabled } from '@/utils/fullscreenPreference';
 
 function AppProviders({ children }) {
   return children;
@@ -29,18 +30,21 @@ function FlowRoute() {
 
 // AppShell: top-level shell wiring routes and global entry points
 export default function AppShell() {
-  const isDevEnvironment = typeof process !== 'undefined'
-    ? process.env.NODE_ENV === 'development'
-    : Boolean(import.meta.env?.DEV);
+  const isDevEnvironment =
+    typeof process !== 'undefined'
+      ? process.env.NODE_ENV === 'development'
+      : Boolean(import.meta.env?.DEV);
 
   const location = useLocation();
   // Hide UserInfoBar on login and landing routes
   const isLoginPage = location.pathname === '/login' || location.pathname === '/';
 
+  const fullscreenEnabled = isFullscreenFeatureEnabled();
+
   return (
     <AppProviders>
       <AppProvider>
-        <FullscreenEnforcer />
+        {fullscreenEnabled && <FullscreenEnforcer />}
         {/* Global UserInfoBar (fixed position); shared across all routes */}
         {!isLoginPage && <UserInfoBar />}
         <Routes>
@@ -58,11 +62,11 @@ export default function AppShell() {
               letting the rest double-render in dev to surface side effects. */}
           <Route
             path="*"
-            element={(
+            element={
               <React.StrictMode>
                 <App />
               </React.StrictMode>
-            )}
+            }
           />
         </Routes>
       </AppProvider>

@@ -37,7 +37,7 @@ function renderPage(initialPageId: PageId = 'height_analysis') {
 }
 
 const STEP_INDEX = 0;
-const HEIGHT_ANALYSIS_PREFIX = `P${encodeCompositePageNum(STEP_INDEX, 6)}_`;
+const HEIGHT_ANALYSIS_PREFIX = `P${encodeCompositePageNum(STEP_INDEX + 1, 6)}_`;
 const GSD_TREND_ID = `${HEIGHT_ANALYSIS_PREFIX}GSD变化趋势`;
 
 describe('Page06_HeightAnalysis', () => {

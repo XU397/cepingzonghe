@@ -1,60 +1,141 @@
 .page {
-  min-height: 100%;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--cartoon-bg);
-  padding: 24px;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 .card {
   background: var(--cartoon-light);
   border: 2px solid var(--cartoon-border);
   border-radius: 18px;
-  padding: 24px 28px;
-  text-align: center;
-  max-width: 640px;
+  display: flex;
   width: 100%;
+  max-width: 900px;
+  height: 100%;
+  max-height: 520px;
+  overflow: hidden;
   box-shadow: 0 10px 20px var(--cartoon-shadow);
 }
 
+.leftSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.completionImage {
+  max-width: 100%;
+  max-height: 460px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.rightSection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: var(--cartoon-light);
+}
+
+.content {
+  text-align: center;
+  max-width: 320px;
+}
+
+.iconWrapper {
+  margin-bottom: 20px;
+}
+
+.checkIcon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+}
+
 .title {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--cartoon-dark);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  line-height: 1.3;
 }
 
 .message {
   font-size: 16px;
   color: var(--text-color);
-  margin-bottom: 20px;
-  line-height: 1.6;
+  line-height: 1.7;
+  margin: 0;
 }
 
-.finishButton {
-  background: var(--cartoon-primary);
-  color: var(--cartoon-bg);
-  border: none;
-  padding: 12px 28px;
-  font-size: 16px;
-  font-weight: 700;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 8px 16px var(--cartoon-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+@media (max-width: 768px) {
+  .card {
+    flex-direction: column;
+    max-height: none;
+  }
+
+  .leftSection {
+    padding: 16px;
+    min-height: 200px;
+  }
+
+  .completionImage {
+    max-height: 280px;
+  }
+
+  .rightSection {
+    padding: 24px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .message {
+    font-size: 15px;
+  }
 }
 
-.finishButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 20px var(--cartoon-shadow);
-}
+@media (max-height: 600px) {
+  .card {
+    max-height: calc(100vh - 100px);
+  }
 
-.finishButton:disabled {
-  background: var(--border-color);
-  color: var(--text-color);
-  opacity: 0.6;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+  .leftSection {
+    padding: 16px;
+  }
+
+  .completionImage {
+    max-height: 280px;
+  }
+
+  .rightSection {
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .checkIcon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .iconWrapper {
+    margin-bottom: 12px;
+  }
 }

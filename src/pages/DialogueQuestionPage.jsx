@@ -1,10 +1,25 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
-import dialogueImg from '../assets/images/dialogue.png';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 import { useAppContext } from '../context/AppContext';
 import TextInput from '../components/common/TextInput';
 import NavigationButton from '../components/common/NavigationButton';
+import DialogueChat from '../components/DialogueChat';
+
+// 对话消息数据
+const dialogueMessages = [
+  { role: 'xiaoming', text: '爸爸妈妈，我发现我蒸的馒头和你们做的不一样，不香又有点软，不够有嚼劲。' },
+  { role: 'dad', text: '我尝尝。味道确实不太对，咬下去有点粘牙。' },
+  { role: 'xiaoming', text: '怎么会这样呢？' },
+  { role: 'mom', text: '第一次做已经很棒了！可能是面团过度发酵了。你掰开馒头，里面是不是有很多大孔？' },
+  { role: 'xiaoming', text: '是呀，妈妈。什么是过度发酵呢？' },
+  { role: 'mom', text: '过度发酵就是面团膨胀的很大，没有弹性了，外观也不好看。' },
+  { role: 'xiaoming', text: '原来是这样！我做的时候面团确实膨胀得很大。' },
+  { role: 'mom', text: '所以蒸馒头前，控制好面的发酵程度很关键，不过发酵过度也很常见。' },
+  { role: 'xiaoming', text: '那面团为什么会发酵过度呢？' },
+  { role: 'mom', text: '这可不好说，我都是凭经验，你可以去查查。' }
+];
 
 /**
  * 蒸馒头 - 对话与提出问题页面
@@ -25,7 +40,10 @@ const DialogueQuestionPage = () => {
   const inputStateRef = useRef({ focused: false, lastValue: '' });
 
   const recordOperation = useCallback((operation) => {
-    const normalizedOperation = { ...operation };
+    const normalizedOperation = {
+      ...operation,
+      time: formatTimestamp(new Date()),
+    };
     logOperation(normalizedOperation);
     operationsRef.current = [...operationsRef.current, normalizedOperation];
   }, [logOperation]);
@@ -53,8 +71,8 @@ const DialogueQuestionPage = () => {
       setShowAlert(true);
       recordOperation({
         eventType: EventTypes.CLICK_BLOCKED,
-        targetElement: 'btn_next',
-        value: { reason: '未填写科学问题', missing: ['scientific_question'] }
+        targetElement: 'next_button',
+        value: { reason: '未填写科学问题', missing: ['科学问题'] }
       });
       return false;
     }
@@ -62,13 +80,13 @@ const DialogueQuestionPage = () => {
     setShowAlert(false);
     recordOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_next',
+      targetElement: 'next_button',
       value: '提交科学问题'
     });
 
     const trimmedQuestion = question.trim();
     const submissionSuccess = await submitPage({
-      answers: trimmedQuestion ? [{ targetElement: 'scientific_question', value: trimmedQuestion }] : [],
+      answers: trimmedQuestion ? [{ targetElement: '科学问题', value: trimmedQuestion }] : [],
       operations: operationsRef.current,
     });
     if (submissionSuccess) {
@@ -88,14 +106,14 @@ const DialogueQuestionPage = () => {
     if (nextValue.length < prev.length) {
       recordOperation({
         eventType: EventTypes.INPUT_DELETE,
-        targetElement: 'input_scientific_question',
+        targetElement: '科学问题输入框',
         value: { action: 'delete', prevLength: prev.length, nextLength: nextValue.length }
       });
     }
 
     recordOperation({
       eventType: EventTypes.INPUT_CHANGE,
-      targetElement: 'input_scientific_question',
+      targetElement: '科学问题输入框',
       value: { prev, next: nextValue }
     });
 
@@ -107,7 +125,7 @@ const DialogueQuestionPage = () => {
     if (inputStateRef.current.focused) return;
     recordOperation({
       eventType: EventTypes.INPUT_FOCUS,
-      targetElement: 'input_scientific_question',
+      targetElement: '科学问题输入框',
       value: '聚焦'
     });
     inputStateRef.current.focused = true;
@@ -116,7 +134,7 @@ const DialogueQuestionPage = () => {
   const handleInputBlur = useCallback(() => {
     recordOperation({
       eventType: EventTypes.INPUT_BLUR,
-      targetElement: 'input_scientific_question',
+      targetElement: '科学问题输入框',
       value: question
     });
     inputStateRef.current.focused = false;
@@ -132,25 +150,13 @@ const DialogueQuestionPage = () => {
       )}
       <h1 className="page-title">蒸馒头</h1>
       
-      <div className="dialogue-container">
-        <div className="dialogue-image">
-          {/* 这里可添加对话场景图片 */}
-          <img 
-            src={dialogueImg} 
-            alt="小明与馒头的对话场景"
-            className="dialogue-scene-image"
-          />
-        </div>
-        
-        <div className="dialogue-text">
-          <p className="dialogue-bubble xiaoming-bubble">
-            我按照食谱放了酵母、面粉、水和白糖，揉了面团后放在温暖处发酵。
-            但过了一会儿，面团发得太大了，变得很松软，甚至有点塌了……
-          </p>
-          <p className="dialogue-bubble teacher-bubble">
-            看来面团过度发酵了。你知道为什么会发生这种情况吗？
-          </p>
-        </div>
+      <div className="dialogue-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+        <DialogueChat
+          messages={dialogueMessages}
+          title="蒸馒头心得讨论"
+          autoPlay={true}
+          initialDelay={800}
+        />
       </div>
       
         <div className="question-input-section">

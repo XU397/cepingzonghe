@@ -1,0 +1,190 @@
+.container {
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.playBtn,
+.resetBtn {
+  min-width: 110px;
+  min-height: 38px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 150ms ease-out,
+    box-shadow 200ms ease;
+}
+
+.playBtn {
+  background: #59c1ff;
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 8px 20px rgba(89, 193, 255, 0.35);
+}
+
+.playBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(89, 193, 255, 0.45);
+}
+
+.playBtn:disabled {
+  background: #cfd8dc;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.resetBtn {
+  background: #ffffff;
+  color: #59c1ff;
+  border: 2px solid #59c1ff;
+}
+
+.resetBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: rgba(89, 193, 255, 0.1);
+}
+
+.resetBtn:disabled {
+  border-color: #cfd8dc;
+  color: #cfd8dc;
+  cursor: not-allowed;
+}
+
+.svgPanel {
+  position: relative;
+  width: 100%;
+}
+
+.svgCanvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  background: #ffffff;
+  touch-action: none;
+}
+
+.dropZoneRect {
+  fill: #f5fbff;
+  stroke: #ffce6b;
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+}
+
+.zoneLabel {
+  fill: #666666;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.axisLine {
+  stroke: #d7e3ef;
+  stroke-width: 2;
+}
+
+.blockGroup {
+  transition: filter 150ms ease;
+}
+
+.blockGroup.draggable {
+  cursor: grab;
+}
+
+.blockGroup.draggable:active {
+  cursor: grabbing;
+}
+
+.blockRect {
+  transition:
+    transform 200ms ease,
+    filter 200ms ease;
+}
+
+.blockGroup:hover .blockRect {
+  filter: brightness(1.1);
+}
+
+.blockText {
+  fill: rgba(255, 255, 255, 0.96);
+  font-size: 24px;
+  font-weight: 800;
+  pointer-events: none;
+  user-select: none;
+}
+
+.cursorLayer {
+  pointer-events: none;
+}
+
+.cursorHalo {
+  fill: rgba(89, 193, 255, 0.26);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.cursorIcon {
+  fill: #ffffff;
+  stroke: #2d5b8e;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.totalTime {
+  position: absolute;
+  right: 30px;
+  bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  color: #333333;
+  font-size: 16px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #d7e3ef;
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+.timeInput {
+  width: 56px;
+  height: 36px;
+  border: 2px solid #e3eaf3;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2d5b8e;
+  background: #ffffff;
+}
+
+.timeInput:focus {
+  outline: none;
+  border-color: #59c1ff;
+  box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.2);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (max-width: 1024px) {
+  .totalTime {
+    right: 20px;
+    bottom: 22px;
+    font-size: 14px;
+  }
+}

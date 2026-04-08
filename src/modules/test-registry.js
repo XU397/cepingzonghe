@@ -47,21 +47,6 @@ async function testModuleRegistry() {
       console.error('❌ [测试场景2] 失败 - 未能正确返回回退模块');
     }
     
-    // 额外测试：验证4年级模块注册
-    console.log('\n📋 [额外测试] 测试4年级模块URL: /four-grade');
-    const fourGradeModule = moduleRegistry.getModuleByUrl('/four-grade');
-    
-    if (fourGradeModule && fourGradeModule.moduleId === 'grade-4') {
-      console.log('✅ [额外测试] 通过 - 成功获取4年级模块');
-      console.log('   模块信息:', {
-        moduleId: fourGradeModule.moduleId,
-        displayName: fourGradeModule.displayName,
-        url: fourGradeModule.url
-      });
-    } else {
-      console.error('❌ [额外测试] 失败 - 未能正确获取4年级模块');
-    }
-    
     // 显示所有已注册模块
     console.log('\n📋 [系统状态] 所有已注册模块:');
     const allMappings = moduleRegistry.getAllUrlMappings();

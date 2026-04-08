@@ -4,18 +4,30 @@
  * 使用 AssessmentPageFrame 统一框架接入
  */
 
-import { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from 'react';
+import { createContext, useContext, useReducer, useEffect, useMemo, useCallback, useRef } from 'react';
 import { AssessmentPageFrame } from '@/shared/ui/PageFrame';
-import { formatTimestamp } from '@/shared/services/dataLogger.js';
+import { formatTimestamp } from '@shared/services/submission/createMarkObject.js';
+import EventTypes from '@shared/services/submission/eventTypes.js';
+import {
+  buildPageDesc as buildSharedPageDesc,
+  appendExperimentHistory,
+  collectAnswers as collectAnswersFromConfig,
+  createOperationSequence,
+  injectFlowContext,
+  shouldInjectFlowContext,
+} from '@shared/services/submission/submoduleAdapter';
+import { encodeCompositePageNum } from '@shared/utils/pageMapping';
 import {
   getNextPageId,
-  getPageSubNum,
+  getSubPageNumByPageId,
   getTotalSteps,
   getNavigationMode,
   getStepIndex,
   PAGE_DESC_MAP,
   QUESTION_CODE_MAP,
   ANSWER_KEY_TO_QUESTION,
+  SUBMODULE_MAPPING_CONFIG,
+  HISTORY_CODE_BASE,
 } from './mapping';
 
 // Page Components
@@ -31,6 +43,8 @@ import Page06Q4Conc from './pages/Page06_Q4_Conc';
 // Constants
 // ========================================
 
+const DISPLAY_NAME = '薇甘菊防治实验';
+
 const STORAGE_KEYS = {
   answers: 'module.g8-mikania-experiment.answers',
   experimentState: 'module.g8-mikania-experiment.experimentState',
@@ -39,7 +53,7 @@ const STORAGE_KEYS = {
 
 const DEFAULT_EXPERIMENT_STATE = {
   concentration: '0mg/ml',
-  days: 1,
+  days: 4,
   hasStarted: false,
   currentResult: null,
   history: [],
@@ -47,30 +61,6 @@ const DEFAULT_EXPERIMENT_STATE = {
 
 // 导出给页面组件使用
 export { QUESTION_CODE_MAP, PAGE_DESC_MAP, ANSWER_KEY_TO_QUESTION };
-
-const PAGE_QUESTIONS = {
-  'page_00_notice': [],
-  'page_01_intro': [],
-  'page_02_step_q1': ['Q1_控制变量原因'],
-  'page_03_sim_exp': [],
-  'page_04_q2_data': ['Q2_抑制作用浓度'],
-  'page_05_q3_trend': ['Q3_发芽率趋势'],
-  'page_06_q4_conc': ['Q4a_菟丝子有效性', 'Q4b_结论理由'],
-};
-
-const QUESTION_TEXT_MAP = {
-  Q1: '问题1：为什么在每组实验中，都要确保其他条件一致？',
-  Q2: '问题2：根据实验结果，哪种浓度的菟丝子提取液对薇甘菊种子萌发抑制作用最强？',
-  Q3: '问题3：随着菟丝子提取液浓度的增加，薇甘菊种子发芽率呈现出怎样的变化趋势？',
-  Q4a: '问题4a：菟丝子能否有效防治薇甘菊？',
-  Q4b: '问题4b：请说明你的理由',
-};
-
-const QUESTION_OPTIONS_MAP = {
-  Q2: { A: '5mg/ml', B: '7.5mg/ml', C: '10mg/ml' },
-  Q3: { A: '下降', B: '上升', C: '先上升后下降' },
-  Q4a: { A: '是', B: '否' },
-};
 
 // ========================================
 // Action Types
@@ -107,6 +97,7 @@ const createInitialState = (initialPageId) => ({
   noticeConfirmed: false,
   noticeCountdown: 38,
   operations: [],
+  flowContextInjected: false,  // flow_context 是否已注入当前页
   pageEnterTime: new Date(),
 });
 
@@ -179,6 +170,44 @@ export function getMissingFields(pageId, state) {
   return missing;
 }
 
+export function getValidationErrors(pageId, state) {
+  const errors = {};
+
+  switch (pageId) {
+    case 'page_00_notice':
+      if (!state.noticeConfirmed) {
+        errors.checkbox = '请勾选确认已阅读注意事项';
+      }
+      break;
+
+    case 'page_02_step_q1': {
+      const answer = state.answers?.Q1_控制变量原因 || '';
+      if (answer.length < 5) {
+        errors.Q1_控制变量原因 = `请至少填写5个字符，当前${answer.length}个`;
+      }
+      break;
+    }
+
+    case 'page_06_q4_conc': {
+      const answerQ4a = state.answers?.Q4a_菟丝子有效性;
+      if (!['是', '否'].includes(answerQ4a)) {
+        errors.Q4a_菟丝子有效性 = '请选择“是”或“否”';
+      }
+
+      const answerQ4b = state.answers?.Q4b_结论理由 || '';
+      if (answerQ4b.length < 10) {
+        errors.Q4b_结论理由 = `请至少输入10个字符，当前${answerQ4b.length}个（至少10个字符）`;
+      }
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  return errors;
+}
+
 export function clearModuleStorage() {
   try {
     Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
@@ -192,64 +221,98 @@ export function clearModuleStorage() {
 // Reducer
 // ========================================
 
-function mikaniaReducer(state, action) {
-  switch (action.type) {
-    case ACTION_TYPES.SET_PAGE:
-      return {
-        ...state,
-        currentPageId: action.payload,
-        pageEnterTime: new Date(),
-        operations: [],
-      };
-    case ACTION_TYPES.SET_ANSWER:
-      return {
-        ...state,
-        answers: {
-          ...state.answers,
-          [action.payload.questionId]: action.payload.value,
-        },
-      };
-    case ACTION_TYPES.SET_EXPERIMENT_STATE:
-      return {
-        ...state,
-        experimentState: {
-          ...state.experimentState,
+function createMikaniaReducer(sequenceRef, flowContext) {
+  return function mikaniaReducer(state, action) {
+    switch (action.type) {
+      case ACTION_TYPES.SET_PAGE:
+        return {
+          ...state,
+          currentPageId: action.payload,
+          pageEnterTime: new Date(),
+          operations: [],
+          flowContextInjected: false,  // 重置 flow_context 注入标记
+        };
+      case ACTION_TYPES.SET_ANSWER:
+        return {
+          ...state,
+          answers: {
+            ...state.answers,
+            [action.payload.questionId]: action.payload.value,
+          },
+        };
+      case ACTION_TYPES.SET_EXPERIMENT_STATE:
+        return {
+          ...state,
+          experimentState: {
+            ...state.experimentState,
+            ...action.payload,
+          },
+        };
+      case ACTION_TYPES.TICK_NOTICE_COUNTDOWN:
+        return {
+          ...state,
+          noticeCountdown: Math.max(0, state.noticeCountdown - 1),
+        };
+      case ACTION_TYPES.CONFIRM_NOTICE:
+        return {
+          ...state,
+          noticeConfirmed: action.payload,
+        };
+      case ACTION_TYPES.LOG_OPERATION: {
+        const { flowContext: payloadFlowContext, ...operation } = action.payload;
+        const operations = [...state.operations, operation];
+        const resolvedFlowContext = payloadFlowContext || flowContext;
+
+        const isPageEnter =
+          operation.eventType === EventTypes.PAGE_ENTER ||
+          operation.eventType === 'page_enter';
+        const needFlowContextInjection =
+          isPageEnter &&
+          shouldInjectFlowContext(operations, resolvedFlowContext) &&
+          !state.flowContextInjected;
+
+        const operationsWithFlowContext = needFlowContextInjection
+          ? injectFlowContext(
+              operations,
+              resolvedFlowContext
+                ? {
+                    ...resolvedFlowContext,
+                    moduleName: resolvedFlowContext.moduleName || DISPLAY_NAME,
+                  }
+                : resolvedFlowContext,
+              sequenceRef.current
+            )
+          : operations;
+
+        const hasFlowContextOperation = operationsWithFlowContext.some(
+          (op) => op.eventType === EventTypes.FLOW_CONTEXT || op.eventType === 'flow_context'
+        );
+
+        return {
+          ...state,
+          operations: operationsWithFlowContext,
+          flowContextInjected: state.flowContextInjected || needFlowContextInjection || hasFlowContextOperation,
+        };
+      }
+      case ACTION_TYPES.CLEAR_OPERATIONS:
+        return {
+          ...state,
+          operations: [],
+        };
+      case ACTION_TYPES.SET_PAGE_ENTER_TIME:
+        return {
+          ...state,
+          pageEnterTime: action.payload,
+        };
+      case ACTION_TYPES.RESTORE_STATE:
+        return {
+          ...state,
           ...action.payload,
-        },
-      };
-    case ACTION_TYPES.TICK_NOTICE_COUNTDOWN:
-      return {
-        ...state,
-        noticeCountdown: Math.max(0, state.noticeCountdown - 1),
-      };
-    case ACTION_TYPES.CONFIRM_NOTICE:
-      return {
-        ...state,
-        noticeConfirmed: action.payload,
-      };
-    case ACTION_TYPES.LOG_OPERATION:
-      return {
-        ...state,
-        operations: [...state.operations, action.payload],
-      };
-    case ACTION_TYPES.CLEAR_OPERATIONS:
-      return {
-        ...state,
-        operations: [],
-      };
-    case ACTION_TYPES.SET_PAGE_ENTER_TIME:
-      return {
-        ...state,
-        pageEnterTime: action.payload,
-      };
-    case ACTION_TYPES.RESTORE_STATE:
-      return {
-        ...state,
-        ...action.payload,
-      };
-    default:
-      return state;
-  }
+        };
+      default:
+        return state;
+    }
+  };
 }
 
 // ========================================
@@ -308,18 +371,13 @@ function MikaniaExperimentFrame({ userContext, flowContext }) {
     state,
     navigateToPage,
     logOperation,
+    pageNumber,
+    subPageNum,
   } = useMikaniaExperiment();
 
   const currentPageId = state.currentPageId;
-  const subPageNum = getPageSubNum(currentPageId);
-  const flowStepIndex = flowContext?.stepIndex;
   // 始终使用子模块内部的 stepIndex 用于导航高亮，不受 Flow 全局 stepIndex 影响
   const stepIndex = getStepIndex(currentPageId);
-  const pageNumber = useMemo(() => {
-    return typeof flowStepIndex === 'number'
-      ? `${flowStepIndex}.${subPageNum}`
-      : String(subPageNum);
-  }, [flowStepIndex, subPageNum]);
   const totalSteps = getTotalSteps();
   const navigationMode = getNavigationMode(currentPageId);
 
@@ -327,7 +385,7 @@ function MikaniaExperimentFrame({ userContext, flowContext }) {
   useEffect(() => {
     if (flowContext?.updateModuleProgress) {
       console.log(`[g8-mikania-experiment] Syncing progress to Flow: page ${currentPageId}, subPageNum ${subPageNum}`);
-      flowContext.updateModuleProgress(subPageNum);
+      flowContext.updateModuleProgress(String(subPageNum));
     }
   }, [currentPageId, subPageNum, flowContext]);
 
@@ -336,69 +394,47 @@ function MikaniaExperimentFrame({ userContext, flowContext }) {
     return validatePage(currentPageId, state);
   }, [currentPageId, state]);
 
-  // Build page description (without Flow prefix - usePageSubmission handles that)
+  // Build page description with optional Flow context prefix
   const buildPageDesc = useCallback((pageId) => {
-    return PAGE_DESC_MAP[pageId] || '未知页面';
-  }, []);
+    const title = PAGE_DESC_MAP[pageId] || '未知页面';
+    const fc = flowContext ? {
+      flowId: flowContext.flowId,
+      submoduleId: flowContext.submoduleId,
+      stepIndex: flowContext.stepIndex,
+      totalSteps: 0,
+    } : null;
+    return buildSharedPageDesc(title, fc);
+  }, [flowContext]);
 
   // Collect answers for current page
-  const collectAnswers = useCallback(() => {
-    const questionKeys = PAGE_QUESTIONS[currentPageId] || [];
-    const answerList = [];
+  const buildAnswerList = useCallback(() => {
+    const collected = collectAnswersFromConfig(currentPageId, state.answers, SUBMODULE_MAPPING_CONFIG).filter(
+      (entry) => typeof entry.value === 'string' && entry.value !== '',
+    );
 
-    questionKeys.forEach((key) => {
-      const value = state.answers[key];
-      if (value !== null && value !== undefined && value !== '') {
-        const questionId = ANSWER_KEY_TO_QUESTION[key];
-        const code = QUESTION_CODE_MAP[questionId];
-        const questionText = QUESTION_TEXT_MAP[questionId] || questionId || key;
-        const options = QUESTION_OPTIONS_MAP[questionId];
-
-        let formattedValue = value;
-
-        if (options) {
-          let optionLabel = null;
-
-          if (typeof value === 'string' && options[value]) {
-            optionLabel = value;
-          } else if (typeof value === 'string') {
-            const matchedEntry = Object.entries(options).find(([, optionText]) => optionText === value);
-            if (matchedEntry) {
-              optionLabel = matchedEntry[0];
-            }
-          }
-
-          formattedValue = optionLabel ? `${optionLabel}. ${options[optionLabel]}` : (typeof value === 'string' ? value : String(value));
-        }
-
-        answerList.push({
-          code,
-          targetElement: questionText,
-          value: formattedValue,
-        });
-      }
-    });
-
-    if (currentPageId === 'page_03_sim_exp') {
-      const runs = Array.isArray(state.experimentState?.history) ? state.experimentState.history : [];
-      if (runs.length > 0) {
-        answerList.push({
-          code: 1,
-          targetElement: `P${pageNumber}_实验历史`,
-          value: JSON.stringify({
-            runs: runs.map(({ concentration, days, germinationRate, timestamp }) => ({
-              concentration,
-              days,
-              germinationRate,
-              timestamp,
-            })),
-          }),
-        });
-      }
+    if (currentPageId !== 'page_03_sim_exp') {
+      return collected;
     }
 
-    return answerList;
-  }, [currentPageId, state.answers, pageNumber, state.experimentState]);
+    const runs = Array.isArray(state.experimentState?.history) ? state.experimentState.history : [];
+    if (runs.length === 0) {
+      return collected;
+    }
+
+    const historyData = {
+      runs: runs.map(({ concentration, days, germinationRate, timestamp }) => ({
+        concentration,
+        days,
+        germinationRate,
+        timestamp,
+      })),
+    };
+
+    return appendExperimentHistory(collected, historyData, {
+      targetElement: `P${pageNumber}_实验历史`,
+      historyCodeBase: HISTORY_CODE_BASE,
+    });
+  }, [currentPageId, state.answers, state.experimentState, pageNumber]);
 
   // Submission config for Frame
   const submissionConfig = useMemo(() => {
@@ -416,7 +452,18 @@ function MikaniaExperimentFrame({ userContext, flowContext }) {
 
     const buildMark = () => {
       const pageDesc = buildPageDesc(currentPageId);
-      const answerList = collectAnswers();
+      const answerList = buildAnswerList();
+
+      // flow_context 按规范应在 Reducer 中注入，这里仅做缺失告警
+      const hasFlowContext = state.operations.some(
+        (op) => op.eventType === EventTypes.FLOW_CONTEXT || op.eventType === 'flow_context'
+      );
+
+      if (flowContext?.flowId && !hasFlowContext) {
+        console.warn(
+          '[g8-mikania-experiment] flow_context missing in operations, should have been injected by Reducer'
+        );
+      }
 
       return {
         pageNumber,
@@ -434,6 +481,7 @@ function MikaniaExperimentFrame({ userContext, flowContext }) {
           flowId: flowContext.flowId,
           submoduleId: flowContext.submoduleId,
           stepIndex: flowContext.stepIndex,
+          moduleName: flowContext.moduleName || DISPLAY_NAME,
           pageId: currentPageId,
         })
       : undefined;
@@ -445,7 +493,7 @@ function MikaniaExperimentFrame({ userContext, flowContext }) {
       allowProceedOnFailureInDev: true,
       logOperation,
     };
-  }, [userContext, flowContext, currentPageId, pageNumber, state.operations, state.pageEnterTime, buildPageDesc, collectAnswers, logOperation]);
+  }, [userContext, flowContext, currentPageId, pageNumber, state.operations, state.pageEnterTime, buildPageDesc, buildAnswerList, logOperation]);
 
   // Navigate to next page
   const goToNextPage = useCallback(() => {
@@ -462,8 +510,8 @@ function MikaniaExperimentFrame({ userContext, flowContext }) {
 
     // Update progress for non-last pages
     if (flowContext?.updateModuleProgress) {
-      const nextSubPageNum = getPageSubNum(nextPageId);
-      flowContext.updateModuleProgress(nextSubPageNum);
+      const nextSubPageNum = getSubPageNumByPageId(nextPageId);
+      flowContext.updateModuleProgress(String(nextSubPageNum));
     }
 
     // Navigate
@@ -514,8 +562,21 @@ function MikaniaExperimentFrame({ userContext, flowContext }) {
     pageDesc: buildPageDesc(currentPageId),
   };
 
-  // Show timer only on experiment pages (hide on hidden notice and intro info page)
-  const showTimer = navigationMode !== 'hidden' && currentPageId !== 'page_01_intro';
+  // Show timer on all experiment pages starting from page_01_intro (step 1)
+  // - page_00_notice: hidden mode, no timer
+  // - page_01_intro onwards: show timer (experiment mode)
+  const showTimer = navigationMode !== 'hidden';
+
+  // Build timerScope that matches Flow's scope format when in Flow mode
+  // This ensures the timer UI correctly subscribes to the timer started by Flow
+  const timerScope = useMemo(() => {
+    if (flowContext?.flowId && flowContext?.stepIndex != null) {
+      // Flow mode: use Flow's scope format
+      return `flow::${flowContext.flowId}::module::g8-mikania-experiment::step::${flowContext.stepIndex}::task`;
+    }
+    // Standalone mode: use module-specific scope
+    return 'module.g8-mikania-experiment.task';
+  }, [flowContext?.flowId, flowContext?.stepIndex]);
 
   return (
     <AssessmentPageFrame
@@ -528,7 +589,7 @@ function MikaniaExperimentFrame({ userContext, flowContext }) {
       showTimer={showTimer}
       timerVariant="task"
       timerLabel="剩余时间"
-      timerScope="module.g8-mikania-experiment.task"
+      timerScope={timerScope}
       nextLabel="下一步"
       submission={submissionConfig}
       onNext={handleFrameNext}
@@ -551,8 +612,13 @@ function MikaniaExperimentComponent({
   options,
   flowContext,
 }) {
+  const sequenceRef = useRef(createOperationSequence());
+  const reducer = useMemo(
+    () => createMikaniaReducer(sequenceRef, flowContext),
+    [flowContext]
+  );
   const [state, dispatch] = useReducer(
-    mikaniaReducer,
+    reducer,
     initialPageId,
     createInitialState
   );
@@ -633,6 +699,7 @@ function MikaniaExperimentComponent({
   // Action creators
   const actions = useMemo(() => ({
     setPage: (pageId) => {
+      sequenceRef.current.reset();
       dispatch({ type: ACTION_TYPES.SET_PAGE, payload: pageId });
     },
     setAnswer: (questionId, value) => {
@@ -650,16 +717,20 @@ function MikaniaExperimentComponent({
     confirmNotice: (confirmed) => {
       dispatch({ type: ACTION_TYPES.CONFIRM_NOTICE, payload: confirmed });
     },
-    logOperation: (operation) => {
+    logOperation: (operation, flowCtx) => {
+      const code = sequenceRef.current.next();
       dispatch({
         type: ACTION_TYPES.LOG_OPERATION,
         payload: {
           ...operation,
-          time: operation.time || new Date().toISOString(),
+          code,
+          time: operation.time || formatTimestamp(new Date()),
+          flowContext: flowCtx,  // 传递 flowContext 用于 PAGE_ENTER 后自动注入
         },
       });
     },
     clearOperations: () => {
+      sequenceRef.current.reset();
       dispatch({ type: ACTION_TYPES.CLEAR_OPERATIONS });
     },
   }), []);
@@ -669,7 +740,35 @@ function MikaniaExperimentComponent({
     actions.setPage(pageId);
   }, [actions]);
 
-  // Context value
+  const subPageNum = getSubPageNumByPageId(state.currentPageId);
+  const pageNumber = useMemo(() => {
+    // 独立模式和 Flow 模式统一使用 encodeCompositePageNum
+    // 独立模式：stepIndex 默认为 0，生成 1.xx 格式
+    // Flow 模式：使用 flowContext.stepIndex，生成 (stepIndex+1).xx 格式
+    const stepIndex = typeof flowContext?.stepIndex === 'number' ? flowContext.stepIndex : 0;
+    return encodeCompositePageNum(stepIndex + 1, subPageNum || 1);
+  }, [flowContext?.stepIndex, subPageNum]);
+  const targetPrefix = useMemo(() => (pageNumber ? `P${pageNumber}_` : ''), [pageNumber]);
+  const taskDurationMinutes = useMemo(() => {
+    const taskSeconds = options?.timers?.task ?? 1200; // 默认 20 分钟
+    return Math.round(taskSeconds / 60);
+  }, [options?.timers?.task]);
+
+  // 使用 ref 跟踪 flowContext，避免 logOperation 因 flowContext 变化而重新创建
+  const flowContextRef = useRef(flowContext);
+  useEffect(() => {
+    flowContextRef.current = flowContext;
+  }, [flowContext]);
+
+  // 创建稳定的 logOperation 函数，避免 useEffect 循环触发
+  // 问题原因：之前 logOperation 在 contextValue 的 useMemo 中创建，依赖 state
+  // 每次 state 变化（如倒计时 tick）都会重新创建 logOperation，
+  // 导致页面组件的 useEffect（依赖 logOperation）反复触发 PAGE_ENTER/PAGE_EXIT
+  const stableLogOperation = useCallback((operation) => {
+    actions.logOperation(operation, flowContextRef.current);
+  }, [actions]);
+
+  // Context value - 注意：不再在这里创建 logOperation，使用稳定的 stableLogOperation
   const contextValue = useMemo(() => ({
     state,
     actions,
@@ -677,6 +776,10 @@ function MikaniaExperimentComponent({
     userContext,
     flowContext,
     options,
+    subPageNum,
+    pageNumber,
+    targetPrefix,
+    taskDurationMinutes,
 
     // Helper functions for pages
     validateCurrentPage: () => validatePage(state.currentPageId, state),
@@ -684,7 +787,10 @@ function MikaniaExperimentComponent({
 
     // Expose actions directly
     ...actions,
-  }), [state, actions, navigateToPage, userContext, flowContext, options]);
+
+    // 使用稳定的 logOperation，避免循环渲染问题
+    logOperation: stableLogOperation,
+  }), [state, actions, navigateToPage, userContext, flowContext, options, subPageNum, pageNumber, targetPrefix, stableLogOperation]);
 
   return (
     <MikaniaExperimentContext.Provider value={contextValue}>

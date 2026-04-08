@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import WindSpeedometer from '../components/WindSpeedometer';
@@ -9,14 +9,17 @@ const Page05Tutorial: React.FC = () => {
     logOperation,
     setPageStartTime,
     collectAnswer,
-    currentPageId
+    getPagePrefix
   } = usePvSandContext();
+
+  const targetPrefix = getPagePrefix();
 
   const [heightIndex, setHeightIndex] = useState(0); // 0: 0cm, 1: 20cm, 2: 50cm, 3: 100cm
   const [withPanelSpeed, setWithPanelSpeed] = useState(0);
   const [withoutPanelSpeed, setWithoutPanelSpeed] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [showError, setShowError] = useState(false);
+  const pageInitializedRef = useRef(false);
 
   // 实验数据: [0cm, 20cm, 50cm, 100cm]
   const heightOptions = [0, 20, 50, 100];
@@ -30,7 +33,7 @@ const Page05Tutorial: React.FC = () => {
     const handleValidationError = () => {
       setShowError(true);
       logOperation({
-        targetElement: 'next_button',
+        targetElement: `${targetPrefix}下一页按钮`,
         eventType: EventTypes.CLICK_BLOCKED,
         value: {
           reason: 'tutorial_not_completed',
@@ -47,28 +50,17 @@ const Page05Tutorial: React.FC = () => {
     return () => {
       window.removeEventListener('pv-sand-validation-error', handleValidationError);
     };
-  }, []);
+  }, [targetPrefix, logOperation]);
 
   useEffect(() => {
+    if (pageInitializedRef.current) {
+      return;
+    }
+    pageInitializedRef.current = true;
+
     const startTime = new Date();
     setPageStartTime(startTime);
-
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: currentPageId,
-      time: startTime.toISOString()
-    });
-
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: currentPageId,
-        time: new Date().toISOString()
-      });
-    };
-  }, [logOperation, setPageStartTime, currentPageId]);
+  }, [setPageStartTime]);
 
   const handleHeightChange = (delta: number) => {
     const newIndex = Math.max(0, Math.min(3, heightIndex + delta));
@@ -76,7 +68,7 @@ const Page05Tutorial: React.FC = () => {
 
     const time = new Date().toISOString();
     logOperation({
-      targetElement: '高度调节',
+      targetElement: `${targetPrefix}高度调节`,
       eventType: EventTypes.SIMULATION_OPERATION,
       value: {
         action: 'adjust_height',
@@ -92,7 +84,7 @@ const Page05Tutorial: React.FC = () => {
     setIsRunning(true);
     const time = new Date().toISOString();
     logOperation({
-      targetElement: '开始按钮',
+      targetElement: `${targetPrefix}开始按钮`,
       eventType: EventTypes.SIMULATION_TIMING_STARTED,
       value: {
         height: currentHeight,
@@ -107,7 +99,7 @@ const Page05Tutorial: React.FC = () => {
       setIsRunning(false);
 
       logOperation({
-        targetElement: 'simulation_result',
+        targetElement: `${targetPrefix}模拟结果`,
         eventType: EventTypes.SIMULATION_RUN_RESULT,
         value: {
           height: currentHeight,
@@ -132,7 +124,7 @@ const Page05Tutorial: React.FC = () => {
     setHeightIndex(0); // 重置为0cm
 
     logOperation({
-      targetElement: '重置按钮',
+      targetElement: `${targetPrefix}重置按钮`,
       eventType: EventTypes.SIMULATION_OPERATION,
       value: '重置实验',
       time: new Date().toISOString()
@@ -340,4 +332,3 @@ const Page05Tutorial: React.FC = () => {
 };
 
 export default Page05Tutorial;
-

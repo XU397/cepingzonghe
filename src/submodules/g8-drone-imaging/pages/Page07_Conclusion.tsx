@@ -44,28 +44,11 @@ export default function Page07_Conclusion() {
   const [error, setError] = useState('');
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'Page07_Conclusion',
-      time: formatTimestamp(new Date()),
-    });
-
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'Page07_Conclusion',
-        time: formatTimestamp(new Date()),
-      });
-
-      // Clear any pending error timeout
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
-      }
-    };
-  }, [logOperation]);
+  useEffect(() => () => {
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
+  }, []);
 
   const handleRadioChange = (option: RadioOption) => {
     const value = option.value;
@@ -361,4 +344,3 @@ export default function Page07_Conclusion() {
     </div>
   );
 }
-

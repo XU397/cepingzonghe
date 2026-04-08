@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useMemo,
   useState,
-  useRef,
 } from 'react';
 import { PvSandProvider, usePvSandContext } from './context/PvSandContext';
 import type { SubmoduleProps } from './types';
@@ -13,12 +12,21 @@ import { AssessmentPageFrame } from '@shared/ui/PageFrame';
 import { formatTimestamp } from '@shared/services/dataLogger.js';
 import { EventTypes } from '@shared/services/submission/eventTypes';
 import {
+  collectAnswers as collectAnswersFromConfig,
+  appendExperimentHistory,
+  buildPageDesc as buildSharedPageDesc,
+} from '@shared/services/submission/submoduleAdapter';
+import { encodeCompositePageNum } from '@shared/utils/pageMapping';
+import {
   getSubPageNumByPageId,
   getPageConfig,
   PAGE_CONFIGS,
   PageId,
+  PAGE_DESC_MAP,
+  INTERNAL_TO_STANDARD_KEY,
+  HISTORY_CODE_BASE,
+  SUBMODULE_MAPPING_CONFIG,
 } from './mapping';
-import useHeartbeat from '@/hooks/useHeartbeat';
 
 const Page01InstructionsCover = lazy(() => import('./pages/Page01bTaskCover'));
 const Page03Background = lazy(() => import('./pages/Page03Background'));
@@ -53,8 +61,8 @@ const PageRouter: React.FC = () => {
 };
 
 const formatPageNumber = (stepIndex: number | undefined, subPageNum: number) => {
-  const safeStep = typeof stepIndex === 'number' ? stepIndex : 0;
-  return `${safeStep}.${subPageNum}`;
+  const safeStep = typeof stepIndex === 'number' ? stepIndex + 1 : 1;
+  return encodeCompositePageNum(safeStep, subPageNum);
 };
 
 const validatePage = (
@@ -141,7 +149,20 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     clearOperations,
     answerDraft,
     experimentState,
+    pageStartTime,
+    setFlowContext,
   } = usePvSandContext();
+
+  // 同步 flowContext 到 context，供页面组件使用
+  useEffect(() => {
+    if (flowContext) {
+      setFlowContext({
+        flowId: flowContext.flowId,
+        submoduleId: flowContext.submoduleId,
+        stepIndex: flowContext.stepIndex,
+      });
+    }
+  }, [flowContext, setFlowContext]);
   const [validationError, setValidationError] = useState<string>('');
 
   const pageConfig = getPageConfig(currentPageId as PageId);
@@ -171,67 +192,46 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     }
   }, [flowContext, subPageNum]);
 
-  // === Progress heartbeat兜底：Flow未启用时仍保持进度同步 ===
-  const stepIndexRef = useRef(submissionStepIndex);
-  const modulePageNumRef = useRef(String(subPageNum));
-
-  useEffect(() => {
-    stepIndexRef.current = submissionStepIndex;
-    modulePageNumRef.current = String(subPageNum);
-  }, [submissionStepIndex, subPageNum]);
-
-  const heartbeatExamNo =
-    (userContext as any)?.examNo || (userContext as any)?.user?.examNo || '';
-  const heartbeatBatchCode =
-    (userContext as any)?.batchCode || (userContext as any)?.user?.batchCode || '';
-  const heartbeatEnabled =
-    Boolean(flowContext?.flowId) && Boolean(heartbeatExamNo) && Boolean(heartbeatBatchCode);
-
-  useHeartbeat({
-    flowId: flowContext?.flowId || '',
-    stepIndexRef,
-    modulePageNumRef,
-    examNo: heartbeatExamNo,
-    batchCode: heartbeatBatchCode,
-    enabled: heartbeatEnabled,
-    intervalMs: 15000,
-    onError: (err) => {
-      console.warn('[PvSand] Heartbeat failed', err);
-    },
-  });
-
   const operationsForSubmission = useMemo(
     () => operations.filter((op) => !op.pageId || op.pageId === currentPageId),
     [currentPageId, operations],
   );
 
-  const answersForSubmission = useMemo(() => {
-    const entries = Object.entries(pageAnswers).map(([key, meta]) => ({
-      targetElement: key,
-      value: (meta as any)?.value,
-      pageId: currentPageId,
-    }));
+  // 构建规范化的页面描述
+  const buildPageDesc = useCallback((pageId: PageId) => {
+    const title = PAGE_DESC_MAP[pageId] || '未知页面';
+    const fc = flowContext ? {
+      flowId: flowContext.flowId,
+      submoduleId: flowContext.submoduleId,
+      stepIndex: flowContext.stepIndex,
+      totalSteps: 0 // 不需要 totalSteps 用于描述
+    } : null;
+    return buildSharedPageDesc(title, fc);
+  }, [flowContext]);
 
-    const filtered = entries.filter(({ value }) => {
-      if (value === undefined || value === null) {
-        return false;
-      }
-      if (typeof value === 'string') {
-        return value.trim() !== '';
-      }
-      return String(value).trim() !== '';
-    });
+  const buildAnswerList = useCallback(() => {
+    const normalizedAnswers = Object.entries(answers).reduce((acc, [key, value]) => {
+      const standardKey = INTERNAL_TO_STANDARD_KEY[key] || key;
+      acc[standardKey] = value;
+      return acc;
+    }, {} as Record<string, any>);
 
-    if (experimentState?.collectedData) {
-      filtered.push({
-        targetElement: 'experiment_data',
-        value: JSON.stringify(experimentState.collectedData),
-        pageId: currentPageId,
+    const collected = collectAnswersFromConfig(
+      currentPageId,
+      normalizedAnswers,
+      SUBMODULE_MAPPING_CONFIG
+    ).filter((entry) => entry.value !== '');
+
+    if ((currentPageId === 'experiment_task1' || currentPageId === 'experiment_task2')
+        && experimentState?.collectedData) {
+      return appendExperimentHistory(collected, experimentState.collectedData, {
+        targetElement: `P${pageNumber}_实验历史`,
+        historyCodeBase: HISTORY_CODE_BASE,
       });
     }
 
-    return filtered;
-  }, [currentPageId, experimentState?.collectedData, pageAnswers]);
+    return collected;
+  }, [currentPageId, answers, experimentState, pageNumber]);
 
   const submissionConfig = useMemo(() => {
     const getUserContext = () => {
@@ -252,22 +252,45 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
             flowId: flowContext.flowId,
             submoduleId: flowContext.submoduleId,
             stepIndex: flowContext.stepIndex,
+            moduleName: '光伏治沙实验',
             pageId: currentPageId,
           })
         : undefined;
 
+    // 使用 buildMark 模式构建符合规范的提交数据
+    const buildMark = () => {
+      const currentPageDesc = buildPageDesc(currentPageId as PageId);
+      const answerList = buildAnswerList();
+
+      // 直接使用 operationsForSubmission，不再手动注入 flow_context
+      // flow_context 已在 Context 的 logOperation 中注入
+      return {
+        pageNumber,
+        pageDesc: currentPageDesc,
+        operationList: operationsForSubmission,
+        answerList,
+        beginTime: pageStartTime ? formatTimestamp(pageStartTime) : formatTimestamp(new Date()),
+        endTime: formatTimestamp(new Date()),
+        imgList: [],
+      };
+    };
+
     return {
       getUserContext,
       getFlowContext,
-      operations: () => operationsForSubmission,
-      answers: () => answersForSubmission,
+      buildMark,
       allowProceedOnFailureInDev: Boolean(import.meta.env?.DEV),
+      logOperation,
     };
   }, [
-    answersForSubmission,
+    buildPageDesc,
+    buildAnswerList,
     currentPageId,
     flowContext,
+    logOperation,
     operationsForSubmission,
+    pageNumber,
+    pageStartTime,
     userContext,
   ]);
 
@@ -285,13 +308,14 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
 
   const handleFrameNext = useCallback(
     async ({ defaultSubmit }: { defaultSubmit?: () => Promise<boolean> }) => {
+      const currentAnswers = buildAnswerList();
       console.log('[PvSand] handleFrameNext called', {
         currentPageId,
         operationsCount: operationsForSubmission.length,
-        answersCount: answersForSubmission.length,
+        answersCount: currentAnswers.length,
         pageMeta: {
           pageNumber,
-          pageDesc,
+          pageDesc: buildPageDesc(currentPageId as PageId),
           stepIndex: submissionStepIndex,
           subPageNum,
         },
@@ -308,9 +332,12 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
         }));
 
         logOperation({
-          targetElement: 'next_button',
+          targetElement: `P${pageNumber}_下一页按钮`,
           eventType: EventTypes.CLICK_BLOCKED,
-          value: message,
+          value: JSON.stringify({
+            reason: 'validation_failed',
+            message,
+          }),
           time: formatTimestamp(new Date()),
           pageId: currentPageId,
         });
@@ -321,7 +348,7 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
 
       console.log('[PvSand] Calling defaultSubmit with data:', {
         operations: operationsForSubmission,
-        answers: answersForSubmission,
+        answers: currentAnswers,
       });
 
       if (typeof defaultSubmit === 'function') {
@@ -336,7 +363,7 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       goToNextPage();
       return true;
     },
-    [answers, answersForSubmission, clearOperations, currentPageId, experimentState, goToNextPage, logOperation, operationsForSubmission, pageDesc, pageNumber, subPageNum, submissionStepIndex],
+    [answers, buildAnswerList, buildPageDesc, clearOperations, currentPageId, experimentState, goToNextPage, logOperation, operationsForSubmission, pageNumber, subPageNum, submissionStepIndex],
   );
 
   const handleTimerTimeout = useCallback(() => {
@@ -392,16 +419,6 @@ function PvSandFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     });
   }
 
-  console.log(
-    '[PvSand] pageMeta.pageId',
-    pageMeta.pageId,
-    typeof pageMeta.pageId,
-    {
-      pageMeta,
-      ...pageIdDiagnostics,
-    },
-  );
-
   // Validation errors are now handled by page-specific UI (e.g., Page01bTaskCover)
   // No need to show footer validation error
   const footerSlot = null;
@@ -440,9 +457,20 @@ const G8PvSandExperiment: React.FC<SubmoduleProps> = ({
   flowContext,
 }) => {
   const validPageId = (initialPageId as PageId) || 'instructions_cover';
+  const initialFlowContext = flowContext
+    ? {
+        flowId: flowContext.flowId,
+        submoduleId: flowContext.submoduleId,
+        stepIndex: flowContext.stepIndex,
+      }
+    : null;
 
   return (
-    <PvSandProvider initialPageId={validPageId}>
+    <PvSandProvider
+      initialPageId={validPageId}
+      options={options}
+      initialFlowContext={initialFlowContext}
+    >
       <Suspense
         fallback={
           <div

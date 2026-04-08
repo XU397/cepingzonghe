@@ -61,7 +61,7 @@ describe('eventType whitelist guard', () => {
     );
 
     const expectedMessage =
-      'operation #1 (P0.3_PAGE) eventType=page_entor 不在允许列表：' +
+      'operation #1 (P1.03_PAGE) eventType=page_entor 不在允许列表：' +
       ALLOWED_EVENT_TYPES.join(', ');
 
     expect(() => assertAllowedEventTypes(mutatedOperations)).toThrowError(expectedMessage);
@@ -77,13 +77,22 @@ describe('eventType whitelist guard', () => {
         "checkbox_uncheck",
         "click",
         "click_blocked",
+        "demo_complete",
+        "demo_play",
+        "dialogue_play",
+        "dialogue_replay",
+        "drag_end",
+        "drag_start",
         "flow_context",
         "focus",
+        "hover_enter",
+        "hover_leave"
         "input",
         "input_blur",
         "input_change",
         "input_delete",
         "input_focus",
+        "key_press",
         "modal_close",
         "modal_open",
         "network_error",
@@ -100,6 +109,9 @@ describe('eventType whitelist guard', () => {
         "simulation_operation",
         "simulation_run_result",
         "simulation_timing_started",
+        "task_drop",
+        "task_remove",
+        "timeout",
         "timer_complete",
         "timer_start",
         "timer_stop",

@@ -37,7 +37,7 @@ function renderPage(initialPageId: PageId = 'focal_analysis') {
 }
 
 const STEP_INDEX = 0;
-const FOCAL_ANALYSIS_PREFIX = `P${encodeCompositePageNum(STEP_INDEX, 5)}_`;
+const FOCAL_ANALYSIS_PREFIX = `P${encodeCompositePageNum(STEP_INDEX + 1, 5)}_`;
 const MIN_GSD_FOCAL_ID = `${FOCAL_ANALYSIS_PREFIX}最小GSD焦距`;
 
 describe('Page05_FocalAnalysis', () => {

@@ -28,9 +28,16 @@ const ACTIONS = {
 
 const timestamp = () => new Date().toISOString();
 
+const isPositiveNumber = value => {
+  const text = String(value ?? '').trim();
+  if (!text) return false;
+  const parsed = Number(text);
+  return Number.isFinite(parsed) && parsed > 0;
+};
+
 const NOTICE_COUNTDOWN_SECONDS = 40;
 
-const createEmptySolution = (id) => ({
+const createEmptySolution = id => ({
   id,
   tasks: [],
   userInputTime: null,
@@ -72,7 +79,10 @@ function g4Reducer(state, action) {
     case ACTIONS.NAVIGATE: {
       const nextPageId = action.pageId;
       if (!nextPageId) return state;
-      const nextPageNum = parseInt(getPageNumByPageId(nextPageId) || String(state.currentPageNum), 10);
+      const nextPageNum = parseInt(
+        getPageNumByPageId(nextPageId) || String(state.currentPageNum),
+        10
+      );
       return {
         ...state,
         currentPageId: nextPageId,
@@ -135,7 +145,7 @@ function g4Reducer(state, action) {
       if (!factor) return state;
       const exists = state.selectedFactors.includes(factor);
       const updated = exists
-        ? state.selectedFactors.filter((item) => item !== factor)
+        ? state.selectedFactors.filter(item => item !== factor)
         : [...state.selectedFactors, factor];
       return { ...state, selectedFactors: updated };
     }
@@ -209,7 +219,7 @@ function g4Reducer(state, action) {
       if (!trainNo) return state;
       const exists = state.selectedTrains.includes(trainNo);
       const nextList = exists
-        ? state.selectedTrains.filter((item) => item !== trainNo)
+        ? state.selectedTrains.filter(item => item !== trainNo)
         : [...state.selectedTrains, trainNo];
       return { ...state, selectedTrains: nextList };
     }
@@ -250,15 +260,15 @@ export function G4Provider({ children, initialPageId = 'notices', userContext = 
   const [state, dispatch] = useReducer(g4Reducer, null, () => createInitialState(initialPageId));
 
   const navigateToPage = useCallback(
-    (pageId) => dispatch({ type: ACTIONS.NAVIGATE, pageId }),
+    pageId => dispatch({ type: ACTIONS.NAVIGATE, pageId }),
     [dispatch]
   );
   const logOperation = useCallback(
-    (operation) => dispatch({ type: ACTIONS.LOG_OPERATION, operation }),
+    operation => dispatch({ type: ACTIONS.LOG_OPERATION, operation }),
     [dispatch]
   );
   const collectAnswer = useCallback(
-    (answer) => dispatch({ type: ACTIONS.COLLECT_ANSWER, answer }),
+    answer => dispatch({ type: ACTIONS.COLLECT_ANSWER, answer }),
     [dispatch]
   );
   const clearOperations = useCallback(
@@ -266,7 +276,7 @@ export function G4Provider({ children, initialPageId = 'notices', userContext = 
     [dispatch]
   );
   const setNoticeConfirmed = useCallback(
-    (confirmed) => dispatch({ type: ACTIONS.SET_NOTICE_CONFIRMED, confirmed }),
+    confirmed => dispatch({ type: ACTIONS.SET_NOTICE_CONFIRMED, confirmed }),
     [dispatch]
   );
   const tickNoticeCountdown = useCallback(
@@ -274,11 +284,11 @@ export function G4Provider({ children, initialPageId = 'notices', userContext = 
     [dispatch]
   );
   const confirmNotice = useCallback(
-    (confirmed) => dispatch({ type: ACTIONS.SET_NOTICE_CONFIRMED, confirmed }),
+    confirmed => dispatch({ type: ACTIONS.SET_NOTICE_CONFIRMED, confirmed }),
     [dispatch]
   );
   const toggleFactor = useCallback(
-    (factor) => dispatch({ type: ACTIONS.TOGGLE_FACTOR, factor }),
+    factor => dispatch({ type: ACTIONS.TOGGLE_FACTOR, factor }),
     [dispatch]
   );
   const updateRouteInput = useCallback(
@@ -286,11 +296,11 @@ export function G4Provider({ children, initialPageId = 'notices', userContext = 
     [dispatch]
   );
   const setSelectedStation = useCallback(
-    (station) => dispatch({ type: ACTIONS.SET_SELECTED_STATION, station }),
+    station => dispatch({ type: ACTIONS.SET_SELECTED_STATION, station }),
     [dispatch]
   );
   const setStationReason = useCallback(
-    (reason) => dispatch({ type: ACTIONS.SET_STATION_REASON, reason }),
+    reason => dispatch({ type: ACTIONS.SET_STATION_REASON, reason }),
     [dispatch]
   );
   const updateSolution = useCallback(
@@ -304,44 +314,39 @@ export function G4Provider({ children, initialPageId = 'notices', userContext = 
     [dispatch]
   );
   const setIsOptimal = useCallback(
-    (isOptimal) => dispatch({ type: ACTIONS.SET_IS_OPTIMAL, isOptimal }),
+    isOptimal => dispatch({ type: ACTIONS.SET_IS_OPTIMAL, isOptimal }),
     [dispatch]
   );
   const toggleTrainSelection = useCallback(
-    (trainNo) => dispatch({ type: ACTIONS.TOGGLE_TRAIN_SELECTION, trainNo }),
+    trainNo => dispatch({ type: ACTIONS.TOGGLE_TRAIN_SELECTION, trainNo }),
     [dispatch]
   );
   const setRecommendedTrain = useCallback(
-    (trainNo) => dispatch({ type: ACTIONS.SET_RECOMMENDED_TRAIN, trainNo }),
+    trainNo => dispatch({ type: ACTIONS.SET_RECOMMENDED_TRAIN, trainNo }),
     [dispatch]
   );
   const setRecommendReason = useCallback(
-    (reason) => dispatch({ type: ACTIONS.SET_RECOMMEND_REASON, reason }),
+    reason => dispatch({ type: ACTIONS.SET_RECOMMEND_REASON, reason }),
     [dispatch]
   );
   const setCalculationProcess = useCallback(
-    (process) => dispatch({ type: ACTIONS.SET_CALCULATION_PROCESS, process }),
+    process => dispatch({ type: ACTIONS.SET_CALCULATION_PROCESS, process }),
     [dispatch]
   );
   const setTotalPrice = useCallback(
-    (price) => dispatch({ type: ACTIONS.SET_TOTAL_PRICE, price }),
+    price => dispatch({ type: ACTIONS.SET_TOTAL_PRICE, price }),
     [dispatch]
   );
   const setProblemAnswer = useCallback(
-    (answer) => dispatch({ type: ACTIONS.SET_PROBLEM_ANSWER, answer }),
+    answer => dispatch({ type: ACTIONS.SET_PROBLEM_ANSWER, answer }),
     [dispatch]
   );
-  const playDialogue = useCallback(
-    () => dispatch({ type: ACTIONS.PLAY_DIALOGUE }),
-    [dispatch]
-  );
-  const resetDialogue = useCallback(
-    () => dispatch({ type: ACTIONS.RESET_DIALOGUE }),
-    [dispatch]
-  );
+  const playDialogue = useCallback(() => dispatch({ type: ACTIONS.PLAY_DIALOGUE }), [dispatch]);
+  const resetDialogue = useCallback(() => dispatch({ type: ACTIONS.RESET_DIALOGUE }), [dispatch]);
 
   const subPageNum = useMemo(
-    () => parseInt(getPageNumByPageId(state.currentPageId) || String(state.currentPageNum), 10) || 1,
+    () =>
+      parseInt(getPageNumByPageId(state.currentPageId) || String(state.currentPageNum), 10) || 1,
     [state.currentPageId, state.currentPageNum]
   );
   const pageNumber = useMemo(() => {
@@ -354,10 +359,47 @@ export function G4Provider({ children, initialPageId = 'notices', userContext = 
     switch (state.currentPageId) {
       case 'notices':
         return state.noticeCountdown <= 0 && state.noticeConfirmed;
+      case 'route-analysis': {
+        const route1 = state.routeInputs?.route1;
+        const route5 = state.routeInputs?.route5;
+        return isPositiveNumber(route1) && isPositiveNumber(route5);
+      }
+      case 'station-recommendation': {
+        const reasonFilled = String(state.stationReason || '').trim().length > 0;
+        return Boolean(state.selectedStation) && reasonFilled;
+      }
+      case 'ticket-filter': {
+        return state.selectedTrains?.length > 0;
+      }
+      case 'ticket-pricing': {
+        const hasRecommendedTrain = Boolean(state.recommendedTrain);
+        const hasRecommendReason = String(state.recommendReason || '').trim().length > 0;
+        const hasCalculationProcess = String(state.calculationProcess || '').trim().length > 0;
+        const priceText = String(state.totalPrice || '').trim();
+        const priceValue = parseInt(priceText, 10);
+        const hasValidTotalPrice =
+          priceText && !Number.isNaN(priceValue) && priceValue > 0 && Number.isInteger(priceValue);
+        return (
+          hasRecommendedTrain && hasRecommendReason && hasCalculationProcess && hasValidTotalPrice
+        );
+      }
       default:
         return true;
     }
-  }, [state.currentPageId, state.noticeCountdown, state.noticeConfirmed]);
+  }, [
+    state.currentPageId,
+    state.noticeCountdown,
+    state.noticeConfirmed,
+    state.routeInputs?.route1,
+    state.routeInputs?.route5,
+    state.selectedStation,
+    state.stationReason,
+    state.selectedTrains,
+    state.recommendedTrain,
+    state.recommendReason,
+    state.calculationProcess,
+    state.totalPrice,
+  ]);
 
   const getCurrentMissingFields = useCallback(() => {
     switch (state.currentPageId) {
@@ -367,10 +409,57 @@ export function G4Provider({ children, initialPageId = 'notices', userContext = 
         if (!state.noticeConfirmed) missing.push('注意事项确认');
         return missing;
       }
+      case 'route-analysis': {
+        const missing = [];
+        if (!isPositiveNumber(state.routeInputs?.route1)) missing.push('路线1路程');
+        if (!isPositiveNumber(state.routeInputs?.route5)) missing.push('路线5路程');
+        return missing;
+      }
+      case 'station-recommendation': {
+        const missing = [];
+        if (!state.selectedStation) missing.push('推荐出发站');
+        if (String(state.stationReason || '').trim().length === 0) missing.push('推荐理由');
+        return missing;
+      }
+      case 'ticket-filter': {
+        const missing = [];
+        if (!state.selectedTrains?.length) missing.push('车次选择');
+        return missing;
+      }
+      case 'ticket-pricing': {
+        const missing = [];
+        if (!state.recommendedTrain) missing.push('推荐车次');
+        if (String(state.recommendReason || '').trim().length === 0) missing.push('推荐理由');
+        if (String(state.calculationProcess || '').trim().length === 0) missing.push('计算过程');
+        const priceText = String(state.totalPrice || '').trim();
+        const priceValue = parseInt(priceText, 10);
+        if (
+          !priceText ||
+          Number.isNaN(priceValue) ||
+          priceValue <= 0 ||
+          !Number.isInteger(priceValue)
+        ) {
+          missing.push('总票价');
+        }
+        return missing;
+      }
       default:
         return [];
     }
-  }, [state.currentPageId, state.noticeCountdown, state.noticeConfirmed]);
+  }, [
+    state.currentPageId,
+    state.noticeCountdown,
+    state.noticeConfirmed,
+    state.routeInputs?.route1,
+    state.routeInputs?.route5,
+    state.selectedStation,
+    state.stationReason,
+    state.selectedTrains,
+    state.recommendedTrain,
+    state.recommendReason,
+    state.calculationProcess,
+    state.totalPrice,
+  ]);
 
   const value = useMemo(
     () => ({

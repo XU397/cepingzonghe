@@ -7,26 +7,23 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 16px; /* 从20px减少到16px，节省垂直空间 */
-  padding: 20px; /* 从30px减少到20px，节省垂直空间 */
+  gap: 10px;
+  padding: 12px;
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
-/* ====================
-   量筒行
-   ==================== */
 .beakersRow {
-  position: relative; /* 为横管提供定位上下文 */
+  position: relative;
   display: flex;
   justify-content: space-evenly;
   align-items: flex-end;
-  gap: 12px; /* 从16px减少到12px */
-  padding: 16px; /* 从20px减少到16px */
+  gap: 10px;
+  padding: 12px;
   background: rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
-  min-height: 300px; /* 从350px减少到300px，节省50px垂直空间 */
+  border-radius: 10px;
+  height: fit-content;
 }
 
 /* 横向管子 - 贯穿所有量筒上方 */
@@ -44,32 +41,27 @@
   z-index: 5; /* 确保在夹子下方 */
 }
 
-/* 单个量筒容器 */
 .beakerContainer {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding-top: 50px; /* 增加顶部空间，让小球距离量筒有间距 */
+  gap: 6px;
+  padding-top: 80px;
 }
 
-/* 量筒主体 */
 .beaker {
   position: relative;
-  width: 75px;
-  height: 205px; /* 降低15px: 从220px到205px */
-  /* 小球初始(未计时)位于圆环处所需的垂直偏移 */
-  --ball-offset: 44px;
-  /* 让小球落在圆环下边线（相对中心向下微调） */
-  --ball-seat: 14px;
+  width: 80px;
+  height: 200px;
+  --ball-offset: 54px;
+  --ball-seat: 9px;
   background: rgba(255, 255, 255, 0.9);
-  border: 3px solid #78909c;
-  border-radius: 8px 8px 4px 4px;
+  border: 2px solid #78909c;
+  border-radius: 6px 6px 3px 3px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  /* 允许小球在量筒顶部外侧可见，避免被裁剪 */
   overflow: visible;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -96,11 +88,20 @@
   justify-content: flex-end;
 }
 
-/* 刻度线位置：200ml在90%位置(top:10%), 150ml(top:28%), 100ml(top:46%), 50ml(top:64%) */
-.scaleLine:nth-child(1) { top: 10%; }
-.scaleLine:nth-child(2) { top: 28%; }
-.scaleLine:nth-child(3) { top: 46%; }
-.scaleLine:nth-child(4) { top: 64%; }
+/* 刻度线位置：均匀分布，每50ml占22.5% */
+/* 200ml=10%, 150ml=32.5%, 100ml=55%, 50ml=77.5%, 0ml=100%(底部) */
+.scaleLine:nth-child(1) {
+  top: 10%;
+}
+.scaleLine:nth-child(2) {
+  top: 32.5%;
+}
+.scaleLine:nth-child(3) {
+  top: 55%;
+}
+.scaleLine:nth-child(4) {
+  top: 77.5%;
+}
 
 .scaleLabel {
   font-size: 9px;
@@ -122,10 +123,18 @@
 }
 
 /* 根据含水量切换不同深浅的黄色（含水量越高越浅） */
-.wc15 { background: linear-gradient(180deg, #E09400 0%, #C97F00 100%); }
-.wc17 { background: linear-gradient(180deg, #E9A61A 0%, #D18F0A 100%); }
-.wc19 { background: linear-gradient(180deg, #F0B63A 0%, #E5A826 100%); }
-.wc21 { background: linear-gradient(180deg, #F7CB61 0%, #F0BD45 100%); }
+.wc15 {
+  background: linear-gradient(180deg, #e09400 0%, #c97f00 100%);
+}
+.wc17 {
+  background: linear-gradient(180deg, #e9a61a 0%, #d18f0a 100%);
+}
+.wc19 {
+  background: linear-gradient(180deg, #f0b63a 0%, #e5a826 100%);
+}
+.wc21 {
+  background: linear-gradient(180deg, #f7cb61 0%, #f0bd45 100%);
+}
 
 /* 夹子 - 圆环形，挂在横管上，小球在圆环中间 */
 .clipper {
@@ -141,8 +150,8 @@
 }
 
 .clipperBody {
-  width: 32px;
-  height: 36px;
+  width: 38px;
+  height: 44px;
   position: relative;
   display: flex;
   justify-content: center;
@@ -168,12 +177,12 @@
 .clipperBody::after {
   content: '';
   position: absolute;
-  top: 8px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 26px;
-  height: 26px;
-  border: 5px solid #546e7a;
+  width: 32px;
+  height: 32px;
+  border: 6px solid #546e7a;
   border-radius: 50%;
   background: transparent; /* 透明背景，让小球可见 */
   box-shadow:
@@ -187,8 +196,8 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   background: radial-gradient(circle at 30% 30%, #bdbdbd, #616161);
   border-radius: 50%;
   box-shadow:
@@ -199,75 +208,68 @@
   z-index: 8;
 }
 
-/* 浓度标签 */
 .concentrationLabel {
-  font-size: 17px; /* 从18px减少到17px */
+  font-size: 15px;
   font-weight: 700;
   color: #424242;
-  padding: 6px 14px; /* 从8px 16px减少到6px 14px */
+  padding: 5px 12px;
   background: white;
-  border-radius: 6px;
+  border-radius: 4px;
   border: 2px solid #81c784;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* ====================
-   时间显示条 (绿色)
-   ==================== */
 .timeBar {
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
   border-radius: 10px;
-  padding: 10px 18px; /* 从12px 20px减少到10px 18px */
+  padding: 12px 18px;
   box-shadow: 0 3px 10px rgba(67, 160, 71, 0.3);
 }
 
 .timeLabel {
-  font-size: 15px; /* 从16px减少到15px */
+  font-size: 14px;
   font-weight: 600;
   color: white;
   text-align: center;
-  margin-bottom: 6px; /* 从8px减少到6px */
+  margin-bottom: 6px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .timeValues {
   display: flex;
   justify-content: space-evenly;
-  gap: 12px; /* 从16px减少到12px */
+  gap: 10px;
 }
 
 .timeValue {
   flex: 1;
   text-align: center;
-  font-size: 17px; /* 从18px减少到17px */
+  font-size: 16px;
   font-weight: 700;
   color: #1b5e20;
   background: rgba(255, 255, 255, 0.9);
-  padding: 8px; /* 从10px减少到8px */
+  padding: 8px;
   border-radius: 6px;
   font-variant-numeric: tabular-nums;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* ====================
-   控制按钮行
-   ==================== */
 .controlsRow {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 16px; /* 从20px减少到16px */
-  padding: 12px; /* 从16px减少到12px */
+  gap: 12px;
+  padding: 10px;
   background: rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 /* 重置按钮 (蓝色) */
 .resetButton {
-  padding: 12px 24px; /* 从14px 28px减少到12px 24px */
-  font-size: 15px; /* 从16px减少到15px */
+  padding: 14px 28px;
+  font-size: 16px;
   font-weight: 600;
   background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
   color: white;
@@ -277,7 +279,7 @@
   box-shadow: 0 3px 8px rgba(30, 136, 229, 0.3);
   transition: all 0.3s ease;
   font-family: inherit;
-  min-width: 100px; /* 从110px减少到100px */
+  min-width: 110px;
 }
 
 .resetButton:hover:not(:disabled) {
@@ -295,8 +297,8 @@
 
 /* 计时开始按钮 (蓝色) */
 .startButton {
-  padding: 12px 24px; /* 从14px 28px减少到12px 24px */
-  font-size: 15px; /* 从16px减少到15px */
+  padding: 14px 28px;
+  font-size: 16px;
   font-weight: 600;
   background: linear-gradient(135deg, #29b6f6 0%, #0288d1 100%);
   color: white;
@@ -306,7 +308,7 @@
   box-shadow: 0 3px 8px rgba(2, 136, 209, 0.3);
   transition: all 0.3s ease;
   font-family: inherit;
-  min-width: 120px; /* 从130px减少到120px */
+  min-width: 130px;
 }
 
 .startButton:hover:not(:disabled) {
@@ -322,19 +324,15 @@
   opacity: 0.6;
 }
 
-/* ====================
-   温度选择器 (上下按钮控制 - 仿照蒸馒头实验)
-   ==================== */
 .temperatureSelector {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-/* 温度调节按钮 (-/+) */
 .temperatureAdjustButton {
-  padding: 8px 14px;
-  font-size: 20px;
+  padding: 8px 12px;
+  font-size: 18px;
   font-weight: 700;
   background: linear-gradient(135deg, #78909c 0%, #607d8b 100%);
   color: white;
@@ -344,8 +342,8 @@
   box-shadow: 0 2px 6px rgba(96, 125, 139, 0.3);
   transition: all 0.3s ease;
   font-family: inherit;
-  min-width: 40px;
-  height: 40px;
+  min-width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -364,27 +362,26 @@
   opacity: 0.5;
 }
 
-/* 温度显示 */
 .temperatureDisplay {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 8px 14px;
   background: white;
-  border: 3px solid #607d8b;
+  border: 2px solid #607d8b;
   border-radius: 8px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #212121;
   font-variant-numeric: tabular-nums;
-  min-width: 110px;
+  min-width: 100px;
   justify-content: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .thermometerIcon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   color: #f44336;
   display: flex;
   align-items: center;
@@ -403,42 +400,40 @@
 /* 🎯 800p优化：针对1280×800分辨率进一步压缩实验面板 */
 @media (max-height: 800px) {
   .container {
-    gap: 12px; /* 从16px进一步减少到12px */
-    padding: 16px; /* 从20px减少到16px */
+    gap: 8px;
+    padding: 8px;
   }
 
   .beakersRow {
-    gap: 10px;
-    padding: 12px;
-    min-height: 260px; /* 从300px减少到260px */
+    gap: 8px;
+    padding: 10px;
   }
 
   .beakerContainer {
-    gap: 8px;
-    padding-top: 45px; /* 增加顶部空间 */
+    gap: 4px;
+    padding-top: 65px;
   }
 
   .beaker {
-    width: 70px;
-    height: 190px; /* 降低15px */
+    width: 65px;
+    height: 165px;
     border-width: 2px;
-    /* 800p 高度下，圆环与量筒顶部距离更近，偏移略小 */
-    --ball-offset: 38px;
-    --ball-seat: 12px;
+    --ball-offset: 44px;
+    --ball-seat: 7px;
   }
 
   .horizontalBar {
     height: 6px;
-    top: 12px; /* 调整横杠位置 */
+    top: 12px;
   }
 
   .clipper {
-    top: -5px; /* 调整夹子位置 */
+    top: -6px;
   }
 
   .clipperBody {
-    width: 28px;
-    height: 32px;
+    width: 30px;
+    height: 36px;
   }
 
   .clipperBody::before {
@@ -447,50 +442,50 @@
   }
 
   .clipperBody::after {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-width: 4px;
-    top: 7px;
+    top: 10px;
   }
 
   .ball {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
   }
 
   .concentrationLabel {
-    font-size: 15px;
-    padding: 5px 12px;
+    font-size: 13px;
+    padding: 4px 10px;
   }
 
   .timeBar {
-    padding: 8px 16px;
+    padding: 8px 12px;
   }
 
   .timeLabel {
-    font-size: 14px;
-    margin-bottom: 5px;
+    font-size: 13px;
+    margin-bottom: 4px;
   }
 
   .timeValues {
-    gap: 10px;
+    gap: 8px;
   }
 
   .timeValue {
-    font-size: 16px;
-    padding: 7px;
+    font-size: 14px;
+    padding: 6px;
   }
 
   .controlsRow {
-    gap: 12px;
-    padding: 10px;
+    gap: 10px;
+    padding: 8px;
   }
 
   .resetButton,
   .startButton {
-    padding: 10px 20px;
+    padding: 10px 18px;
     font-size: 14px;
-    min-width: 90px;
+    min-width: 95px;
   }
 
   .startButton {
@@ -502,21 +497,21 @@
   }
 
   .temperatureAdjustButton {
-    padding: 7px 12px;
-    font-size: 18px;
-    min-width: 36px;
-    height: 36px;
+    padding: 6px 10px;
+    font-size: 16px;
+    min-width: 32px;
+    height: 32px;
   }
 
   .temperatureDisplay {
-    padding: 7px 14px;
-    font-size: 16px;
-    min-width: 100px;
+    padding: 6px 12px;
+    font-size: 14px;
+    min-width: 90px;
   }
 
   .thermometerIcon {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -584,7 +579,6 @@
   .beakersRow {
     gap: 8px;
     padding: 12px;
-    min-height: 280px;
   }
 
   .beakerContainer {

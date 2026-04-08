@@ -22,6 +22,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { useAppContext } from '@/context/AppContext.jsx';
 import styles from '../../styles/CountdownTimer.module.css';
 
 /**
@@ -46,6 +47,14 @@ const CountdownTimer = ({
   warningThreshold = 300, // 5 minutes default, matching Timer.jsx
   className = '',
 }) => {
+  let shouldHideTimer = false;
+  try {
+    const appContext = useAppContext();
+    shouldHideTimer = Boolean(appContext?.shouldHideTimer);
+  } catch {
+    // 忽略异常：允许在未包裹 AppContext 时继续渲染
+  }
+
   const [timeRemaining, setTimeRemaining] = useState(seconds);
   const [isRunning, setIsRunning] = useState(autoStart);
   const intervalRef = useRef(null);
@@ -137,6 +146,11 @@ const CountdownTimer = ({
       window.__countdownTimerReset = reset;
     }
   }, [reset]);
+
+  if (shouldHideTimer) {
+    // 根据 AppContext 配置隐藏显示，但计时逻辑仍在运行
+    return null;
+  }
 
   return (
     <div

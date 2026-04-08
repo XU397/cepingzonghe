@@ -30,6 +30,7 @@ const mergeHandlers = (...handlers) => {
 
 const PageSubmissionContext = createContext({
   submitPage: async () => false,
+  submitOnTimeout: async () => false,
   logOperation: () => {},
   pageNumber: '0',
 });
@@ -185,21 +186,22 @@ export function AssessmentPageFrame({
   }, [pageId, pageMeta, pageTitle, stepIndex, subPageNum]);
 
   const resolvedPageNumber = useMemo(() => {
+    if (effectivePageMeta.pageNumber) {
+      return String(effectivePageMeta.pageNumber);
+    }
     if (
       typeof effectivePageMeta.stepIndex === 'number' &&
       typeof effectivePageMeta.subPageNum === 'number'
     ) {
       try {
+        // stepIndex 在 Flow 内部是 0 起始，encodeCompositePageNum 期望 1 起始
         return encodeCompositePageNum(
-          Number(effectivePageMeta.stepIndex),
+          Number(effectivePageMeta.stepIndex) + 1,
           Number(effectivePageMeta.subPageNum),
         );
       } catch (error) {
         console.warn('[AssessmentPageFrame] 复合页码编码失败', error);
       }
-    }
-    if (effectivePageMeta.pageNumber) {
-      return String(effectivePageMeta.pageNumber);
     }
     return defaultPageMeta.pageNumber;
   }, [effectivePageMeta]);
@@ -289,7 +291,22 @@ export function AssessmentPageFrame({
       if (!lifecycleOps.length) {
         return base;
       }
-      const deduped = lifecycleOps.filter(
+
+      // 按类型分离生命周期事件
+      const pageEnterOps = lifecycleOps.filter(
+        (op) => op.eventType === 'page_enter' || op.eventType === EventTypes.PAGE_ENTER
+      );
+      const pageExitOps = lifecycleOps.filter(
+        (op) => op.eventType === 'page_exit' || op.eventType === EventTypes.PAGE_EXIT
+      );
+      const otherLifecycleOps = lifecycleOps.filter(
+        (op) =>
+          op.eventType !== 'page_enter' && op.eventType !== EventTypes.PAGE_ENTER &&
+          op.eventType !== 'page_exit' && op.eventType !== EventTypes.PAGE_EXIT
+      );
+
+      // 去重：过滤掉 base 中已存在的事件
+      const dedupe = (ops) => ops.filter(
         (op) =>
           !base.some(
             (item) =>
@@ -298,10 +315,20 @@ export function AssessmentPageFrame({
               (item.value || '') === (op.value || ''),
           ),
       );
-      if (!deduped.length) {
-        return base;
-      }
-      return [...base, ...deduped];
+
+      const dedupedEnter = dedupe(pageEnterOps);
+      const dedupedExit = dedupe(pageExitOps);
+      const dedupedOther = dedupe(otherLifecycleOps);
+
+      // 合并顺序：page_enter 在开头，base + other 在中间，page_exit 在末尾
+      const merged = [...dedupedEnter, ...base, ...dedupedOther, ...dedupedExit];
+
+      // 重新编号 code，从 1 开始连续递增
+      merged.forEach((op, index) => {
+        op.code = index + 1;
+      });
+
+      return merged;
     },
     [autoRecordLifecycle],
   );
@@ -335,6 +362,12 @@ export function AssessmentPageFrame({
   const upsertLifecycleEvent = useCallback(
     (eventType, overrides = {}) => {
       if (!autoRecordLifecycle) return;
+
+      // 如果 PAGE_ENTER 已存在，则保留首次进入时间
+      if (eventType === EventTypes.PAGE_ENTER && lifecycleEventsRef.current[eventType]) {
+        return;
+      }
+
       const operation = buildLifecycleOperation(eventType, effectivePageMeta, overrides);
       lifecycleEventsRef.current[eventType] = operation;
       logOperationWithPage(operation);
@@ -359,12 +392,16 @@ export function AssessmentPageFrame({
       return undefined;
     }
     upsertLifecycleEvent(EventTypes.PAGE_ENTER, {
-      value: effectivePageMeta.pageDesc,
+      value: pageId || effectivePageMeta.pageId || 'unknown',
     });
-    return () => {
-      markPageExit('component_unmount');
-    };
-  }, [autoRecordLifecycle, effectivePageMeta.pageDesc, markPageExit, upsertLifecycleEvent]);
+    return undefined; // page_exit 只在 handleDefaultNext 中记录
+  }, [
+    autoRecordLifecycle,
+    effectivePageMeta.pageId,
+    markPageExit,
+    pageId,
+    upsertLifecycleEvent,
+  ]);
 
   // Submission helpers already extracted above (line 207-220) to avoid TDZ
   const resolvedLogger = submissionLogger || console;
@@ -481,11 +518,17 @@ export function AssessmentPageFrame({
       const operationList = injectNextClick
         ? appendNextClickEvent(normalizedOperations)
         : normalizedOperations;
+
+      // 从 lifecycleEventsRef 获取 page_enter 事件的时间作为 beginTime
+      const pageEnterEvent = lifecycleEventsRef.current[EventTypes.PAGE_ENTER];
+      const beginTime = pageEnterEvent?.time || formatTimestamp(new Date());
+
       return {
         answerList: sanitizeAnswersInput(answersInput),
         operationList,
         pageId: effectivePageMeta.pageId,
         pageDesc: effectivePageMeta.pageDesc,
+        beginTime,
       };
     },
     [appendNextClickEvent, effectivePageMeta.pageDesc, effectivePageMeta.pageId, mergeLifecycleOperations, sanitizeAnswersInput, sanitizeOperationsInput],
@@ -824,13 +867,22 @@ export function AssessmentPageFrame({
     return rest;
   }, [nextButtonProps]);
 
+  const wrappedSubmitOnTimeout = useCallback(
+    (options = {}) => {
+      const { markOverride, ...rest } = options;
+      return runSubmitWithMark({ markOverride, ...rest, mode: 'timeout' });
+    },
+    [runSubmitWithMark],
+  );
+
   const pageSubmissionContextValue = useMemo(
     () => ({
       submitPage,
+      submitOnTimeout: wrappedSubmitOnTimeout,
       logOperation: logOperationWithPage,
       pageNumber: resolvedPageNumber,
     }),
-    [logOperationWithPage, resolvedPageNumber, submitPage],
+    [logOperationWithPage, resolvedPageNumber, submitPage, wrappedSubmitOnTimeout],
   );
 
   return (

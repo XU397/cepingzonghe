@@ -1,5 +1,46 @@
 import { encrypt } from '../../utils/jsencrypt.ts';
 import { buildApiUrl, getFetchOptions } from '../../config/apiConfig.js';
+import { orderMarkFields } from './submission/createMarkObject.js';
+
+/**
+ * 过滤字符串中的 emoji 和其他 4 字节 UTF-8 字符
+ * MySQL utf8 字符集只支持 3 字节字符，需要过滤掉 4 字节字符（Unicode > 0xFFFF）
+ * @param {string} str - 输入字符串
+ * @returns {string} 过滤后的字符串
+ */
+const filterEmoji = (str) => {
+  if (typeof str !== 'string') return str;
+  // 匹配所有 4 字节 UTF-8 字符（Unicode 码点 > 0xFFFF）
+  // 包括 emoji、特殊符号等
+  return str.replace(/[\u{10000}-\u{10FFFF}]/gu, '');
+};
+
+/**
+ * 递归过滤对象中所有字符串的 emoji
+ * @param {any} obj - 输入对象
+ * @returns {any} 过滤后的对象
+ */
+const filterEmojiDeep = (obj) => {
+  if (obj === null || obj === undefined) return obj;
+
+  if (typeof obj === 'string') {
+    return filterEmoji(obj);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => filterEmojiDeep(item));
+  }
+
+  if (typeof obj === 'object') {
+    const result = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = filterEmojiDeep(obj[key]);
+    }
+    return result;
+  }
+
+  return obj;
+};
 
 /**
  * 提交页面标记数据
@@ -31,13 +72,23 @@ export const submitPageMarkData = async (payload) => {
     const formData = new FormData();
     formData.append('batchCode', payload.batchCode);
     formData.append('examNo', payload.examNo);
-    
+
+    // 🔑 修复3: 过滤 emoji 等 4 字节字符，避免 MySQL utf8 字符集报错
+    const filteredMark = filterEmojiDeep(payload.mark);
+    // 确保字段顺序和全字段输出符合规范
+    const orderedMark = orderMarkFields(filteredMark);
+
+    // DEBUG: 验证字段顺序
+    const markJson = JSON.stringify(orderedMark);
+    console.log('[apiService] mark字段顺序验证:', Object.keys(orderedMark).join(' → '));
+    console.log('[apiService] JSON前50字符:', markJson.substring(0, 50));
+
     // 将mark对象转换为JSON字符串添加到FormData
-    formData.append('mark', JSON.stringify(payload.mark));
-    
+    formData.append('mark', markJson);
+
     console.log('FormData内容:');
     // Note: Sensitive data not logged for security
-    console.log('- mark:', JSON.stringify(payload.mark));
+    console.log('- mark (已过滤emoji，已排序):', markJson);
     
     // 使用配置文件中的fetch选项，但移除Content-Type让浏览器自动设置（FormData需要）
     const fetchOptions = getFetchOptions({

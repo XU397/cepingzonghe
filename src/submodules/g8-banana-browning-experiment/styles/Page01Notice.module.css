@@ -1,0 +1,218 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  height: 100%;
+  padding: 20px 10px;
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+  position: relative;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  width: 100%;
+}
+
+.titleSection {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 12px 0;
+  display: inline-block;
+  position: relative;
+}
+
+.titleUnderline {
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: #d97706;
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
+
+.noticeArea {
+  position: relative;
+  background: #fff;
+  padding: 32px 28px 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  margin-top: 20px;
+  text-align: left;
+  border: 2px solid #fde68a;
+  border-left: 5px solid #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.noticeBadge {
+  position: absolute;
+  top: -16px;
+  left: 20px;
+  display: inline-block;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
+}
+
+.noticeList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.noticeList li {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: 16px;
+  font-size: 18px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.noticeList li:last-child {
+  margin-bottom: 0;
+}
+
+.noticeList li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #f59e0b;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.highlight {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.highlightRed {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+.confirmationBox {
+  background: #fef9ee;
+  border: 2px solid #fde68a;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.checkboxWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  color: #92400e;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxLabel.disabled {
+  color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #d97706;
+}
+
+.checkboxPending {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.countdownButton {
+  display: inline-block;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 12px 28px;
+  border-radius: 25px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  cursor: default;
+}
+
+.countdownNumber {
+  font-weight: 700;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 24px 16px;
+    min-height: 400px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .noticeBadge {
+    font-size: 14px;
+    padding: 8px 20px;
+  }
+
+  .noticeArea {
+    padding: 16px 20px;
+  }
+
+  .noticeList li {
+    font-size: 14px;
+    padding-left: 20px;
+  }
+
+  .confirmationBox {
+    padding: 16px;
+  }
+
+  .checkboxLabel {
+    font-size: 14px;
+  }
+
+  .countdownButton {
+    font-size: 13px;
+    padding: 10px 20px;
+  }
+}

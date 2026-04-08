@@ -2,15 +2,17 @@ import { useCallback, useEffect, useRef } from 'react';
 import Grade7TrackingModuleDefinition from '@/modules/grade-7-tracking';
 import { useTrackingContext } from '@/modules/grade-7-tracking/context/TrackingProvider';
 import { PAGE_MAPPING } from '@/modules/grade-7-tracking/config';
+import { useTimer } from '@/shared/services/timers/useTimer';
 import { getPageNumByPageId } from './mapping';
 
 function ExperimentFlowBridge({ flowContext }) {
   const { session } = useTrackingContext();
+  const { isTimeout: taskTimerTimeout, getDebugInfo: getTaskTimerDebug } = useTimer('task');
   const lastProgressRef = useRef(null);
   const completionRef = useRef(false);
   const timeoutRef = useRef(false);
 
-  const isExperimentPage = session.currentPage >= 1 && session.currentPage <= 13;
+  const isExperimentPage = session.currentPage >= 1 && session.currentPage <= 12;
   const currentPageEntry = isExperimentPage ? PAGE_MAPPING[session.currentPage] : undefined;
   const currentPageId = currentPageEntry?.pageId;
   const isExperimentCompletionPage = currentPageId === PAGE_MAPPING[13]?.pageId;
@@ -53,15 +55,28 @@ function ExperimentFlowBridge({ flowContext }) {
     flowContext.onTimeout();
   }, [flowContext]);
 
+  const expectedTaskScope = flowContext
+    ? [
+        'flow',
+        flowContext.flowId || 'unknown',
+        flowContext.submoduleId || 'unknown',
+        String(flowContext.stepIndex ?? 0),
+        'task',
+      ].join('::')
+    : null;
+
   useEffect(() => {
-    if (
-      session.navigationMode === 'experiment' &&
-      session.taskTimerActive &&
-      session.taskTimeRemaining <= 0
-    ) {
-      handleTimeout();
+    if (!taskTimerTimeout) {
+      return;
     }
-  }, [handleTimeout, session.navigationMode, session.taskTimeRemaining, session.taskTimerActive]);
+
+    const timerDebug = getTaskTimerDebug();
+    if (expectedTaskScope && timerDebug?.scope && timerDebug.scope !== expectedTaskScope) {
+      return;
+    }
+
+    handleTimeout();
+  }, [expectedTaskScope, getTaskTimerDebug, handleTimeout, taskTimerTimeout]);
 
   useEffect(() => {
     completionRef.current = false;
@@ -97,10 +112,7 @@ export function G7TrackingExperimentComponent({ userContext, initialPageId, flow
   }
 
   return (
-    <TrackingModule
-      userContext={enhancedUserContext}
-      initialPageId={initialPageId}
-    >
+    <TrackingModule userContext={enhancedUserContext} initialPageId={initialPageId}>
       <ExperimentFlowBridge flowContext={flowContext} />
     </TrackingModule>
   );

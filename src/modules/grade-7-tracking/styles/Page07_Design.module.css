@@ -1,14 +1,42 @@
 /**
  * Page07_Design Styles
- * 方案设计页面样式 - 单列布局
+ * 方案设计页面样式 - 三栏卡片布局（参考方案设计参考.html）
  */
 
 .pageContainer {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 20px 40px 24px 40px;
-  background-color: #f5f7fa;
+  padding: 24px 40px;
+  background: #f5f7fb;
+  position: relative;
+}
+
+/* 装饰背景 */
+.pageContainer::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(89, 193, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pageContainer::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(103, 213, 181, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ============================================================================
@@ -16,29 +44,82 @@
    ============================================================================ */
 
 .header {
-  margin-bottom: 24px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+}
+
+.badge {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23px;
+  font-weight: 700;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(103, 213, 181, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.headerContent {
+  flex: 1;
 }
 
 .title {
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 16px 0;
-  border-bottom: 3px solid #3498db;
-  padding-bottom: 12px;
-  display: inline-block;
+  color: #2d5b8e;
+  margin: 0;
+  letter-spacing: 1px;
 }
 
 .subtitle {
-  font-size: 18px;
-  color: #555;
-  line-height: 2;
-  max-width: 1000px;
-  margin: 0 auto;
-  text-align: justify;
-  text-align: left;  /* 文本左对齐 */
-  text-indent: 2em;  /* 首行缩进两个字符 */
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  margin: 6px 0 0 0;
+}
+
+.subtitle strong {
+  color: #2d5b8e;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   Instruction Card
+   ============================================================================ */
+
+.instructionCard {
+  background: white;
+  border: 2px solid #e3eaf3;
+  border-radius: 14px;
+  padding: 16px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(45, 91, 142, 0.06);
+  position: relative;
+  z-index: 1;
+  animation: slideInUp 0.5s ease-out 0.1s both;
+}
+
+.instructionText {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.instructionText strong {
+  color: #2d5b8e;
+  font-weight: 600;
 }
 
 /* ============================================================================
@@ -47,117 +128,164 @@
 
 .content {
   flex: 1;
-  overflow-y: auto;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr; /* 三列等宽 */
-  gap: 16px;
-  max-width: 1400px;
-  width: 100%;
-  margin: 0 auto;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
 }
 
-/* 想法行容器 - 改为垂直布局 */
-.ideaRow {
+/* 输入卡片样式 */
+.inputCard {
+  background: white;
+  border: 2px solid #e3eaf3;
+  border-radius: 14px;
+  padding: 18px;
   display: flex;
-  flex-direction: column; /* 垂直布局：标签在上，输入框在下 */
-  gap: 8px;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
+  flex-direction: column;
+  box-shadow: 0 2px 12px rgba(45, 91, 142, 0.04);
+  transition: all 0.25s ease;
+  animation: slideInUp 0.5s ease-out both;
 }
 
-.ideaRow:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+.inputCard:nth-child(1) {
+  animation-delay: 0.15s;
 }
 
-/* 标签样式 */
-.ideaLabel {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2c3e50;
-  white-space: nowrap;
-  min-width: auto;
-  padding-top: 0;
+.inputCard:nth-child(2) {
+  animation-delay: 0.25s;
 }
 
-/* TextArea 容器 */
-.ideaRow textarea {
-  flex: 1;
+.inputCard:nth-child(3) {
+  animation-delay: 0.35s;
+}
+
+.inputCard:hover {
+  border-color: rgba(89, 193, 255, 0.4);
+  box-shadow: 0 8px 28px rgba(89, 193, 255, 0.15);
+  transform: translateY(-4px);
+}
+
+.inputCard.filled {
+  border-color: rgba(103, 213, 181, 0.4);
+}
+
+.inputCard.filled .inputNumber {
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  box-shadow: 0 3px 10px rgba(103, 213, 181, 0.35);
+}
+
+.inputCard.filled .checkIcon {
+  opacity: 1;
+}
+
+/* 卡片头部 */
+.inputHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.inputNumber {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 3px 10px rgba(89, 193, 255, 0.35);
+  flex-shrink: 0;
+}
+
+.inputLabel {
   font-size: 16px;
-  line-height: 1.6;
-  color: #2c3e50;
-  background-color: #f8f9fa;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  padding: 12px;
-  transition: border-color 0.3s ease;
-}
-
-.ideaRow textarea:focus {
-  outline: none;
-  border-color: #3498db;
-  background-color: #ffffff;
-  color: #2c3e50;
-}
-
-/* ============================================================================
-   提示和成功卡片
-   ============================================================================ */
-
-.hintCard {
-  background: linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%);
-  border-left: 4px solid #f39c12;
-  border-radius: 8px;
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.2);
-}
-
-.hintIcon {
-  font-size: 24px;
-  flex-shrink: 0;
-}
-
-.hintText {
-  font-size: 15px;
-  color: #8b6914;
-  line-height: 1.6;
-  margin: 0;
-}
-
-.hintText strong {
-  color: #e67e22;
   font-weight: 600;
+  color: #333;
 }
 
-.successCard {
-  background: linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);
-  border-left: 4px solid #27ae60;
-  border-radius: 8px;
-  padding: 16px 20px;
+.checkIcon {
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* 文本输入区域 */
+.textareaWrapper {
+  position: relative;
+  flex: 1;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
+  flex-direction: column;
+  min-height: 140px;
 }
 
-.successIcon {
-  font-size: 24px;
-  color: #27ae60;
-  font-weight: bold;
-  flex-shrink: 0;
-}
-
-.successText {
-  font-size: 15px;
-  color: #196f3d;
+.ideaTextarea {
+  width: 100%;
+  flex: 1;
+  min-height: 120px;
+  border: 2px solid #e3eaf3;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #333;
+  background: #fafbfc;
+  resize: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
   line-height: 1.6;
-  margin: 0;
-  font-weight: 500;
+}
+
+.ideaTextarea:hover {
+  border-color: rgba(89, 193, 255, 0.5);
+  background: white;
+}
+
+.ideaTextarea:focus {
+  outline: none;
+  border-color: #59c1ff;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.25);
+}
+
+.ideaTextarea::placeholder {
+  color: #a0aec0;
+}
+
+/* 字数统计 */
+.charCount {
+  position: absolute;
+  bottom: 6px;
+  right: 10px;
+  font-size: 10px;
+  color: #a0aec0;
+  transition: color 0.2s ease;
+  background: linear-gradient(to left, #fafbfc 70%, transparent);
+  padding-left: 16px;
+}
+
+.charCount.warning {
+  color: #e67e22;
+}
+
+.charCount.limit {
+  color: #e74c3c;
+}
+
+.ideaTextarea:focus + .charCount {
+  background: linear-gradient(to left, white 70%, transparent);
+}
+
+/* 提示标签 */
+.btnPrimary svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* ============================================================================
@@ -165,55 +293,185 @@
    ============================================================================ */
 
 .footer {
-  margin-top: 20px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  align-items: center;
   padding-top: 16px;
-  border-top: 1px solid #e0e0e0;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease-out 0.5s both;
+}
+
+.btnPrimary {
+  height: 44px;
+  padding: 0 36px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 8px 20px rgba(45, 143, 201, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  top: -2px;
+  box-shadow:
+    0 6px 0 #2d8fc9,
+    0 12px 28px rgba(45, 143, 201, 0.35);
+}
+
+.btnPrimary:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 0 0 #2d8fc9,
+    0 4px 12px rgba(45, 143, 201, 0.25);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnPrimary svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ============================================================================
+   动画关键帧
+   ============================================================================ */
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   减少动画偏好
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .instructionCard,
+  .inputCard,
+  .footer {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .inputCard:hover,
+  .btnPrimary:hover {
+    transform: none;
+  }
 }
 
 /* ============================================================================
    Responsive Design
    ============================================================================ */
 
-/* 小屏幕优化 */
 @media (max-height: 800px) {
   .pageContainer {
-    padding: 16px 32px 20px 32px;
+    padding: 16px 30px;
   }
 
-  .header {
-    margin-bottom: 16px;
+  .badge {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
   }
 
   .title {
-    font-size: 26px;
-    padding-bottom: 8px;
+    font-size: 22px;
   }
 
   .subtitle {
-    font-size: 18px;
-    line-height: 2;
+    font-size: 13px;
+  }
+
+  .instructionCard {
+    padding: 12px 18px;
+    margin-bottom: 14px;
+  }
+
+  .instructionText {
+    font-size: 13px;
   }
 
   .content {
-    gap: 12px;
+    gap: 14px;
   }
 
-  .ideaRow {
-    padding: 16px;
+  .inputCard {
+    padding: 14px;
   }
 
-  .ideaLabel {
-    font-size: 15px;
+  .inputNumber {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 6px;
   }
 
-  .ideaRow textarea {
+  .inputLabel {
     font-size: 14px;
   }
 
+  .textareaWrapper {
+    min-height: 100px;
+  }
+
+  .ideaTextarea {
+    min-height: 90px;
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
   .footer {
-    margin-top: 16px;
+    padding-top: 12px;
+  }
+
+  .btnPrimary {
+    height: 40px;
+    padding: 0 30px;
+    font-size: 14px;
   }
 }
 
@@ -222,16 +480,12 @@
     padding: 16px 24px;
   }
 
-  .title {
-    font-size: 28px;
-  }
-
   .content {
     gap: 12px;
   }
 
-  .ideaRow {
-    padding: 16px;
+  .inputCard {
+    padding: 14px;
   }
 }
 
@@ -240,34 +494,25 @@
     padding: 16px 20px;
   }
 
-  .title {
-    font-size: 24px;
+  .header {
+    flex-direction: column;
+    text-align: center;
   }
 
-  .subtitle {
-    font-size: 18px;
-    line-height: 2;
-  }
-
-  /* 小屏幕改回单列布局 */
   .content {
     grid-template-columns: 1fr;
     gap: 12px;
   }
 
-  .ideaRow {
+  .inputCard {
     padding: 16px;
   }
-}
 
-/* ============================================================================
-   Accessibility
-   ============================================================================ */
+  .textareaWrapper {
+    min-height: 120px;
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .ideaTextarea {
+    min-height: 100px;
   }
 }

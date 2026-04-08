@@ -1,0 +1,512 @@
+/**
+ * Page_11_Solution_Design Styles
+ * 方案设计页面样式 - 参考 Page07_Design.module.css
+ * 三栏卡片布局，确保内容不超出框架高度
+ */
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 24px;
+  background: #f5f7fb;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 装饰背景 */
+.pageContainer::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(89, 193, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pageContainer::after {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  left: -30px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(103, 213, 181, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================================================
+   Header Section
+   ============================================================================ */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.badge {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  box-shadow:
+    0 4px 12px rgba(103, 213, 181, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d5b8e;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* ============================================================================
+   Instruction Card - 包含图片的说明区域
+   ============================================================================ */
+
+.instructionCard {
+  background: white;
+  border: 2px solid #e3eaf3;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(45, 91, 142, 0.06);
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.instructionText {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+  margin: 0;
+  text-indent: 2em;
+}
+
+.instructionText strong {
+  color: #2d5b8e;
+  font-weight: 600;
+}
+
+/* 图片对比展示区域 */
+.imageCompareWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin: 10px 0;
+  flex-wrap: nowrap;
+}
+
+.imageItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.doughImage {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #ddd;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.imageLabel {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+}
+
+.arrowIcon {
+  font-size: 1.8em;
+  color: #64b5f6;
+  font-weight: bold;
+}
+
+.highlightText {
+  color: #d32f2f;
+}
+
+/* ============================================================================
+   Content Section - 三列横向布局
+   ============================================================================ */
+
+.content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 输入卡片样式 */
+.inputCard {
+  background: white;
+  border: 2px solid #e3eaf3;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 10px rgba(45, 91, 142, 0.04);
+  transition: all 0.25s ease;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.inputCard:hover {
+  border-color: rgba(89, 193, 255, 0.4);
+  box-shadow: 0 6px 20px rgba(89, 193, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.inputCard.filled {
+  border-color: rgba(103, 213, 181, 0.4);
+}
+
+.inputCard.filled .inputNumber {
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  box-shadow: 0 3px 10px rgba(103, 213, 181, 0.35);
+}
+
+.inputCard.filled .checkIcon {
+  opacity: 1;
+}
+
+/* 卡片头部 */
+.inputHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.inputNumber {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 3px 8px rgba(89, 193, 255, 0.35);
+  flex-shrink: 0;
+}
+
+.inputLabel {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.checkIcon {
+  margin-left: auto;
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* 文本输入区域 */
+.textareaWrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ideaTextarea {
+  width: 100%;
+  flex: 1;
+  min-height: 50px;
+  border: 2px solid #e3eaf3;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #333;
+  background: #fafbfc;
+  resize: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.ideaTextarea:hover {
+  border-color: rgba(89, 193, 255, 0.5);
+  background: white;
+}
+
+.ideaTextarea:focus {
+  outline: none;
+  border-color: #59c1ff;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.25);
+}
+
+.ideaTextarea::placeholder {
+  color: #a0aec0;
+}
+
+/* 字数统计 */
+.charCount {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 10px;
+  color: #a0aec0;
+  transition: color 0.2s ease;
+  background: linear-gradient(to left, #fafbfc 70%, transparent);
+  padding-left: 12px;
+}
+
+.charCount.warning {
+  color: #e67e22;
+}
+
+.charCount.limit {
+  color: #e74c3c;
+}
+
+.ideaTextarea:focus + .charCount {
+  background: linear-gradient(to left, white 70%, transparent);
+}
+
+/* ============================================================================
+   Footer Section
+   ============================================================================ */
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 12px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.btnPrimary {
+  height: 40px;
+  padding: 0 30px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 6px 16px rgba(45, 143, 201, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  top: -2px;
+  box-shadow:
+    0 6px 0 #2d8fc9,
+    0 10px 24px rgba(45, 143, 201, 0.35);
+}
+
+.btnPrimary:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 0px 0 #2d8fc9,
+    0 3px 10px rgba(45, 143, 201, 0.25);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnPrimary svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ============================================================================
+   Alert Box
+   ============================================================================ */
+
+.alertBox {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px 16px;
+  border-radius: 5px;
+  border: '1px solid #f5c6cb';
+  z-index: 1050;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alertCloseBtn {
+  margin-left: 12px;
+  border: none;
+  background: transparent;
+  color: #721c24;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  line-height: 1;
+}
+
+/* ============================================================================
+   减少动画偏好
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .instructionCard,
+  .inputCard,
+  .footer {
+    opacity: 1;
+    transform: none;
+  }
+
+  .inputCard:hover,
+  .btnPrimary:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+@media (max-height: 700px) {
+  .pageContainer {
+    padding: 10px 16px;
+  }
+
+  .badge {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .instructionCard {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+  }
+
+  .instructionText {
+    font-size: 13px;
+  }
+
+  .content {
+    gap: 10px;
+  }
+
+  .inputCard {
+    padding: 8px;
+  }
+
+  .inputNumber {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+    border-radius: 5px;
+  }
+
+  .inputLabel {
+    font-size: 13px;
+  }
+
+  .ideaTextarea {
+    min-height: 40px;
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .footer {
+    padding-top: 8px;
+  }
+
+  .btnPrimary {
+    height: 36px;
+    padding: 0 24px;
+    font-size: 13px;
+  }
+
+  .doughImage {
+    width: 140px;
+    height: 94px;
+  }
+
+  .imageLabel {
+    font-size: 12px;
+  }
+
+  .arrowIcon {
+    font-size: 1.5em;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 12px 20px;
+  }
+
+  .content {
+    gap: 10px;
+  }
+
+  .inputCard {
+    padding: 10px;
+  }
+}

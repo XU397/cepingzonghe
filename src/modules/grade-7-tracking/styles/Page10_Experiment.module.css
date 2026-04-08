@@ -9,40 +9,101 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 20px 20px 12px 20px;
-  background-color: #f5f7fa;
+  padding: 16px 30px;
+  background: #f5f7fb;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 装饰背景 */
+.container::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(89, 193, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(103, 213, 181, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header Section */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+}
+
+.badge {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  font-weight: 700;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(103, 213, 181, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.headerContent {
+  flex: 1;
 }
 
 /* 页面标题 */
 .pageTitle {
-  text-align: center;
-  color: #1a1a1a;
-  margin-top: 0;
-  margin-bottom: 16px;
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d5b8e;
+  margin: 0;
+  letter-spacing: 1px;
 }
 
-/* 内容布局: 左右分栏 1:2 */
 .contentLayout {
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 2fr;
-  gap: 14px; /* 进一步减小gap */
-  align-items: flex-start;
-  /* 移除overflow和max-height，让外层PageLayout.contentFrame统一管理滚动 */
+  gap: 10px;
+  align-items: start;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* ====================
    左侧: 说明面板
    ==================== */
 .instructionsPanel {
+  align-self: start;
   background: #ffffff;
-  padding: 16px; /* 从20px减少到16px，进一步节省空间 */
+  padding: 12px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.3s ease;
+  overflow-y: auto;
 }
 
 .instructionsPanel:hover {
@@ -53,48 +114,48 @@
   margin-top: 0;
   color: #2c3e50;
   border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 8px; /* 进一步减少 */
-  margin-bottom: 10px; /* 进一步减少 */
-  font-size: 18px; /* 减小字体 */
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  font-size: 17px;
   font-weight: 600;
 }
 
 .stepsList {
   padding-left: 20px;
-  font-size: 16px; /* 从15px减少到14px */
-  line-height: 1.6; /* 从1.8减少到1.6 */
+  font-size: 15px;
+  line-height: 1.7;
   color: #555555;
   margin-bottom: 0;
 }
 
 .stepsList li {
-  margin-bottom: 6px; /* 从8px减少到6px */
+  margin-bottom: 6px;
 }
 
 .divider {
-  margin: 12px 0; /* 从16px减少到12px */
+  margin: 8px 0;
   border: none;
   border-top: 2px solid #f0f0f0;
 }
 
 .instructionsSectionTitle {
   color: #2c3e50;
-  margin-top: 10px; /* 从12px减少到10px */
-  margin-bottom: 8px; /* 从10px减少到8px */
-  font-size: 15px; /* 从16px减少到15px */
+  margin-top: 8px;
+  margin-bottom: 6px;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .instructionsList {
   padding-left: 20px;
-  font-size: 16px; /* 从15px减少到14px */
-  line-height: 1.6; /* 从1.7减少到1.6 */
+  font-size: 15px;
+  line-height: 1.7;
   color: #555555;
   list-style-type: disc;
 }
 
 .instructionsList li {
-  margin-bottom: 6px; /* 从8px减少到6px */
+  margin-bottom: 6px;
 }
 
 /* 内联图片样式 */
@@ -157,15 +218,14 @@
   color: #2c3e50;
 }
 
-/* ====================
-   右侧: 实验环境面板
-   ==================== */
 .simulationEnvironmentPanel {
+  align-self: start;
   background: #ffffff;
   border-radius: 12px;
-  padding: 16px; /* 从20px减少到16px，进一步节省空间 */
+  padding: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.3s ease;
+  overflow: hidden;
 }
 
 .simulationEnvironmentPanel:hover {
@@ -316,42 +376,83 @@
    底部导航
    ==================== */
 .navigationFooter {
-  margin-top: 8px; /* 减少顶部间距 */
   display: flex;
-  justify-content: center;
-  padding-top: 8px; /* 减少内边距 */
-  padding-bottom: 8px; /* 减少底部padding */
-  border-top: 1px solid #e0e0e0;
-  background-color: #ffffff; /* 添加白色背景,避免与上方实验区域背景混合 */
-  flex-shrink: 0; /* 防止被压缩 */
-  min-height: 48px; /* 固定最小高度 */
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 10px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
 }
 
-.nextButton {
-  padding: 8px 24px; /* 减少padding降低按钮高度 */
-  font-size: 15px; /* 稍微缩小字号 */
-  font-weight: 600;
-  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+.btnPrimary {
+  height: 38px;
+  padding: 0 28px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
   color: white;
+  font-size: 14px;
+  font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
-  transition: all 0.3s ease;
-  font-family: inherit;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 6px 16px rgba(45, 143, 201, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.nextButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%);
-  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.5);
-  transform: translateY(-2px);
+.btnPrimary:hover:not(:disabled) {
+  top: -2px;
+  box-shadow:
+    0 6px 0 #2d8fc9,
+    0 12px 28px rgba(45, 143, 201, 0.35);
 }
 
-.nextButton:disabled {
-  background: #d9d9d9;
-  color: #8c8c8c;
+.btnPrimary:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 0px 0 #2d8fc9,
+    0 4px 12px rgba(45, 143, 201, 0.25);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
-  box-shadow: none;
+  transform: none;
+}
+
+.btnPrimary svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ====================
+   动画关键帧
+   ==================== */
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ====================
@@ -361,34 +462,42 @@
 /* 🎯 800p优化：针对1280×800分辨率的紧凑布局 */
 @media (max-height: 800px) {
   .container {
-    margin-top: -64px; /* 保持负margin抵消 */
-    padding: 6px 20px 10px 20px; /* 进一步减小padding */
+    padding: 12px 24px;
+  }
+
+  .badge {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
   }
 
   .pageTitle {
-    margin-top: 6px; /* 从8px减少到6px */
-    margin-bottom: 10px; /* 从12px减少到10px */
-    font-size: 24px; /* 紧凑字体 */
+    font-size: 20px;
+  }
+
+  .header {
+    margin-bottom: 8px;
   }
 
   .contentLayout {
-    gap: 10px; /* 从12px进一步减少到10px */
+    gap: 8px;
   }
 
   .instructionsPanel,
   .simulationEnvironmentPanel {
-    padding: 12px; /* 从16px减少到12px */
+    padding: 8px;
   }
 
   .instructionsTitle {
-    padding-bottom: 6px;
-    margin-bottom: 8px;
-    font-size: 16px;
+    font-size: 15px;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
   }
 
   .stepsList,
   .instructionsList {
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.6;
   }
 
   .stepsList li,
@@ -397,25 +506,23 @@
   }
 
   .divider {
-    margin: 10px 0;
+    margin: 6px 0;
   }
 
   .instructionsSectionTitle {
-    margin-top: 8px;
-    margin-bottom: 6px;
+    margin-top: 6px;
+    margin-bottom: 4px;
     font-size: 14px;
   }
 
   .navigationFooter {
-    margin-top: 6px;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    min-height: 40px;
+    padding-top: 8px;
   }
 
-  .nextButton {
-    padding: 6px 20px; /* 进一步缩小按钮 */
-    font-size: 14px;
+  .btnPrimary {
+    height: 36px;
+    padding: 0 24px;
+    font-size: 13px;
   }
 }
 

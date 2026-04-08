@@ -1,14 +1,12 @@
-import React, { useState, useContext, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { SCHOOL_ACTIVITIES, FREQUENCY_OPTIONS } from '../../utils/questionnaireData';
 import FrequencyScale from '../../components/questionnaire/FrequencyScale';
 import { scrollToTop } from '../../utils/scrollUtils';
 
 import styles from './QuestionnairePage.module.css';
-import { getNextPageId } from '../../utils/pageMappings';
 
 const PAGE_ID = 'Page_26_School_Activities';
-const DEFAULT_NEXT_PAGE_ID = 'Page_27_Outschool_Activities';
 
 /**
  * P26: 校内科学活动参与情况
@@ -16,16 +14,14 @@ const DEFAULT_NEXT_PAGE_ID = 'Page_27_Outschool_Activities';
  */
 function Page_26_School_Activities() {
   const {
-    currentPageId,
     navigateToPage,
-    questionnaireRemainingTime,
     isQuestionnaireTimeUp,
     saveQuestionnaireAnswer,
     getQuestionnaireAnswer,
     setPageEnterTime,
     logOperation,
     collectAnswer,
-    submitPageData
+    submitPageData,
   } = useAppContext();
 
   const [answers, setAnswers] = useState({});
@@ -59,33 +55,39 @@ function Page_26_School_Activities() {
    * @param {string} activityId 活动ID
    * @param {string} frequency 频率
    */
-  const handleAnswerChange = useCallback((activityId, frequency) => {
-    setAnswers(prevAnswers => {
-      const newAnswers = { ...prevAnswers, [activityId]: frequency };
-      return newAnswers;
-    });
-    logOperation({
-      targetElement: `FrequencyScale-${activityId}`,
-      eventType: 'change',
-      value: frequency
-    });
-    
-    // 实时收集答案到answerList，确保即使用户没有点击下一页按钮也能提交答案
-    const activityIndex = SCHOOL_ACTIVITIES.findIndex(act => act.id === activityId);
-    if (activityIndex !== -1) {
-      collectAnswer({
-        code: activityIndex + 1,
-        targetElement: `P26_校内科学活动${activityIndex + 1}`,
-        value: frequency
+  const handleAnswerChange = useCallback(
+    (activityId, frequency) => {
+      setAnswers(prevAnswers => {
+        const newAnswers = { ...prevAnswers, [activityId]: frequency };
+        return newAnswers;
       });
-    }
-  }, [logOperation, collectAnswer]);
+      logOperation({
+        targetElement: `FrequencyScale-${activityId}`,
+        eventType: 'change',
+        value: frequency,
+      });
+
+      // 实时收集答案到answerList，确保即使用户没有点击下一页按钮也能提交答案
+      const activityIndex = SCHOOL_ACTIVITIES.findIndex(act => act.id === activityId);
+      if (activityIndex !== -1) {
+        collectAnswer({
+          code: activityIndex + 1,
+          targetElement: `P26_校内科学活动${activityIndex + 1}`,
+          value: frequency,
+        });
+      }
+    },
+    [logOperation, collectAnswer]
+  );
 
   // 使用useEffect来保存答案，避免在渲染期间调用setState
   // 使用ref来缓存上一次的answers，避免不必要的保存操作
   const prevAnswersRef = useRef({});
   useEffect(() => {
-    if (Object.keys(answers).length > 0 && JSON.stringify(answers) !== JSON.stringify(prevAnswersRef.current)) {
+    if (
+      Object.keys(answers).length > 0 &&
+      JSON.stringify(answers) !== JSON.stringify(prevAnswersRef.current)
+    ) {
       prevAnswersRef.current = answers;
       saveQuestionnaireAnswer(PAGE_ID, answers);
     }
@@ -110,7 +112,11 @@ function Page_26_School_Activities() {
   const handleNextPage = async () => {
     if (!allActivitiesAnswered && !isQuestionnaireTimeUp) {
       alert('请为所有活动选择参与频率后再继续。');
-      logOperation({ targetElement: 'NextButton', eventType: 'click_blocked', value: 'incomplete' });
+      logOperation({
+        targetElement: 'NextButton',
+        eventType: 'click_blocked',
+        value: 'incomplete',
+      });
       return;
     }
     setIsSubmitting(true);
@@ -120,7 +126,7 @@ function Page_26_School_Activities() {
     const answerList = SCHOOL_ACTIVITIES.map((activity, index) => ({
       code: index + 1,
       targetElement: `P26_校内科学活动${index + 1}`,
-      value: answers[activity.id] || '未回答'
+      value: answers[activity.id] || '未回答',
     }));
 
     // 手动将答案添加到AppContext，确保立即可用
@@ -128,7 +134,7 @@ function Page_26_School_Activities() {
       collectAnswer({
         targetElement: answer.targetElement,
         value: answer.value,
-        code: answer.code
+        code: answer.code,
       });
     });
 
@@ -143,8 +149,8 @@ function Page_26_School_Activities() {
         alert('数据提交失败，请重试');
       }
     } catch (error) {
-      console.error("提交P26数据失败:", error);
-      alert("提交答案失败，请稍后重试！");
+      console.error('提交P26数据失败:', error);
+      alert('提交答案失败，请稍后重试！');
     } finally {
       setIsSubmitting(false);
     }
@@ -158,13 +164,17 @@ function Page_26_School_Activities() {
     if (isQuestionnaireTimeUp && !isSubmitting && !timeoutHandledRef.current) {
       timeoutHandledRef.current = true;
       setIsSubmitting(true);
-      logOperation({ targetElement: 'System', eventType: 'auto_submit', value: 'questionnaire_time_up' });
-      
+      logOperation({
+        targetElement: 'System',
+        eventType: 'auto_submit',
+        value: 'questionnaire_time_up',
+      });
+
       // 同步收集超时时的答案
       const answerList = SCHOOL_ACTIVITIES.map((activity, index) => ({
         code: index + 1,
         targetElement: `P26_校内科学活动${index + 1}`,
-        value: answers[activity.id] || '超时未回答'
+        value: answers[activity.id] || '超时未回答',
       }));
 
       // 手动将答案添加到AppContext
@@ -172,20 +182,23 @@ function Page_26_School_Activities() {
         collectAnswer({
           targetElement: answer.targetElement,
           value: answer.value,
-          code: answer.code
+          code: answer.code,
         });
       });
-      
+
       // 等待状态更新后提交
       setTimeout(() => {
-        submitPageData().then(() => {
-          navigateToPage('Page_27_Outschool_Activities', { skipSubmit: true });
-        }).catch(error => {
-          console.error("超时自动提交P26数据失败:", error);
-          alert("问卷时间到，自动提交答案失败，请检查网络或联系管理员。");
-        }).finally(() => {
-          setIsSubmitting(false);
-        });
+        submitPageData()
+          .then(() => {
+            navigateToPage('Page_27_Outschool_Activities', { skipSubmit: true });
+          })
+          .catch(error => {
+            console.error('超时自动提交P26数据失败:', error);
+            alert('问卷时间到，自动提交答案失败，请检查网络或联系管理员。');
+          })
+          .finally(() => {
+            setIsSubmitting(false);
+          });
       }, 0);
     }
   }, [isQuestionnaireTimeUp, isSubmitting]);
@@ -196,9 +209,9 @@ function Page_26_School_Activities() {
         <p className={styles.pageDescription}>
           请选择你参与以下各项<span style={{ color: 'red' }}>校内</span>科学活动的频率。
         </p>
-        
+
         <div className={styles.tableContainer}>
-          <FrequencyScale 
+          <FrequencyScale
             activities={SCHOOL_ACTIVITIES}
             options={FREQUENCY_OPTIONS}
             answers={answers}
@@ -206,20 +219,22 @@ function Page_26_School_Activities() {
             disabled={isDisabled}
           />
         </div>
-        
+
         <div className={styles.buttonContainer}>
-          <button 
+          <button
             className={styles.nextButton}
-            onClick={handleNextPage} 
+            onClick={handleNextPage}
             disabled={(!allActivitiesAnswered && !isQuestionnaireTimeUp) || isSubmitting}
           >
             {isSubmitting ? '提交中...' : '下一页'}
           </button>
-          {isQuestionnaireTimeUp && <p className={styles.timeUpMessage}>问卷时间已到，将自动提交您的答案。</p>}
+          {isQuestionnaireTimeUp && (
+            <p className={styles.timeUpMessage}>问卷时间已到，将自动提交您的答案。</p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-export default Page_26_School_Activities; 
+export default Page_26_School_Activities;

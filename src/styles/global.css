@@ -22,6 +22,37 @@
   --cartoon-green: #67d5b5;
   --cartoon-red: #ff8a80;
 
+  /* G4 Experiment Module */
+  --g4-bubble-blue: #dbeafe;
+  --g4-bubble-orange: #fdba74;
+  --g4-task-blue: #2563EB;
+  --g4-task-orange: #EA580C;
+  --g4-task-gray: #6B7280;
+  --g4-task-green: #15803D;
+  --g4-task-pink: #DB2777;
+  --g4-phone-border: #1f2937;
+  --g4-chat-bg: #f8fafc;
+  --g4-warning-bg: #fff9e6;
+  --g4-info-bg: #f0f7ff;
+
+  /* Common color tokens */
+  --color-white: #ffffff;
+  --color-text-primary: #333333;
+  --color-text-secondary: #666666;
+  --color-text-tertiary: #999999;
+  --color-text-dark: #111827;
+  --color-border-light: #dddddd;
+  --color-border-medium: #cccccc;
+  --color-bg-light: #f5f5f5;
+  --color-bg-hover: #e0e0e0;
+  --color-error: #ef4444;
+  --color-error-dark: #b91c1c;
+
+  /* Hover/active state variants */
+  --cartoon-primary-hover: #3db1ff;
+  --cartoon-green-hover: #4fc9a5;
+  --cartoon-red-hover: #ff6b6b;
+
   /* 全局布局变量 */
   --userinfo-bar-height: 50px;
 }
@@ -58,7 +89,8 @@ body {
 
 .page-content {
   padding: 30px;
-  max-height: calc(100vh - 150px); /* 确保在一屏内显示，留出空间给其他元素 */
+  
+  height: 100%;
   overflow-y: auto;
   max-width: 1200px; /* 设置一个最大宽度，例如 1200px */
   width: 100%;       /* 在屏幕宽度小于 1200px 时，元素宽度为100% */

@@ -29,8 +29,8 @@ export const PAGE_MAPPING: PageMapping = {
   '10': 'Page_15_Simulation_Question_1',
   '11': 'Page_16_Simulation_Question_2',
   '12': 'Page_17_Simulation_Question_3',
+  // �?12 作为收�?�页（Page_18_Solution_Selection），不再单独呈现 P19 结束页
   '13': 'Page_18_Solution_Selection',
-  '14': 'Page_19_Task_Completion',
 };
 
 /**
@@ -44,7 +44,7 @@ export function getInitialPage(subPageNum: string): string {
  * 获取总步数
  */
 export function getTotalSteps(): number {
-  return getTotalPages(PAGE_MAPPING);
+  return 12;
 }
 
 /**
@@ -75,5 +75,15 @@ export function getPageNumByPageId(pageId: string | null | undefined): string | 
   if (!pageId) {
     return null;
   }
-  return getPageNumFromPageId(pageId, PAGE_MAPPING);
+  // 映射压缩：将末尾两页收敛为总步数 12，避免出现第13页的结束视图
+  if (pageId === 'Page_18_Solution_Selection') {
+    return '12';
+  }
+  if (pageId === 'Page_17_Simulation_Question_3') {
+    return '11';
+  }
+  const resolved = getPageNumFromPageId(pageId, PAGE_MAPPING);
+  if (!resolved) return null;
+  const parsed = parseInt(resolved, 10);
+  return String(Math.min(parsed, 12));
 }

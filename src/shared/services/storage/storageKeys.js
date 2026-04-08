@@ -27,6 +27,9 @@ export const STORAGE_KEYS = {
   CORE_PAGE_NUM: 'core.page/pageNum',
   CORE_CURRENT_PAGE_ID: 'core.page/currentPageId',
 
+  // 显示配置
+  CORE_DISPLAY_OPTIONS_HIDE_TIMER: 'core.displayOptions/hideTimerDisplay',
+
   // 会话管理
   CORE_LAST_SESSION_END: 'core.lastSessionEndTime',
   CORE_SHOULD_CLEAR_CACHE: 'core.shouldClearOnNextSession',

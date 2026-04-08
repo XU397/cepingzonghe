@@ -1,13 +1,10 @@
-import uncleAvatar from '@/assets/images/jiujiuT.png';
-import momAvatar from '@/assets/images/mamaT.png';
-import dadAvatar from '@/assets/images/babaT.png';
-import mingAvatar from '@/assets/images/xiaomingT.png';
+import { UncleAvatar, MingAvatar, MomAvatar, DadAvatar } from '../components/DialoguePlayer/DialogueAvatars';
 
 export const ROLE_CONFIG = {
-  uncle: { name: '舅舅', align: 'left', bubbleColor: 'var(--g4-bubble-blue)', avatar: uncleAvatar },
-  mom: { name: '妈妈', align: 'left', bubbleColor: 'var(--g4-bubble-blue)', avatar: momAvatar },
-  dad: { name: '爸爸', align: 'left', bubbleColor: 'var(--g4-bubble-blue)', avatar: dadAvatar },
-  ming: { name: '小明', align: 'right', bubbleColor: 'var(--g4-bubble-orange)', avatar: mingAvatar },
+  uncle: { name: '舅舅', align: 'left', bubbleColor: 'var(--g4-bubble-blue)', avatar: UncleAvatar },
+  mom: { name: '妈妈', align: 'left', bubbleColor: 'var(--g4-bubble-blue)', avatar: MomAvatar },
+  dad: { name: '爸爸', align: 'left', bubbleColor: 'var(--g4-bubble-blue)', avatar: DadAvatar },
+  ming: { name: '小明', align: 'right', bubbleColor: 'var(--g4-bubble-orange)', avatar: MingAvatar },
 };
 
 export const DIALOGUE_MESSAGES = [

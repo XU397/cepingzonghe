@@ -75,7 +75,7 @@ describe('validation rules', () => {
     });
 
     const satisfied = buildState({
-      answers: { Q4a_菟丝子有效性: '否', Q4b_结论理由: '足够长的结论文本' },
+      answers: { Q4a_菟丝子有效性: '否', Q4b_结论理由: '足够长的结论文本已经够长' },
     });
     expect(validatePage('page_06_q4_conc', satisfied)).toBe(true);
     expect(getValidationErrors('page_06_q4_conc', satisfied)).toEqual({});

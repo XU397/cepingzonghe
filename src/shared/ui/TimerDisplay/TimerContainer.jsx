@@ -32,6 +32,7 @@
 import { useTimer } from '../../services/timers/useTimer.js';
 import TimerDisplay from './index.jsx';
 import PropTypes from 'prop-types';
+import { useAppContext } from '@/context/AppContext.jsx';
 
 /**
  * TimerContainer 组件
@@ -50,7 +51,7 @@ import PropTypes from 'prop-types';
 const TimerContainer = ({
   type,
   onTimeout,
- onTick,
+  onTick,
   warningThreshold = 300,
   criticalThreshold = 60,
   label,
@@ -58,6 +59,8 @@ const TimerContainer = ({
   className = '',
   scope,
 }) => {
+  // 从全局配置读取是否需要隐藏倒计时
+  const { shouldHideTimer } = useAppContext();
   const { remaining } = useTimer(type, {
     onTimeout,
     onTick,
@@ -79,6 +82,7 @@ const TimerContainer = ({
       label={label}
       showEmoji={showEmoji}
       className={className}
+      hidden={shouldHideTimer}
     />
   );
 };

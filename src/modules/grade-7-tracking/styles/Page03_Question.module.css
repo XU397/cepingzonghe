@@ -1,137 +1,155 @@
 /**
  * Page03_Question.module.css
- * 提出问题页面样式 - 左侧对话图片 + 右侧输入框
+ * 提出问题页面样式 - 左侧对话动画 + 右侧输入框
+ * 参考 g7-experiment 子模块 Page_03_Dialogue_Question.jsx 样式
  */
 
-/* 页面容器 */
+/* 页面容器 - 暖橙色背景 */
 .pageContainer {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  padding: 10px;
+  overflow: hidden;
+  background-color: #fff7ed;
+  background-image:
+    radial-gradient(#ffedd5 15%, transparent 16%), radial-gradient(#ffedd5 15%, transparent 16%);
+  background-size: 60px 60px;
+  background-position:
+    0 0,
+    30px 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 内容包装器 - 限制最大宽度 */
+.contentWrapper {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  max-width: 1400px;
+  display: flex;
+  flex-direction: row;
+  padding: 20px;
+  box-sizing: border-box;
+  gap: 20px;
+}
+
+/* 左右分栏布局 - 45%左侧，55%右侧 */
+.splitLayout {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  gap: 20px;
+}
+
+/* 左侧面板 - 对话区域，无背景 */
+.leftPanel {
+  width: 45%;
+  min-width: 400px;
+  height: 680px;
+  max-height: 680px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 对话组件容器 */
+.dialogueContainer {
+  width: 100%;
+  height: 100%;
+  border-radius: 30px;
+  overflow: hidden;
+}
+
+/* 右侧面板 - 垂直居中 */
+.rightPanel {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  /* 使用负margin抵消PageLayout的padding，让内容顶部对齐 */
-  margin: -80px -40px -40px -40px;
-  padding: 80px 40px 40px 40px;
-  background: #f0f4f8;
-  overflow-y: auto; /* 改为允许滚动 */
-  overflow-x: hidden;
+  justify-content: center;
+  min-width: 400px;
+}
+
+/* 右侧内容卡片 - 白色背景 + 橙色边框 */
+.contentCard {
+  width: 100%;
+  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(251, 146, 60, 0.25);
+  border: 3px solid rgba(251, 146, 60, 0.3);
+  flex-shrink: 0;
 }
 
 /* 页面标题 */
 .pageTitle {
-  font-size: 20px; /* 进一步减小字体 */
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 8px 0; /* 移除顶部margin，紧贴顶部 */
+  margin-bottom: 20px;
   text-align: center;
-  border-bottom: 2px solid #3498db; /* 减小边框宽度 */
-  padding-bottom: 4px; /* 减小内边距 */
-  flex-shrink: 0;
 }
 
-/* 左右分栏布局 - 左侧稍大，右侧稍小 */
-.splitLayout {
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 12px; /* 进一步减小间距 */
-  flex: 1;
-  margin-bottom: 8px; /* 进一步减小底部间距 */
-  min-height: 0;
-  overflow: hidden;
+.pageTitle h2 {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #fb923c;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(251, 146, 60, 0.2);
+  letter-spacing: 2px;
 }
 
-/* 左侧面板 - 对话图片，纯白背景 */
-.leftPanel {
-  background: #ffffff;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 8px; /* 进一步减小内边距 */
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  min-height: 0;
+/* 问题区域 */
+.questionSection {
+  margin-bottom: 20px;
 }
 
-/* 图片包装器 */
-.imageWrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
-}
-
-/* 对话图片 - 自适应显示，保持完整 */
-.dialogueImage {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-/* 右侧面板 - 输入区域，暖黄色背景 */
-.rightPanel {
-  background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
-  border: 2px solid #ffd54f;
-  border-radius: 12px;
-  padding: 10px; /* 进一步减小内边距 */
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-}
-
-/* 任务区域 */
-.taskSection {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-}
-
-/* 任务标题 */
-.taskTitle {
-  font-size: 16px; /* 进一步减小字体 */
-  font-weight: 600;
-  color: #34495e;
-  margin: 0 0 6px 0; /* 进一步减小间距 */
-  flex-shrink: 0;
-}
-
-/* 任务描述 */
+/* 问题描述 - 左侧橙色边框 */
 .taskDescription {
-  font-size: 16px; /* 进一步减小字体 */
-  line-height: 2; /* 进一步减小行高 */
-  color: #555;
-  margin-bottom: 8px; /* 进一步减小间距 */
-  flex-shrink: 0;
-  text-indent: 2em;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+  line-height: 1.6;
+  padding: 12px;
+  background-color: rgba(255, 237, 213, 0.5);
+  border-radius: 10px;
+  border-left: 4px solid #fb923c;
 }
 
-/* 文本输入框 */
+/* 文本输入框 - 橙色主题 */
+.textAreaWrapper {
+  margin-bottom: 24px;
+}
+
 .textArea {
   width: 100%;
-  flex: 1;
-  padding: 8px; /* 进一步减小内边距 */
-  font-size: 13px; /* 进一步减小字体 */
-  line-height: 1.4; /* 减小行高 */
-  border: 2px solid #ddd;
-  border-radius: 8px;
+  min-height: 100px;
+  padding: 14px;
+  font-size: 16px;
+  line-height: 1.6;
+  border: 2px solid rgba(251, 146, 60, 0.4);
+  border-radius: 12px;
   resize: none;
   font-family: inherit;
-  transition: border-color 0.3s ease;
-  min-height: 0;
+  background-color: rgba(255, 251, 235, 1);
+  box-shadow:
+    inset 0 2px 6px rgba(251, 146, 60, 0.15),
+    0 2px 8px rgba(251, 146, 60, 0.2);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .textArea:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: #fb923c;
+  box-shadow:
+    inset 0 2px 6px rgba(251, 146, 60, 0.2),
+    0 4px 12px rgba(251, 146, 60, 0.3);
 }
 
 .textArea::placeholder {
@@ -142,14 +160,14 @@
 .buttonContainer {
   display: flex;
   justify-content: center;
-  padding: 6px 0 8px 0; /* 顶部6px，底部8px */
-  flex-shrink: 0;
+  width: 100%;
+  text-align: center;
 }
 
 /* 下一页按钮 */
 .nextButton {
-  padding: 9px 44px; /* 进一步减小按钮尺寸 */
-  font-size: 15px; /* 进一步减小字体 */
+  padding: 12px 48px;
+  font-size: 16px;
   font-weight: 600;
   border: none;
   border-radius: 8px;
@@ -159,13 +177,13 @@
 }
 
 .nextButton.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
   color: #ffffff;
 }
 
 .nextButton.active:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(251, 146, 60, 0.4);
 }
 
 .nextButton.active:active {
@@ -178,6 +196,7 @@
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+  opacity: 0.5;
 }
 
 /* ============================================================================
@@ -186,46 +205,45 @@
 
 /* 800p紧凑模式 - 关键优化，确保1280x800下无滚动 */
 @media (max-height: 800px) {
-  .pageContainer {
-    /* 匹配PageLayout 800p模式：padding: 60px 30px 30px 30px */
-    margin: -60px -30px -30px -30px;
-    padding: 60px 30px 30px 30px;
+  .contentWrapper {
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .leftPanel {
+    height: 520px;
+    min-width: 320px;
+  }
+
+  .rightPanel {
+    min-width: 320px;
   }
 
   .pageTitle {
-    font-size: 18px; /* 更小的标题 */
-    margin: 0 0 6px 0; /* 移除顶部margin */
-    padding-bottom: 3px;
-    border-bottom-width: 2px;
+    margin-bottom: 15px;
   }
 
-  .splitLayout {
-    gap: 10px; /* 更小的间距 */
-    margin-bottom: 6px;
+  .pageTitle h2 {
+    font-size: 1.5em;
   }
 
-  .leftPanel,
-  .rightPanel {
-    padding: 6px; /* 更小的内边距 */
+  .contentCard {
+    padding: 20px;
   }
 
-  .taskTitle {
-    font-size: 15px; /* 更小的字体 */
-    margin-bottom: 5px;
+  .taskDescription {
+    font-size: 1em;
+    padding: 10px;
   }
 
   .textArea {
-    padding: 6px; /* 更小的内边距 */
-    font-size: 12px; /* 更小的字体 */
-    line-height: 1.3;
-  }
-
-  .buttonContainer {
-    padding: 5px 0 6px 0; /* 更小的间距 */
+    padding: 10px;
+    font-size: 14px;
+    min-height: 80px;
   }
 
   .nextButton {
-    padding: 8px 40px; /* 更小的按钮 */
+    padding: 10px 40px;
     font-size: 14px;
   }
 }
@@ -234,24 +252,42 @@
 
 /* 标准屏幕 (1600x900 - 1920x1080) */
 @media (max-width: 1600px) {
-  .splitLayout {
+  .contentWrapper {
     gap: 18px;
   }
 
-  .pageTitle {
-    font-size: 22px;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
+  .pageTitle h2 {
+    font-size: 1.7em;
   }
 
-  .leftPanel,
-  .rightPanel {
-    padding: 14px;
+  .contentCard {
+    padding: 25px;
   }
 
-  .taskTitle {
-    font-size: 19px;
-    margin-bottom: 8px;
+  .textArea {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  .nextButton {
+    padding: 11px 46px;
+    font-size: 16px;
+  }
+}
+
+/* 中等屏幕 (1366x768 - 1600x900) */
+@media (max-width: 1440px) {
+  .contentWrapper {
+    padding: 18px;
+    gap: 16px;
+  }
+
+  .pageTitle h2 {
+    font-size: 1.6em;
+  }
+
+  .contentCard {
+    padding: 22px;
   }
 
   .textArea {
@@ -260,182 +296,95 @@
   }
 
   .nextButton {
-    padding: 11px 50px;
-    font-size: 17px;
-  }
-}
-
-/* 中等屏幕 (1366x768 - 1600x900) */
-@media (max-width: 1440px) {
-  .pageContainer {
-    padding: 14px 24px 10px;
-  }
-
-  .splitLayout {
-    gap: 16px;
-    margin-bottom: 10px;
-  }
-
-  .pageTitle {
-    font-size: 21px;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-  }
-
-  .leftPanel,
-  .rightPanel {
-    padding: 12px;
-  }
-
-  .taskTitle {
-    font-size: 18px;
-    margin-bottom: 8px;
-  }
-
-
-  .textArea {
-    font-size: 13px;
-    padding: 10px;
-  }
-
-  .nextButton {
-    padding: 10px 48px;
-    font-size: 16px;
-  }
-
-  .buttonContainer {
-    padding: 10px 0 0;
+    padding: 10px 44px;
+    font-size: 15px;
   }
 }
 
 /* 小屏幕 (1280x720 - 1366x768) */
 @media (max-width: 1366px) {
-  .pageContainer {
-    padding: 12px 20px 8px;
-  }
-
-  .splitLayout {
-    grid-template-columns: 1fr 0.85fr;
+  .contentWrapper {
+    padding: 16px;
     gap: 14px;
-    margin-bottom: 8px;
   }
 
-  .pageTitle {
-    font-size: 20px;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
+  .leftPanel {
+    min-width: 360px;
   }
 
-  .leftPanel,
   .rightPanel {
-    padding: 10px;
+    min-width: 360px;
   }
 
-  .taskTitle {
-    font-size: 17px;
-    margin-bottom: 6px;
+  .pageTitle h2 {
+    font-size: 1.5em;
+  }
+
+  .contentCard {
+    padding: 20px;
   }
 
   .textArea {
-    font-size: 13px;
-    padding: 9px;
+    font-size: 14px;
+    padding: 10px;
   }
 
   .nextButton {
-    padding: 9px 44px;
-    font-size: 16px;
-  }
-
-  .buttonContainer {
-    padding: 8px 0 0;
+    padding: 10px 40px;
+    font-size: 15px;
   }
 }
 
 /* 窄屏幕 (1024x768或更小) - 切换为上下布局 */
 @media (max-width: 1280px) {
-  .splitLayout {
-    grid-template-columns: 1fr;
+  .contentWrapper {
+    flex-direction: column;
     gap: 16px;
-    max-height: none;
+    overflow-y: auto;
+  }
+
+  .splitLayout {
+    flex-direction: column;
   }
 
   .leftPanel {
-    max-height: 400px;
-    min-height: 300px;
+    width: 100%;
+    height: 400px;
+    min-width: auto;
   }
 
   .rightPanel {
-    min-height: 350px;
+    width: 100%;
+    min-width: auto;
   }
-
 }
 
 /* 平板竖屏 (768x1024) */
 @media (max-width: 1024px) {
-  .pageContainer {
-    padding: 12px 16px;
-  }
-
-  .pageTitle {
-    font-size: 20px;
-    margin-bottom: 12px;
-  }
-
-  .leftPanel {
-    max-height: 350px;
+  .contentWrapper {
     padding: 12px;
-  }
-
-  .rightPanel {
-    padding: 16px;
-    min-height: 320px;
-  }
-
-  .taskTitle {
-    font-size: 17px;
-  }
-
-  .textArea {
-    font-size: 13px;
-    min-height: 120px;
-  }
-
-  .nextButton {
-    padding: 11px 42px;
-    font-size: 16px;
-  }
-}
-
-/* 移动设备横屏 (小于768px) */
-@media (max-width: 768px) {
-  .pageContainer {
-    padding: 10px 12px;
-  }
-
-  .pageTitle {
-    font-size: 18px;
-    margin-bottom: 10px;
+    gap: 12px;
   }
 
   .leftPanel {
-    max-height: 300px;
-    padding: 10px;
+    height: 350px;
   }
 
-  .rightPanel {
-    padding: 14px;
-    min-height: 280px;
+  .contentCard {
+    padding: 18px;
   }
 
-  .taskTitle {
-    font-size: 16px;
+  .pageTitle h2 {
+    font-size: 1.4em;
   }
 
+  .taskDescription {
+    font-size: 1em;
+  }
 
   .textArea {
-    font-size: 13px;
-    padding: 9px;
-    min-height: 110px;
+    font-size: 14px;
+    min-height: 100px;
   }
 
   .nextButton {
@@ -444,34 +393,72 @@
   }
 }
 
-/* 移动设备竖屏 (小于480px) */
-@media (max-width: 480px) {
-  .pageTitle {
-    font-size: 16px;
-    margin-bottom: 8px;
+/* 移动设备横屏 (小于768px) */
+@media (max-width: 768px) {
+  .contentWrapper {
+    padding: 10px;
+    gap: 10px;
   }
 
   .leftPanel {
-    max-height: 250px;
-    padding: 8px;
+    height: 300px;
   }
 
-  .rightPanel {
-    padding: 12px;
+  .contentCard {
+    padding: 16px;
   }
 
-  .taskTitle {
-    font-size: 15px;
+  .pageTitle h2 {
+    font-size: 1.3em;
+  }
+
+  .taskDescription {
+    font-size: 0.95em;
+    padding: 10px;
   }
 
   .textArea {
-    font-size: 12px;
-    padding: 8px;
-    min-height: 100px;
+    font-size: 14px;
+    padding: 10px;
+    min-height: 90px;
   }
 
   .nextButton {
-    padding: 9px 30px;
+    padding: 10px 32px;
     font-size: 14px;
+  }
+}
+
+/* 移动设备竖屏 (小于480px) */
+@media (max-width: 480px) {
+  .contentWrapper {
+    padding: 8px;
+  }
+
+  .leftPanel {
+    height: 250px;
+  }
+
+  .contentCard {
+    padding: 12px;
+  }
+
+  .pageTitle h2 {
+    font-size: 1.2em;
+  }
+
+  .taskDescription {
+    font-size: 0.9em;
+  }
+
+  .textArea {
+    font-size: 13px;
+    padding: 8px;
+    min-height: 80px;
+  }
+
+  .nextButton {
+    padding: 9px 28px;
+    font-size: 13px;
   }
 }

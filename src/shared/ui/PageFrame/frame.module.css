@@ -49,6 +49,7 @@
   flex-direction: column;
   gap: var(--page-frame-body-gap);
   box-sizing: border-box;
+  min-height: 0;
   overflow-y: auto;
   background: var(--page-frame-content-area-bg, #fffef9);
   margin-top: 0px;
@@ -62,6 +63,7 @@
   padding: 0;
   width: 100%;
   box-sizing: border-box;
+  min-height: 0;
 }
 
 .header {
@@ -81,7 +83,7 @@
 .body {
   flex: 1;
   margin-top: 0px;
-  height: 100%;
+  min-height: 0;
 }
 
 .bodyStretch {
@@ -121,7 +123,9 @@
   font-weight: 600;
   cursor: pointer;
   padding: 0 32px;
-  transition: transform var(--page-frame-transition), box-shadow var(--page-frame-transition);
+  transition:
+    transform var(--page-frame-transition),
+    box-shadow var(--page-frame-transition);
 }
 
 .nextButton:not(:disabled):hover {
@@ -252,7 +256,6 @@
   .content {
     padding: 20px;
   }
-
 
   .timerSlot {
     /* 保持固定定位在 UserInfoBar 下方 */

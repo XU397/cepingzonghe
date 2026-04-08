@@ -14,12 +14,13 @@ const TIMEOUT_SECONDS = 30; // 倒计时结束后的超时时间
  * 注意事项页面组件
  * 显示任务注意事项，用户需等待10秒倒计时完成后才能勾选确认，然后才能继续
  */
-const PrecautionsPage = () => {
-  const { 
-    currentPageId, 
+const PrecautionsPage = ({ taskDurationMinutes: propTaskDurationMinutes }) => {
+  const {
+    currentPageId,
     startTaskTimer,
     setPageEnterTime,
-    navigateToPage
+    navigateToPage,
+    TOTAL_TASK_DURATION
   } = useAppContext();
   const { submitPage, logOperation, submitOnTimeout } = usePageSubmissionContext();
 
@@ -27,6 +28,16 @@ const PrecautionsPage = () => {
   // 添加倒计时相关状态
   const [timeRemainingOnPage, setTimeRemainingOnPage] = useState(READING_TIME_SECONDS);
   const [canSelectCheckbox, setCanSelectCheckbox] = useState(false);
+
+  const taskDurationMinutes = useMemo(() => {
+    if (typeof propTaskDurationMinutes === 'number' && !Number.isNaN(propTaskDurationMinutes)) {
+      return propTaskDurationMinutes;
+    }
+    if (typeof TOTAL_TASK_DURATION === 'number' && !Number.isNaN(TOTAL_TASK_DURATION)) {
+      return Math.round(TOTAL_TASK_DURATION / 60);
+    }
+    return 40;
+  }, [TOTAL_TASK_DURATION, propTaskDurationMinutes]);
 
   // 使用ref防止重复执行
   const pageLoadedRef = useRef(false);
@@ -48,7 +59,7 @@ const PrecautionsPage = () => {
   const logTimerStart = useCallback(() => {
     appendOperation({
       eventType: EventTypes.TIMER_START,
-      targetElement: 'countdown_timer',
+      targetElement: '倒计时',
       value: { duration: READING_TIME_SECONDS, unit: 'seconds' }
     });
   }, [appendOperation]);
@@ -94,7 +105,7 @@ const PrecautionsPage = () => {
             value: '超时未确认'
           },
           {
-            targetElement: 'reading_duration',
+            targetElement: '阅读时长',
             value: String(READING_TIME_SECONDS)
           }
         ]
@@ -119,7 +130,7 @@ const PrecautionsPage = () => {
         timerCompleteLoggedRef.current = true;
         appendOperation({
           eventType: EventTypes.TIMER_COMPLETE,
-          targetElement: 'countdown_timer',
+          targetElement: '倒计时',
           value: { duration: READING_TIME_SECONDS, unit: 'seconds' }
         });
 
@@ -176,7 +187,7 @@ const PrecautionsPage = () => {
 
     appendOperation({
       eventType: checked ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
-      targetElement: 'precautions_acknowledged',
+      targetElement: '注意事项已确认',
       value: checked ? 'true' : 'false'
     });
   }, [appendOperation, canSelectCheckbox]);
@@ -198,14 +209,14 @@ const PrecautionsPage = () => {
 
     appendOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_continue',
+      targetElement: '继续按钮',
       value: '开始任务'
     });
 
     const success = await submitPage({
       answers: [
         { targetElement: '确认：已阅读并同意注意事项？', value: 'A. 已阅读并同意' },
-        { targetElement: 'reading_duration', value: String(READING_TIME_SECONDS) }
+        { targetElement: '阅读时长', value: String(READING_TIME_SECONDS) }
       ],
       operations: operationsRef.current
     });
@@ -224,7 +235,7 @@ const PrecautionsPage = () => {
   }, [appendOperation, currentPageId, navigateToPage, startTaskTimer, submitPage]);
 
   return (
-    <div className="page-content page-fade-in" style={{ 
+    <div className="page-content page-fade-in" style={{
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
@@ -235,12 +246,12 @@ const PrecautionsPage = () => {
       height: '100%'
       //minWidth: '90%',
     }}>
-      <h1 className="page-title" style={{ 
+      <h1 className="page-title" style={{
         marginBottom: '20px',
         fontSize: '28px'
       }}>注意事项</h1>
-      
-      <div className="cartoon-box" style={{ 
+
+      <div className="cartoon-box" style={{
         marginBottom: '25px',
         borderLeft: '6px solid var(--cartoon-red)',
         position: 'relative',
@@ -260,34 +271,34 @@ const PrecautionsPage = () => {
         }}>
           请仔细阅读
         </div>
-        
-        <p style={{ 
-          fontSize: '16px', 
-          lineHeight: '1.8', 
+
+        <p style={{
+          fontSize: '16px',
+          lineHeight: '1.8',
           marginBottom: '12px',
           display: 'flex',
           alignItems: 'flex-start',
           color: '#333'
         }}>
-          <span style={{ 
-            display: 'inline-block', 
+          <span style={{
+            display: 'inline-block',
             marginRight: '8px',
             color: 'var(--cartoon-red)',
             fontSize: '16px',
             marginTop: '2px'
           }}>•</span>
-          作答时间共<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>40分钟</span>，时间结束后，系统将自动退出答题界面。
+          本次测试一共两个任务，作答时间共<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>{taskDurationMinutes}分钟</span>，当前是第二个任务，大约需要<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>30分钟</span>完成，请注意时间分配。
         </p>
-        <p style={{ 
-          fontSize: '18px', 
-          lineHeight: '1.8', 
+        <p style={{
+          fontSize: '18px',
+          lineHeight: '1.8',
           marginBottom: '12px',
           display: 'flex',
           alignItems: 'flex-start',
           color: '#333'
         }}>
-          <span style={{ 
-            display: 'inline-block', 
+          <span style={{
+            display: 'inline-block',
             marginRight: '8px',
             color: 'var(--cartoon-red)',
             fontSize: '18px',
@@ -295,16 +306,16 @@ const PrecautionsPage = () => {
           }}>•</span>
           请按顺序回答每页问题，<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>上一页题目未完成作答，将无法点击进入下一页</span>。
         </p>
-        <p style={{ 
-          fontSize: '18px', 
-          lineHeight: '1.8', 
+        <p style={{
+          fontSize: '18px',
+          lineHeight: '1.8',
           marginBottom: '12px',
           display: 'flex',
           alignItems: 'flex-start',
           color: '#333'
         }}>
-          <span style={{ 
-            display: 'inline-block', 
+          <span style={{
+            display: 'inline-block',
             marginRight: '8px',
             color: 'var(--cartoon-red)',
             fontSize: '18px',
@@ -312,16 +323,16 @@ const PrecautionsPage = () => {
           }}>•</span>
           答题时，<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>不要提前点击&ldquo;下一页&rdquo;</span>查看后面的内容，<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>否则将无法返回上一页</span>。
         </p>
-        <p style={{ 
-          fontSize: '18px', 
-          lineHeight: '1.8', 
+        <p style={{
+          fontSize: '18px',
+          lineHeight: '1.8',
           marginBottom: '0',
           display: 'flex',
           alignItems: 'flex-start',
           color: '#333'
         }}>
-          <span style={{ 
-            display: 'inline-block', 
+          <span style={{
+            display: 'inline-block',
             marginRight: '8px',
             color: 'var(--cartoon-red)',
             fontSize: '18px',
@@ -330,8 +341,8 @@ const PrecautionsPage = () => {
           遇到系统故障、死机、死循环等特殊情况时，<span style={{ color: '#d32f2f', fontWeight: 'bold' }}>请举手示意老师</span>。
         </p>
       </div>
-      
-      <div className="checkbox-container" style={{ 
+
+      <div className="checkbox-container" style={{
         marginBottom: '25px',
         background: '#e3f2fd',
         border: '2px solid #2196f3',
@@ -345,8 +356,8 @@ const PrecautionsPage = () => {
         opacity: canSelectCheckbox ? 1 : 0.7,
         width: '90%',
       }}>
-        <div style={{ 
-          display: 'flex', 
+        <div style={{
+          display: 'flex',
           alignItems: 'center',
           marginBottom: !canSelectCheckbox ? '12px' : '0'
         }}>
@@ -356,18 +367,18 @@ const PrecautionsPage = () => {
             checked={isAcknowledged}
             onChange={handleAcknowledgeChange}
             disabled={!canSelectCheckbox}
-            style={{ 
-              width: '20px', 
+            style={{
+              width: '20px',
               height: '20px',
               accentColor: '#2196f3',
               cursor: canSelectCheckbox ? 'pointer' : 'not-allowed',
               marginRight: '12px'
             }}
           />
-          <label 
-            htmlFor="acknowledge-checkbox" 
+          <label
+            htmlFor="acknowledge-checkbox"
             className="checkbox-label"
-            style={{ 
+            style={{
               fontSize: '16px',
               fontWeight: 'bold',
               color: '#1565c0',
@@ -375,10 +386,10 @@ const PrecautionsPage = () => {
               userSelect: 'none'
             }}
           >
-            我已阅读并理解上述注意事项 
+            我已阅读并理解上述注意事项
           </label>
         </div>
-        
+
         {/* 倒计时显示在蓝色框内 */}
         {!canSelectCheckbox && (
           <div style={{
@@ -390,8 +401,8 @@ const PrecautionsPage = () => {
             fontSize: '14px',
             fontWeight: 'bold'
           }}>
-            请仔细阅读注意事项，<span style={{ 
-              fontSize: '18px', 
+            请仔细阅读注意事项，<span style={{
+              fontSize: '18px',
               color: '#fff3e0',
               marginLeft: '4px',
               marginRight: '4px'
@@ -399,14 +410,14 @@ const PrecautionsPage = () => {
           </div>
         )}
       </div>
-      
+
       <div style={{ display: 'flex', justifyContent: 'center', width: '90%' }}>
         <NavigationButton
           currentPageId={currentPageId}
           disabled={isContinueDisabled}
           buttonText="继续"
           onClick={handleBeforeContinue}
-          customStyle={{ 
+          customStyle={{
             padding: '10px 30px',
             fontSize: '16px',
             borderRadius: '25px'

@@ -8,7 +8,7 @@
  * - Bottom: Control bar with Reset, Days, and Start buttons
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { EventTypes } from '@shared/services/submission/eventTypes';
 import { formatTimestamp } from '@/shared/services/dataLogger.js';
 import { useMikaniaExperiment } from '../../Component';
@@ -20,7 +20,6 @@ import {
   isValidConcentration,
   isValidDays,
 } from '../../utils/experimentData';
-import { getPageSubNum } from '../../mapping';
 import PetriDish from './PetriDish';
 import Dropper from './Dropper';
 import SeedDisplay from './SeedDisplay';
@@ -55,27 +54,16 @@ function validateDays(value) {
 /**
  * ExperimentPanel Component
  */
-function ExperimentPanel({ pageNumber }) {
+function ExperimentPanel() {
   const {
     state,
     setExperimentState,
     logOperation,
-    flowContext,
+    targetPrefix,
   } = useMikaniaExperiment();
 
   const { experimentState } = state;
-  const subPageNum = getPageSubNum(state.currentPageId);
-  const flowStepIndex = flowContext?.stepIndex;
-  const computedPageNumber = useMemo(() => {
-    return typeof flowStepIndex === 'number'
-      ? `${flowStepIndex}.${subPageNum}`
-      : String(subPageNum);
-  }, [flowStepIndex, subPageNum]);
-  const effectivePageNumber = pageNumber || computedPageNumber;
-  const pageTargetPrefix = useMemo(() => {
-    if (!effectivePageNumber) return '';
-    return `P${effectivePageNumber}_`;
-  }, [effectivePageNumber]);
+  const pageTargetPrefix = targetPrefix || '';
   const buildTarget = useCallback((suffix) => `${pageTargetPrefix}${suffix}`, [pageTargetPrefix]);
 
   // Local animation state
@@ -255,7 +243,7 @@ function ExperimentPanel({ pageNumber }) {
     // Reset state to defaults
     setExperimentState({
       concentration: '0mg/ml',
-      days: 1,
+      days: DAYS_RANGE.default,
       hasStarted: false,
       currentResult: null,
     });

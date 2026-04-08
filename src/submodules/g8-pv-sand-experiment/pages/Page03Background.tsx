@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import styles from '../styles/Page03Background.module.css';
@@ -9,22 +9,30 @@ const Page03Background: React.FC = () => {
     logOperation,
     setPageStartTime,
     collectAnswer,
-    currentPageId,
-    answers
+    answers,
+    getPagePrefix
   } = usePvSandContext();
 
+  const targetPrefix = getPagePrefix();
+
   const [countdown, setCountdown] = useState(5);
+  const pageInitializedRef = useRef(false);
 
   // Sync local state with answers
   const canProceed = answers['background_read'] === 'true';
 
   useEffect(() => {
+    if (pageInitializedRef.current) {
+      return;
+    }
+    pageInitializedRef.current = true;
+
     const startTime = new Date();
     setPageStartTime(startTime);
 
     // 计时开始埋点
     logOperation({
-      targetElement: 'background_timer',
+      targetElement: `${targetPrefix}背景计时器`,
       eventType: EventTypes.TIMER_START,
       value: {
         duration: 5,
@@ -33,22 +41,7 @@ const Page03Background: React.FC = () => {
       time: startTime.toISOString(),
     });
 
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: currentPageId,
-      time: startTime.toISOString()
-    });
-
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: currentPageId,
-        time: new Date().toISOString()
-      });
-    };
-  }, [logOperation, setPageStartTime, currentPageId]);
+  }, [logOperation, setPageStartTime, targetPrefix]);
 
   useEffect(() => {
     if (canProceed) {
@@ -61,7 +54,7 @@ const Page03Background: React.FC = () => {
         value: 'true'
       });
       logOperation({
-        targetElement: 'background_timer',
+        targetElement: `${targetPrefix}背景计时器`,
         eventType: EventTypes.TIMER_COMPLETE,
         value: {
           duration: 5,
@@ -71,7 +64,7 @@ const Page03Background: React.FC = () => {
         time: new Date().toISOString(),
       });
       logOperation({
-        targetElement: 'system',
+        targetElement: `${targetPrefix}系统`,
         eventType: EventTypes.AUTO_SUBMIT,
         value: {
           reason: 'timer_expired',

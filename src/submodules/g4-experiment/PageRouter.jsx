@@ -2,6 +2,7 @@ import { useG4Context } from './context/G4Context';
 import { useG4Navigation } from './hooks/useG4Navigation';
 import { useTimeoutHandler } from './hooks/useTimeoutHandler';
 import { useErrorHandler } from './hooks/useErrorHandler';
+import { handleSessionExpired } from '@shared/services/submission/handleSessionExpired.js';
 import Page01_Notices from './pages/Page01_Notices';
 import Page02_ScenarioIntro from './pages/Page02_ScenarioIntro';
 import Page03_ProblemId from './pages/Page03_ProblemId';
@@ -40,13 +41,12 @@ export function PageRouter() {
   // 接入超时处理（FR-073）
   useTimeoutHandler({ handleNextPage, collectAnswer });
 
-  // 接入错误处理（FR-074/075）
+  // 接入错误处理（FR-074/075/076）
   const { errorMessage, showRetry, clearError } = useErrorHandler({
     lastError,
     onSessionExpired: () => {
-      // 会话过期时清除本地存储并跳转登录
-      localStorage.removeItem('hci-isAuthenticated');
-      window.location.href = '/';
+      // FR-076: 使用统一的 handleSessionExpired 处理会话过期
+      handleSessionExpired({ reason: '401_from_g4_experiment' });
     },
   });
 

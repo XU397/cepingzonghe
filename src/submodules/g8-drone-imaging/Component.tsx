@@ -1,12 +1,33 @@
-import React, { Suspense, lazy, useEffect, useCallback, useMemo } from 'react';
+import React, {
+  Suspense,
+  lazy,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  useLayoutEffect,
+} from 'react';
 import type { SubmoduleProps } from '@shared/types/flow';
 import { AssessmentPageFrame } from '@shared/ui/PageFrame';
 import { DroneImagingProvider, useDroneImagingContext } from './context/DroneImagingContext';
-import type { AnswerRecord, buildQuestionIdMap } from './context/DroneImagingContext';
+import type { AnswerRecord, Operation, buildQuestionIdMap } from './context/DroneImagingContext';
 import { EventTypes } from '@shared/services/submission/eventTypes';
 import { usePageSubmission } from '@shared/services/submission/usePageSubmission';
 import { formatTimestamp } from '@shared/services/dataLogger.js';
-import { getSubPageNumByPageId, getPageConfig, PAGE_CONFIGS } from './mapping';
+import {
+  buildPageDesc as buildSharedPageDesc,
+  appendExperimentHistory,
+  collectAnswers,
+} from '@shared/services/submission/submoduleAdapter';
+import {
+  getPageConfig,
+  PAGE_CONFIGS,
+  PAGE_QUESTIONS,
+  PAGE_DESC_MAP,
+  HISTORY_CODE_BASE,
+  getSubPageNumByPageId,
+  SUBMODULE_MAPPING_CONFIG,
+} from './mapping';
 import type { PageId } from './mapping';
 import { encodeCompositePageNum } from '@shared/utils/pageMapping';
 
@@ -63,27 +84,47 @@ function PageRouter() {
   }
 }
 
-const getQuestionIdList = (questionIds: ReturnType<typeof buildQuestionIdMap>) => [
-  questionIds.confirmRead,
-  questionIds.controlVariableReason,
-  questionIds.minGsdFocal,
-  questionIds.gsdTrend,
-  questionIds.priorityFactor,
-  questionIds.priorityReason,
-];
+const resolveModuleName = (moduleName?: string) =>
+  typeof moduleName === 'string' && moduleName.trim().length > 0 ? moduleName : 'g8-drone-imaging';
 
-const getQuestionTextMap = (questionIds: ReturnType<typeof buildQuestionIdMap>) => ({
-  [questionIds.confirmRead]: '我已阅读并理解以上注意事项',
-  [questionIds.controlVariableReason]:
-    '问题1：为什么在每次航拍时，都需要确保相机分辨率和天气条件等一致？请写出原因。',
-  [questionIds.minGsdFocal]:
-    '问题2：根据模拟实验，当飞行高度为100米时，使用何种焦距可以使地面采样距离（GSD）达到最小？',
-  [questionIds.gsdTrend]:
-    '问题3：根据模拟实验，随着飞行高度的增加，地面采样距离（GSD）呈现出怎样的变化趋势？',
-  [questionIds.priorityFactor]:
-    '问题4：右图展示了飞行高度、镜头焦距与地面采样距离（GSD）的关系曲线。请问在航拍中，为获取更高精度的影像，应优先考虑降低飞行高度还是调整镜头焦距？',
-  [questionIds.priorityReason]: '请说明你的理由：',
-});
+const getFlowModuleName = (flowContext: DroneImagingChildProps['flowContext'] | undefined) => {
+  if (!flowContext) {
+    return 'g8-drone-imaging';
+  }
+  const moduleName = (flowContext as { moduleName?: unknown }).moduleName;
+  return typeof moduleName === 'string' ? resolveModuleName(moduleName) : 'g8-drone-imaging';
+};
+
+const normalizeOperationCodes = (operationList: Operation[]) =>
+  operationList.map((operation, index) => ({
+    ...operation,
+    code: index + 1,
+  }));
+
+const buildAnswersForPage = (
+  pageId: PageId,
+  rawAnswers: Record<string, AnswerRecord | string>,
+  questionIdMap: ReturnType<typeof buildQuestionIdMap>
+) => {
+  const questionKeys = PAGE_QUESTIONS[pageId] || [];
+  return questionKeys.reduce<Record<string, AnswerRecord | string>>((map, key) => {
+    const answerKey = (questionIdMap as Record<string, string>)[key];
+    if (answerKey) {
+      map[key] = rawAnswers[answerKey];
+    }
+    return map;
+  }, {});
+};
+
+const buildAnswerList = (
+  pageId: PageId,
+  rawAnswers: Record<string, AnswerRecord | string>,
+  questionIdMap: ReturnType<typeof buildQuestionIdMap>
+) => {
+  const answersForPage = buildAnswersForPage(pageId, rawAnswers, questionIdMap);
+  const collected = collectAnswers(pageId, answersForPage, SUBMODULE_MAPPING_CONFIG);
+  return collected.filter(entry => entry.value.trim() !== '').sort((a, b) => a.code - b.code);
+};
 
 interface DroneImagingProps extends Omit<SubmoduleProps, 'initialPageId'> {
   stepIndex?: number;
@@ -100,6 +141,7 @@ function DroneImagingInner({
   stepIndex: stepIndexProp,
 }: DroneImagingChildProps) {
   const stepIndex = stepIndexProp ?? flowContext?.stepIndex ?? 0;
+  const resolvedModuleName = getFlowModuleName(flowContext);
   const {
     currentPageId,
     operations,
@@ -107,14 +149,10 @@ function DroneImagingInner({
     pageStartTime,
     experimentState,
     logOperation,
-    setAnswer,
     clearOperations,
     saveToStorage,
     questionIds,
   } = useDroneImagingContext();
-
-  const requiredQuestionIds = useMemo(() => getQuestionIdList(questionIds), [questionIds]);
-  const questionTextMap = useMemo(() => getQuestionTextMap(questionIds), [questionIds]);
 
   const resolveUserIds = useCallback(() => {
     const flatBatchCode = (userContext as any)?.batchCode || '';
@@ -137,138 +175,11 @@ function DroneImagingInner({
           submoduleId: flowContext.submoduleId,
           stepIndex,
           pageId: currentPageId,
+          moduleName: resolvedModuleName,
         })
       : undefined,
     allowProceedOnFailureInDev: true,
   });
-
-  // Handle timer expiration - auto-submit with default values
-  const handleTimerExpiration = useCallback(async () => {
-    console.log('[DroneImaging] Timer expired, auto-submitting...');
-
-    // Log AUTO_SUBMIT event
-    logOperation({
-      targetElement: 'module',
-      eventType: EventTypes.AUTO_SUBMIT,
-      value: 'timer_expired',
-      time: formatTimestamp(new Date()),
-    });
-
-    const subPageNum = getSubPageNumByPageId(currentPageId as PageId);
-    const currentPageNumber = encodeCompositePageNum(stepIndex, subPageNum);
-    const currentPagePrefix = `P${currentPageNumber}_`;
-
-    // Fill unanswered questions with timeout message (仅当前页面的问题)
-    const timeoutValue = '超时未回答';
-    const populatedAnswers: Record<string, AnswerRecord> = { ...answers };
-
-    // 只处理当前页面的必填问题
-    requiredQuestionIds.forEach((questionId) => {
-      if (questionId.startsWith(currentPagePrefix)) {
-        const currentAnswer = populatedAnswers[questionId];
-        const answerValue = currentAnswer?.value ?? '';
-        if (!answerValue || answerValue.trim() === '') {
-          populatedAnswers[questionId] = { value: timeoutValue };
-          setAnswer(questionId, timeoutValue);
-        }
-      }
-    });
-
-    // 仅提交当前页面的答案
-    const answerList = Object.entries(populatedAnswers)
-      .filter(([key, answerRecord]) => {
-        const answerValue = answerRecord?.value ?? '';
-        if (answerValue.trim() === '') {
-          return false;
-        }
-        // 只提交当前页面的答案
-        return key.startsWith(currentPagePrefix);
-      })
-      .map(([key, answerRecord], index) => ({
-        code: index + 1,
-        targetElement: questionTextMap[key] ?? key,
-        value: answerRecord?.value ?? '',
-      }));
-
-    // 实验历史仅在实验页面提交
-    if (currentPageId === 'experiment_free' && experimentState.captureHistory.length > 0) {
-      answerList.push({
-        code: answerList.length + 1,
-        targetElement: 'experiment_captures',
-        value: JSON.stringify(experimentState.captureHistory),
-      });
-    }
-
-    // Get page description
-    const pageConfig = getPageConfig(currentPageId as PageId);
-    const pageDescPrefix = flowContext
-      ? `[${flowContext.flowId}/${flowContext.submoduleId}/${stepIndex}] `
-      : '';
-    const pageDescBase = `无人机航拍交互课堂-${pageConfig?.pageId || currentPageId}`;
-    const pageDesc = `${pageDescPrefix}${pageDescBase}`;
-
-    // Build mark object for submission
-    const markData = {
-      pageNumber: currentPageNumber,
-      pageDesc,
-      operationList: operations,
-      answerList,
-      beginTime: pageStartTime,
-      endTime: formatTimestamp(new Date()),
-    };
-
-    console.log('[DroneImaging] Auto-submit data:', {
-      pageNumber: markData.pageNumber,
-      pageId: currentPageId,
-      answerCount: answerList.length,
-      answerList,
-    });
-
-    // Submit data
-    try {
-      await submit({ markOverride: markData });
-      console.log('[DroneImaging] Auto-submit completed');
-    } catch (error) {
-      console.error('[DroneImaging] Auto-submit failed:', error);
-    }
-
-    // Save to storage before completion
-    saveToStorage();
-
-    // Clear operations after submission
-    clearOperations();
-
-    // ✅ 不再调用 onComplete，避免与 onTimeout 重复触发
-    // flowContext.onTimeout() 会负责后续的流程控制
-  }, [
-    answers,
-    clearOperations,
-    currentPageId,
-    experimentState.captureHistory,
-    flowContext,
-    logOperation,
-    operations,
-    pageStartTime,
-    questionIds,
-    questionTextMap,
-    requiredQuestionIds,
-    stepIndex,
-    saveToStorage,
-    setAnswer,
-    submit,
-  ]);
-
-  // Handle timeout signal from flow context
-  useEffect(() => {
-    if (flowContext?.onTimeout) {
-      // Register timeout handler
-      const originalOnTimeout = flowContext.onTimeout;
-      flowContext.onTimeout = () => {
-        handleTimerExpiration();
-        originalOnTimeout?.();
-      };
-    }
-  }, [flowContext, handleTimerExpiration]);
 
   // Notify flow context of page changes
   useEffect(() => {
@@ -298,15 +209,32 @@ function DroneImagingFrame(props: DroneImagingChildProps) {
     logOperation,
     questionIds,
     getAnswer,
+    clearOperations,
   } = useDroneImagingContext();
+  const lastPageEnterLoggedRef = useRef<string | null>(null);
   const pageConfig = getPageConfig(currentPageId as PageId);
   const stepIndex = props.stepIndex ?? flowContext?.stepIndex ?? 0;
+  const resolvedModuleName = useMemo(() => getFlowModuleName(flowContext), [flowContext]);
 
   const navigationMode = pageConfig?.navigationMode ?? 'experiment';
   const currentStep = pageConfig?.stepIndex ?? 0;
-  const totalSteps = PAGE_CONFIGS.filter((cfg) => cfg.stepIndex > 0).length;
+  const totalSteps = PAGE_CONFIGS.filter(cfg => cfg.stepIndex > 0).length;
   const subPageNum = getSubPageNumByPageId(currentPageId as PageId);
-  const questionTextMap = useMemo(() => getQuestionTextMap(questionIds), [questionIds]);
+
+  // 确保每次进入页面都记录 page_enter（使用共享 logger 以触发 flow_context 注入且保持时间准确）
+  useLayoutEffect(() => {
+    if (lastPageEnterLoggedRef.current === currentPageId) {
+      return;
+    }
+    lastPageEnterLoggedRef.current = currentPageId;
+    const pageIdValue = pageConfig?.pageId ?? currentPageId;
+    logOperation({
+      targetElement: 'page',
+      eventType: EventTypes.PAGE_ENTER,
+      value: pageIdValue,
+      time: formatTimestamp(new Date()),
+    });
+  }, [currentPageId, logOperation, pageConfig]);
 
   const canProceed = useMemo(() => {
     if (!currentPageId) {
@@ -321,9 +249,9 @@ function DroneImagingFrame(props: DroneImagingChildProps) {
     }
     if (currentPageId === 'background') {
       return operations.some(
-        (op) =>
+        op =>
           op.eventType === EventTypes.READING_COMPLETE &&
-          (op.value === 'Page02_Background' || op.targetElement === 'page'),
+          (op.value === 'Page02_Background' || op.targetElement === 'page')
       );
     }
     if (currentPageId === 'hypothesis') {
@@ -360,45 +288,34 @@ function DroneImagingFrame(props: DroneImagingChildProps) {
     };
 
     const buildMark = () => {
-      const pageDescBase = `无人机航拍交互课堂-${pageConfig?.pageId ?? currentPageId}`;
-      const pageDescPrefix = flowContext
-        ? `[${flowContext.flowId}/${flowContext.submoduleId}/${stepIndex}] `
-        : '';
-      const pageDesc = `${pageDescPrefix}${pageDescBase}`;
+      const currentPageNumber = encodeCompositePageNum(stepIndex + 1, subPageNum);
+      const normalizedOperations = normalizeOperationCodes(operations);
 
-      const currentPageNumber = encodeCompositePageNum(stepIndex, subPageNum);
-      const currentPagePrefix = `P${currentPageNumber}_`;
+      let answerList = buildAnswerList(currentPageId as PageId, answers, questionIds);
 
-      // 仅提交当前页面的答案（根据题目ID前缀过滤）
-      const answerEntries = Object.entries(answers).filter(
-        ([key, answerRecord]) => {
-          const answerValue = answerRecord?.value ?? '';
-          if (answerValue.trim() === '') {
-            return false;
-          }
-          // 只提交当前页面的答案
-          return key.startsWith(currentPagePrefix);
-        },
-      );
-      const answerList = answerEntries.map(([key, answerRecord], index) => ({
-        code: index + 1,
-        targetElement: questionTextMap[key] ?? key,
-        value: answerRecord?.value ?? '',
-      }));
-
-      // 实验历史仅在实验页面提交
       if (currentPageId === 'experiment_free' && experimentState.captureHistory.length > 0) {
-        answerList.push({
-          code: answerList.length + 1,
-          targetElement: 'experiment_captures',
-          value: JSON.stringify(experimentState.captureHistory),
+        answerList = appendExperimentHistory(answerList, experimentState.captureHistory, {
+          targetElement: `P${currentPageNumber}_experiment_captures`,
+          historyCodeBase: HISTORY_CODE_BASE,
         });
       }
+
+      const pageDesc = buildSharedPageDesc(
+        PAGE_DESC_MAP[currentPageId as PageId] || '未知页面',
+        flowContext
+          ? {
+              flowId: flowContext.flowId,
+              submoduleId: flowContext.submoduleId,
+              stepIndex,
+              totalSteps: 0,
+            }
+          : null
+      );
 
       const markData = {
         pageNumber: currentPageNumber,
         pageDesc,
-        operationList: operations,
+        operationList: normalizedOperations,
         answerList,
         beginTime: pageStartTime,
         endTime: formatTimestamp(new Date()),
@@ -425,6 +342,7 @@ function DroneImagingFrame(props: DroneImagingChildProps) {
             submoduleId: flowContext.submoduleId,
             stepIndex,
             pageId: currentPageId,
+            moduleName: resolvedModuleName,
           })
         : undefined;
 
@@ -440,16 +358,16 @@ function DroneImagingFrame(props: DroneImagingChildProps) {
     experimentState.captureHistory,
     flowContext,
     operations,
-    pageConfig?.pageId,
     pageStartTime,
-    questionTextMap,
+    questionIds,
     props.userContext,
     stepIndex,
     subPageNum,
+    resolvedModuleName,
   ]);
 
   const goToNextPage = useCallback(() => {
-    const currentIndex = PAGE_CONFIGS.findIndex((cfg) => cfg.pageId === (currentPageId as PageId));
+    const currentIndex = PAGE_CONFIGS.findIndex(cfg => cfg.pageId === (currentPageId as PageId));
     if (currentIndex >= 0 && currentIndex < PAGE_CONFIGS.length - 1) {
       const nextConfig = PAGE_CONFIGS[currentIndex + 1];
       navigateToPage(nextConfig.pageId);
@@ -463,8 +381,9 @@ function DroneImagingFrame(props: DroneImagingChildProps) {
   const handleFrameNext = useCallback(
     async ({ defaultSubmit }: { defaultSubmit?: () => Promise<boolean> }) => {
       if (!canProceed) {
-        const pageNextButton =
-          document.querySelector<HTMLButtonElement>('[data-testid="next-button"]');
+        const pageNextButton = document.querySelector<HTMLButtonElement>(
+          '[data-testid="next-button"]'
+        );
         if (pageNextButton) {
           pageNextButton.click();
         }
@@ -477,10 +396,12 @@ function DroneImagingFrame(props: DroneImagingChildProps) {
           return false;
         }
       }
+      // Clear per-page operations after successful submission to avoid carrying over to next pages
+      clearOperations();
       goToNextPage();
       return true;
     },
-    [canProceed, goToNextPage],
+    [canProceed, clearOperations, goToNextPage]
   );
 
   const handleTimerTimeout = useCallback(() => {
@@ -489,15 +410,26 @@ function DroneImagingFrame(props: DroneImagingChildProps) {
     }
   }, [flowContext]);
 
-  const basePageDesc = `无人机航拍交互课堂-${pageConfig?.pageId ?? currentPageId}`;
+  const basePageTitle =
+    PAGE_DESC_MAP[currentPageId as PageId] || pageConfig?.pageId || currentPageId;
+  const currentPageNumber = encodeCompositePageNum(stepIndex + 1, subPageNum);
+  const pageDesc = buildSharedPageDesc(
+    basePageTitle,
+    flowContext
+      ? {
+          flowId: flowContext.flowId,
+          submoduleId: flowContext.submoduleId,
+          stepIndex,
+          totalSteps: 0,
+        }
+      : null
+  );
   const pageMeta = {
     pageId: pageConfig?.pageId ?? currentPageId,
-    pageNumber: encodeCompositePageNum(stepIndex, subPageNum),
+    pageNumber: currentPageNumber,
     subPageNum,
     stepIndex,
-    pageDesc: flowContext
-      ? `[${flowContext.flowId}/${flowContext.submoduleId}/${stepIndex}] ${basePageDesc}`
-      : basePageDesc,
+    pageDesc,
   };
 
   const showUnifiedTimer = currentPageId !== 'cover';
@@ -548,6 +480,7 @@ export default function Component({
       initialPageId={validPageId}
       stepIndex={resolvedStepIndex}
       flowContext={flowContext}
+      options={options}
     >
       <DroneImagingFrame
         userContext={userContext}

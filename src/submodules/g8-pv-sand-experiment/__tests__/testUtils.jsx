@@ -14,7 +14,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import { vi } from 'vitest';
-import { PvSandProvider } from '../context/PvSandContext';
+import PvSandContext from '../context/PvSandContext';
 import { WindSpeedData, ExperimentState, AnswerDraft } from '../types';
 
 // === Mock 数据工厂 ===
@@ -94,35 +94,92 @@ export const createMockAnswerDraft = (overrides = {}) => ({
 /**
  * 创建测试用的PvSandContext值
  */
-export const createMockContextValue = (overrides = {}) => ({
-  // 页面状态
-  currentPageId: 'page01-instructions-cover',
-  navigateToPage: vi.fn(),
-  canNavigateNext: vi.fn(() => true),
-  canNavigatePrevious: vi.fn(() => false),
-  
-  // 操作日志
-  operations: [],
-  answers: [],
-  logOperation: vi.fn(),
-  collectAnswer: vi.fn(),
-  clearOperations: vi.fn(),
-  
-  // 实验状态
-  experimentState: createMockExperimentState(),
-  updateExperimentState: vi.fn(),
-  resetExperiment: vi.fn(),
-  
-  // 答案草稿
-  answerDraft: createMockAnswerDraft(),
-  updateAnswerDraft: vi.fn(),
-  
-  // 流程上下文
-  flowContext: null,
-  setFlowContext: vi.fn(),
-  
-  ...overrides
-});
+const deriveAnswersFromDraft = (draft = {}) => {
+  const answers = {};
+
+  // 将页面答案展开为扁平结构
+  if (draft.pageAnswers) {
+    Object.values(draft.pageAnswers).forEach((pageAns) => {
+      Object.entries(pageAns).forEach(([key, val]) => {
+        answers[key] = val?.value ?? val;
+      });
+    });
+  }
+
+  // 同步实验答案以便页面预填充
+  if (draft.experimentAnswers) {
+    const { conclusionAnswers, ...rest } = draft.experimentAnswers;
+    Object.entries(rest).forEach(([key, val]) => {
+      answers[key] = val;
+    });
+
+    if (conclusionAnswers) {
+      Object.entries(conclusionAnswers).forEach(([key, val]) => {
+        answers[key] = val;
+      });
+    }
+  }
+
+  return answers;
+};
+
+export const createMockContextValue = (overrides = {}) => {
+  const mockAnswerDraft = overrides.answerDraft ?? createMockAnswerDraft();
+  const mockExperimentState = overrides.experimentState ?? createMockExperimentState();
+  const initialOperations = overrides.operations ?? overrides.operationLogs ?? [];
+
+  const mockValue = {
+    // 页面状态
+    currentPageId: 'page01-instructions-cover',
+    navigateToPage: vi.fn(),
+    canNavigateNext: vi.fn(() => true),
+    canNavigatePrevious: vi.fn(() => false),
+    pageStartTime: null,
+    flowContext: null,
+    operationSequence: 1,
+    answerSequence: 1,
+
+    // 状态数据
+    experimentState: mockExperimentState,
+    answerDraft: mockAnswerDraft,
+    operationLogs: initialOperations,
+    operations: initialOperations,
+    answerList: [],
+    answers: deriveAnswersFromDraft(mockAnswerDraft),
+    taskDurationMinutes: 20,
+
+    // Actions
+    dispatch: vi.fn(),
+    logOperation: vi.fn(),
+    collectAnswer: vi.fn(),
+    clearOperations: vi.fn(),
+    clearAnswers: vi.fn(),
+    setPageStartTime: vi.fn(),
+    updateExperimentState: vi.fn(),
+    updateAnswerDraft: vi.fn(),
+    resetSequences: vi.fn(),
+    setFlowContext: vi.fn(),
+    getPagePrefix: vi.fn(() => ''),
+    resetExperiment: vi.fn(),
+
+    ...overrides
+  };
+
+  const normalizedOperations = overrides.operations ?? overrides.operationLogs ?? mockValue.operationLogs ?? [];
+  mockValue.operationLogs = normalizedOperations;
+  mockValue.operations = normalizedOperations;
+
+  if (!overrides.answers) {
+    mockValue.answers = deriveAnswersFromDraft(mockValue.answerDraft);
+  }
+
+  // 便于测试断言：将最终值回填到传入的对象
+  if (overrides && typeof overrides === 'object') {
+    Object.assign(overrides, mockValue);
+  }
+
+  return mockValue;
+};
 
 // === Mock Provider 工厂 ===
 
@@ -133,10 +190,12 @@ export const createMockContextValue = (overrides = {}) => ({
 export const createMockPvSandProvider = (contextValue = {}) => {
   const mockValue = createMockContextValue(contextValue);
   
-  // Mock the hook directly within tests
   return ({ children }) => {
-    // This is just a wrapper div, the actual mocking happens in individual test files
-    return React.createElement('div', { 'data-testid': 'mock-provider' }, children);
+    return (
+      <PvSandContext.Provider value={mockValue}>
+        {children}
+      </PvSandContext.Provider>
+    );
   };
 };
 
@@ -147,9 +206,15 @@ export const createMockPvSandProvider = (contextValue = {}) => {
  */
 export const renderWithPvSandContext = (ui, options = {}) => {
   const { contextValue = {}, ...renderOptions } = options;
-  
-  const MockProvider = createMockPvSandProvider(contextValue);
-  
+
+  const mockValue = createMockContextValue(contextValue);
+
+  const MockProvider = ({ children }) => (
+    <PvSandContext.Provider value={mockValue}>
+      {children}
+    </PvSandContext.Provider>
+  );
+
   return render(ui, {
     wrapper: MockProvider,
     ...renderOptions
@@ -161,16 +226,15 @@ export const renderWithPvSandContext = (ui, options = {}) => {
  */
 export const renderWithAllProviders = (ui, options = {}) => {
   const { contextValue = {}, ...renderOptions } = options;
-  
-  const AllTheProviders = ({ children }) => {
-    const MockPvSandProvider = createMockPvSandProvider(contextValue);
-    return (
-      <MockPvSandProvider>
-        {children}
-      </MockPvSandProvider>
-    );
-  };
-  
+
+  const mockValue = createMockContextValue(contextValue);
+
+  const AllTheProviders = ({ children }) => (
+    <PvSandContext.Provider value={mockValue}>
+      {children}
+    </PvSandContext.Provider>
+  );
+
   return render(ui, {
     wrapper: AllTheProviders,
     ...renderOptions

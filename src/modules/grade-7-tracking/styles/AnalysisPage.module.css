@@ -6,33 +6,91 @@
 .container {
   display: flex;
   flex-direction: column;
-  /* ✅ 移除 height: 100% 链式高度，允许内容自适应 */
-  /* 🔧 负margin抵消PageLayout的padding-top (64px)，重新控制对齐 */
-  margin-top: -64px;
-  padding: 12px 20px 12px 20px; /* 优化上下padding节省垂直空间 */
-  background-color: #f5f7fa;
+  height: 100%;
+  padding: 16px 30px;
+  background: #f5f7fb;
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(89, 193, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(103, 213, 181, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+  flex-shrink: 0;
+}
+
+.badge {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(103, 213, 181, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.headerContent {
+  flex: 1;
 }
 
 .pageTitle {
-  text-align: center;
-  margin-top: 12px; /* 标题更靠上 */
-  margin-bottom: 16px; /* 从24px减少到16px */
-}
-
-.pageTitle h2 {
-  font-size: 26px; /* 从28px减少到26px */
-  font-weight: 600;
-  color: #1a1a1a;
   margin: 0;
 }
 
-/* 左右分栏布局 */
+.pageTitle h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2d5b8e;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
 .contentLayout {
   flex: 1;
   display: grid;
-  grid-template-columns: 2fr 3fr;
-  gap: 16px; /* 从20px减少到16px */
-  overflow-y: auto;
+  grid-template-columns: 3fr 2fr;
+  gap: 10px;
+  align-items: start;
+  min-height: 0;
+  overflow: hidden;
 }
 
 @media (max-width: 1024px) {
@@ -41,15 +99,15 @@
   }
 }
 
-/* 左侧实验区(紧凑版) */
 .leftPanel {
+  align-self: start;
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
+  overflow: hidden;
 }
 
 .leftPanel:hover {
@@ -168,21 +226,23 @@
   border-bottom: none;
 }
 
-/* 右侧问题区 */
 .rightPanel {
+  align-self: start;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .questionCard {
   display: flex;
   flex-direction: column;
-  gap: 16px; /* 从20px减少到16px */
-  padding: 20px; /* 从24px减少到20px */
+  gap: 10px;
+  padding: 14px;
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
+  height: auto;
+  overflow: hidden;
 }
 
 .questionCard:hover {
@@ -199,26 +259,29 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
 }
 
 .questionBody {
   display: flex;
   flex-direction: column;
-  gap: 16px; /* 从20px减少到16px */
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
 }
 
 .questionText {
-  font-size: 15px; /* 从16px减少到15px */
-  line-height: 1.7; /* 从1.8减少到1.7 */
+  font-size: 15px;
+  line-height: 1.6;
   color: #2c3e50;
   margin: 0;
+  text-indent: 2em;
 }
 
 .questionText strong {
@@ -226,21 +289,20 @@
   font-weight: 600;
 }
 
-/* 选项组 */
 .optionsGroup {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* 从12px减少到10px */
+  gap: 6px;
 }
 
 .optionLabel {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 18px; /* 从16px 20px减少到14px 18px */
+  gap: 10px;
+  padding: 12px 16px;
   background: #f8f9fa;
   border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
   user-select: none;
@@ -253,19 +315,19 @@
 
 .optionLabel.selected {
   border-color: #3498db;
-  border-width: 3px;
+  border-width: 2px;
   background: linear-gradient(135deg, #e8f4f8 0%, #d4ebf5 100%);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 3px 10px rgba(52, 152, 219, 0.25);
 }
 
 .optionInput {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
 }
 
 .optionText {
-  font-size: 15px; /* 从16px减少到15px */
+  font-size: 14px;
   font-weight: 600;
   color: #2c3e50;
 }
@@ -304,132 +366,185 @@
   color: #2c3e50;
 }
 
-/* 页面底部导航 */
 .navigationFooter {
-  margin-top: 16px; /* 从24px减少到16px */
   display: flex;
-  justify-content: center;
-  padding-top: 12px; /* 从16px减少到12px */
-  padding-bottom: 8px; /* 添加底部padding确保按钮不贴边 */
-  border-top: 1px solid #e0e0e0;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 10px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
 }
 
-.nextButton {
-  padding: 12px 28px; /* 从14px 32px减少到12px 28px */
-  font-size: 15px; /* 从16px减少到15px */
-  font-weight: 600;
-  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+.btnPrimary {
+  height: 36px;
+  padding: 0 28px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
   color: white;
+  font-size: 14px;
+  font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3);
-  transition: all 0.3s ease;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 6px 16px rgba(45, 143, 201, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: inherit;
 }
 
-.nextButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%);
-  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.5);
-  transform: translateY(-2px);
+.btnPrimary:hover:not(:disabled) {
+  top: -2px;
+  box-shadow:
+    0 6px 0 #2d8fc9,
+    0 10px 24px rgba(45, 143, 201, 0.35);
 }
 
-.nextButton:disabled {
-  background: #d9d9d9;
-  color: #8c8c8c;
+.btnPrimary:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 0px 0 #2d8fc9,
+    0 3px 10px rgba(45, 143, 201, 0.25);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
-  box-shadow: none;
+  transform: none;
+}
+
+.btnPrimary svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 动画关键帧 */
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* 🎯 800p优化：针对1280×800分辨率的紧凑布局 */
 @media (max-height: 800px) {
   .container {
-    margin-top: -64px; /* 保持负margin抵消 */
-    padding: 8px 20px 10px 20px; /* 进一步减小padding */
+    padding: 12px 24px;
   }
 
-  .pageTitle {
-    margin-top: 8px;
-    margin-bottom: 12px;
+  .badge {
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+  }
+
+  .header {
+    margin-bottom: 8px;
+    gap: 10px;
   }
 
   .pageTitle h2 {
-    font-size: 24px; /* 更紧凑的标题 */
+    font-size: 18px;
   }
 
   .contentLayout {
-    gap: 12px; /* 进一步减小gap */
+    gap: 8px;
   }
 
   .questionCard {
-    gap: 12px;
-    padding: 16px;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .questionNumber {
+    padding: 4px 10px;
+    font-size: 12px;
   }
 
   .questionBody {
-    gap: 12px;
+    gap: 8px;
   }
 
   .questionText {
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 
   .optionsGroup {
-    gap: 8px;
+    gap: 5px;
   }
 
   .optionLabel {
-    padding: 12px 16px;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .optionInput {
+    width: 14px;
+    height: 14px;
   }
 
   .optionText {
-    font-size: 14px;
-  }
-
-  .answerHint {
-    padding: 12px 16px;
-    margin-top: 4px;
-  }
-
-  .hintText {
     font-size: 13px;
   }
 
   .navigationFooter {
-    margin-top: 12px;
     padding-top: 8px;
   }
 
-  .nextButton {
-    padding: 10px 24px;
-    font-size: 14px;
+  .btnPrimary {
+    height: 32px;
+    padding: 0 22px;
+    font-size: 13px;
+  }
+
+  .btnPrimary svg {
+    width: 12px;
+    height: 12px;
   }
 }
 
-/* 响应式 */
 @media (max-width: 768px) {
   .container {
-    padding: 16px;
+    padding: 12px;
   }
 
   .pageTitle h2 {
-    font-size: 20px;
+    font-size: 16px;
   }
 
   .questionCard {
-    padding: 16px;
+    padding: 10px;
   }
 
   .questionText {
-    font-size: 15px;
+    font-size: 12px;
   }
 
   .optionLabel {
-    padding: 12px 16px;
+    padding: 8px 12px;
   }
 
   .optionText {
-    font-size: 15px;
+    font-size: 12px;
   }
 }

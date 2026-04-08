@@ -16,7 +16,7 @@ const deepClone = (value) => JSON.parse(JSON.stringify(value));
 export function createSubmissionFixture() {
   const flowContext = { ...baseFlowContext };
   const subPageNum = 3;
-  const pageNumber = encodeCompositePageNum(flowContext.stepIndex, subPageNum);
+  const pageNumber = encodeCompositePageNum(flowContext.stepIndex + 1, subPageNum);
   const targetPrefix = buildTargetElementPrefix(pageNumber);
   const pageDescPrefix = buildPageDescPrefix(
     flowContext.flowId,

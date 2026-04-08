@@ -4,6 +4,7 @@
  */
 
 import type { ReactElement, ComponentType } from 'react';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 import type { CompositePageNum } from '@/shared/utils/pageMapping';
 export { parseCompositePageNum } from '@/shared/utils/pageMapping';
 export type { CompositePageNum };
@@ -181,10 +182,17 @@ export const FlowStorageKeys = {
 } as const;
 
 /**
- * 编码复合页码
+ * 编码复合页码（新格式）
+ *
+ * @deprecated 请使用 @shared/utils/pageMapping.ts 中的 encodeCompositePageNum
+ * @param stepIndex - Flow 步骤索引（从 0 开始）
+ * @param subPageNum - 子模块内页码（从 1 开始）
+ * @returns 新格式页码，如 "1.03"
  */
 export function encodeCompositePageNum(stepIndex: number, subPageNum: string): string {
-  return `M${stepIndex}:${subPageNum}`;
+  const submoduleIndex = stepIndex + 1;
+  const pageIndex = parseInt(subPageNum, 10) || 1;
+  return `${submoduleIndex}.${String(pageIndex).padStart(2, '0')}`;
 }
 
 /**
@@ -201,9 +209,9 @@ export interface FlowContextValue {
  * Flow 上下文操作日志
  */
 export interface FlowContextOperation {
-  targetElement: '页面';
+  targetElement: 'flow_context';
   eventType: 'flow_context';
-  value: FlowContextValue;
+  value: string;
   time: string;
 }
 
@@ -217,14 +225,14 @@ export function createFlowContextOperation(
   moduleName: string
 ): FlowContextOperation {
   return {
-    targetElement: '页面',
+    targetElement: 'flow_context',
     eventType: 'flow_context',
-    value: {
+    value: JSON.stringify({
       flowId,
       stepIndex,
       submoduleId,
       moduleName,
-    },
-    time: new Date().toISOString(),
+    }),
+    time: formatTimestamp(new Date()),
   };
 }

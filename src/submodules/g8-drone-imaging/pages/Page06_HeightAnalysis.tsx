@@ -33,9 +33,18 @@ const RADIO_OPTIONS: RadioOption[] = [
 ];
 
 export default function Page06_HeightAnalysis() {
-  const { experimentState, logOperation, setAnswer, getAnswer, capture, resetExperiment, questionIds } =
-    useDroneImagingContext();
+  const {
+    experimentState,
+    logOperation,
+    setAnswer,
+    getAnswer,
+    capture,
+    resetExperiment,
+    questionIds,
+    getPagePrefix,
+  } = useDroneImagingContext();
   const gsdTrendQuestionId = questionIds.gsdTrend;
+  const pagePrefix = getPagePrefix(6);
 
   // State
   const [selectedValue, setSelectedValue] = useState(getAnswer(gsdTrendQuestionId) || '');
@@ -47,32 +56,15 @@ export default function Page06_HeightAnalysis() {
   const { currentHeight } = experimentState;
   const canCapture = currentHeight !== 0;
 
-  // Page enter/exit logging
-  useEffect(() => {
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'Page06_HeightAnalysis',
-      time: formatTimestamp(new Date()),
-    });
-
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'Page06_HeightAnalysis',
-        time: formatTimestamp(new Date()),
-      });
-
-      // Clear any pending timeouts
-      if (flashTimeoutRef.current) {
-        clearTimeout(flashTimeoutRef.current);
-      }
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
-      }
-    };
-  }, [logOperation]);
+  // Clear any pending timeouts on unmount
+  useEffect(() => () => {
+    if (flashTimeoutRef.current) {
+      clearTimeout(flashTimeoutRef.current);
+    }
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
+  }, []);
 
   // Handle radio selection
   const handleRadioChange = (option: RadioOption) => {
@@ -105,7 +97,7 @@ export default function Page06_HeightAnalysis() {
     setShowFovCone(true);
 
     logOperation({
-      targetElement: 'capture_button',
+      targetElement: `${pagePrefix}capture_button`,
       eventType: EventTypes.SIMULATION_OPERATION,
       value: JSON.stringify({
         action: 'capture',
@@ -121,12 +113,12 @@ export default function Page06_HeightAnalysis() {
     flashTimeoutRef.current = setTimeout(() => {
       setShowFovCone(false);
     }, 2000);
-  }, [experimentState, capture, logOperation, canCapture]);
+  }, [experimentState, capture, logOperation, canCapture, pagePrefix]);
 
   // Handle reset
   const handleReset = useCallback(() => {
     logOperation({
-      targetElement: 'reset_button',
+      targetElement: `${pagePrefix}reset_button`,
       eventType: EventTypes.SIMULATION_OPERATION,
       value: JSON.stringify({ action: 'reset_experiment' }),
       time: formatTimestamp(new Date()),
@@ -138,7 +130,7 @@ export default function Page06_HeightAnalysis() {
     if (flashTimeoutRef.current) {
       clearTimeout(flashTimeoutRef.current);
     }
-  }, [resetExperiment, logOperation]);
+  }, [resetExperiment, logOperation, pagePrefix]);
 
   // Handle next button click (used by Flow frame fallback)
   const handleNext = () => {

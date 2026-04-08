@@ -1,0 +1,448 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 24px 40px;
+  box-sizing: border-box;
+  background: #f5f7fb;
+  gap: 16px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+}
+
+.badge {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23px;
+  font-weight: 700;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(245, 158, 11, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.pageTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.pageTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.instruction {
+  font-size: 16px;
+  color: #374151;
+  line-height: 1.8;
+  margin: 0;
+  padding: 16px 24px;
+  background: white;
+  border: 2px solid #fde68a;
+  border-left: 5px solid #f59e0b;
+  border-radius: 14px;
+  text-indent: 2em;
+  box-shadow: 0 4px 20px rgba(146, 64, 14, 0.06);
+  position: relative;
+  z-index: 1;
+  animation: slideInUp 0.5s ease-out 0.1s both;
+}
+
+.instructionHighlight {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.starInline {
+  color: #f59e0b;
+  text-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.mainContent {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+  animation: slideInUp 0.5s ease-out 0.2s both;
+}
+
+.chartSection {
+  flex: 1.1;
+  background: white;
+  border: 2px solid #fde68a;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(146, 64, 14, 0.06);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chartTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 12px 0;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(245, 158, 11, 0.2);
+}
+
+.chartWrapper {
+  flex: 1;
+  min-height: 320px;
+}
+
+.rightPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tableSection {
+  background: white;
+  border: 2px solid #fde68a;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(146, 64, 14, 0.06);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 12px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f59e0b;
+}
+
+.tableWrapper {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableWrapper th {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fde68a;
+  padding: 8px 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #92400e;
+  text-align: center;
+}
+
+.tableWrapper td {
+  border: 1px solid #fde68a;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 16px;
+  color: #4a5563;
+}
+
+.tableWrapper tr:nth-child(even) td {
+  background-color: #fffbeb;
+}
+
+.tableWrapper tr:hover td {
+  background-color: #fef3c7;
+}
+
+.selectCell {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #2d3748;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectCell:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.starButton {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+  color: #d1d5db;
+}
+
+.starButton:hover {
+  transform: scale(1.15);
+}
+
+.starButtonActive {
+  color: #f59e0b;
+  text-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.deleteButton:hover {
+  color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.addRowButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 14px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #92400e;
+  background-color: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-end;
+}
+
+.addRowButton:hover {
+  background-color: #fde68a;
+  border-color: #f59e0b;
+}
+
+.emptyRow td {
+  text-align: center;
+  color: #9ca3af;
+  padding: 20px 10px;
+  font-style: italic;
+  font-size: 16px;
+}
+
+.reasonSection {
+  background: white;
+  border: 2px solid #fde68a;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(146, 64, 14, 0.06);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.reasonLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 8px 0;
+}
+
+.reasonTextarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  font-size: 16px;
+  color: #374151;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  resize: vertical;
+  line-height: 1.6;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.reasonTextarea:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.reasonTextarea::placeholder {
+  color: #9ca3af;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-height: 800px) {
+  .container {
+    padding: 16px 30px;
+    gap: 12px;
+  }
+
+  .badge {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+  }
+
+  .instruction {
+    padding: 12px 18px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .mainContent {
+    gap: 16px;
+  }
+
+  .chartSection {
+    padding: 12px;
+  }
+
+  .chartTitle {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .chartWrapper {
+    min-height: 260px;
+  }
+
+  .tableSection {
+    padding: 12px;
+  }
+
+  .tableTitle {
+    font-size: 16px;
+  }
+
+  .reasonSection {
+    padding: 12px;
+  }
+
+  .reasonLabel {
+    font-size: 16px;
+  }
+
+  .reasonTextarea {
+    min-height: 60px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .mainContent {
+    flex-direction: column;
+  }
+
+  .chartSection {
+    flex: none;
+  }
+
+  .chartWrapper {
+    min-height: 280px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .instruction,
+  .mainContent {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

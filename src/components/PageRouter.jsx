@@ -17,7 +17,6 @@ import Page_15_Simulation_Question_1 from '../pages/Page_15_Simulation_Question_
 import Page_16_Simulation_Question_2 from '../pages/Page_16_Simulation_Question_2';
 import Page_17_Simulation_Question_3 from '../pages/Page_17_Simulation_Question_3';
 import Page_18_Solution_Selection from '../pages/Page_18_Solution_Selection';
-import Page_19_Task_Completion from '../pages/Page_19_Task_Completion';
 
 // 问卷页面组件
 import Page_20_Questionnaire_Intro from '../pages/questionnaire/Page_20_Questionnaire_Intro';
@@ -35,7 +34,7 @@ import Page_28_Effort_Submit from '../pages/questionnaire/Page_28_Effort_Submit'
  * 页面路由组件
  * 根据当前页面ID显示相应的页面组件
  */
-const PageRouter = () => {
+const PageRouter = ({ taskDurationMinutes }) => {
   const { currentPageId, isAuthenticated } = useAppContext();
   
   // 减少日志频率，避免控制台刷屏
@@ -63,7 +62,6 @@ const PageRouter = () => {
     'Page_16_Simulation_Question_2',
     'Page_17_Simulation_Question_3',
     'Page_18_Solution_Selection',
-    'Page_19_Task_Completion',
     // 问卷页面也需要登录保护
     'Page_20_Questionnaire_Intro',
     'Page_21_Curiosity_Questions',
@@ -93,7 +91,7 @@ const PageRouter = () => {
       case 'Page_Login':
         return <LoginPage />;
       case 'Page_01_Precautions':
-        return <PrecautionsPage />;
+        return <PrecautionsPage taskDurationMinutes={taskDurationMinutes} />;
       case 'Page_02_Introduction':
         return <IntroductionPage />;
       case 'Page_03_Dialogue_Question':
@@ -118,8 +116,6 @@ const PageRouter = () => {
         return <Page_17_Simulation_Question_3 />;
       case 'Page_18_Solution_Selection':
         return <Page_18_Solution_Selection />;
-      case 'Page_19_Task_Completion':
-        return <Page_19_Task_Completion />;
       // 问卷页面路由
       case 'Page_20_Questionnaire_Intro':
         return <Page_20_Questionnaire_Intro />;

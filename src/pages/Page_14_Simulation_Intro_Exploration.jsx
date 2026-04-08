@@ -5,16 +5,70 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 import { useAppContext } from '../context/AppContext';
 import NavigationButton from '../components/common/NavigationButton';
 import InteractiveSimulationEnvironment from '../components/simulation/InteractiveSimulationEnvironment'; // 模拟实验环境组件
 
-// 导入图片资源
-import jiaImg from '../assets/images/jia.jpg';
-import jianImg from '../assets/images/jian.jpg';
-import jishiImg from '../assets/images/jishi.jpg';
-import chongzhiImg from '../assets/images/chongzhi.jpg';
-import tijiImg from '../assets/images/tiji.jpg';
+// 内联样式 - 模拟控件外观（替代图片）
+const controlStyles = {
+  // 增加/减少按钮 - 黄色
+  btnYellow: {
+    display: 'inline-block',
+    width: '24px',
+    height: '20px',
+    margin: '0 3px',
+    background: 'linear-gradient(to bottom, #ffcc80, #ffa726)',
+    color: '#5d4037',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    lineHeight: '20px',
+    textAlign: 'center',
+    borderRadius: '4px',
+    verticalAlign: 'middle',
+    border: '1px solid #ffb74d',
+  },
+  // 计时开始按钮 - 蓝色圆角
+  btnStart: {
+    display: 'inline-block',
+    padding: '4px 12px',
+    margin: '0 4px',
+    background: 'linear-gradient(to bottom, #4fc3f7, #039be5)',
+    borderRadius: '6px',
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: '12px',
+    boxShadow: '0 2px 0 #0277bd',
+    verticalAlign: 'middle',
+  },
+  // 重置按钮 - 红色圆角
+  btnReset: {
+    display: 'inline-block',
+    padding: '4px 12px',
+    margin: '0 4px',
+    background: 'linear-gradient(to bottom, #ef5350, #e53935)',
+    borderRadius: '6px',
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: '12px',
+    boxShadow: '0 2px 0 #c62828',
+    verticalAlign: 'middle',
+  },
+  // 体积显示框 - 浅黄色背景带阴影效果
+  volumeDisplay: {
+    display: 'inline-block',
+    padding: '3px 10px',
+    margin: '0 4px',
+    background: '#FFFACD',
+    borderRadius: '4px',
+    color: '#2e7d32',
+    fontWeight: '700',
+    fontSize: '13px',
+    border: '1px solid #e0d8a0',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+    verticalAlign: 'middle',
+  },
+};
 
 /**
  * P14: 蒸馒头:模拟实验 - 界面介绍与自由探索
@@ -39,7 +93,10 @@ const Page_14_Simulation_Intro_Exploration = () => {
   const pageLoadedRef = useRef(false);
   const operationsRef = useRef([]);
   const recordOperation = useCallback((operation) => {
-    const normalizedOperation = { ...operation };
+    const normalizedOperation = {
+      ...operation,
+      time: formatTimestamp(new Date()),
+    };
     logOperation(normalizedOperation);
     operationsRef.current = [...operationsRef.current, normalizedOperation];
   }, [logOperation]);
@@ -60,7 +117,7 @@ const Page_14_Simulation_Intro_Exploration = () => {
       setShowAlert(true);
       recordOperation({
         eventType: EventTypes.CLICK_BLOCKED,
-        targetElement: 'btn_next',
+        targetElement: 'next_button',
         value: { reason: '未进行计时', missing: ['simulation_timing_started'] },
       });
       return false;
@@ -69,7 +126,7 @@ const Page_14_Simulation_Intro_Exploration = () => {
     setShowAlert(false);
     recordOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_next',
+      targetElement: 'next_button',
       value: '完成模拟实验界面介绍',
     });
 
@@ -142,13 +199,13 @@ const Page_14_Simulation_Intro_Exploration = () => {
             <li>将量筒放入恒温箱，每隔1小时(1-8小时)记录恒温箱中量筒的读数。</li>
           </ol>
           <hr style={{ margin: '20px 0', borderColor: '#90caf9'}} />
-          <h3 style={{ color: '#00796b', marginTop: '15px' }}>【说明】右侧为实验互动界面:</h3> 
+          <h3 style={{ color: '#00796b', marginTop: '15px' }}>【说明】右侧为实验互动界面:</h3>
           {/* 指向的是下一列的模拟器，如果布局变化，此文本需修改 */}
           <ul style={{ paddingLeft: '20px', fontSize: '0.95em', lineHeight: '1.7', color: '#37474f'}}>
-            <li style={{ marginBottom: '8px' }}>单击<img src={jiaImg} alt="+" style={{height: '1.5em', verticalAlign: 'middle', margin: '0 2px'}} />或者<img src={jianImg} alt="-" style={{height: '1.5em', verticalAlign: 'middle', margin: '0 2px'}} />可调整发酵时间。</li>
-            <li style={{ marginBottom: '8px' }}>设好时间后，单击 <img src={jishiImg} alt="计时开始" style={{height: '1.8em', verticalAlign: 'middle', margin: '0 2px'}} />，面团会在量筒中发酵，体积不断膨胀。</li>
-            <li style={{ marginBottom: '8px' }}>发酵结束后，量筒下方体积框内 <img src={tijiImg} alt="0.0" style={{height: '1.5em', verticalAlign: 'middle', margin: '0 2px'}} /> 显示面团体积。</li> {/* PRD中是0.0，但实际应显示结果 */}
-            <li>单击 <img src={chongzhiImg} alt="重置" style={{height: '1.8em', verticalAlign: 'middle', margin: '0 2px'}} /> 可重新开始。</li>
+            <li style={{ marginBottom: '8px' }}>单击<span style={controlStyles.btnYellow}>+</span>或者<span style={controlStyles.btnYellow}>-</span>可调整发酵时间。</li>
+            <li style={{ marginBottom: '8px' }}>设好时间后，单击<span style={controlStyles.btnStart}>计时开始</span>，面团会在量筒中发酵，体积不断膨胀。</li>
+            <li style={{ marginBottom: '8px' }}>发酵结束后，量筒下方体积框内<span style={controlStyles.volumeDisplay}>----</span>显示面团体积。</li>
+            <li>单击<span style={controlStyles.btnReset}>重置</span>可重新开始。</li>
           </ul>
         </div>
 

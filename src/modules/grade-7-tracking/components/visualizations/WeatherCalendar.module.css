@@ -1,0 +1,287 @@
+/**
+ * WeatherCalendar Styles
+ * 天气日历 SVG 动画组件样式
+ * 符合 7 年级模块设计系统规范
+ */
+
+/* CSS 变量定义 */
+.calendarContainer {
+  --calendar-bg: #ffffff;
+  --calendar-border: #e3eaf3;
+  --header-text: #2d5b8e;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --weekend-text: #dc2626;
+  --accent-sun: #f59e0b;
+  --accent-rain: #3b82f6;
+  --accent-cloud: #94a3b8;
+}
+
+.calendarContainer {
+  width: 100%;
+  height: 100%;
+  background: var(--calendar-bg);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: 1px solid var(--calendar-border);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 周几标题行 */
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fc 100%);
+  border-bottom: 2px solid var(--calendar-border);
+}
+
+.weekday {
+  padding: 10px 4px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--header-text);
+  letter-spacing: 0.5px;
+}
+
+.weekday.weekend {
+  color: var(--weekend-text);
+}
+
+/* 日历网格 */
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--calendar-border);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dayCell {
+  background: var(--calendar-bg);
+  min-height: 90px;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.dayCell:not(.empty):hover {
+  background: #fafbfc;
+}
+
+.dayCell.empty {
+  background: #fafbfc;
+}
+
+.dayCell.weekend .dayNumber {
+  color: var(--weekend-text);
+}
+
+.dayNumber {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.weatherIcon {
+  width: 44px;
+  height: 44px;
+  margin: 3px 0;
+}
+
+.weatherText {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.temperature {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tempHigh {
+  color: #e53e3e;
+  font-weight: 500;
+}
+
+.tempLow {
+  color: #3182ce;
+  font-weight: 500;
+}
+
+/* SVG 动画 keyframes */
+@keyframes sunRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sunPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes cloudFloat {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes rainDrop {
+  0% {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+}
+
+@keyframes rainDrop2 {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+
+@keyframes heavyRain {
+  0% {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+}
+
+/* 动画应用 */
+.sunRays {
+  transform-origin: center;
+  animation: sunRotate 18s linear infinite;
+}
+
+.sunRaysSmall {
+  transform-origin: center;
+  animation: sunRotate 20s linear infinite;
+}
+
+.sunBody {
+  animation: sunPulse 3s ease-in-out infinite;
+}
+
+.cloudMain {
+  animation: cloudFloat 4s ease-in-out infinite;
+}
+
+.rainLine {
+  animation: rainDrop 1.2s linear infinite;
+}
+
+.rainLine2 {
+  animation: rainDrop2 1.4s linear infinite;
+  animation-delay: -0.4s;
+}
+
+.rainLine3 {
+  animation: rainDrop 1s linear infinite;
+  animation-delay: -0.7s;
+}
+
+.heavyRainLine {
+  animation: heavyRain 0.7s linear infinite;
+}
+
+/* 可访问性：减少动画 */
+@media (prefers-reduced-motion: reduce) {
+  .sunRays,
+  .sunRaysSmall,
+  .sunBody,
+  .cloudMain,
+  .rainLine,
+  .rainLine2,
+  .rainLine3,
+  .heavyRainLine {
+    animation: none;
+  }
+}
+
+/* 响应式 */
+@media (max-height: 800px) {
+  .dayCell {
+    min-height: 72px;
+    padding: 5px 4px;
+  }
+
+  .weatherIcon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .weekday {
+    padding: 6px 2px;
+    font-size: 12px;
+  }
+
+  .dayNumber {
+    font-size: 14px;
+  }
+
+  .weatherText {
+    font-size: 10px;
+  }
+
+  .temperature {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .dayCell {
+    min-height: 70px;
+  }
+
+  .weatherIcon {
+    width: 32px;
+    height: 32px;
+  }
+}

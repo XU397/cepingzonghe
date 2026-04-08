@@ -3,11 +3,7 @@ import { useMemo } from 'react';
 import { AssessmentPageFrame } from '@shared/ui/PageFrame';
 import { useTrackingContext } from '../../context/TrackingContext';
 import { getRelativePageInfo } from '../../utils/pageMapping';
-import {
-  PAGE_MAPPING,
-  TASK_TIMER_SCOPE,
-  QUESTIONNAIRE_TIMER_SCOPE,
-} from '../../config';
+import { PAGE_MAPPING, TASK_TIMER_SCOPE, QUESTIONNAIRE_TIMER_SCOPE } from '../../config';
 import styles from '../../styles/PageLayout.module.css';
 
 const QUESTIONNAIRE_WARNING_THRESHOLD = 180;
@@ -19,7 +15,7 @@ const PageLayout = ({ children, showNavigation = true, showTimer = true }) => {
 
   const relativeInfo = useMemo(
     () => getRelativePageInfo(session.currentPage),
-    [session.currentPage],
+    [session.currentPage]
   );
 
   const navigationMode = session.navigationMode || 'hidden';
@@ -27,13 +23,9 @@ const PageLayout = ({ children, showNavigation = true, showTimer = true }) => {
     showNavigation && navigationMode !== 'hidden' && relativeInfo.totalPages > 0;
 
   const timerScope =
-    navigationMode === 'questionnaire'
-      ? QUESTIONNAIRE_TIMER_SCOPE
-      : TASK_TIMER_SCOPE;
+    navigationMode === 'questionnaire' ? QUESTIONNAIRE_TIMER_SCOPE : TASK_TIMER_SCOPE;
   const timerWarningThreshold =
-    navigationMode === 'questionnaire'
-      ? QUESTIONNAIRE_WARNING_THRESHOLD
-      : TASK_WARNING_THRESHOLD;
+    navigationMode === 'questionnaire' ? QUESTIONNAIRE_WARNING_THRESHOLD : TASK_WARNING_THRESHOLD;
 
   const pageMeta = useMemo(() => {
     const pageInfo = PAGE_MAPPING[parseFloat(session.currentPage)] || {};
@@ -46,6 +38,7 @@ const PageLayout = ({ children, showNavigation = true, showTimer = true }) => {
 
   return (
     <AssessmentPageFrame
+      pageId={pageMeta.pageId}
       navigationMode={navigationMode}
       currentStep={Math.max(1, relativeInfo.currentPage || 1)}
       totalSteps={Math.max(1, relativeInfo.totalPages || 1)}
@@ -60,9 +53,7 @@ const PageLayout = ({ children, showNavigation = true, showTimer = true }) => {
       pageMeta={pageMeta}
       bodyClassName={styles.contentWrapper}
     >
-      <div className={styles.contentFrame}>
-        {children}
-      </div>
+      {children}
     </AssessmentPageFrame>
   );
 };

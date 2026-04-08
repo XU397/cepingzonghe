@@ -1,84 +1,378 @@
 .container {
-  padding: 24px;
-  max-width: 1000px;
+  max-width: 1180px;
+  height: 100%;
+  min-height: 0;
   margin: 0 auto;
+  padding: 12px 20px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .header {
-  text-align: center;
-  margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
-.header h2 {
-  color: var(--cartoon-dark, #2d5b8e);
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 8px;
 }
 
-.header p {
-  color: #666;
-}
-
-.timeInputs {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  margin: 24px 0;
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.timeInputGroup {
+.titleBadge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(103, 213, 181, 0.35);
 }
 
-.timeInputGroup label {
-  font-weight: 600;
-  color: #333;
+.title {
+  margin: 0;
+  font-size: 42px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #5b9f34;
 }
 
-.timeInputGroup input {
-  width: 80px;
-  padding: 8px 12px;
-  border: 2px solid #ddd;
-  border-radius: 6px;
-  font-size: 16px;
-  text-align: center;
+.prompt {
+  margin: 0 0 8px;
+  color: #333333;
+  font-size: 18px;
+  line-height: 1.55;
+  text-indent: 2em;
 }
 
-.timeInputGroup input:focus {
-  outline: none;
-  border-color: var(--cartoon-primary, #59c1ff);
-}
-
-.error {
-  background-color: var(--cartoon-red, #ff8a80);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin: 16px 0;
-  text-align: center;
-}
-
-.navigation {
+.taskDesc {
+  margin: 0;
   display: flex;
-  justify-content: flex-end;
-  margin-top: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 600;
 }
 
-.nextBtn {
-  padding: 12px 32px;
-  background-color: var(--cartoon-primary, #59c1ff);
-  color: white;
-  border: none;
+.taskBlue {
+  color: var(--g4-task-blue, #2563eb);
+}
+
+.taskOrange {
+  color: var(--g4-task-orange, #ea580c);
+}
+
+.taskGray {
+  color: var(--g4-task-gray, #4b5563);
+}
+
+.taskGreen {
+  color: var(--g4-task-green, #15803d);
+}
+
+.taskPink {
+  color: var(--g4-task-pink, #db2777);
+}
+
+.svgPanel {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.svgCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 12px;
+  background: #ffffff;
+  touch-action: none;
+}
+
+.dropZoneRect {
+  fill: #f5fbff;
+  stroke: #ffce6b;
+  stroke-width: 2;
+  stroke-dasharray: 8 6;
+}
+
+.zoneLabel {
+  fill: #666666;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.axisLine {
+  stroke: #e8eef5;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.blockGroup {
+  transition: filter 150ms ease;
+}
+
+.blockGroup.draggable {
+  cursor: grab;
+}
+
+.blockGroup.draggable:active {
+  cursor: grabbing;
+}
+
+.blockRect {
+  transition:
+    transform 200ms ease,
+    filter 200ms ease;
+}
+
+.blockGroup:hover .blockRect {
+  filter: brightness(1.1);
+}
+
+.blockText {
+  fill: rgba(255, 255, 255, 0.96);
+  font-size: 24px;
+  font-weight: 800;
+  pointer-events: none;
+  user-select: none;
+}
+
+.cursorLayer {
+  pointer-events: none;
+}
+
+.cursorHalo {
+  fill: rgba(89, 193, 255, 0.26);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.cursorIcon {
+  fill: #ffffff;
+  stroke: #2d5b8e;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.timeInputWrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  color: #333333;
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #d7e3ef;
+  border-radius: 10px;
+  padding: 4px 8px;
+}
+
+.timeInput {
+  width: 48px;
+  height: 28px;
+  border: 2px solid #e3eaf3;
   border-radius: 8px;
+  text-align: center;
   font-size: 16px;
+  font-weight: 700;
+  color: #2d5b8e;
+  background: #ffffff;
+}
+
+.timeInput:focus {
+  outline: none;
+  border-color: #59c1ff;
+  box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.2);
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-top: 8px;
+}
+
+.resetBtn {
+  min-width: 100px;
+  min-height: 36px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  background: #ffffff;
+  color: #59c1ff;
+  border: 2px solid #59c1ff;
+  transition:
+    transform 150ms ease-out,
+    box-shadow 200ms ease;
 }
 
-.nextBtn:hover {
-  background-color: #3db1ff;
+.resetBtn:hover {
+  transform: translateY(-2px);
+  background: rgba(89, 193, 255, 0.1);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.taskPalette {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.paletteBlock,
+.placedBlock {
+  height: 48px;
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+.paletteBlock:active,
+.placedBlock:active {
+  cursor: grabbing;
+}
+
+.solutionWrap {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.solutionSection {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.solutionTitle {
+  margin: 0 0 6px;
+  color: #111827;
+  font-size: 34px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.dropZone {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border: 2px dashed #ffce6b;
+  border-radius: 14px;
+  background: #f5fbff;
+  overflow: hidden;
+}
+
+.placeholder {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  color: #9ca3af;
+  font-size: 24px;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.placedBlock {
+  position: absolute;
+  z-index: 2;
+}
+
+.timeInputInline {
+  position: absolute;
+  right: 16px;
+  bottom: 10px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  color: #333333;
+  font-size: 16px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #d7e3ef;
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+.timeInputInline input {
+  width: 56px;
+  height: 36px;
+  border: 2px solid #e3eaf3;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2d5b8e;
+  background: #ffffff;
+}
+
+.timeInputInline input:focus {
+  outline: none;
+  border-color: #59c1ff;
+  box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.2);
+}
+
+@media (max-width: 1280px) {
+  .container {
+    padding: 10px 14px 8px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .prompt {
+    font-size: 18px;
+  }
+
+  .taskDesc {
+    font-size: 18px;
+  }
+
+  .solutionTitle {
+    font-size: 30px;
+  }
+
+  .placeholder {
+    font-size: 20px;
+  }
 }

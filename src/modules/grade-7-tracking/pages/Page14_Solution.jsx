@@ -17,13 +17,16 @@ const Page14_Solution = () => {
     clearOperations,
     buildMarkObject,
     navigateToPage,
-    submitPageData
+    submitPageData,
+    userContext,
   } = useTrackingContext();
 
   const [isNavigating, setIsNavigating] = useState(false);
 
   // 动态表格数据（每行包含: id, temperature, waterContent, isBest）
-  const [tableRows, setTableRows] = useState([{ id: 1, temperature: null, waterContent: null, isBest: false }]);
+  const [tableRows, setTableRows] = useState([
+    { id: 1, temperature: null, waterContent: null, isBest: false },
+  ]);
   const [nextId, setNextId] = useState(2);
 
   // 理由输入
@@ -31,9 +34,19 @@ const Page14_Solution = () => {
 
   // 页面进入/离开日志
   useEffect(() => {
-    logOperation({ action: 'page_enter', target: '页面', value: 'Page14_Solution', time: new Date().toISOString() });
+    logOperation({
+      action: 'page_enter',
+      target: '页面',
+      value: 'Page14_Solution',
+      time: new Date().toISOString(),
+    });
     return () => {
-      logOperation({ action: 'page_exit', target: '页面', value: 'Page14_Solution', time: new Date().toISOString() });
+      logOperation({
+        action: 'page_exit',
+        target: '页面',
+        value: 'Page14_Solution',
+        time: new Date().toISOString(),
+      });
     };
   }, [logOperation]);
 
@@ -43,60 +56,108 @@ const Page14_Solution = () => {
     setTableRows(prev => [...prev, newRow]);
     setNextId(prev => prev + 1);
 
-    logOperation({ action: '点击', target: '动态表格', value: '新增', time: new Date().toISOString() });
+    logOperation({
+      action: '点击',
+      target: '动态表格',
+      value: '新增',
+      time: new Date().toISOString(),
+    });
   }, [nextId, logOperation]);
 
   // 删除一行（至少保留1行）
-  const handleDeleteRow = useCallback((rowId) => {
-    if (tableRows.length === 1) {
-      alert('至少需要保留一行数据');
-      return;
-    }
+  const handleDeleteRow = useCallback(
+    rowId => {
+      if (tableRows.length === 1) {
+        alert('至少需要保留一行数据');
+        return;
+      }
 
-    setTableRows(prev => prev.filter(row => row.id !== rowId));
-    logOperation({ action: '点击', target: '动态表格', value: `删除行_${rowId}`, time: new Date().toISOString() });
-  }, [tableRows.length, logOperation]);
+      setTableRows(prev => prev.filter(row => row.id !== rowId));
+      logOperation({
+        action: '点击',
+        target: '动态表格',
+        value: `删除行_${rowId}`,
+        time: new Date().toISOString(),
+      });
+    },
+    [tableRows.length, logOperation]
+  );
 
   // 选择温度
-  const handleTemperatureChange = useCallback((rowId, temperature) => {
-    setTableRows(prev => prev.map(row =>
-      row.id === rowId ? { ...row, temperature: parseInt(temperature, 10) } : row
-    ));
-    logOperation({ action: '下拉框选择', target: `温度下拉菜单_${rowId}`, value: temperature, time: new Date().toISOString() });
-  }, [logOperation]);
+  const handleTemperatureChange = useCallback(
+    (rowId, temperature) => {
+      setTableRows(prev =>
+        prev.map(row =>
+          row.id === rowId ? { ...row, temperature: parseInt(temperature, 10) } : row
+        )
+      );
+      logOperation({
+        action: '下拉框选择',
+        target: `温度下拉菜单_${rowId}`,
+        value: temperature,
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
 
   // 选择含水量
-  const handleWaterContentChange = useCallback((rowId, waterContent) => {
-    setTableRows(prev => prev.map(row =>
-      row.id === rowId ? { ...row, waterContent: parseInt(waterContent, 10) } : row
-    ));
-    logOperation({ action: '下拉框选择', target: `含水量下拉菜单_${rowId}`, value: waterContent, time: new Date().toISOString() });
-  }, [logOperation]);
+  const handleWaterContentChange = useCallback(
+    (rowId, waterContent) => {
+      setTableRows(prev =>
+        prev.map(row =>
+          row.id === rowId ? { ...row, waterContent: parseInt(waterContent, 10) } : row
+        )
+      );
+      logOperation({
+        action: '下拉框选择',
+        target: `含水量下拉菜单_${rowId}`,
+        value: waterContent,
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
 
   // 理由输入
-  const handleReasonChange = useCallback((event) => {
-    const value = event.target.value;
-    setReasonText(value);
-    logOperation({ action: '文本域输入', target: '理由输入框', value, time: new Date().toISOString() });
-  }, [logOperation]);
+  const handleReasonChange = useCallback(
+    event => {
+      const value = event.target.value;
+      setReasonText(value);
+      logOperation({
+        action: '文本域输入',
+        target: '理由输入框',
+        value,
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
 
   // 切换最佳方案标记（单选模式：只能选择一个最佳方案）
-  const handleToggleBest = useCallback((rowId) => {
-    setTableRows(prev => prev.map(row =>
-      // 点击的行设为最佳方案，其他所有行取消标记
-      row.id === rowId ? { ...row, isBest: true } : { ...row, isBest: false }
-    ));
-    logOperation({
-      action: '点击',
-      target: `最佳方案星标_${rowId}`,
-      value: '标记为最佳',
-      time: new Date().toISOString()
-    });
-  }, [logOperation]);
+  const handleToggleBest = useCallback(
+    rowId => {
+      setTableRows(prev =>
+        prev.map(row =>
+          // 点击的行设为最佳方案，其他所有行取消标记
+          row.id === rowId ? { ...row, isBest: true } : { ...row, isBest: false }
+        )
+      );
+      logOperation({
+        action: '点击',
+        target: `最佳方案星标_${rowId}`,
+        value: '标记为最佳',
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
 
   // 是否可以提交
   const canSubmit = useCallback(() => {
-    const hasValidRow = tableRows.some(row => row.temperature !== null && row.waterContent !== null);
+    const hasValidRow = tableRows.some(
+      row => row.temperature !== null && row.waterContent !== null
+    );
     const hasValidReason = reasonText.trim().length >= 4;
     return hasValidRow && hasValidReason;
   }, [tableRows, reasonText]);
@@ -107,14 +168,19 @@ const Page14_Solution = () => {
     setIsNavigating(true);
 
     try {
-      logOperation({ action: '点击', target: '下一页按钮', value: '完成方案选择,进入问卷', time: new Date().toISOString() });
+      logOperation({
+        action: '点击',
+        target: '下一页按钮',
+        value: '完成方案选择,进入问卷',
+        time: new Date().toISOString(),
+      });
 
       const validCombinations = tableRows
         .filter(row => row.temperature !== null && row.waterContent !== null)
         .map(row => ({
           temperature: row.temperature,
           waterContent: row.waterContent,
-          isBest: row.isBest
+          isBest: row.isBest,
         }));
 
       // 同步构建答案列表，避免依赖异步的 collectAnswer 状态
@@ -139,7 +205,16 @@ const Page14_Solution = () => {
 
       if (success) {
         clearOperations();
-        await navigateToPage(13);
+        const flowContext =
+          typeof userContext?.getFlowContext === 'function' ? userContext.getFlowContext() : null;
+        if (
+          flowContext?.submoduleId === 'g7-tracking-experiment' &&
+          typeof flowContext.onComplete === 'function'
+        ) {
+          flowContext.onComplete();
+        } else {
+          await navigateToPage(13);
+        }
       } else {
         throw new Error('数据提交失败');
       }
@@ -148,19 +223,35 @@ const Page14_Solution = () => {
       alert(error.message || '页面跳转失败，请重试');
       setIsNavigating(false);
     }
-  }, [canSubmit, isNavigating, tableRows, reasonText, logOperation, collectAnswer, buildMarkObject, submitPageData, clearOperations, navigateToPage, session]);
+  }, [
+    canSubmit,
+    isNavigating,
+    tableRows,
+    reasonText,
+    logOperation,
+    collectAnswer,
+    buildMarkObject,
+    submitPageData,
+    clearOperations,
+    navigateToPage,
+    session,
+    userContext,
+  ]);
 
   return (
     <PageLayout showNavigation={true} showTimer={true}>
-      <div className={styles.container}>
-        <div className={styles.pageTitle}>
-          <h2>选择最佳方案</h2>
-          <p className={styles.subtitle}>
-            经实验，小明绘制了温度、含水量与落球时间的关系图（见左下角图）。
-            若小钢球在小明家变稀后的蜂蜜中下落时间为2秒，请根据折线图，将所有可能的温度和含水量的组合选入右下方表格中。
-            选择完成后，在你认为最可能的存放环境前点亮⭐，并在下方方框内，简要说明选择该组合的理由。
-          </p>
-        </div>
+      <div className={styles.pageContainer}>
+        <header className={styles.header}>
+          <div className={styles.badge}>12</div>
+          <div className={styles.headerContent}>
+            <h1 className={styles.title}>蜂蜜变稀：选择最佳方案</h1>
+            <p className={styles.subtitle}>
+              经实验，小明绘制了温度、含水量与落球时间的关系图（见左下角图）。
+              若小钢球在小明家变稀后的蜂蜜中下落时间为2秒，请根据折线图，将所有可能的温度和含水量的组合选入右下方表格中。
+              选择完成后，在你认为最可能的存放环境前点亮⭐，并在下方方框内，简要说明选择该组合的理由。
+            </p>
+          </div>
+        </header>
 
         <div className={styles.contentLayout}>
           {/* 左侧：折线图 */}
@@ -168,9 +259,13 @@ const Page14_Solution = () => {
             <LineChart
               temperatureRange={TEMPERATURE_OPTIONS}
               waterContentOptions={WATER_CONTENT_OPTIONS}
-              height={400}
+              height={500}
               showLegend
               showGrid
+              onChartFocus={data => logOperation({ action: 'focus', ...data })}
+              onChartBlur={data => logOperation({ action: 'blur', ...data })}
+              onDataPointFocus={data => logOperation({ action: 'data_point_focus', ...data })}
+              onDataPointBlur={data => logOperation({ action: 'data_point_blur', ...data })}
             />
           </div>
 
@@ -178,7 +273,9 @@ const Page14_Solution = () => {
           <div className={styles.rightPanel}>
             <div className={styles.tableCard}>
               <h3 className={styles.tableTitle}>方案选择</h3>
-              <p className={styles.tableHint}>点击"新增"按钮可以添加多个方案，点击"删除"按钮可以删去该方案</p>
+              <p className={styles.tableHint}>
+                点击&quot;新增&quot;按钮可以添加多个方案，点击"删除"按钮可以删去该方案
+              </p>
 
               <div className={styles.tableContainer}>
                 <table className={styles.dynamicTable}>
@@ -195,33 +292,35 @@ const Page14_Solution = () => {
                     {tableRows.map((row, index) => (
                       <tr key={row.id} className={styles.tableRow}>
                         <td className={styles.iconCell}>
-                          <div className={styles.sequenceNumber}>
-                            {index + 1}
-                          </div>
+                          <div className={styles.sequenceNumber}>{index + 1}</div>
                         </td>
                         <td className={styles.selectCell}>
                           <select
                             value={row.temperature || ''}
-                            onChange={(e) => handleTemperatureChange(row.id, e.target.value)}
+                            onChange={e => handleTemperatureChange(row.id, e.target.value)}
                             className={styles.selectInput}
                             aria-label={`组合${index + 1}温度选择`}
                           >
                             <option value="">下拉菜单</option>
-                            {TEMPERATURE_OPTIONS.map((temp) => (
-                              <option key={temp} value={temp}>{temp}°C</option>
+                            {TEMPERATURE_OPTIONS.map(temp => (
+                              <option key={temp} value={temp}>
+                                {temp}°C
+                              </option>
                             ))}
                           </select>
                         </td>
                         <td className={styles.selectCell}>
                           <select
                             value={row.waterContent || ''}
-                            onChange={(e) => handleWaterContentChange(row.id, e.target.value)}
+                            onChange={e => handleWaterContentChange(row.id, e.target.value)}
                             className={styles.selectInput}
                             aria-label={`组合${index + 1}含水量选择`}
                           >
                             <option value="">下拉菜单</option>
-                            {WATER_CONTENT_OPTIONS.map((wc) => (
-                              <option key={wc} value={wc}>{wc}%</option>
+                            {WATER_CONTENT_OPTIONS.map(wc => (
+                              <option key={wc} value={wc}>
+                                {wc}%
+                              </option>
                             ))}
                           </select>
                         </td>
@@ -262,7 +361,9 @@ const Page14_Solution = () => {
 
             <div className={styles.reasonCard}>
               <h4 className={styles.reasonTitle}>说明理由</h4>
-              <p className={styles.reasonHint}>请解释你为什么选择这些温度和含水量组合（至少4个字）</p>
+              <p className={styles.reasonHint}>
+                请解释你为什么选择这些温度和含水量组合（至少4个字）
+              </p>
               <textarea
                 value={reasonText}
                 onChange={handleReasonChange}
@@ -274,23 +375,39 @@ const Page14_Solution = () => {
                 <span className={reasonText.length >= 4 ? styles.valid : styles.invalid}>
                   {reasonText.length}/500 字符
                 </span>
-                {reasonText.length < 4 && (
-                  <span className={styles.countHint}>(至少4个字)</span>
-                )}
+                {reasonText.length < 4 && <span className={styles.countHint}>(至少4个字)</span>}
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className={styles.navigationFooter}>
-          <button
-            type="button"
-            className={styles.nextButton}
-            onClick={handleNextPage}
-            disabled={!canSubmit() || isNavigating}
-          >
-            {canSubmit() ? (isNavigating ? '跳转中...' : '完成实验，进入问卷') : '请完成方案选择和理由说明'}
-          </button>
+            <div className={styles.footer}>
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={handleNextPage}
+                disabled={!canSubmit() || isNavigating}
+                aria-label="进入下一页"
+              >
+                <span>
+                  {canSubmit()
+                    ? isNavigating
+                      ? '提交中...'
+                      : '完成实验，进入问卷'
+                    : '请完成方案选择和理由说明'}
+                </span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </PageLayout>

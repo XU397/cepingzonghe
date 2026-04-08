@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useDroneImagingContext } from '../context/DroneImagingContext';
 import { EventTypes } from '@shared/services/submission/eventTypes';
 import { formatTimestamp } from '@shared/services/dataLogger.js';
@@ -25,25 +25,6 @@ export default function Page03_Hypothesis() {
   // State
   const [inputValue, setInputValue] = useState(getAnswer(hypothesisQuestionId) || '');
   const [error, setError] = useState('');
-
-  // Page enter/exit logging
-  useEffect(() => {
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'Page03_Hypothesis',
-      time: formatTimestamp(new Date()),
-    });
-
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'Page03_Hypothesis',
-        time: formatTimestamp(new Date()),
-      });
-    };
-  }, [logOperation]);
 
   // Handle input change
   const handleInputFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {

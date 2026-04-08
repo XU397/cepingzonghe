@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 import { useAppContext } from '../context/AppContext';
 import NavigationButton from '../components/common/NavigationButton';
 // 导入小明图片
@@ -21,7 +22,10 @@ const TransitionToSimulationPage = () => {
   const pageLoadedRef = useRef(false);
   const operationsRef = useRef([]);
   const recordOperation = useCallback((operation) => {
-    const normalizedOperation = { ...operation };
+    const normalizedOperation = {
+      ...operation,
+      time: formatTimestamp(new Date()),
+    };
     logOperation(normalizedOperation);
     operationsRef.current = [...operationsRef.current, normalizedOperation];
   }, [logOperation]);
@@ -42,7 +46,7 @@ const TransitionToSimulationPage = () => {
   const handleNextPage = useCallback(async () => {
     recordOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_next',
+      targetElement: 'next_button',
       value: '跳转到模拟实验页面'
     });
     

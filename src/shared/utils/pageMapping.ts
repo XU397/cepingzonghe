@@ -46,33 +46,69 @@ export interface CompositePageNum {
   subPageNum: number;
 }
 
+/**
+ * 复合页码解析结果（新格式）
+ */
+export interface CompositePageNumNew {
+  /** 子模块索引（从 1 开始，等于 stepIndex + 1） */
+  submoduleIndex: number;
+  /** 子模块内的页码（从 1 开始，两位零填充） */
+  pageIndex: number;
+}
+
 // ==================== 复合页码解析 ====================
 
 /**
  * 解析复合页码
  *
  * 支持以下格式（按优先级）：
- * - `<stepIndex>.<subPageNum>` - 如 "1.5" 表示第1步的第5页
- * - `M<stepIndex>:<subPageNum>` - 如 "M1:5" 表示第1步的第5页（已废弃，仅保留兼容）
+ * - `<submoduleIndex>.<pageIndex>` - 新格式，如 "1.03" 表示第 1 个子模块的第 3 页
+ * - `<stepIndex>.<subPageNum>` - 旧格式（仅兼容读取），如 "0.3"；返回 { stepIndex, subPageNum } 并输出废弃警告
+ * - `M<stepIndex>:<subPageNum>` - 旧格式（仅兼容读取），如 "M1:5"；返回 { stepIndex, subPageNum } 并输出废弃警告
  *
  * @param pageNumStr - 复合页码字符串
- * @returns 解析结果，如果格式无效则返回 null
+ * @returns 新格式返回 { submoduleIndex, pageIndex, stepIndex, subPageNum }，旧格式返回 { stepIndex, subPageNum }，无效则返回 null
  *
  * @example
- * parseCompositePageNum("1.5")   // { stepIndex: 1, subPageNum: 5 }
- * parseCompositePageNum("M2:10") // { stepIndex: 2, subPageNum: 10 } 并输出警告
+ * parseCompositePageNum("1.03")   // { submoduleIndex: 1, pageIndex: 3, stepIndex: 0, subPageNum: 3 }
+ * parseCompositePageNum("0.3")    // { stepIndex: 0, subPageNum: 3 } 并输出警告
+ * parseCompositePageNum("M2:10")  // { stepIndex: 2, subPageNum: 10 } 并输出警告
  * parseCompositePageNum("invalid") // null
  */
-export function parseCompositePageNum(pageNumStr: string): CompositePageNum | null {
+export function parseCompositePageNum(
+  pageNumStr: string
+): (CompositePageNum & CompositePageNumNew) | CompositePageNum | null {
   if (!pageNumStr || typeof pageNumStr !== 'string') {
     return null;
   }
 
-  // 点分格式: <stepIndex>.<subPageNum>
-  const dotMatch = pageNumStr.match(/^(\d+)\.(\d+)$/);
-  if (dotMatch) {
-    const stepIndex = parseInt(dotMatch[1], 10);
-    const subPageNum = parseInt(dotMatch[2], 10);
+  const normalized = pageNumStr.trim();
+
+  // 新格式：<submoduleIndex>.<pageIndex>，其中 submoduleIndex 从 1 开始，pageIndex 为两位
+  const newFormatMatch = normalized.match(/^([1-9]\d*)\.(\d{2})$/);
+  if (newFormatMatch) {
+    const submoduleIndex = parseInt(newFormatMatch[1], 10);
+    const pageIndex = parseInt(newFormatMatch[2], 10);
+
+    if (pageIndex < 1) {
+      console.warn('[parseCompositePageNum] pageIndex 应从 1 开始，收到:', normalized);
+      return null;
+    }
+
+    return {
+      submoduleIndex,
+      pageIndex,
+      stepIndex: submoduleIndex - 1,
+      subPageNum: pageIndex,
+    };
+  }
+
+  // 旧格式：<stepIndex>.<subPageNum>（保留读取兼容，仅用于历史数据恢复）
+  const legacyDotMatch = normalized.match(/^(\d+)\.(\d+)$/);
+  if (legacyDotMatch) {
+    console.warn('[parseCompositePageNum] 检测到已废弃的点分格式，请迁移至 X.YY 新格式');
+    const stepIndex = parseInt(legacyDotMatch[1], 10);
+    const subPageNum = parseInt(legacyDotMatch[2], 10);
 
     if (isNaN(stepIndex) || isNaN(subPageNum) || stepIndex < 0 || subPageNum < 0) {
       return null;
@@ -81,14 +117,13 @@ export function parseCompositePageNum(pageNumStr: string): CompositePageNum | nu
     return { stepIndex, subPageNum };
   }
 
-  // 格式1: M<stepIndex>:<subPageNum>
-  const format1Match = pageNumStr.match(/^M(\d+):(\d+)$/);
+  // 已废弃的 M 前缀格式：M<stepIndex>:<subPageNum>
+  const format1Match = normalized.match(/^M(\d+):(\d+)$/);
   if (format1Match) {
     console.warn('已废弃的 M 前缀格式，请使用点分格式');
     const stepIndex = parseInt(format1Match[1], 10);
     const subPageNum = parseInt(format1Match[2], 10);
 
-    // 验证解析结果
     if (isNaN(stepIndex) || isNaN(subPageNum) || stepIndex < 0 || subPageNum < 0) {
       return null;
     }
@@ -101,17 +136,36 @@ export function parseCompositePageNum(pageNumStr: string): CompositePageNum | nu
 }
 
 /**
+ * 校验复合页码是否符合新格式
+ *
+ * @param pageNumStr - 复合页码字符串
+ * @returns 是否符合新格式 `X.YY`
+ *
+ * @example
+ * isValidCompositePageNum("1.01") // true
+ * isValidCompositePageNum("0.3")  // false
+ */
+export function isValidCompositePageNum(pageNumStr: string): boolean {
+  if (typeof pageNumStr !== 'string') {
+    return false;
+  }
+  return /^[1-9]\d*\.\d{2}$/.test(pageNumStr.trim());
+}
+
+/**
  * 构造复合页码字符串
  *
- * @param stepIndex - Flow步骤索引
- * @param subPageNum - 子模块内的页码
+ * 该函数等同于 {@link encodeCompositePageNum}，作为别名存在以兼容旧调用。
+ *
+ * @param submoduleIndex - 子模块索引（从 1 开始，对应 stepIndex + 1）
+ * @param pageIndex - 子模块内的页码（从 1 开始，两位零填充）
  * @returns 复合页码字符串
  *
  * @example
- * buildCompositePageNum(1, 5) // "1.5"
+ * buildCompositePageNum(1, 3) // "1.03"
  */
-export function buildCompositePageNum(stepIndex: number, subPageNum: number): string {
-  return `${stepIndex}.${subPageNum}`;
+export function buildCompositePageNum(submoduleIndex: number, pageIndex: number): string {
+  return encodeCompositePageNum(submoduleIndex, pageIndex);
 }
 
 /**
@@ -119,15 +173,66 @@ export function buildCompositePageNum(stepIndex: number, subPageNum: number): st
  *
  * 该函数是 {@link buildCompositePageNum} 的别名，确保所有提交上报统一使用点分格式编码。
  *
- * @param stepIndex - Flow步骤索引
- * @param subPageNum - 子模块内的页码
+ * @param submoduleIndex - 子模块索引（从 1 开始，对应 stepIndex + 1）
+ * @param pageIndex - 子模块内的页码（从 1 开始，两位零填充）
  * @returns 点分格式的复合页码
  *
  * @example
- * encodeCompositePageNum(2, 10) // "2.10"
+ * encodeCompositePageNum(1, 3) // "1.03"
  */
-export function encodeCompositePageNum(stepIndex: number, subPageNum: number): string {
-  return buildCompositePageNum(stepIndex, subPageNum);
+export function encodeCompositePageNum(submoduleIndex: number, pageIndex: number): string {
+  if (submoduleIndex < 1) {
+    console.warn('[encodeCompositePageNum] submoduleIndex 应从 1 开始，收到:', submoduleIndex);
+  }
+  if (pageIndex < 1) {
+    console.warn('[encodeCompositePageNum] pageIndex 应从 1 开始，收到:', pageIndex);
+  }
+
+  return `${submoduleIndex}.${String(pageIndex).padStart(2, '0')}`;
+}
+
+/**
+ * 将旧格式复合页码转换为新格式
+ *
+ * @param legacyPageNum - 旧格式复合页码字符串（stepIndex 从 0 开始，如 "0.3"、"1.10"）
+ * @returns 新格式复合页码字符串（如 "1.03"、"2.10"），无法解析时返回 null
+ *
+ * @example
+ * convertLegacyPageNum("0.3")  // "1.03"
+ * convertLegacyPageNum("1.10") // "2.10"
+ */
+export function convertLegacyPageNum(legacyPageNum: string): string | null {
+  if (typeof legacyPageNum !== 'string') {
+    console.warn('[convertLegacyPageNum] 仅支持字符串格式的页码，收到:', legacyPageNum);
+    return null;
+  }
+
+  const normalized = legacyPageNum.trim();
+  const legacyDotMatch = normalized.match(/^(\d+)\.(\d+)$/);
+  if (legacyDotMatch) {
+    const stepIndex = parseInt(legacyDotMatch[1], 10);
+    const subPageNum = parseInt(legacyDotMatch[2], 10);
+
+    if (isNaN(stepIndex) || isNaN(subPageNum)) {
+      console.warn('[convertLegacyPageNum] 无法解析旧格式页码:', legacyPageNum);
+      return null;
+    }
+
+    return encodeCompositePageNum(stepIndex + 1, subPageNum);
+  }
+
+  // 回退到通用解析逻辑（兼容 M 前缀等极端旧格式）
+  const parsed = parseCompositePageNum(normalized);
+  if (parsed) {
+    if ('submoduleIndex' in parsed && 'pageIndex' in parsed) {
+      return encodeCompositePageNum(parsed.submoduleIndex, parsed.pageIndex);
+    }
+
+    return encodeCompositePageNum(parsed.stepIndex + 1, parsed.subPageNum);
+  }
+
+  console.warn('[convertLegacyPageNum] 无法解析旧格式页码:', legacyPageNum);
+  return null;
 }
 
 /**

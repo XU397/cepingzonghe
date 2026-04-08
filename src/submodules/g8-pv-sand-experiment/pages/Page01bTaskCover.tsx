@@ -10,8 +10,12 @@ const Page01bTaskCover: React.FC = () => {
     setPageStartTime,
     collectAnswer,
     currentPageId,
-    answers
+    answers,
+    taskDurationMinutes,
+    getPagePrefix
   } = usePvSandContext();
+
+  const targetPrefix = getPagePrefix();
 
   const [countdown, setCountdown] = useState(30); // Reduced to 5s for testing, originally 38
   const [canCheck, setCanCheck] = useState(false);
@@ -41,7 +45,7 @@ const Page01bTaskCover: React.FC = () => {
       if (message) {
         setErrorMessage(message);
         logOperation({
-          targetElement: 'next_button',
+          targetElement: `${targetPrefix}下一页按钮`,
           eventType: EventTypes.CLICK_BLOCKED,
           value: {
             reason,
@@ -59,15 +63,26 @@ const Page01bTaskCover: React.FC = () => {
     return () => {
       window.removeEventListener('pv-sand-validation-error', handleValidationError);
     };
-  }, [canCheck, isChecked, logOperation]);
+  }, [canCheck, isChecked, logOperation, targetPrefix]);
+
+  // 页面初始化：设置开始时间和启动计时器
+  // 注意：page_enter/page_exit 由 AssessmentPageFrame 自动记录，此处不再手动记录
+  // 参考 g8-mikania-experiment 的规范实现
+  const pageInitializedRef = useRef(false);
 
   useEffect(() => {
+    // 防止重复初始化（React StrictMode 或 logOperation 变化时）
+    if (pageInitializedRef.current) {
+      return;
+    }
+    pageInitializedRef.current = true;
+
     const startTime = new Date();
     setPageStartTime(startTime);
 
     // 计时开始埋点
     logOperation({
-      targetElement: 'task_timer',
+      targetElement: `${targetPrefix}任务计时器`,
       eventType: EventTypes.TIMER_START,
       value: {
         duration: 30,
@@ -75,30 +90,14 @@ const Page01bTaskCover: React.FC = () => {
       },
       time: startTime.toISOString(),
     });
-
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: currentPageId,
-      time: startTime.toISOString()
-    });
-
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: currentPageId,
-        time: new Date().toISOString()
-      });
-    };
-  }, [logOperation, setPageStartTime, currentPageId]);
+  }, [logOperation, setPageStartTime, targetPrefix]);
 
   useEffect(() => {
     if (countdown <= 0) {
       if (!timerCompletedRef.current) {
         timerCompletedRef.current = true;
         logOperation({
-          targetElement: 'task_timer',
+          targetElement: `${targetPrefix}任务计时器`,
           eventType: EventTypes.TIMER_COMPLETE,
           value: {
             duration: 30,
@@ -126,7 +125,7 @@ const Page01bTaskCover: React.FC = () => {
   const handleCheckboxChange = () => {
     if (!canCheck) {
       logOperation({
-        targetElement: 'confirmCheckbox',
+        targetElement: `${targetPrefix}确认复选框`,
         eventType: EventTypes.CLICK_BLOCKED,
         value: {
           reason: 'countdown_not_finished',
@@ -146,7 +145,7 @@ const Page01bTaskCover: React.FC = () => {
     });
 
     logOperation({
-      targetElement: 'instructions_checkbox',
+      targetElement: `${targetPrefix}阅读确认复选框`,
       eventType: newChecked ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
       value: newChecked ? '已勾选' : '取消勾选',
       time: new Date().toISOString()
@@ -163,7 +162,7 @@ const Page01bTaskCover: React.FC = () => {
 
       <div className={styles.content}>
         <div className={styles.title}>
-          光伏治沙
+          光伏治沙科学探究
           <div className={styles.titleUnderline}></div>
         </div>
 
@@ -172,16 +171,16 @@ const Page01bTaskCover: React.FC = () => {
 
           <ul className={styles.noticeList}>
             <li>
-              作答时间共<span className={styles.highlight}>20分钟</span>时间结束后，系统将自动跳转到下一个测评环节。
+            本次测试一共两个任务，作答时间共<span className={styles.highlight}>{taskDurationMinutes}分钟</span>，当前是第一个任务，大约需要<span className={styles.highlight}>20分钟</span>完成，请注意时间分配。
             </li>
             <li>
-              请按顺序回答每页问题，<span className={styles.highlightRed}>上一页题目未完成作答</span>，<span className={styles.highlightRed}>将无法点击进入下一页</span>。
+              请按顺序回答每页问题，上一页题目未完成作答，将无法点击进入下一页。
             </li>
-            <li>
+            <li style={{ fontSize: '20px' }}>
               答题时，<span className={styles.highlightRed}>不要提前点击"下一页"</span>查看后面的内容，<span className={styles.highlightRed}>否则将无法返回上一页</span>。
             </li>
             <li>
-              遇到系统故障、死机、死循环等特殊情况时，<span className={styles.highlightRed}>请举手示意老师</span>。
+              遇到系统故障、死机、死循环等特殊情况时，请举手示意老师。
             </li>
           </ul>
         </div>

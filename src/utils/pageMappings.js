@@ -64,118 +64,112 @@ export const pageInfoMapping = {
     isInProgress: false
   },
   'Page_10_Hypothesis_Focus': {
-    number: '10',
+    number: '5',
     desc: '第四题',
     stepNumber: 4,
     isInProgress: true
   },
   'Page_11_Solution_Design_Measurement_Ideas': {
-    number: '11',
+    number: '6',
     desc: '第五题',
     stepNumber: 5,
     isInProgress: true
   },
   'Page_12_Solution_Evaluation_Measurement_Critique': {
-    number: '12',
+    number: '7',
     desc: '第六题',
     stepNumber: 6,
     isInProgress: true
   },
   'Page_13_Transition_To_Simulation': {
-    number: '13',
+    number: '8',
     desc: '第七题',
     stepNumber: 7,
     isInProgress: true
   },
   'Page_14_Simulation_Intro_Exploration': {
-    number: '14',
+    number: '9',
     desc: '第八题',
     stepNumber: 8,
     isInProgress: true
   },
   'Page_15_Simulation_Question_1': {
-    number: '15',
+    number: '10',
     desc: '第九题',
     stepNumber: 9,
     isInProgress: true
   },
   'Page_16_Simulation_Question_2': {
-    number: '16',
+    number: '11',
     desc: '第十题',
     stepNumber: 10,
     isInProgress: true
   },
   'Page_17_Simulation_Question_3': {
-    number: '17',
+    number: '12',
     desc: '第十一题',
     stepNumber: 11,
     isInProgress: true
   },
   'Page_18_Solution_Selection': {
-    number: '18',
+    number: '13',
     desc: '第十二题',
     stepNumber: 12,
-    isInProgress: true
-  },
-  'Page_19_Task_Completion': {
-    number: '19',
-    desc: '第十三题',
-    stepNumber: 13,
     isInProgress: true
   },
   // 问卷调查页面映射
   'Page_20_Questionnaire_Intro': {
     number: '20',
     desc: '问卷调查说明',
-    stepNumber: 14,
+    stepNumber: 13,
     isInProgress: true
   },
   'Page_21_Curiosity_Questions': {
     number: '21',
     desc: '好奇心问卷',
-    stepNumber: 15,
+    stepNumber: 14,
     isInProgress: true
   },
   'Page_22_Creativity_Questions': {
     number: '22',
     desc: '创造力问卷',
-    stepNumber: 16,
+    stepNumber: 15,
     isInProgress: true
   },
   'Page_23_Imagination_Questions': {
     number: '23',
     desc: '想象力问卷',
-    stepNumber: 17,
+    stepNumber: 16,
     isInProgress: true
   },
   'Page_24_Science_Efficacy_Questions': {
     number: '24',
     desc: '科学自效能问卷',
-    stepNumber: 18,
+    stepNumber: 17,
     isInProgress: true
   },
   'Page_25_Environment_Questions': {
     number: '25',
     desc: '创造环境问卷',
-    stepNumber: 19,
+    stepNumber: 18,
     isInProgress: true
   },
   'Page_26_School_Activities': {
     number: '26',
     desc: '校内科学活动调查',
-    stepNumber: 20,
+    stepNumber: 19,
     isInProgress: true
   },
   'Page_27_Outschool_Activities': {
     number: '27',
     desc: '校外科学活动调查',
-    stepNumber: 21,
+    stepNumber: 20,
     isInProgress: true
   },
   'Page_28_Effort_Submit': {
     number: '28',
     desc: '努力评估与提交',
-    stepNumber: 22,
+    stepNumber: 21,
     isInProgress: true
   }
 };
@@ -190,16 +184,16 @@ export const pageNumToPageIdMapping = {
   '2': 'Page_02_Introduction',    // pageNum 2: 第一题
   '3': 'Page_03_Dialogue_Question', // pageNum 3: 第二题
   '4': 'Page_04_Material_Reading_Factor_Selection', // pageNum 4: 第三题
-  '10': 'Page_10_Hypothesis_Focus', // pageNum 10: 第四题
-  '11': 'Page_11_Solution_Design_Measurement_Ideas', // pageNum 11: 第五题
-  '12': 'Page_12_Solution_Evaluation_Measurement_Critique', // pageNum 12: 第六题
-  '13': 'Page_13_Transition_To_Simulation', // pageNum 13: 第七题
-  '14': 'Page_14_Simulation_Intro_Exploration', // pageNum 14: 第八题
-  '15': 'Page_15_Simulation_Question_1', // pageNum 15: 第九题
-  '16': 'Page_16_Simulation_Question_2', // pageNum 16: 第十题
-  '17': 'Page_17_Simulation_Question_3', // pageNum 17: 第十一题
-  '18': 'Page_18_Solution_Selection', // pageNum 18: 第十二题
-  '19': 'Page_19_Task_Completion',  // pageNum 19: 第十三题（任务完成）
+  '5': 'Page_10_Hypothesis_Focus', // pageNum 5: 第四题
+  '6': 'Page_11_Solution_Design_Measurement_Ideas', // pageNum 6: 第五题
+  '7': 'Page_12_Solution_Evaluation_Measurement_Critique', // pageNum 7: 第六题
+  '8': 'Page_13_Transition_To_Simulation', // pageNum 8: 第七题
+  '9': 'Page_14_Simulation_Intro_Exploration', // pageNum 9: 第八题
+  '10': 'Page_15_Simulation_Question_1', // pageNum 10: 第九题
+  '11': 'Page_16_Simulation_Question_2', // pageNum 11: 第十题
+  '12': 'Page_17_Simulation_Question_3', // pageNum 12: 第十一题
+  '13': 'Page_18_Solution_Selection', // pageNum 13: 第十二题
+  '14': 'Page_18_Solution_Selection',  // 兼容旧进度：回落到内容页，结束页已移除
   // 问卷页面映射
   '20': 'Page_20_Questionnaire_Intro', // pageNum 20: 问卷说明
   '21': 'Page_21_Curiosity_Questions', // pageNum 21: 好奇心问卷
@@ -247,7 +241,7 @@ export const isTaskCompletedByPageNum = (pageNum) => {
  */
 export const isMainTaskCompletedByPageNum = (pageNum) => {
   const pageNumStr = String(pageNum);
-  return parseInt(pageNumStr) >= 19; // 主任务完成为19
+  return parseInt(pageNumStr) >= 13; // 主任务完成为13（第十二题）
 };
 
 /**
@@ -267,7 +261,6 @@ export const getTargetPageIdFromPageNum = (pageNum) => {
   }
   
   // 如果已经进入问卷阶段（pageNum >= 20）但还未完成所有问卷，跳转到对应的问卷页面
-  // 注意：pageNum为19时应该停留在19页，让用户手动点击按钮进入问卷
   if (pageNumInt >= 20 && pageNumInt < 28) {
     const targetPageId = pageNumToPageIdMapping[pageNumStr];
     if (targetPageId) {
@@ -305,7 +298,7 @@ export const getTargetPageIdFromPageNum = (pageNum) => {
 /**
  * 总的用户可见步骤数
  */
-export const TOTAL_USER_STEPS = 13;
+export const TOTAL_USER_STEPS = 12;
 
 /**
  * 问卷总步骤数
@@ -367,7 +360,6 @@ export const getNextPageId = (currentPageId) => {
     'Page_16_Simulation_Question_2',
     'Page_17_Simulation_Question_3',
     'Page_18_Solution_Selection',
-    'Page_19_Task_Completion',
     // 问卷调查页面
     'Page_20_Questionnaire_Intro',
     'Page_21_Curiosity_Questions',
@@ -396,27 +388,27 @@ export const getNextPageId = (currentPageId) => {
  */
 export const getPageTitle = (pageId) => {
   const titleMap = {
-    'Page_Login': '登录 - 蒸馒头科学探究任务',
-    'Page_01_Precautions': '注意事项',
-    'Page_02_Introduction': '蒸馒头',
-    'Page_03_Dialogue_Question': '蒸馒头',
-    'Page_04_Material_Reading_Factor_Selection': '蒸馒头:资料阅读',
-    'Modal_Page_05_Process': '蒸馒头全流程',
-    'Modal_Page_06_Principle': '发酵原理趣话',
-    'Modal_Page_07_Techniques': '发酵技巧讲堂',
-    'Modal_Page_08_Discussion': '发酵问题讨论',
-    'Modal_Page_09_Yeast_Dosage': '酵母用量秘籍',
-    'Page_10_Hypothesis_Focus': '蒸馒头',
-    'Page_11_Solution_Design_Measurement_Ideas': '蒸馒头:方案设计',
-    'Page_12_Solution_Evaluation_Measurement_Critique': '蒸馒头:方案评估',
-    'Page_13_Transition_To_Simulation': '蒸馒头',
-    'Page_14_Simulation_Intro_Exploration': '蒸馒头:模拟实验',
-    'Page_15_Simulation_Question_1': '蒸馒头:模拟实验',
-    'Page_16_Simulation_Question_2': '蒸馒头:模拟实验',
-    'Page_17_Simulation_Question_3': '蒸馒头:模拟实验',
-    'Page_18_Solution_Selection': '蒸馒头:方案选择',
-    'Page_19_Task_Completion': '蒸馒头:任务完成'
+    'Page_Login': '?? - ?????????',
+    'Page_01_Precautions': '????',
+    'Page_02_Introduction': '?????',
+    'Page_03_Dialogue_Question': '?????',
+    'Page_04_Material_Reading_Factor_Selection': '???????',
+    'Modal_Page_05_Process': '??????',
+    'Modal_Page_06_Principle': '??????',
+    'Modal_Page_07_Techniques': '??????',
+    'Modal_Page_08_Discussion': '??????',
+    'Modal_Page_09_Yeast_Dosage': '??????',
+    'Page_10_Hypothesis_Focus': '?????',
+    'Page_11_Solution_Design_Measurement_Ideas': '???????',
+    'Page_12_Solution_Evaluation_Measurement_Critique': '???????',
+    'Page_13_Transition_To_Simulation': '?????',
+    'Page_14_Simulation_Intro_Exploration': '???????',
+    'Page_15_Simulation_Question_1': '???????',
+    'Page_16_Simulation_Question_2': '???????',
+    'Page_17_Simulation_Question_3': '???????',
+    'Page_18_Solution_Selection': '???????'
   };
   
-  return titleMap[pageId] || '蒸馒头探究任务';
-}; 
+  return titleMap[pageId] || '???????';
+};
+

@@ -4,7 +4,7 @@ import imgP44 from '../../assets/images/P4-4.jpg';
 /**
  * 发酵问题讨论资料内容组件
  * 对应PRD中的P8资料
- * 
+ *
  * @param {Object} props - 组件属性
  * @param {boolean} props.isModal - 是否在模态框中显示，控制样式
  * @returns {React.ReactElement} 资料内容组件
@@ -16,40 +16,11 @@ const MaterialDiscussion = ({ isModal = true }) => {
     margin: '0 auto',
   };
 
-
-
-
-
-  const avatarStyle = {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    backgroundColor: '#e6e6e6',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: '10px',
-    fontSize: '1.2rem',
-    color: '#666',
-  };
-
-  const usernameStyle = {
-    fontWeight: 'bold',
-    color: '#333',
-  };
-
-
-
-
-
-
-
-
   return (
     <div style={containerStyle}>
-      <img 
-        src={imgP44} 
-        alt="发酵问题讨论区" 
+      <img
+        src={imgP44}
+        alt="发酵问题讨论区"
         style={{
           maxWidth: '85%',
           width: '85%',
@@ -57,7 +28,7 @@ const MaterialDiscussion = ({ isModal = true }) => {
           borderRadius: '10px',
           boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
           margin: '20px auto',
-          display: 'block'
+          display: 'block',
         }}
       />
     </div>
@@ -65,7 +36,7 @@ const MaterialDiscussion = ({ isModal = true }) => {
 };
 
 MaterialDiscussion.propTypes = {
-  isModal: PropTypes.bool
+  isModal: PropTypes.bool,
 };
 
-export default MaterialDiscussion; 
+export default MaterialDiscussion;

@@ -14,7 +14,14 @@ import styles from '../styles/Page01_Cover.module.css';
  * - CLICK_BLOCKED event on validation failure
  */
 export default function Page01_Cover() {
-  const { logOperation, navigateToPage, setAnswer, questionIds, getPagePrefix } = useDroneImagingContext();
+  const {
+    logOperation,
+    navigateToPage,
+    setAnswer,
+    questionIds,
+    getPagePrefix,
+    taskDurationMinutes,
+  } = useDroneImagingContext();
   const confirmReadId = questionIds.confirmRead;
   const pagePrefix = getPagePrefix(1);
 
@@ -25,15 +32,14 @@ export default function Page01_Cover() {
   const [isCountdownFinished, setCountdownFinished] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownLoggedRef = useRef(false);
 
-  // Page enter/exit logging
+  // Timer setup/cleanup
   useEffect(() => {
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'Page01_Cover',
-      time: formatTimestamp(new Date()),
-    });
+    if (countdownLoggedRef.current) {
+      return undefined;
+    }
+    countdownLoggedRef.current = true;
 
     logOperation({
       targetElement: `${pagePrefix}countdown`,
@@ -56,12 +62,7 @@ export default function Page01_Cover() {
       if (countdownStopRef.current) {
         clearTimeout(countdownStopRef.current);
       }
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'Page01_Cover',
-        time: formatTimestamp(new Date()),
-      });
+      countdownLoggedRef.current = false;
     };
   }, [logOperation, pagePrefix]);
 
@@ -157,7 +158,7 @@ export default function Page01_Cover() {
           <span className={styles.noticeBadge}>注意事项</span>
           <ul className={styles.noticeList}>
             <li>
-              作答时间为 <span className={styles.highlightBold}>20 分钟</span>，时间结束后，系统将自动跳转到下一个测评环节。
+            本次测试一共两个任务，作答时间共<span className={styles.highlight}>{taskDurationMinutes}分钟</span>，当前是第一个任务，大约需要<span className={styles.highlight}>20分钟</span>完成，请注意时间分配。
             </li>
             <li>
               请按顺序回答每页问题，上一页题目未完成作答，将无法点击进入下一页。

@@ -1,0 +1,429 @@
+/**
+ * Page07BananaBrowningEvaluation Styles
+ * 香蕉变黑方案评估页面样式 - 三栏卡片布局
+ * 颜色主题：琥珀/橙色 (#f59e0b, #d97706, #92400e)
+ */
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px 40px;
+  background: #f5f7fb;
+  position: relative;
+  overflow-y: auto;
+}
+
+/* 装饰背景 */
+.pageContainer::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pageContainer::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================================================
+   Header Section
+   ============================================================================ */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+}
+
+.badge {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23px;
+  font-weight: 700;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(245, 158, 11, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.description {
+  font-size: 16px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+  text-indent: 2em;
+  position: relative;
+  z-index: 1;
+  animation: slideInUp 0.5s ease-out 0.1s both;
+}
+
+/* ============================================================================
+   Cards Container - 三列横向布局
+   ============================================================================ */
+
+.cardsContainer {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+}
+
+/* 卡片样式 */
+.card {
+  background: white;
+  border: 2px solid #fde68a;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 12px rgba(146, 64, 14, 0.04);
+  transition: all 0.25s ease;
+  animation: slideInUp 0.5s ease-out both;
+  overflow: hidden;
+}
+
+.card:nth-child(1) {
+  animation-delay: 0.15s;
+}
+
+.card:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.card:nth-child(3) {
+  animation-delay: 0.35s;
+}
+
+.card:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.15);
+  transform: translateY(-4px);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cardNumber {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35);
+  flex-shrink: 0;
+}
+
+.cardName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.cardDescription {
+  font-size: 16px;
+  color: #333;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+  text-indent: 2em;
+  flex-shrink: 0;
+  min-height: 96px; /* 4 lines × 24px line-height */
+}
+
+.imagePlaceholder {
+  width: 250px;
+  height: 200px;
+  margin: 0 auto 12px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+  border: 2px solid #fde68a;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.imagePlaceholder img {
+  width: 250px;
+  height: 200px;
+  object-fit: cover;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.inputGroup:last-child {
+  margin-bottom: 0;
+}
+
+.inputLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inputLabel::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 18px;
+  border-radius: 3px;
+}
+
+.inputLabel.pros::before {
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+}
+
+.inputLabel.cons::before {
+  background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 40px;
+  border: 2px solid #fde68a;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #333;
+  background: #fafbfc;
+  resize: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.textarea:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: white;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #f59e0b;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+}
+
+.textarea::placeholder {
+  color: #a0aec0;
+}
+
+/* ============================================================================
+   动画关键帧
+   ============================================================================ */
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   减少动画偏好
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .cardsContainer {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+
+@media (max-height: 800px) {
+  .pageContainer {
+    padding: 16px 30px;
+  }
+
+  .badge {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .description {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .cardsContainer {
+    gap: 14px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .cardNumber {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  .cardName {
+    font-size: 16px;
+  }
+
+  .cardDescription {
+    font-size: 14px;
+    margin-bottom: 10px;
+    min-height: 84px; /* 4 lines × 21px (14px × 1.5 line-height) */
+  }
+
+  .imagePlaceholder {
+    width: 200px;
+    height: 160px;
+    margin-bottom: 10px;
+  }
+
+  .imagePlaceholder img {
+    width: 200px;
+    height: 160px;
+  }
+
+  .inputGroup {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .inputLabel {
+    font-size: 14px;
+  }
+
+  .textarea {
+    min-height: 45px;
+    padding: 6px 8px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 16px 24px;
+  }
+
+  .cardsContainer {
+    gap: 12px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: 16px 20px;
+  }
+
+  .header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .description {
+    font-size: 18px;
+  }
+
+  .cardsContainer {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .imagePlaceholder {
+    height: 140px;
+  }
+
+  .textarea {
+    min-height: 80px;
+  }
+}

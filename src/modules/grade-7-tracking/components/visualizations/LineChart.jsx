@@ -1,7 +1,8 @@
-﻿/**
+/**
  * LineChart - 折线图可视化组件（UTF-8 clean）
  */
 
+import { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
   LineChart as RechartsLineChart,
@@ -12,7 +13,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  ReferenceLine
 } from 'recharts';
 import styles from '../../styles/LineChart.module.css';
 
@@ -24,13 +24,13 @@ const generateChartData = (temperatureRange, waterContentOptions) => {
     30: { 15: 8.6, 17: 3.1, 19: 1.6, 21: 1.1 },
     35: { 15: 4.8, 17: 1.8, 19: 1.0, 21: 0.7 },
     40: { 15: 2.7, 17: 1.1, 19: 0.6, 21: 0.4 },
-    45: { 15: 1.6, 17: 0.7, 19: 0.4, 21: 0.3 }
+    45: { 15: 1.6, 17: 0.7, 19: 0.4, 21: 0.3 },
   };
 
-  return temperatureRange.map((temperature) => {
+  return temperatureRange.map(temperature => {
     const dataPoint = { temperature };
 
-    waterContentOptions.forEach((waterContent) => {
+    waterContentOptions.forEach(waterContent => {
       const fallTime = tableData[temperature]?.[waterContent];
       if (fallTime !== undefined) {
         dataPoint[`${waterContent}%`] = fallTime;
@@ -41,13 +41,37 @@ const generateChartData = (temperatureRange, waterContentOptions) => {
   });
 };
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, onDataPointFocus, onDataPointBlur }) => {
+  const prevActiveRef = useRef(false);
+
+  useEffect(() => {
+    if (active && !prevActiveRef.current && onDataPointFocus) {
+      onDataPointFocus({
+        target: '折线图数据点',
+        value: `温度: ${label}°C`,
+        time: new Date().toISOString(),
+      });
+    }
+    if (!active && prevActiveRef.current && onDataPointBlur) {
+      onDataPointBlur({
+        target: '折线图数据点',
+        value: '数据点失焦',
+        time: new Date().toISOString(),
+      });
+    }
+    prevActiveRef.current = active;
+  }, [active, label, onDataPointFocus, onDataPointBlur]);
+
   if (active && payload && payload.length) {
     return (
       <div className={styles.customTooltip}>
         <p className={styles.tooltipLabel}>温度: {label}°C</p>
         {payload.map((entry, index) => (
-          <p key={`item-${index}`} className={styles.tooltipItem} style={{ color: entry.color }}>
+          <p
+            key={`tooltip-${entry.name}-${index}`}
+            className={styles.tooltipItem}
+            style={{ color: entry.color }}
+          >
             {entry.name}: {Number(entry.value).toFixed(1)}秒
           </p>
         ))}
@@ -60,7 +84,9 @@ const CustomTooltip = ({ active, payload, label }) => {
 CustomTooltip.propTypes = {
   active: PropTypes.bool,
   payload: PropTypes.array,
-  label: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  label: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onDataPointFocus: PropTypes.func,
+  onDataPointBlur: PropTypes.func,
 };
 
 const LineChart = ({
@@ -69,7 +95,11 @@ const LineChart = ({
   width = '100%',
   height = 400,
   showLegend = true,
-  showGrid = true
+  showGrid = true,
+  onChartFocus,
+  onChartBlur,
+  onDataPointFocus,
+  onDataPointBlur,
 }) => {
   const chartData = generateChartData(temperatureRange, waterContentOptions);
 
@@ -77,11 +107,37 @@ const LineChart = ({
     '15%': '#8884d8',
     '17%': '#82ca9d',
     '19%': '#ffc658',
-    '21%': '#ff7300'
+    '21%': '#ff7300',
+  };
+
+  const handleMouseEnter = () => {
+    if (onChartFocus) {
+      onChartFocus({
+        target: '折线图',
+        value: '图表聚焦',
+        time: new Date().toISOString(),
+      });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (onChartBlur) {
+      onChartBlur({
+        target: '折线图',
+        value: '图表失焦',
+        time: new Date().toISOString(),
+      });
+    }
   };
 
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      role="img"
+      aria-label="温度含水量与落球时间关系折线图"
+    >
       <div className={styles.chartHeader}>
         <h3 className={styles.chartTitle}>温度、含水量与落球时间的关系</h3>
         <p className={styles.chartSubtitle}>横轴: 环境温度(°C) · 纵轴: 小球下落时间(秒)</p>
@@ -93,25 +149,48 @@ const LineChart = ({
 
           <XAxis
             dataKey="temperature"
-            label={{ value: '温度 (°C)', position: 'insideBottom', offset: -10, style: { fontSize: 14, fontWeight: 600, fill: '#595959' } }}
+            label={{
+              value: '温度 (°C)',
+              position: 'insideBottom',
+              offset: -10,
+              style: { fontSize: 14, fontWeight: 600, fill: '#595959' },
+            }}
             tick={{ fontSize: 12, fill: '#8c8c8c' }}
             stroke="#d9d9d9"
           />
 
           <YAxis
-            label={{ value: '下落时间 (秒)', angle: -90, position: 'insideLeft', offset: 0, style: { fontSize: 14, fontWeight: 600, fill: '#595959' } }}
+            label={{
+              value: '下落时间 (秒)',
+              angle: -90,
+              position: 'insideLeft',
+              offset: 0,
+              style: { fontSize: 14, fontWeight: 600, fill: '#595959' },
+            }}
             tick={{ fontSize: 12, fill: '#8c8c8c' }}
             stroke="#d9d9d9"
             domain={[0, 'auto']}
             ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]}
           />
 
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip
+            content={
+              <CustomTooltip
+                onDataPointFocus={onDataPointFocus}
+                onDataPointBlur={onDataPointBlur}
+              />
+            }
+          />
           {showLegend && (
-            <Legend verticalAlign="top" height={40} wrapperStyle={{ fontSize: 13, fontWeight: 600 }} iconType="line" />
+            <Legend
+              verticalAlign="top"
+              height={40}
+              wrapperStyle={{ fontSize: 13, fontWeight: 600 }}
+              iconType="line"
+            />
           )}
 
-          {waterContentOptions.map((wc) => (
+          {waterContentOptions.map(wc => (
             <Line
               key={wc}
               type="monotone"
@@ -127,8 +206,6 @@ const LineChart = ({
           ))}
         </RechartsLineChart>
       </ResponsiveContainer>
-
-      {/* 删除了chartFooter观察提示部分，以节省垂直空间 */}
     </div>
   );
 };
@@ -139,7 +216,11 @@ LineChart.propTypes = {
   width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   height: PropTypes.number,
   showLegend: PropTypes.bool,
-  showGrid: PropTypes.bool
+  showGrid: PropTypes.bool,
+  onChartFocus: PropTypes.func,
+  onChartBlur: PropTypes.func,
+  onDataPointFocus: PropTypes.func,
+  onDataPointBlur: PropTypes.func,
 };
 
 export default LineChart;

@@ -19,7 +19,8 @@ import styles from '../styles/Page04_Experiment.module.css';
  * Validation for Flow: must perform at least one capture before proceeding.
  */
 export default function Page04_ExperimentFree() {
-  const { experimentState, logOperation, capture, resetExperiment } = useDroneImagingContext();
+  const { experimentState, logOperation, capture, resetExperiment, getPagePrefix } = useDroneImagingContext();
+  const pagePrefix = getPagePrefix(4);
 
   const { currentHeight } = experimentState;
   const [showFovCone, setShowFovCone] = useState(false);
@@ -30,33 +31,15 @@ export default function Page04_ExperimentFree() {
   // Capture is only enabled when a height is selected (not 0)
   const canCapture = currentHeight !== 0;
 
-  // Log page enter on mount
-  useEffect(() => {
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'Page04_ExperimentFree',
-      time: formatTimestamp(new Date()),
-    });
-
-    // Cleanup on unmount
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'Page04_ExperimentFree',
-        time: formatTimestamp(new Date()),
-      });
-
-      // Clear any pending timeouts
-      if (flashTimeoutRef.current) {
-        clearTimeout(flashTimeoutRef.current);
-      }
-      if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current);
-      }
-    };
-  }, [logOperation]);
+  // Cleanup on unmount
+  useEffect(() => () => {
+    if (flashTimeoutRef.current) {
+      clearTimeout(flashTimeoutRef.current);
+    }
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
+  }, []);
 
   // Handle capture/start experiment
   const handleCapture = useCallback(() => {
@@ -68,7 +51,7 @@ export default function Page04_ExperimentFree() {
 
     // Log the capture operation
     logOperation({
-      targetElement: 'capture_button',
+      targetElement: `${pagePrefix}capture_button`,
       eventType: EventTypes.SIMULATION_OPERATION,
       value: JSON.stringify({
         action: 'capture',
@@ -93,12 +76,12 @@ export default function Page04_ExperimentFree() {
     flashTimeoutRef.current = setTimeout(() => {
       setShowFovCone(false);
     }, 2000);
-  }, [experimentState, capture, logOperation, canCapture]);
+  }, [experimentState, capture, logOperation, canCapture, pagePrefix]);
 
   // Handle reset
   const handleReset = useCallback(() => {
     logOperation({
-      targetElement: 'reset_button',
+      targetElement: `${pagePrefix}reset_button`,
       eventType: EventTypes.SIMULATION_OPERATION,
       value: JSON.stringify({ action: 'reset_experiment' }),
       time: formatTimestamp(new Date()),
@@ -111,7 +94,7 @@ export default function Page04_ExperimentFree() {
     if (flashTimeoutRef.current) {
       clearTimeout(flashTimeoutRef.current);
     }
-  }, [resetExperiment, logOperation]);
+  }, [resetExperiment, logOperation, pagePrefix]);
 
   // Validate for Flow "next" – used by hidden button
   const handleNext = () => {
@@ -169,7 +152,7 @@ export default function Page04_ExperimentFree() {
           </p>
           <ul className={styles.instructionList}>
             <li>
-              单击左上方橙色框<span className={styles.sampleHeight}>100米</span>，可设置无人机飞行高度。
+              单击左上方橙色框<span className={styles.sampleHeight}>100米</span><span className={styles.sampleHeight}>200米</span><span className={styles.sampleHeight}>300米</span>，可设置无人机飞行高度。
             </li>
             <li>
               单击下方 <span className={styles.arrowBtnUp}>▲</span><span className={styles.arrowBtnDown}>▼</span> 按钮，可调整镜头焦距。

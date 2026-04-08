@@ -3,14 +3,16 @@ import styles from './completion.module.css';
 
 const defaultIcon = '🎉';
 
-const defaultContent = {
+export const completionDefaultContent = {
   title: '蒸馒头任务完成！',
   message:
     '经过一番探究，总算真相大白，原来是发酵时间过长，导致了小明蒸的馒头过度发酵。感谢你对小明的帮助！',
-  detail: '接下来，我们还有一份简短的问卷调查，用于了解你的学习体验。',
-  tip: '问卷大约需要10分钟时间。',
-  ctaLabel: '继续完成问卷调查',
+  detail: '现在可以点击退出按钮，退出系统了。',//原来文字是“接下来，我们还有一份简短的问卷调查，用于了解你的学习体验。”，现在改为“现在可以点击退出按钮，退出系统了。”
+  tip: '',//原来文字是“问卷大约需要10分钟时间。”，现在改为“ ”
+  ctaLabel: '退出，结束测试', //原来文字是"继续完成问卷调查"，现在改为"退出，结束测试"
+
 };
+const defaultContent = completionDefaultContent;
 
 export function CompletionPage({
   title = defaultContent.title,

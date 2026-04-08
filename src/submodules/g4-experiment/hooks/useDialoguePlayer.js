@@ -34,6 +34,11 @@ export function useDialoguePlayer({
 
   const runIdRef = useRef(0);
   const timersRef = useRef([]);
+  const callbacksRef = useRef({ onMessageShown, onComplete, onStart });
+
+  useEffect(() => {
+    callbacksRef.current = { onMessageShown, onComplete, onStart };
+  }, [onMessageShown, onComplete, onStart]);
 
   const sleep = useCallback(
     (ms) =>
@@ -67,8 +72,9 @@ export function useDialoguePlayer({
     setTypingRole(null);
     setHasCompleted(false);
     setIsPlaying(true);
-    if (typeof onStart === 'function') {
-      onStart();
+    const startCallback = callbacksRef.current.onStart;
+    if (typeof startCallback === 'function') {
+      startCallback();
     }
 
     await sleep(initialDelay);
@@ -85,8 +91,9 @@ export function useDialoguePlayer({
       setTypingRole(null);
       setVisibleMessages((prev) => [...prev, { ...message, index }]);
 
-      if (typeof onMessageShown === 'function') {
-        onMessageShown(message, index);
+      const messageCallback = callbacksRef.current.onMessageShown;
+      if (typeof messageCallback === 'function') {
+        messageCallback(message, index);
       }
 
       await sleep(messageInterval);
@@ -95,10 +102,11 @@ export function useDialoguePlayer({
 
     setIsPlaying(false);
     setHasCompleted(true);
-    if (typeof onComplete === 'function') {
-      onComplete();
+    const completeCallback = callbacksRef.current.onComplete;
+    if (typeof completeCallback === 'function') {
+      completeCallback();
     }
-  }, [initialDelay, messageInterval, messages, onComplete, onMessageShown, onStart, sleep]);
+  }, [initialDelay, messageInterval, messages, sleep]);
 
   useEffect(() => {
     if (autoStart) {

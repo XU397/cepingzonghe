@@ -1,20 +1,18 @@
-
 import styles from './VirtualKeyboard.module.css';
 
 const KEYBOARD_LAYOUT = [
-  ['7', '8', '9', '÷'],
-  ['4', '5', '6', '×'],
-  ['1', '2', '3', '-'],
-  ['0', '.', '=', '+'],
-  ['Enter', 'C'],
+  ['0', '6', '+'],
+  ['1', '7', '-'],
+  ['2', '8', '×'],
+  ['3', '9', '÷'],
+  ['4', '.', '='],
+  ['5', '↵'],
 ];
 
-export function VirtualKeyboard({ onKeyPress, onEnter, onClear }) {
-  const handleKeyClick = (key) => {
-    if (key === 'Enter') {
+export function VirtualKeyboard({ onKeyPress, onEnter }) {
+  const handleKeyClick = key => {
+    if (key === '↵') {
       onEnter && onEnter();
-    } else if (key === 'C') {
-      onClear && onClear();
     } else {
       onKeyPress && onKeyPress(key);
     }
@@ -24,14 +22,19 @@ export function VirtualKeyboard({ onKeyPress, onEnter, onClear }) {
     <div className={styles.keyboard}>
       {KEYBOARD_LAYOUT.map((row, rowIndex) => (
         <div key={rowIndex} className={styles.row}>
-          {row.map((key) => (
+          {row.map(key => (
             <button
               key={key}
               type="button"
-              className={[styles.key, (key === 'Enter' || key === 'C') ? styles.specialKey : ''].join(' ')}
+              className={[
+                styles.key,
+                key === '↵' ? styles.enterKey : '',
+                ['+', '-', '×', '÷'].includes(key) ? styles.operatorKey : '',
+                key === '=' ? styles.equalsKey : '',
+              ].join(' ')}
               onClick={() => handleKeyClick(key)}
             >
-              {key === 'Enter' ? '换行' : key === 'C' ? '清除' : key}
+              {key}
             </button>
           ))}
         </div>

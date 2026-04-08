@@ -1,6 +1,6 @@
 {
-  "pageNumber": "0.4",
-  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/0] 自由探索实验",
+  "pageNumber": "1.04",
+  "pageDesc": "[g8-assessment-flow/g8-drone-imaging/1.04] 自由探索实验",
   "operationList": [
     {
       "code": 1,
@@ -88,7 +88,7 @@
       "code": 10,
       "targetElement": "flow_context",
       "eventType": "page_submit_success",
-      "value": "{\"pageNumber\":\"0.4\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/0] 自由探索实验\",\"auto_submit\":false}",
+      "value": "{\"pageNumber\":\"1.04\",\"pageDesc\":\"[g8-assessment-flow/g8-drone-imaging/1.04] 自由探索实验\",\"auto_submit\":false}",
       "time": "2025-02-01 09:08:20"
     }
   ],

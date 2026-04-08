@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 import { useAppContext } from '../context/AppContext';
 import Modal from '../components/common/Modal';
 import NavigationButton from '../components/common/NavigationButton';
@@ -43,7 +44,10 @@ const Page_04_Material_Reading_Factor_Selection = () => {
   const pageLoadedRef = useRef(false);
   const operationsRef = useRef([]);
   const recordOperation = useCallback((operation) => {
-    const normalizedOperation = { ...operation };
+    const normalizedOperation = {
+      ...operation,
+      time: formatTimestamp(new Date()),
+    };
     logOperation(normalizedOperation);
     operationsRef.current = [...operationsRef.current, normalizedOperation];
   }, [logOperation]);
@@ -101,7 +105,7 @@ const Page_04_Material_Reading_Factor_Selection = () => {
     
     recordOperation({
       eventType: EventTypes.MODAL_OPEN,
-      targetElement: `material_modal_${modalId}`,
+      targetElement: `材料弹窗_${modalId}`,
       value: getModalTitle(modalId)
     });
   }, [getModalTitle, recordOperation]);
@@ -115,7 +119,7 @@ const Page_04_Material_Reading_Factor_Selection = () => {
       
       recordOperation({
         eventType: EventTypes.MODAL_CLOSE,
-        targetElement: `material_modal_${openModalId}`,
+        targetElement: `材料弹窗_${openModalId}`,
         value: { duration: viewDuration, modalId: openModalId }
       });
     }
@@ -138,7 +142,7 @@ const Page_04_Material_Reading_Factor_Selection = () => {
     const factorDisplayName = getFactorDisplayName(factorKey);
     recordOperation({
       eventType: newSelections[factorKey] ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
-      targetElement: `factor_${factorKey}`,
+      targetElement: `因素_${factorKey}`,
       value: factorDisplayName
     });
   }, [factorSelections, getFactorDisplayName, recordOperation]);
@@ -153,7 +157,7 @@ const Page_04_Material_Reading_Factor_Selection = () => {
 
     recordOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_next',
+      targetElement: 'next_button',
       value: selectedFactorKeys.length === 0 ? '未选择任何因素' : '提交因素选择'
     });
 
@@ -288,7 +292,7 @@ const Page_04_Material_Reading_Factor_Selection = () => {
           boxShadow: '0 2px 10px rgba(0,0,0,0.08)'
         }}>
           <p style={{ marginTop: 0, fontSize: '1.1em', color: '#5d4037', lineHeight: '1.6', marginBottom: '20px', textIndent: '2em' }}>
-            为探索影响面团过度发酵的因素，小明搜集了左侧的五条资料。请点击并查看资料，思考面团过度发酵(膨胀松弛)可能与以下哪些因素有关？单击选择你认为正确的选项，再次点击可取消选择 (可多选)。
+            为探索影响面团过度发酵的因素，小明搜集了左侧的五条资料。<span style={{ color: 'red', fontWeight: 'bold' }}>请点击并查看资料</span>，思考面团过度发酵(膨胀松弛)可能与以下哪些因素有关？单击选择你认为正确的选项，再次点击可取消选择 (可多选)。
           </p>
           <div className="checkbox-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
             {factors.map(factor => (

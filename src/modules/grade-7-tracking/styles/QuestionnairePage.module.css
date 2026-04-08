@@ -1,21 +1,269 @@
 /**
  * QuestionnairePage Shared Styles
- * 问卷页面共享样式（表格布局版本�?
+ * 问卷页面共享样式 - 符合设计规范 docs/DESIGN_SYSTEM.md
+ * 7年级模块特点：稍微收敛，更现代
  */
 
 /* ============================================================================
-   Page Container
+   设计规范变量映射 (Design System Token Alignment)
+   参考: docs/DESIGN_SYSTEM.md
+   ============================================================================ */
+
+:root {
+  /* 主色调 */
+  --g7-primary: var(--cartoon-primary, #59c1ff);
+  --g7-secondary: var(--cartoon-secondary, #ffce6b);
+  --g7-green: var(--cartoon-green, #67d5b5);
+  --g7-red: var(--cartoon-red, #ff8a80);
+  --g7-dark: var(--cartoon-dark, #2d5b8e);
+
+  /* 中性色 */
+  --g7-text-primary: var(--text-primary, #333333);
+  --g7-text-secondary: var(--text-secondary, #666666);
+  --g7-text-tertiary: var(--text-tertiary, #999999);
+  --g7-border-light: var(--border-light, #e3eaf3);
+  --g7-border-medium: var(--border-medium, #cfd8dc);
+  --g7-bg-card: var(--background-card, #ffffff);
+  --g7-bg-main: var(--background-main, #f5f5f5);
+
+  /* 间距 */
+  --g7-space-sm: var(--space-sm, 8px);
+  --g7-space-md: var(--space-md, 16px);
+  --g7-space-lg: var(--space-lg, 24px);
+  --g7-space-xl: var(--space-xl, 32px);
+
+  /* 圆角 - 7年级使用标准圆角 */
+  --g7-radius-sm: var(--radius-sm, 8px);
+  --g7-radius-md: var(--radius-md, 12px);
+  --g7-radius-lg: var(--radius-lg, 18px);
+
+  /* 阴影 */
+  --g7-shadow-sm: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.08));
+  --g7-shadow-md: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.1));
+  --g7-shadow-lg: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.12));
+  --g7-button-shadow: var(--button-shadow, 0 8px 20px rgba(89, 193, 255, 0.35));
+
+  /* 过渡 */
+  --g7-transition-fast: var(--transition-fast, 150ms ease);
+  --g7-transition-normal: var(--transition-normal, 200ms ease);
+}
+
+/* ============================================================================
+   Page Container - 填满 Frame 高度，不滚动
    ============================================================================ */
 
 .pageContainer {
   display: flex;
   flex-direction: column;
-  /* 🔧 负margin抵消PageLayout的contentWrapper padding-top (80px) */
-  padding: 20px 40px 28px 40px; /* �?2px 48px 40px 48px减少�?0px 40px 28px 40px */
-  max-width: 1400px;
+  height: 100%;
+  padding: var(--g7-space-md, 16px) var(--g7-space-lg, 24px);
+  max-width: 1180px;
   margin-left: auto;
   margin-right: auto;
-  gap: 20px; /* �?2px减少�?0px */
+  gap: var(--g7-space-md, 16px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Instruction Box (符合设计规范的卡片样式) */
+
+.instructionBox {
+  padding: var(--g7-space-sm, 8px) var(--g7-space-lg, 24px);
+  background: var(--g7-bg-card, #ffffff);
+  border: 1px solid var(--g7-border-light, #e3eaf3);
+  border-radius: var(--g7-radius-md, 12px);
+  box-shadow: var(--g7-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.08));
+  flex-shrink: 0;
+}
+
+.instructions {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--g7-text-primary, #333333);
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+}
+
+/* Table Section (问卷表格区域 - 自动填充剩余空间) */
+
+.tableSection {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Footer Section (居中按钮区域) */
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--g7-space-sm, 8px);
+  padding-top: var(--g7-space-sm, 8px);
+  flex-shrink: 0;
+}
+
+/* Next Button (参考 Page07_Design 的 3D 效果按钮) */
+
+.nextButton {
+  height: 44px;
+  min-width: 180px;
+  padding: 0 36px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 8px 20px rgba(45, 143, 201, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.nextButton:hover:not(:disabled) {
+  top: -2px;
+  box-shadow:
+    0 6px 0 #2d8fc9,
+    0 12px 28px rgba(45, 143, 201, 0.35);
+}
+
+.nextButton:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 0 0 #2d8fc9,
+    0 4px 12px rgba(45, 143, 201, 0.25);
+}
+
+.nextButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  top: 0;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 8px 20px rgba(45, 143, 201, 0.3);
+}
+
+.nextButton:focus-visible {
+  outline: 3px solid var(--g7-primary, #59c1ff);
+  outline-offset: 2px;
+}
+
+/* Warning Message (符合设计规范的警告样式) */
+
+.warningMessage {
+  padding: 10px var(--g7-space-md, 16px);
+  background: rgba(255, 206, 107, 0.2);
+  border: 1px solid var(--g7-secondary, #ffce6b);
+  border-radius: var(--g7-radius-sm, 8px);
+  font-size: 13px;
+  color: #e65100;
+  font-weight: 500;
+  text-align: center;
+  animation: fadeIn var(--g7-transition-normal, 200ms ease);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+
+@media (max-height: 800px) {
+  .pageContainer {
+    padding: var(--g7-space-sm, 8px) var(--g7-space-md, 16px);
+    gap: var(--g7-space-sm, 8px);
+  }
+
+  .instructionBox {
+    padding: 6px var(--g7-space-md, 16px);
+  }
+
+  .instructions {
+    font-size: 14px;
+  }
+
+  .footer {
+    gap: 6px;
+    padding-top: 6px;
+  }
+
+  .nextButton {
+    height: 40px;
+    padding: 0 28px;
+    font-size: 14px;
+  }
+
+  .warningMessage {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: var(--g7-space-sm, 8px);
+    gap: var(--g7-space-sm, 8px);
+  }
+
+  .instructionBox {
+    padding: 6px 12px;
+  }
+
+  .instructions {
+    font-size: 13px;
+  }
+
+  .nextButton {
+    height: 38px;
+    min-width: 160px;
+    padding: 0 24px;
+    font-size: 14px;
+  }
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .nextButton,
+  .warningMessage {
+    transition: none;
+    animation: none;
+  }
+
+  .nextButton:hover:not(:disabled) {
+    top: 0;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .nextButton {
+    border: 2px solid currentColor;
+  }
+
+  .nextButton:disabled {
+    opacity: 0.5;
+  }
+
+  .warningMessage {
+    border-width: 2px;
+  }
 }
 
 /* ============================================================================
@@ -44,7 +292,6 @@
    ============================================================================ */
 
 .tableSection {
-  
   margin-bottom: 16px; /* �?4px减少�?6px */
 }
 
@@ -121,7 +368,7 @@
     /* 保持负margin抵消 */
     padding: 12px 28px 20px 28px; /* 进一步压缩padding */
     gap: 12px; /* �?6px减少�?2px */
-    }
+  }
 
   /* 紧凑说明�?*/
   .instructionBox {
@@ -137,7 +384,6 @@
 
   /* 表格区域不需要底部margin，让表格自己滚动 */
   .tableSection {
-    
     margin-bottom: 10px; /* �?2px减少�?0px */
   }
 
@@ -192,4 +438,3 @@
     padding: 10px 16px;
   }
 }
-

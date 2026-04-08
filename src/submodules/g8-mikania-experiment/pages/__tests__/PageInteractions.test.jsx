@@ -2,9 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, expect, it } from 'vitest';
 import Page00Notice from '../Page00_Notice.jsx';
-import Page01Intro from '../Page01_Intro.jsx';
 import Page02StepQ1 from '../Page02_Step_Q1.jsx';
-import Page03SimExp from '../Page03_Sim_Exp.jsx';
 import Page04Q2Data from '../Page04_Q2_Data.jsx';
 import Page05Q3Trend from '../Page05_Q3_Trend.jsx';
 import Page06Q4Conc from '../Page06_Q4_Conc.jsx';
@@ -68,20 +66,12 @@ beforeEach(() => {
 });
 
 describe('Page00_Notice', () => {
-  it('logs enter/exit and blocks checkbox before countdown ends', () => {
+  it('blocks checkbox before countdown ends', () => {
     const ctx = buildMockContext({ state: { noticeCountdown: 5 } });
     mockContext = ctx;
-    const { unmount } = render(<Page00Notice />);
+    render(<Page00Notice />);
 
-    expect(ctx.logOperation).toHaveBeenCalledWith(
-      expect.objectContaining({ eventType: 'page_enter', value: 'page_00_notice' }),
-    );
     expect(screen.getByRole('checkbox')).toBeDisabled();
-
-    unmount();
-    expect(ctx.logOperation).toHaveBeenCalledWith(
-      expect.objectContaining({ eventType: 'page_exit', value: 'page_00_notice' }),
-    );
   });
 
   it('enables checkbox after countdown and records confirmation', async () => {
@@ -102,23 +92,6 @@ describe('Page00_Notice', () => {
         eventType: 'change',
         value: 'checked',
       }),
-    );
-  });
-});
-
-describe('Page01_Intro', () => {
-  it('records page enter/exit for background page', () => {
-    const ctx = buildMockContext();
-    mockContext = ctx;
-    const { unmount } = render(<Page01Intro />);
-
-    expect(ctx.logOperation).toHaveBeenCalledWith(
-      expect.objectContaining({ value: 'page_01_intro', eventType: 'page_enter' }),
-    );
-
-    unmount();
-    expect(ctx.logOperation).toHaveBeenCalledWith(
-      expect.objectContaining({ value: 'page_01_intro', eventType: 'page_exit' }),
     );
   });
 });
@@ -161,22 +134,6 @@ describe('Page02_Step_Q1', () => {
     render(<Page02StepQ1 />);
 
     expect(screen.getByRole('button', { name: '提交中...' })).toBeDisabled();
-  });
-});
-
-describe('Page03_Sim_Exp', () => {
-  it('logs page lifecycle events', () => {
-    const ctx = buildMockContext();
-    mockContext = ctx;
-    const { unmount } = render(<Page03SimExp />);
-
-    expect(ctx.logOperation).toHaveBeenCalledWith(
-      expect.objectContaining({ value: 'page_03_sim_exp', eventType: 'page_enter' }),
-    );
-    unmount();
-    expect(ctx.logOperation).toHaveBeenCalledWith(
-      expect.objectContaining({ value: 'page_03_sim_exp', eventType: 'page_exit' }),
-    );
   });
 });
 

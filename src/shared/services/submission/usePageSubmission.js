@@ -4,7 +4,11 @@ import { createSubmissionPayload } from '@shared/services/dataLogger.js';
 import createMarkObject, { formatTimestamp } from './createMarkObject.js';
 import EventTypes from './eventTypes.js';
 import { handleSessionExpired as defaultHandleSessionExpired } from './handleSessionExpired.js';
-import { validateMarkObject, RESERVED_TARGET_ELEMENTS, isNonEmptyAnswer } from '@shared/services/submission/schema.ts';
+import {
+  validateMarkObject,
+  RESERVED_TARGET_ELEMENTS,
+  isNonEmptyAnswer,
+} from '@shared/services/submission/schema.ts';
 import {
   encodeCompositePageNum,
   buildTargetElementPrefix,
@@ -16,85 +20,119 @@ const debugLog = () => {};
 const DEFAULT_TIMEOUT_PLACEHOLDER = '超时未回答';
 const SUBMISSION_CHANNEL = 'usePageSubmission';
 const SYSTEM_EVENT_TARGET = 'page_submission';
+const COMPOSITE_TARGET_PREFIX_REGEX = /^P[1-9]\d*\.\d{2}_.+/;
+const LEGACY_TARGET_PREFIX_REGEX = /^P\d+(?:\.\d+)?_/;
 
 // System reserved targetElement values that should NOT have P prefix (keep in sync with schema)
 const RESERVED_TARGET_ELEMENT_SET = new Set(RESERVED_TARGET_ELEMENTS);
 
-const isSessionExpiredError = (error) => {
+const isSessionExpiredError = error => {
   if (!error) return false;
   if (error.isSessionExpired) return true;
   if (error.code === 401) return true;
   const message = error.message || '';
   return (
     typeof message === 'string' &&
-    (message.includes('401') ||
-      message.includes('session已过期') ||
-      message.includes('请重新登录'))
+    (message.includes('401') || message.includes('session已过期') || message.includes('请重新登录'))
   );
 };
 
-const ensureArray = (value) => (Array.isArray(value) ? value : []);
+const ensureArray = value => (Array.isArray(value) ? value : []);
 
-const isFlowContextEventType = (eventType) =>
+const parseTimeValue = value => {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === 'string') {
+    const directDate = new Date(value);
+    if (!Number.isNaN(directDate.getTime())) {
+      return directDate;
+    }
+    const isoLikeDate = new Date(value.replace(' ', 'T'));
+    if (!Number.isNaN(isoLikeDate.getTime())) {
+      return isoLikeDate;
+    }
+  }
+  return null;
+};
+
+const isFlowContextEventType = eventType =>
   eventType === 'flow_context' || eventType === EventTypes.FLOW_CONTEXT;
 
-const maybeString = (value) => {
+const maybeString = value => {
   if (value === null || value === undefined) return '';
   if (typeof value === 'object') return value;
   return String(value);
 };
 
-const buildFlowContextValue = (flowInfo) => {
+const buildFlowContextValue = flowInfo => {
   if (!flowInfo) {
     return null;
   }
-  return {
+  return JSON.stringify({
     flowId: flowInfo.flowId || null,
     submoduleId: flowInfo.submoduleId || null,
     stepIndex: flowInfo.stepIndex ?? null,
+    moduleName: flowInfo.moduleName || null,
     pageId: flowInfo.pageId || null,
-  };
+  });
 };
 
 const normalizeFlowContextValue = (value, flowInfo) => {
-  if (value && typeof value === 'object') {
-    return value;
-  }
+  // 如果已经是符合格式的 JSON 字符串，直接返回
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value);
       if (parsed && typeof parsed === 'object') {
-        return parsed;
+        // 补充 moduleName 如果缺失
+        if (!parsed.moduleName && flowInfo?.moduleName) {
+          parsed.moduleName = flowInfo.moduleName;
+        }
+        return JSON.stringify(parsed);
       }
     } catch (error) {
-      console.warn('[usePageSubmission] 无法解析 flow_context value 字符串', error);
+      // 解析失败，使用 buildFlowContextValue 创建新的
     }
+  }
+  // 如果是对象，转换为 JSON 字符串
+  if (value && typeof value === 'object') {
+    const merged = {
+      flowId: value.flowId || flowInfo?.flowId || null,
+      submoduleId: value.submoduleId || flowInfo?.submoduleId || null,
+      stepIndex: value.stepIndex ?? flowInfo?.stepIndex ?? null,
+      moduleName: value.moduleName || flowInfo?.moduleName || null,
+      pageId: value.pageId || flowInfo?.pageId || null,
+    };
+    return JSON.stringify(merged);
   }
   return buildFlowContextValue(flowInfo);
 };
 
-const cloneMark = (mark) => {
+const cloneMark = mark => {
   if (!mark) return null;
   return {
     ...mark,
-    operationList: ensureArray(mark.operationList).map((op) => ({ ...op })),
-    answerList: ensureArray(mark.answerList).map((answer) => ({ ...answer })),
-    imgList: ensureArray(mark.imgList).map((item) => ({ ...item })),
+    operationList: ensureArray(mark.operationList).map(op => ({ ...op })),
+    answerList: ensureArray(mark.answerList).map(answer => ({ ...answer })),
+    imgList: ensureArray(mark.imgList).map(item => ({ ...item })),
   };
 };
 
-const cloneOperationList = (operations) => ensureArray(operations).map((op) => ({ ...op }));
-const cloneAnswerList = (answers) => ensureArray(answers).map((answer) => ({ ...answer }));
+const cloneOperationList = operations => ensureArray(operations).map(op => ({ ...op }));
+const cloneAnswerList = answers => ensureArray(answers).map(answer => ({ ...answer }));
 
-const isFiniteNumber = (value) => typeof value === 'number' && Number.isFinite(value);
+const isFiniteNumber = value => typeof value === 'number' && Number.isFinite(value);
 
-const shouldEncodeCompositePageNumber = (meta) =>
+const shouldEncodeCompositePageNumber = meta =>
   isFiniteNumber(meta?.stepIndex) && isFiniteNumber(meta?.subPageNum);
 
 const pickPageNumber = (meta, markCandidate) => {
   if (shouldEncodeCompositePageNumber(meta)) {
     try {
-      return encodeCompositePageNum(Number(meta.stepIndex), Number(meta.subPageNum));
+      // 新格式：submoduleIndex = stepIndex + 1, pageIndex = subPageNum
+      const submoduleIndex = Number(meta.stepIndex) + 1;
+      const pageIndex = Number(meta.subPageNum);
+      return encodeCompositePageNum(submoduleIndex, pageIndex);
     } catch (error) {
       console.warn('[usePageSubmission] 复合页码编码失败', error);
     }
@@ -127,10 +165,21 @@ const hasFlowPrefix = (pageDesc, prefix) => {
 };
 
 const applyPageDescPrefixWithFlow = (pageDesc, flowContext, meta) => {
-  const flowId = flowContext?.flowId || meta?.flowId;
-  const submoduleId = flowContext?.submoduleId || meta?.submoduleId;
+  let parsedFlowContext = flowContext;
+  if (typeof flowContext === 'string') {
+    try {
+      parsedFlowContext = JSON.parse(flowContext);
+    } catch (e) {
+      parsedFlowContext = null;
+    }
+  }
+
+  const flowId = parsedFlowContext?.flowId || meta?.flowId;
+  const submoduleId = parsedFlowContext?.submoduleId || meta?.submoduleId;
   const stepIndex =
-    typeof flowContext?.stepIndex === 'number' ? flowContext.stepIndex : meta?.stepIndex;
+    typeof parsedFlowContext?.stepIndex === 'number'
+      ? parsedFlowContext.stepIndex
+      : meta?.stepIndex;
 
   const prefix = buildPageDescPrefix(flowId, submoduleId, stepIndex);
   if (!prefix) {
@@ -145,10 +194,10 @@ const applyPageDescPrefixWithFlow = (pageDesc, flowContext, meta) => {
 const applyOperationTargetPrefix = (operations, pageNumber) => {
   const list = ensureArray(operations);
   if (!pageNumber) {
-    return list.map((operation) => ({ ...operation }));
+    return list.map(operation => ({ ...operation }));
   }
   const prefix = buildTargetElementPrefix(pageNumber);
-  return list.map((operation) => {
+  return list.map(operation => {
     if (!operation) return operation;
     if (isFlowContextEventType(operation.eventType)) {
       return { ...operation };
@@ -157,11 +206,17 @@ const applyOperationTargetPrefix = (operations, pageNumber) => {
       typeof operation.targetElement === 'string'
         ? operation.targetElement
         : String(operation.targetElement ?? '');
-    // Skip if already prefixed
-    if (rawTarget.startsWith('P')) {
+    if (COMPOSITE_TARGET_PREFIX_REGEX.test(rawTarget)) {
       return {
         ...operation,
         targetElement: rawTarget,
+      };
+    }
+    if (LEGACY_TARGET_PREFIX_REGEX.test(rawTarget)) {
+      const strippedTarget = rawTarget.replace(LEGACY_TARGET_PREFIX_REGEX, '').trim();
+      return {
+        ...operation,
+        targetElement: `${prefix}${strippedTarget || 'unknown_target'}`,
       };
     }
     // Skip if system reserved element
@@ -181,20 +236,26 @@ const applyOperationTargetPrefix = (operations, pageNumber) => {
 const applyAnswerTargetPrefix = (answers, pageNumber) => {
   const list = ensureArray(answers);
   if (!pageNumber) {
-    return list.map((answer) => ({ ...answer }));
+    return list.map(answer => ({ ...answer }));
   }
   const prefix = buildTargetElementPrefix(pageNumber);
-  return list.map((answer) => {
+  return list.map(answer => {
     if (!answer) return answer;
     const rawTarget =
       typeof answer.targetElement === 'string'
         ? answer.targetElement
         : String(answer.targetElement ?? '');
-    // Skip if already prefixed
-    if (rawTarget.startsWith('P')) {
+    if (COMPOSITE_TARGET_PREFIX_REGEX.test(rawTarget)) {
       return {
         ...answer,
         targetElement: rawTarget,
+      };
+    }
+    if (LEGACY_TARGET_PREFIX_REGEX.test(rawTarget)) {
+      const strippedTarget = rawTarget.replace(LEGACY_TARGET_PREFIX_REGEX, '').trim();
+      return {
+        ...answer,
+        targetElement: `${prefix}${strippedTarget || 'answer'}`,
       };
     }
     // Skip if system reserved element
@@ -218,11 +279,9 @@ const appendTimeoutAnswers = (answers, targets, placeholderValue, pageNumber) =>
   }
   const currentAnswers = [...answers];
   const prefix = pageNumber ? buildTargetElementPrefix(pageNumber) : '';
-  const knownTargets = new Set(
-    currentAnswers.map((answer) => String(answer?.targetElement ?? '')),
-  );
+  const knownTargets = new Set(currentAnswers.map(answer => String(answer?.targetElement ?? '')));
 
-  missingTargets.forEach((entry) => {
+  missingTargets.forEach(entry => {
     const descriptor =
       typeof entry === 'string'
         ? { targetElement: entry }
@@ -250,7 +309,7 @@ const appendTimeoutAnswers = (answers, targets, placeholderValue, pageNumber) =>
 
 const appendTimeoutOperations = (
   operations,
-  { pageNumber, autoSubmitReason, autoSubmitMeta, pageExitReason, timeoutSeconds },
+  { pageNumber, autoSubmitReason, autoSubmitMeta, pageExitReason, timeoutSeconds }
 ) => {
   const now = formatTimestamp(new Date());
   const autoSubmitValue = {
@@ -262,19 +321,19 @@ const appendTimeoutOperations = (
     ...(autoSubmitMeta || {}),
   };
 
-  const eventSet = new Set(operations.map((operation) => operation?.eventType));
+  const eventSet = new Set(operations.map(operation => operation?.eventType));
   const result = [...operations];
   const timeoutExitReason = pageExitReason || 'timeout_auto_submit';
   const hasTimeoutExit = operations.some(
-    (operation) =>
+    operation =>
       operation?.eventType === EventTypes.PAGE_EXIT &&
-      String(operation?.value || '') === timeoutExitReason,
+      String(operation?.value || '') === timeoutExitReason
   );
 
   if (!eventSet.has(EventTypes.AUTO_SUBMIT)) {
     result.push({
       eventType: EventTypes.AUTO_SUBMIT,
-      targetElement: '页面',
+      targetElement: 'page',
       value: autoSubmitValue,
       time: now,
     });
@@ -283,7 +342,7 @@ const appendTimeoutOperations = (
   if (!hasTimeoutExit) {
     result.push({
       eventType: EventTypes.PAGE_EXIT,
-      targetElement: '页面',
+      targetElement: 'page',
       value: timeoutExitReason,
       time: now,
     });
@@ -292,27 +351,26 @@ const appendTimeoutOperations = (
   return result;
 };
 
-const filterNonEmptyAnswers = (answers) =>
+const filterNonEmptyAnswers = answers =>
   ensureArray(answers)
-    .map((answer) => ({
+    .map(answer => ({
       ...answer,
-      value:
-        answer?.value === undefined || answer?.value === null ? '' : String(answer.value),
+      value: answer?.value === undefined || answer?.value === null ? '' : String(answer.value),
     }))
-    .filter((answer) => isNonEmptyAnswer(answer));
+    .filter(answer => isNonEmptyAnswer(answer));
 
-const ensureLifecycleOperations = (operations, { pageDesc, pageId, mode }) => {
-  const list = ensureArray(operations).map((operation) => ({ ...operation }));
-  const eventSet = new Set(list.map((operation) => operation?.eventType));
+const ensureLifecycleOperations = (operations, { pageDesc, pageId, mode, beginTime }) => {
+  const list = ensureArray(operations).map(operation => ({ ...operation }));
+  const eventSet = new Set(list.map(operation => operation?.eventType));
   const now = formatTimestamp(new Date());
   const hasAutoSubmit = eventSet.has(EventTypes.AUTO_SUBMIT);
 
   if (!eventSet.has(EventTypes.PAGE_ENTER)) {
     list.unshift({
       eventType: EventTypes.PAGE_ENTER,
-      targetElement: '页面',
+      targetElement: 'page',
       value: pageDesc || pageId || 'page_enter',
-      time: now,
+      time: beginTime || now,
       pageId,
     });
   }
@@ -325,9 +383,7 @@ const ensureLifecycleOperations = (operations, { pageDesc, pageId, mode }) => {
       time: now,
       pageId,
     };
-    const exitIndex = list.findIndex(
-      (operation) => operation?.eventType === EventTypes.PAGE_EXIT,
-    );
+    const exitIndex = list.findIndex(operation => operation?.eventType === EventTypes.PAGE_EXIT);
     if (exitIndex >= 0) {
       list.splice(exitIndex, 0, nextClickOperation);
     } else {
@@ -338,7 +394,7 @@ const ensureLifecycleOperations = (operations, { pageDesc, pageId, mode }) => {
   if (!eventSet.has(EventTypes.PAGE_EXIT)) {
     list.push({
       eventType: EventTypes.PAGE_EXIT,
-      targetElement: '页面',
+      targetElement: 'page',
       value: mode === 'timeout' ? 'timeout_auto_submit' : 'navigate_next',
       time: now,
       pageId,
@@ -354,15 +410,14 @@ const normalizeOperations = (operations, defaultPageId) =>
     return {
       code: index + 1,
       eventType,
-      targetElement:
-        typeof operation?.targetElement === 'string' ? operation.targetElement : '',
+      targetElement: typeof operation?.targetElement === 'string' ? operation.targetElement : '',
       value: isFlowContextEventType(eventType) ? operation?.value : maybeString(operation?.value),
       time: operation?.time || formatTimestamp(new Date()),
       pageId: operation?.pageId || defaultPageId || undefined,
     };
   });
 
-const normalizeAnswers = (answers) =>
+const normalizeAnswers = answers =>
   ensureArray(answers).map((answer, index) => ({
     code: index + 1,
     targetElement: typeof answer?.targetElement === 'string' ? answer.targetElement : '',
@@ -379,7 +434,7 @@ const buildMarkFromInputs = (meta, answers, operations) => ({
   imgList: [],
 });
 
-const answerEntriesFromObject = (record) => {
+const answerEntriesFromObject = record => {
   if (!record || typeof record !== 'object' || Array.isArray(record)) {
     return [];
   }
@@ -438,47 +493,70 @@ export function usePageSubmission(options = {}) {
     return userContext;
   }, [getUserContext, userContext]);
 
-  const injectFlowContextOperation = useCallback((mark) => {
-    if (typeof getFlowContext !== 'function') return null;
-    const flowInfo = getFlowContext();
-    if (!flowInfo) return null;
+  const injectFlowContextOperation = useCallback(
+    mark => {
+      if (typeof getFlowContext !== 'function') return null;
+      const flowInfo = getFlowContext();
+      if (!flowInfo) return null;
 
-    const operationList = ensureArray(mark.operationList);
-    const existingOperation = operationList.find((operation) =>
-      isFlowContextEventType(operation?.eventType),
-    );
+      const operationList = ensureArray(mark.operationList);
+      // 检查是否已存在 flow_context
+      const existingOpIndex = operationList.findIndex(operation =>
+        isFlowContextEventType(operation?.eventType)
+      );
 
-    if (existingOperation) {
-      const normalizedValue = normalizeFlowContextValue(existingOperation.value, flowInfo);
-      if (normalizedValue) {
-        existingOperation.value = normalizedValue;
+      if (existingOpIndex !== -1) {
+        const existingOperation = operationList[existingOpIndex];
+        const normalizedValue = normalizeFlowContextValue(existingOperation.value, flowInfo);
+        if (normalizedValue) {
+          existingOperation.value = normalizedValue;
+        }
+        if (!existingOperation.pageId && flowInfo.pageId) {
+          existingOperation.pageId = flowInfo.pageId;
+        }
+        mark.operationList = operationList;
+        return normalizedValue || buildFlowContextValue(flowInfo);
       }
-      if (!existingOperation.pageId && flowInfo.pageId) {
-        existingOperation.pageId = flowInfo.pageId;
+
+      const flowContextValue = buildFlowContextValue(flowInfo);
+      const pageEnterIndex = operationList.findIndex(
+        op => op.eventType === 'page_enter' || op.eventType === EventTypes.PAGE_ENTER
+      );
+      const pageEnterOp = pageEnterIndex !== -1 ? operationList[pageEnterIndex] : null;
+      let flowContextTime = flowInfo.time;
+      if (!flowContextTime) {
+        const pageEnterTime = parseTimeValue(pageEnterOp?.time);
+        if (pageEnterTime) {
+          flowContextTime = formatTimestamp(new Date(pageEnterTime.getTime() + 1000));
+        } else if (typeof pageEnterOp?.time === 'string' && pageEnterOp.time.trim()) {
+          flowContextTime = pageEnterOp.time;
+        } else {
+          flowContextTime = formatTimestamp(new Date());
+        }
       }
+      const flowContextOp = {
+        code: 0, // 稍后重新编号
+        targetElement: 'flow_context',
+        eventType: EventTypes.FLOW_CONTEXT,
+        value: flowContextValue,
+        time: flowContextTime,
+        pageId: flowInfo.pageId || undefined,
+      };
+
+      // 在 page_enter 后插入，如果没有 page_enter 则插入到开头
+      const insertIndex = pageEnterIndex !== -1 ? pageEnterIndex + 1 : 0;
+      operationList.splice(insertIndex, 0, flowContextOp);
+
+      // 重新编号 code，从 1 开始连续递增
+      operationList.forEach((op, index) => {
+        op.code = index + 1;
+      });
+
       mark.operationList = operationList;
-      return normalizedValue || buildFlowContextValue(flowInfo);
-    }
-
-    const nextCode =
-      operationList.length > 0
-        ? Math.max(...operationList.map((op) => Number(op.code) || 0)) + 1
-        : 1;
-
-    const flowContextValue = buildFlowContextValue(flowInfo);
-
-    operationList.push({
-      code: nextCode,
-      targetElement: 'flow_context',
-      eventType: EventTypes.FLOW_CONTEXT,
-      value: flowContextValue,
-      time: flowInfo.time || formatTimestamp(new Date()),
-      pageId: flowInfo.pageId || undefined,
-    });
-
-    mark.operationList = operationList;
-    return flowContextValue;
-  }, [getFlowContext]);
+      return flowContextValue;
+    },
+    [getFlowContext]
+  );
 
   const emitSubmitEvent = useCallback(
     (eventType, markSummary, { isTimeout, error } = {}) => {
@@ -490,7 +568,9 @@ export function usePageSubmission(options = {}) {
       }
       const pageNumber = markSummary.pageNumber ? String(markSummary.pageNumber) : '';
       const targetPrefix = pageNumber ? buildTargetElementPrefix(pageNumber) : '';
-      const targetElement = targetPrefix ? `${targetPrefix}${SYSTEM_EVENT_TARGET}` : SYSTEM_EVENT_TARGET;
+      const targetElement = targetPrefix
+        ? `${targetPrefix}${SYSTEM_EVENT_TARGET}`
+        : SYSTEM_EVENT_TARGET;
       const payload = {
         channel: SUBMISSION_CHANNEL,
         pageNumber,
@@ -513,7 +593,7 @@ export function usePageSubmission(options = {}) {
         logger?.warn?.('[usePageSubmission] 提交事件日志记录失败', logError);
       }
     },
-    [externalLogOperation, logger],
+    [externalLogOperation, logger]
   );
 
   const submitInternal = useCallback(
@@ -583,7 +663,11 @@ export function usePageSubmission(options = {}) {
         } else {
           const fallbackAnswers = resolveProvidedAnswers();
           const fallbackOperations = resolveProvidedOperations();
-          markCandidate = buildMarkFromInputs(resolvedPageMeta, fallbackAnswers, fallbackOperations);
+          markCandidate = buildMarkFromInputs(
+            resolvedPageMeta,
+            fallbackAnswers,
+            fallbackOperations
+          );
         }
       }
 
@@ -605,15 +689,16 @@ export function usePageSubmission(options = {}) {
 
       let resolvedPageNumber = pickPageNumber(resolvedPageMeta, markCandidate);
       if (!resolvedPageNumber) {
-        logger.warn('[usePageSubmission] pageNumber 缺失，默认使用 "0.0"');
-        resolvedPageNumber = '0.0';
+        logger.warn('[usePageSubmission] pageNumber 缺失，默认使用 "1.01"');
+        resolvedPageNumber = '1.01';
       }
       markCandidate.pageNumber = resolvedPageNumber;
 
       const baseOperations = ensureArray(markCandidate.operationList);
-      const mergedOperations = baseOperations.length > 0
-        ? cloneOperationList(baseOperations)
-        : resolveProvidedOperations();
+      const mergedOperations =
+        baseOperations.length > 0
+          ? cloneOperationList(baseOperations)
+          : resolveProvidedOperations();
 
       let composedOperations = [...mergedOperations];
       if (mode === 'timeout') {
@@ -628,16 +713,15 @@ export function usePageSubmission(options = {}) {
       markCandidate.operationList = composedOperations;
 
       const baseAnswers = ensureArray(markCandidate.answerList);
-      let composedAnswers = baseAnswers.length > 0
-        ? cloneAnswerList(baseAnswers)
-        : resolveProvidedAnswers();
+      let composedAnswers =
+        baseAnswers.length > 0 ? cloneAnswerList(baseAnswers) : resolveProvidedAnswers();
 
       if (mode === 'timeout') {
         composedAnswers = appendTimeoutAnswers(
           composedAnswers,
           timeoutOptions.missingAnswerTargets,
           timeoutOptions.placeholderValue || DEFAULT_TIMEOUT_PLACEHOLDER,
-          resolvedPageNumber,
+          resolvedPageNumber
         );
       }
       markCandidate.answerList = filterNonEmptyAnswers(composedAnswers);
@@ -651,7 +735,7 @@ export function usePageSubmission(options = {}) {
       const pageDescAfter = applyPageDescPrefixWithFlow(
         pageDescBefore,
         resolvedFlowContext,
-        resolvedPageMeta,
+        resolvedPageMeta
       );
       debugLog('[usePageSubmission] pageDesc after enhancement:', pageDescAfter);
       markCandidate.pageDesc = pageDescAfter;
@@ -660,15 +744,16 @@ export function usePageSubmission(options = {}) {
         pageDesc: pageDescAfter,
         pageId: resolvedPageMeta.pageId,
         mode,
+        beginTime: markCandidate.beginTime,
       });
 
       const prefixedOperations = applyOperationTargetPrefix(
         markCandidate.operationList,
-        resolvedPageNumber,
+        resolvedPageNumber
       );
       markCandidate.operationList = normalizeOperations(
         prefixedOperations,
-        resolvedPageMeta.pageId,
+        resolvedPageMeta.pageId
       );
 
       const prefixedAnswers = applyAnswerTargetPrefix(markCandidate.answerList, resolvedPageNumber);
@@ -775,13 +860,14 @@ export function usePageSubmission(options = {}) {
           }
 
           const delay = RETRY_DELAYS[attempt];
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
 
       setIsSubmitting(false);
       return false;
-    }, [
+    },
+    [
       allowProceedOnFailureInDev,
       answers,
       buildMark,
@@ -797,17 +883,17 @@ export function usePageSubmission(options = {}) {
       resolveUserContext,
       submitImpl,
       emitSubmitEvent,
-    ],
+    ]
   );
 
   const submit = useCallback(
     (params = {}) => submitInternal({ ...params, mode: 'default' }),
-    [submitInternal],
+    [submitInternal]
   );
 
   const submitOnTimeout = useCallback(
     (timeoutOptions = {}) => submitInternal({ mode: 'timeout', timeoutOptions }),
-    [submitInternal],
+    [submitInternal]
   );
 
   const helpers = useMemo(
@@ -818,7 +904,7 @@ export function usePageSubmission(options = {}) {
       },
       getLastError: () => lastErrorRef.current,
     }),
-    [],
+    []
   );
 
   return {

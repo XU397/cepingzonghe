@@ -1,7 +1,10 @@
 import { PAGE_MAPPING, QUESTIONNAIRE_DURATION } from '@/modules/grade-7-tracking/config';
 
-const QUESTIONNAIRE_PAGE_NUMBERS = [14, 15, 16, 17, 18, 19, 20, 21];
-const DEFAULT_QUESTIONNAIRE_PAGE_ID = PAGE_MAPPING[QUESTIONNAIRE_PAGE_NUMBERS[0]]?.pageId || 'Questionnaire_01';
+const QUESTIONNAIRE_PAGE_NUMBERS = [0.2, 14, 15, 16, 17, 18, 19, 20, 21];
+const PAGE_MAPPING_RECORD = PAGE_MAPPING as Record<string, { pageId?: string }>;
+const DEFAULT_QUESTIONNAIRE_PAGE_ID =
+  PAGE_MAPPING_RECORD[String(QUESTIONNAIRE_PAGE_NUMBERS[0])]?.pageId ||
+  'Page_00_2_QuestionnaireIntro';
 
 export function getInitialPage(subPageNum: string): string {
   const index = parseInt(subPageNum, 10);
@@ -11,7 +14,7 @@ export function getInitialPage(subPageNum: string): string {
 
   const boundedIndex = Math.min(index, QUESTIONNAIRE_PAGE_NUMBERS.length);
   const pageNumber = QUESTIONNAIRE_PAGE_NUMBERS[boundedIndex - 1];
-  return PAGE_MAPPING[pageNumber]?.pageId || DEFAULT_QUESTIONNAIRE_PAGE_ID;
+  return PAGE_MAPPING_RECORD[String(pageNumber)]?.pageId || DEFAULT_QUESTIONNAIRE_PAGE_ID;
 }
 
 export function getTotalSteps(): number {
@@ -30,24 +33,17 @@ export function getDefaultTimers(): { questionnaire: number } {
 
 export function getPageNumByPageId(pageId: string | null | undefined): string | null {
   if (!pageId) {
-    return '1';
+    return null;
   }
 
   const entry = Object.entries(PAGE_MAPPING).find(
-    ([key, info]) =>
-      info.pageId === pageId &&
-      QUESTIONNAIRE_PAGE_NUMBERS.includes(Number(key)),
+    ([key, info]) => info.pageId === pageId && QUESTIONNAIRE_PAGE_NUMBERS.includes(Number(key))
   );
 
   if (!entry) {
-    return '1';
+    return null;
   }
 
-  const numericPage = QuestionPageIndex(Number(entry[0]));
-  return String(numericPage);
-}
-
-function QuestionPageIndex(pageNumber: number): number {
-  const idx = QUESTIONNAIRE_PAGE_NUMBERS.indexOf(pageNumber);
-  return idx === -1 ? 1 : idx + 1;
+  const idx = QUESTIONNAIRE_PAGE_NUMBERS.indexOf(Number(entry[0]));
+  return String(idx + 1);
 }

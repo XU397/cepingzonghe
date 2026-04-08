@@ -1,0 +1,352 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 30px;
+  background: #f5f7fb;
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(251, 211, 77, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+}
+
+.badge {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  font-weight: 700;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(245, 158, 11, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.contentLayout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+  align-items: start;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.instructionsPanel {
+  align-self: start;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+  overflow-y: auto;
+}
+
+.instructionsPanel:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.instructionsTitle {
+  margin-top: 0;
+  color: #2c3e50;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.stepsList {
+  padding-left: 20px;
+  font-size: 17px;
+  line-height: 1.7;
+  color: #555555;
+  margin-bottom: 0;
+}
+
+.stepsList li {
+  margin-bottom: 6px;
+}
+
+.divider {
+  margin: 8px 0;
+  border: none;
+  border-top: 2px solid #f0f0f0;
+}
+
+.instructionsSectionTitle {
+  color: #2c3e50;
+  margin-top: 8px;
+  margin-bottom: 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.instructionsList {
+  padding-left: 20px;
+  font-size: 17px;
+  line-height: 1.7;
+  color: #555555;
+  list-style-type: disc;
+}
+
+.instructionsList li {
+  margin-bottom: 6px;
+}
+
+.inlineBtnDayAdjust {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: white;
+  background: linear-gradient(135deg, #78909c 0%, #607d8b 100%);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(96, 125, 139, 0.3);
+  vertical-align: middle;
+  margin: 0 2px;
+  line-height: 1;
+}
+
+.inlineBtnReset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: white;
+  background: linear-gradient(135deg, #78909c 0%, #607d8b 100%);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(96, 125, 139, 0.3);
+  vertical-align: middle;
+  margin: 0 2px;
+  line-height: 1.4;
+}
+
+.inlineBtnStart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: white;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.3);
+  vertical-align: middle;
+  margin: 0 2px;
+  line-height: 1.4;
+}
+
+.hintBox {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+  margin-top: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.hintIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hintContent {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #92400e;
+}
+
+.hintContent p {
+  margin: 0;
+}
+
+.simulationPanel {
+  align-self: start;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.simulationPanel:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-height: 800px) {
+  .container {
+    padding: 12px 24px;
+  }
+
+  .badge {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .pageTitle {
+    font-size: 20px;
+  }
+
+  .header {
+    margin-bottom: 8px;
+  }
+
+  .contentLayout {
+    gap: 8px;
+  }
+
+  .instructionsPanel,
+  .simulationPanel {
+    padding: 8px;
+  }
+
+  .instructionsTitle {
+    font-size: 17px;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+  }
+
+  .stepsList,
+  .instructionsList {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .stepsList li,
+  .instructionsList li {
+    margin-bottom: 4px;
+  }
+
+  .divider {
+    margin: 6px 0;
+  }
+
+  .instructionsSectionTitle {
+    margin-top: 6px;
+    margin-bottom: 4px;
+    font-size: 16px;
+  }
+
+  .hintBox {
+    padding: 8px 12px;
+    margin-top: 12px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .contentLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .instructionsPanel {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .pageTitle {
+    font-size: 20px;
+  }
+
+  .contentLayout {
+    gap: 16px;
+  }
+
+  .instructionsTitle {
+    font-size: 16px;
+  }
+
+  .stepsList,
+  .instructionsList {
+    font-size: 0.85em;
+  }
+}

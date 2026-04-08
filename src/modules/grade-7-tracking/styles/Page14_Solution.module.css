@@ -1,50 +1,138 @@
 /**
- * Page14_Solution 样式
- * T053 - Page14_Solution样式
+ * Page14_Solution Styles
+ * 方案选择页面样式 - 参考Page07_Design样式重构
  */
 
-.container {
+.pageContainer {
   display: flex;
   flex-direction: column;
-  gap: 6px; /* 从8px减少到6px */
-  /* 取消负 margin，遵从固定内容外框 1200×800 居中规范 */
-  margin-top: 0;
-  padding: 2px 20px 4px 20px; /* 顶部从4px减少到2px */
+  height: 100%;
+  max-height: 100%;
+  padding: 12px 24px;
+  background: #f5f7fb;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-.pageTitle {
-  text-align: center;
-  margin-top: 0; /* 从2px减少到0，完全贴近顶部 */
-  padding-bottom: 3px; /* 从4px减少到3px */
-  border-bottom: 2px solid #e8e8e8;
+.pageContainer::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(89, 193, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.pageTitle h2 {
-  font-size: 32px;
+.pageContainer::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(103, 213, 181, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================================================
+   Header Section
+   ============================================================================ */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.badge {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
   font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 16px 0;
-  border-bottom: 3px solid #3498db;
-  padding-bottom: 12px;
-  display: inline-block;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(103, 213, 181, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
 }
 
+.headerContent {
+  flex: 1;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2d5b8e;
+  margin: 0 0 6px 0;
+  letter-spacing: 0.5px;
+}
 
 .subtitle {
-  font-size: 18px; /* 从14px减少到13px */
-  color: #595959; /* 从#8c8c8c调深，提高可读性 */
+  font-size: 16px;
+  color: #333;
+  line-height: 1.5;
   margin: 0;
-  line-height: 2; /* 添加行高，提高多行文本可读性 */
-  text-align: left;  /* 文本左对齐 */
-  text-indent: 2em;  /* 首行缩进两个字符 */
+}
+
+.subtitle strong {
+  color: #2d5b8e;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   Instruction Card
+   ============================================================================ */
+
+.instructionCard {
+  background: white;
+  border: 2px solid #e3eaf3;
+  border-radius: 12px;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 20px rgba(45, 91, 142, 0.06);
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.instructionText {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.instructionText strong {
+  color: #2d5b8e;
+  font-weight: 600;
 }
 
 /* 左右分栏布局 */
 .contentLayout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px; /* 从14px减少到10px */
-  /* 不再强制撑满高度，随内容自适应，在 contentFrame 内部滚动 */
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 1200px) {
@@ -57,36 +145,41 @@
 .leftPanel {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* 右侧面板(表格+理由) */
 .rightPanel {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* 从10px减少到8px，进一步缩小卡片间距 */
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* 表格卡片 */
 .tableCard {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* 从10px减少到8px */
-  padding: 12px; /* 从16px减少到12px */
+  gap: 6px;
+  padding: 10px;
   background: white;
-  border-radius: 8px;
-  border: 2px solid #e8e8e8;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  border: 2px solid #e3eaf3;
+  box-shadow: 0 4px 20px rgba(45, 91, 142, 0.06);
+  flex-shrink: 0;
 }
 
 .tableTitle {
-  font-size: 15px; /* 从17px减少到15px */
+  font-size: 15px;
   font-weight: 700;
   color: #262626;
   margin: 0;
 }
 
 .tableHint {
-  font-size: 14px; /* 增加到14px */
+  font-size: 13px;
   color: #8c8c8c;
   margin: 0;
 }
@@ -95,7 +188,7 @@
 .tableContainer {
   overflow-x: auto;
   border-radius: 6px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid #e3eaf3;
 }
 
 .dynamicTable {
@@ -109,8 +202,8 @@
 }
 
 .dynamicTable th {
-  padding: 6px 10px; /* 从8px 12px减少到6px 10px，降低表头高度 */
-  font-size: 12px; /* 从13px减少到12px */
+  padding: 4px 8px;
+  font-size: 12px;
   font-weight: 600;
   color: #595959;
   text-align: left;
@@ -145,26 +238,25 @@
 }
 
 .dynamicTable td {
-  padding: 6px 10px; /* 从8px 12px减少到6px 10px，大幅降低行高 */
-  font-size: 12px; /* 从13px减少到12px */
+  padding: 4px 8px;
+  font-size: 12px;
   color: #262626;
   border-bottom: 1px solid #f0f0f0;
 }
 
-/* 序号单元格 */
 .iconCell {
   text-align: center;
 }
 
 .sequenceNumber {
-  font-size: 12px; /* 从13px减少到12px */
+  font-size: 11px;
   font-weight: 600;
   color: #1890ff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 8px; /* 从3px 10px减少到2px 8px，降低高度 */
-  border-radius: 12px;
+  padding: 1px 6px;
+  border-radius: 10px;
   background: #e6f7ff;
   border: 1px solid #91d5ff;
 }
@@ -175,14 +267,14 @@
 }
 
 .starButton {
-  font-size: 24px; /* 从28px减少到24px，降低按钮高度 */
-  padding: 2px 6px; /* 从4px 8px减少到2px 6px */
+  font-size: 20px;
+  padding: 1px 4px;
   background: transparent;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
   line-height: 1;
-  color: #d4d4d4; /* 未激活状态：浅灰色空心星 */
+  color: #d4d4d4;
 }
 
 .starButton:hover {
@@ -202,7 +294,8 @@
 }
 
 @keyframes starPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -217,8 +310,8 @@
 
 .selectInput {
   width: 100%;
-  padding: 4px 8px; /* 从6px 10px减少到4px 8px，降低下拉框高度 */
-  font-size: 12px; /* 从13px减少到12px */
+  padding: 3px 6px;
+  font-size: 12px;
   color: #262626;
   background: white;
   border: 2px solid #d9d9d9;
@@ -244,8 +337,8 @@
 }
 
 .deleteButton {
-  padding: 3px 10px; /* 从5px 14px减少到3px 10px */
-  font-size: 11px; /* 从12px减少到11px */
+  padding: 2px 8px;
+  font-size: 11px;
   font-weight: 600;
   color: #ff4d4f;
   background: white;
@@ -275,8 +368,8 @@
 }
 
 .addButton {
-  padding: 6px 14px; /* 从8px 18px减少到6px 14px */
-  font-size: 12px; /* 从13px减少到12px */
+  padding: 4px 12px;
+  font-size: 12px;
   font-weight: 600;
   color: white;
   background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
@@ -298,39 +391,40 @@
 .reasonCard {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* 从10px减少到8px */
-  padding: 12px; /* 从16px减少到12px */
+  gap: 4px;
+  padding: 10px;
   background: white;
-  border-radius: 8px;
-  border: 2px solid #e8e8e8;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  border: 2px solid #e3eaf3;
+  box-shadow: 0 4px 20px rgba(45, 91, 142, 0.06);
+  flex-shrink: 0;
 }
 
 .reasonTitle {
-  font-size: 14px; /* 从15px减少到14px */
+  font-size: 14px;
   font-weight: 700;
   color: #262626;
   margin: 0;
 }
 
 .reasonHint {
-  font-size: 16px; /* 增加到14px */
+  font-size: 13px;
   color: #8c8c8c;
   margin: 0;
 }
 
 .reasonTextarea {
   width: 100%;
-  padding: 8px; /* 从10px减少到8px */
-  font-size: 12px; /* 从13px减少到12px */
-  line-height: 1.4; /* 从1.5减少到1.4 */
+  padding: 6px;
+  font-size: 12px;
+  line-height: 1.4;
   color: #262626;
   background: white;
   border: 2px solid #d9d9d9;
   border-radius: 6px;
-  resize: vertical;
-  min-height: 35px; /* 高度减半：从70px减少到35px */
-  max-height: 50px; /* 高度减半：从100px减少到50px */
+  resize: none;
+  min-height: 32px;
+  max-height: 45px;
   transition: all 0.3s ease;
   font-family: inherit;
 }
@@ -372,183 +466,252 @@
   color: #8c8c8c;
 }
 
-/* 页面底部导航 */
-.navigationFooter {
+/* ============================================================================
+   Footer Section
+   ============================================================================ */
+
+.footer {
   display: flex;
-  justify-content: center;
-  padding-top: 6px; /* 从10px减少到6px */
-  padding-bottom: 6px; /* 从10px减少到6px */
-  border-top: 2px solid #e8e8e8;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 8px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
 }
 
-.nextButton {
-  padding: 12px 32px; /* 从14px 36px减少到12px 32px */
-  font-size: 14px; /* 从15px减少到14px */
-  font-weight: 700;
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+.btnPrimary {
+  height: 40px;
+  padding: 0 28px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
   color: white;
+  font-size: 14px;
+  font-weight: 600;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
-  transition: all 0.3s ease;
-  font-family: inherit;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 8px 20px rgba(45, 143, 201, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.nextButton:hover:not(:disabled) {
-  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
-  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.6);
-  transform: translateY(-2px);
+.btnPrimary:hover:not(:disabled) {
+  top: -2px;
+  box-shadow:
+    0 6px 0 #2d8fc9,
+    0 12px 28px rgba(45, 143, 201, 0.35);
 }
 
-.nextButton:disabled {
-  background: #d9d9d9;
-  color: #8c8c8c;
+.btnPrimary:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 0 0 #2d8fc9,
+    0 4px 12px rgba(45, 143, 201, 0.25);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
-  box-shadow: none;
+  transform: none;
+}
+
+/* ============================================================================
+   动画关键帧
+   ============================================================================ */
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   减少动画偏好
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .instructionCard,
+  .footer {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ============================================================================
    响应式设计
    ============================================================================ */
 
-/* 🎯 800p优化：针对1280×800分辨率的紧凑布局 */
 @media (max-height: 800px) {
-  .container {
-    margin-top: -64px; /* 保持负margin抵消 */
-    padding: 6px 20px 8px 20px; /* 进一步减小padding */
-    gap: 10px; /* 从12px减少到10px */
+  .pageContainer {
+    padding: 8px 20px;
   }
 
-  .pageTitle {
-    margin-top: 4px; /* 从8px减少到4px */
-    padding-bottom: 4px; /* 从6px减少到4px */
+  .header {
+    gap: 10px;
+    margin-bottom: 6px;
   }
 
-  .pageTitle h2 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0 0 16px 0;
-    border-bottom: 3px solid #3498db;
-    padding-bottom: 12px;
-    display: inline-block;
+  .badge {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .title {
+    font-size: 18px;
+    margin-bottom: 2px;
   }
 
   .subtitle {
-    font-size: 16px; /* 从13px减少到12px */
-    line-height: 2; /* 紧凑行高 */
+    font-size: 14px;
+    line-height: 1.4;
   }
 
-  /* 保持2列布局但缩小间距 */
+  .instructionCard {
+    padding: 6px 12px;
+    margin-bottom: 6px;
+  }
+
+  .instructionText {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
   .contentLayout {
-    gap: 10px; /* 从14px减少到10px */
+    gap: 10px;
   }
 
-  /* 紧凑卡片 */
   .rightPanel {
-    gap: 8px; /* 从10px减少到8px */
+    gap: 6px;
   }
 
-  .tableCard,
-  .reasonCard {
-    padding: 10px; /* 从12px减少到10px */
-    gap: 6px; /* 从8px减少到6px */
-    border-radius: 6px;
+  .tableCard {
+    padding: 8px;
+    gap: 4px;
   }
 
   .tableTitle {
-    font-size: 13px; /* 从15px减少到13px */
+    font-size: 13px;
+  }
+
+  .tableHint {
+    font-size: 12px;
+  }
+
+  .reasonCard {
+    padding: 8px;
+    gap: 3px;
   }
 
   .reasonTitle {
-    font-size: 13px; /* 从14px减少到13px */
+    font-size: 13px;
   }
 
+  .reasonHint {
+    font-size: 12px;
+  }
 
-  /* 紧凑表格 */
   .dynamicTable th,
   .dynamicTable td {
-    padding: 4px 6px; /* 从6px 8px进一步减少到4px 6px */
-    font-size: 11px; /* 从12px减少到11px */
+    padding: 3px 6px;
+    font-size: 11px;
   }
 
   .sequenceNumber {
-    font-size: 10px; /* 从11px减少到10px */
-    padding: 1px 6px; /* 从2px 6px减少 */
+    font-size: 10px;
+    padding: 1px 5px;
   }
 
   .starButton {
-    font-size: 18px; /* 从20px减少到18px */
-    padding: 1px 4px; /* 从2px 6px减少 */
-  }
-
-  .starButton:hover {
-    transform: scale(1.15); /* 800p模式下略微减小hover缩放 */
+    font-size: 18px;
+    padding: 1px 3px;
   }
 
   .selectInput {
-    padding: 3px 6px; /* 从4px 6px减少 */
-    font-size: 10px; /* 从11px减少到10px */
+    padding: 2px 4px;
+    font-size: 11px;
   }
 
   .deleteButton {
-    padding: 2px 8px; /* 从3px 10px减少 */
-    font-size: 10px; /* 从11px减少到10px */
+    padding: 1px 6px;
+    font-size: 10px;
   }
 
   .addButton {
-    padding: 4px 12px; /* 从6px 14px减少 */
-    font-size: 10px; /* 从11px减少到10px */
+    padding: 3px 10px;
+    font-size: 11px;
   }
 
-  /* 紧凑理由输入框 */
   .reasonTextarea {
-    padding: 6px; /* 保持6px */
-    font-size: 10px; /* 从11px减少到10px */
-    min-height: 30px; /* 高度减半：从60px减少到30px */
-    max-height: 40px; /* 高度减半：从80px减少到40px */
-    line-height: 1.3;
+    padding: 4px;
+    font-size: 11px;
+    min-height: 28px;
+    max-height: 38px;
   }
 
-  .characterCount {
-    font-size: 9px; /* 从10px减少到9px */
+  .footer {
+    padding-top: 6px;
   }
 
-  /* 紧凑底部 */
-  .navigationFooter {
-    padding-top: 8px; /* 从12px减少到8px */
-    padding-bottom: 8px; /* 保持8px确保按钮完整显示 */
+  .btnPrimary {
+    height: 36px;
+    padding: 0 24px;
+    font-size: 13px;
   }
+}
 
-  .nextButton {
-    padding: 10px 24px; /* 从10px 28px减少 */
-    font-size: 13px; /* 从14px减少到13px */
+@media (max-width: 1200px) {
+  .contentLayout {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 16px;
+  .pageContainer {
+    padding: 16px 20px;
   }
 
-  .pageTitle h2 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0 0 16px 0;
-    border-bottom: 3px solid #3498db;
-    padding-bottom: 12px;
-    display: inline-block;
-  }
-
-  .contentLayout {
-    gap: 16px;
+  .header {
+    flex-direction: column;
+    text-align: center;
   }
 
   .tableCard,
   .reasonCard {
-    padding: 16px;
+    padding: 14px;
   }
 
   .dynamicTable th,
@@ -564,10 +727,5 @@
 
   .reasonTextarea {
     font-size: 13px;
-  }
-
-  .nextButton {
-    padding: 14px 32px;
-    font-size: 15px;
   }
 }

@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 import { useAppContext } from '../context/AppContext';
 import NavigationButton from '../components/common/NavigationButton';
 import InteractiveSimulationEnvironment from '../components/simulation/InteractiveSimulationEnvironment';
@@ -37,7 +38,10 @@ const Page_17_Simulation_Question_3 = () => {
   const prevAnswerRef = useRef(null);
   const operationsRef = useRef([]);
   const recordOperation = useCallback((operation) => {
-    const normalizedOperation = { ...operation };
+    const normalizedOperation = {
+      ...operation,
+      time: formatTimestamp(new Date()),
+    };
     logOperation(normalizedOperation);
     operationsRef.current = [...operationsRef.current, normalizedOperation];
   }, [logOperation]);
@@ -63,7 +67,7 @@ const Page_17_Simulation_Question_3 = () => {
       
       recordOperation({
         eventType: EventTypes.SELECT_CHANGE,
-        targetElement: 'simulation_q3_option',
+        targetElement: '模拟问题3_选项',
         value: `${value}°C`,
       });
       
@@ -76,7 +80,7 @@ const Page_17_Simulation_Question_3 = () => {
       setShowAlert(true);
       recordOperation({
         eventType: EventTypes.CLICK_BLOCKED,
-        targetElement: 'btn_next',
+        targetElement: 'next_button',
         value: { reason: '未选择答案', missing: ['simulation_q3'] },
       });
       return false;
@@ -85,7 +89,7 @@ const Page_17_Simulation_Question_3 = () => {
     setShowAlert(false);
     recordOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_next',
+      targetElement: 'next_button',
       value: '提交模拟实验问题3',
     });
 

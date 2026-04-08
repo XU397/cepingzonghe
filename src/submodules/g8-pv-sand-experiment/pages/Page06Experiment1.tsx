@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import WindSpeedometer from '../components/WindSpeedometer';
@@ -10,9 +10,13 @@ const Page06Experiment1: React.FC = () => {
     setPageStartTime,
     collectAnswer,
     updateExperimentState,
-    currentPageId,
-    answers
+    answers,
+    getPagePrefix,
   } = usePvSandContext();
+
+  // 规范化的 targetElement 前缀
+  const targetPrefix = getPagePrefix();
+  const questionTarget = `${targetPrefix}Q2_50cm风速区域`;
 
   // 本地状态管理实验数据
   const [heightIndex, setHeightIndex] = useState(0); // 0: 0cm, 1: 20cm, 2: 50cm, 3: 100cm
@@ -21,6 +25,7 @@ const Page06Experiment1: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<string>('');
   const [showError, setShowError] = useState(false);
+  const pageInitializedRef = useRef(false);
 
   // 实验数据: [0cm, 20cm, 50cm, 100cm]
   const heightOptions = [0, 20, 50, 100];
@@ -42,13 +47,12 @@ const Page06Experiment1: React.FC = () => {
     const handleValidationError = () => {
       setShowError(true);
       logOperation({
-        targetElement: 'next_button',
+        targetElement: `${targetPrefix}下一页按钮`,
         eventType: EventTypes.CLICK_BLOCKED,
-        value: {
+        value: JSON.stringify({
           reason: 'choice_required',
-          missing: ['experiment1Choice'],
-          timestamp: new Date().toISOString(),
-        },
+          missing: ['Q2_50cm风速区域'],
+        }),
         time: new Date().toISOString(),
       });
       // Auto-hide error after 3 seconds
@@ -59,29 +63,18 @@ const Page06Experiment1: React.FC = () => {
     return () => {
       window.removeEventListener('pv-sand-validation-error', handleValidationError);
     };
-  }, []);
+  }, [targetPrefix, logOperation]);
 
   // 页面生命周期记录
   useEffect(() => {
+    if (pageInitializedRef.current) {
+      return;
+    }
+    pageInitializedRef.current = true;
+
     const startTime = new Date();
     setPageStartTime(startTime);
-
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: currentPageId,
-      time: startTime.toISOString()
-    });
-
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: currentPageId,
-        time: new Date().toISOString()
-      });
-    };
-  }, [logOperation, setPageStartTime, currentPageId]);
+  }, [setPageStartTime]);
 
   // 处理高度调节
   const handleHeightChange = (delta: number) => {
@@ -89,12 +82,12 @@ const Page06Experiment1: React.FC = () => {
     setHeightIndex(newIndex);
 
     logOperation({
-      targetElement: '高度调节',
+      targetElement: `${targetPrefix}高度调节`,
       eventType: EventTypes.SIMULATION_OPERATION,
-      value: {
+      value: JSON.stringify({
         action: 'adjust_height',
         toHeight: heightOptions[newIndex],
-      },
+      }),
       time: new Date().toISOString()
     });
   };
@@ -105,12 +98,12 @@ const Page06Experiment1: React.FC = () => {
 
     setIsRunning(true);
     logOperation({
-      targetElement: '开始按钮',
+      targetElement: `${targetPrefix}开始按钮`,
       eventType: EventTypes.SIMULATION_TIMING_STARTED,
-      value: {
+      value: JSON.stringify({
         height: currentHeight,
         context: 'experiment_task1',
-      },
+      }),
       time: new Date().toISOString()
     });
 
@@ -133,13 +126,13 @@ const Page06Experiment1: React.FC = () => {
       });
 
       logOperation({
-        targetElement: 'simulation_result',
+        targetElement: `${targetPrefix}实验结果`,
         eventType: EventTypes.SIMULATION_RUN_RESULT,
-        value: {
+        value: JSON.stringify({
           height: currentHeight,
           withPanelSpeed: wpSpeed,
           withoutPanelSpeed: npSpeed,
-        },
+        }),
         time: new Date().toISOString(),
       });
 
@@ -153,7 +146,7 @@ const Page06Experiment1: React.FC = () => {
     setHeightIndex(0); // 重置为0cm
 
     logOperation({
-      targetElement: '重置按钮',
+      targetElement: `${targetPrefix}重置按钮`,
       eventType: EventTypes.SIMULATION_OPERATION,
       value: '重置实验',
       time: new Date().toISOString()
@@ -170,9 +163,9 @@ const Page06Experiment1: React.FC = () => {
     });
 
     logOperation({
-      targetElement: 'experiment1Choice',
+      targetElement: questionTarget,
       eventType: EventTypes.RADIO_SELECT,
-      value: choice === 'withPanel' ? '有光伏板区风速更小' : '无光伏板区风速更小',
+      value: choice === 'withPanel' ? 'A. 有板区' : 'B. 无板区',
       time: new Date().toISOString()
     });
   };

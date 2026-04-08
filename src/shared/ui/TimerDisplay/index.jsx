@@ -50,6 +50,7 @@ function formatTime(totalSeconds) {
  * @param {string} [props.className] - 额外 CSS 类名
  * @param {string} [props.label] - 自定义标签文本, 默认 "剩余时间"
  * @param {boolean} [props.showEmoji=true] - 是否显示 emoji
+ * @param {boolean} [props.hidden=false] - 隐藏计时器
  * @returns {JSX.Element}
  */
 const TimerDisplay = ({
@@ -60,8 +61,9 @@ const TimerDisplay = ({
   className = '',
   label = '剩余时间',
   showEmoji = true,
+  hidden = false,
 }) => {
-  // 计算状态
+  // 计算状态（Hooks 必须在条件返回之前调用）
   const state = useMemo(() => {
     if (remainingSeconds === 0) {
       return 'complete';
@@ -77,6 +79,11 @@ const TimerDisplay = ({
 
   // 格式化时间
   const timeText = useMemo(() => formatTime(remainingSeconds), [remainingSeconds]);
+
+  // 隐藏时不渲染计时器（必须在所有 Hooks 之后）
+  if (hidden) {
+    return null;
+  }
 
   // 构建 CSS 类名
   const timerClasses = [
@@ -126,6 +133,7 @@ TimerDisplay.propTypes = {
   className: PropTypes.string,
   label: PropTypes.string,
   showEmoji: PropTypes.bool,
+  hidden: PropTypes.bool,
 };
 
 export default TimerDisplay;

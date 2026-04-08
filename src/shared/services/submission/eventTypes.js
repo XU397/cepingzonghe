@@ -14,6 +14,8 @@ export const EventTypes = Object.freeze({
   INPUT_DELETE: 'input_delete',
   FOCUS: 'focus',
   BLUR: 'blur',
+  HOVER_ENTER: 'hover_enter',
+  HOVER_LEAVE: 'hover_leave',
   SELECT_CHANGE: 'select_change',
   RADIO_SELECT: 'radio_select',
   CHECKBOX_CHECK: 'checkbox_check',
@@ -32,6 +34,7 @@ export const EventTypes = Object.freeze({
   NETWORK_ERROR: 'network_error',
   CLICK_BLOCKED: 'click_blocked',
   AUTO_SUBMIT: 'auto_submit',
+  TIMEOUT: 'timeout',
   READING_COMPLETE: 'reading_complete',
   // G4 拖拽交互事件
   DRAG_START: 'drag_start',

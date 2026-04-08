@@ -1,29 +1,33 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useG4Context } from '../context/G4Context';
-import EventTypes from '@shared/services/submission/eventTypes.js';
-import { useG4Navigation } from '../hooks/useG4Navigation';
-import TaskBlockDnd from '../components/TaskBlockDnd';
 import { TASK_BLOCKS } from '../constants/taskBlocks';
+import { EventTypes } from '../constants/eventTypes';
+import { TimelineCanvas } from '../components/TimelineCanvas';
+import { useTimelineDragDrop } from '../hooks/useTimelineDragDrop';
 import styles from './Page09_PlanOptimize.module.css';
 
-const XIAOMING_SOLUTION = {
-  tasks: [
-    { ...TASK_BLOCKS[0], cloneId: 'xm-task-1', x: 0, y: 0 },
-    { ...TASK_BLOCKS[1], cloneId: 'xm-task-2', x: 40, y: 0 },
-    { ...TASK_BLOCKS[3], cloneId: 'xm-task-4', x: 40, y: 1 },
-    { ...TASK_BLOCKS[4], cloneId: 'xm-task-5', x: 120, y: 1 },
-    { ...TASK_BLOCKS[2], cloneId: 'xm-task-3', x: 440, y: 0 },
-  ],
-  totalTime: 15, // spec FR-048: 小明方案总用时15分钟
+const CANVAS_WIDTH = 1000;
+const CANVAS_HEIGHT_READONLY = 195;
+const CANVAS_HEIGHT_INTERACTIVE = 300;
+const MAIN_AXIS_Y_READONLY = 50;
+const SUB_AXIS_Y_READONLY = 110;
+const START_X = 40;
+
+const ORDER_LABELS = {
+  'task-1': '①',
+  'task-2': '②',
+  'task-3': '③',
+  'task-4': '④',
+  'task-5': '⑤',
 };
+
+const INTERACTIVE_SOLUTION_CONFIG = [{ key: 'improved', mainY: 145, subY: 215 }];
 
 export function Page09_PlanOptimize() {
   const { logOperation, collectAnswer } = useG4Context();
-  const { handleNextPage } = useG4Navigation();
-  
   const [isOptimal, setIsOptimal] = useState(null);
-  const [improvedSolution, setImprovedSolution] = useState({ tasks: [], userInputTime: '' });
-  const [error, setError] = useState('');
+  const [userInputTime, setUserInputTime] = useState('');
+  const svgRef = useRef(null);
 
   useEffect(() => {
     logOperation({
@@ -43,154 +47,257 @@ export function Page09_PlanOptimize() {
     };
   }, [logOperation]);
 
-  const handleOptimalChange = (value) => {
-    setIsOptimal(value);
-    setError('');
-    
-    logOperation({
-      targetElement: '方案最优选择',
-      eventType: EventTypes.RADIO_SELECT,
-      value: value ? 'yes' : 'no',
-      time: new Date().toISOString(),
+  useEffect(() => {
+    if (isOptimal !== null) {
+      collectAnswer({ targetElement: '方案最优', value: isOptimal ? '是' : '否' });
+    }
+  }, [collectAnswer, isOptimal]);
+
+  const handleOptimalChange = useCallback(
+    value => {
+      setIsOptimal(value);
+      logOperation({
+        targetElement: '方案最优选择',
+        eventType: EventTypes.RADIO_SELECT,
+        value: value ? 'yes' : 'no',
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
+
+  const xiaomingPlacedBlocks = useMemo(() => {
+    const positions = [];
+    let currentX = START_X;
+
+    positions.push({
+      ...TASK_BLOCKS[3],
+      cloneId: 'xm-task-4',
+      x: currentX,
+      y: MAIN_AXIS_Y_READONLY,
+      label: ORDER_LABELS['task-4'],
     });
-  };
+    currentX += TASK_BLOCKS[3].width;
 
-  const handleTaskPlaced = useCallback((e, rect, solutionId, axisY) => {
-    const taskId = e.dataTransfer.getData('taskId');
-    const taskData = TASK_BLOCKS.find(t => t.id === taskId);
-    
-    if (!taskData) return;
-
-    const dropX = e.clientX - rect.left;
-    const cloneId = taskId + '-improved-' + Date.now();
-
-    const newTask = {
-      ...taskData,
-      cloneId,
-      x: Math.max(0, dropX),
-      y: axisY,
-    };
-
-    setImprovedSolution(prev => ({
-      ...prev,
-      tasks: [...prev.tasks, newTask],
-    }));
-
-    logOperation({
-      targetElement: '改进方案_任务条',
-      eventType: EventTypes.TASK_DROP,
-      value: JSON.stringify({ action: 'place', task: taskData.label, x: dropX, y: axisY }),
-      time: new Date().toISOString(),
+    positions.push({
+      ...TASK_BLOCKS[0],
+      cloneId: 'xm-task-1',
+      x: currentX,
+      y: MAIN_AXIS_Y_READONLY,
+      label: ORDER_LABELS['task-1'],
     });
-  }, [logOperation]);
+    currentX += TASK_BLOCKS[0].width;
 
-  const handleClearSolution = useCallback(() => {
-    setImprovedSolution({ tasks: [], userInputTime: '' });
+    const task2X = currentX;
+    positions.push({
+      ...TASK_BLOCKS[1],
+      cloneId: 'xm-task-2',
+      x: task2X,
+      y: MAIN_AXIS_Y_READONLY,
+      label: ORDER_LABELS['task-2'],
+    });
+
+    positions.push({
+      ...TASK_BLOCKS[4],
+      cloneId: 'xm-task-5',
+      x: task2X,
+      y: SUB_AXIS_Y_READONLY,
+      label: ORDER_LABELS['task-5'],
+    });
+
+    currentX += TASK_BLOCKS[1].width;
+
+    positions.push({
+      ...TASK_BLOCKS[2],
+      cloneId: 'xm-task-3',
+      x: currentX,
+      y: MAIN_AXIS_Y_READONLY,
+      label: ORDER_LABELS['task-3'],
+    });
+
+    return positions;
   }, []);
 
-  const validateAndNext = async () => {
-    setError('');
+  const xiaomingSolutionZones = [
+    {
+      key: 'xiaoming-solution',
+      mainY: MAIN_AXIS_Y_READONLY,
+      subY: SUB_AXIS_Y_READONLY,
+      label: '',
+      showTimeInput: true,
+      timeInputProps: {
+        value: '15',
+        readOnly: true,
+        onChange: () => {},
+      },
+    },
+  ];
 
-    if (isOptimal === null) {
-      setError('请选择小明的方案是否为最短用时');
-      return;
+  const initialBlocks = useMemo(() => {
+    let x = 40;
+    const gap = 20;
+    return TASK_BLOCKS.map(task => {
+      const pos = { ...task, x, y: 25, label: ORDER_LABELS[task.id] };
+      x += task.width + gap;
+      return pos;
+    });
+  }, []);
+
+  const handleTaskPlaced = useCallback(
+    (solutionKey, taskInfo) => {
+      logOperation({
+        targetElement: '改进方案_任务条',
+        eventType: EventTypes.TASK_DROP,
+        value: JSON.stringify({
+          taskId: taskInfo.taskId,
+          x: Math.round(taskInfo.x),
+          y: Math.round(taskInfo.y),
+        }),
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
+
+  const handleDragStart = useCallback(
+    (taskId, isPlaced) => {
+      logOperation({
+        targetElement: isPlaced ? '已放置任务条' : '任务条',
+        eventType: EventTypes.DRAG_START,
+        value: taskId,
+        time: new Date().toISOString(),
+      });
+    },
+    [logOperation]
+  );
+
+  const {
+    placedBlocks,
+    draggingBlock,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handlePointerLeave,
+  } = useTimelineDragDrop(
+    svgRef,
+    INTERACTIVE_SOLUTION_CONFIG,
+    handleTaskPlaced,
+    null,
+    handleDragStart,
+    false
+  );
+
+  const handleTimeInput = useCallback(e => {
+    const normalizedValue = e.target.value.replace(/\D/g, '').slice(0, 3);
+    setUserInputTime(normalizedValue);
+  }, []);
+
+  useEffect(() => {
+    if (isOptimal === false && placedBlocks.length > 0) {
+      collectAnswer({
+        targetElement: '改进方案',
+        value: JSON.stringify({ tasks: placedBlocks, userInputTime }),
+      });
     }
+  }, [collectAnswer, isOptimal, placedBlocks, userInputTime]);
 
-    if (!isOptimal) {
-      if (improvedSolution.tasks.length === 0) {
-        setError('请设计改进方案');
-        return;
-      }
-      const time = parseInt(improvedSolution.userInputTime, 10);
-      if (!time || time < 1 || time > 999) {
-        setError('请输入改进方案的总用时（1-999分钟）');
-        return;
-      }
-    }
+  const handleBlockPointerDown = useCallback(
+    (e, block, isPlaced = false, cloneId = null) => {
+      handlePointerDown(e, block, isPlaced, cloneId);
+    },
+    [handlePointerDown]
+  );
 
-    collectAnswer({ targetElement: '方案最优', value: isOptimal ? '是' : '否' });
-    if (!isOptimal) {
-      collectAnswer({ targetElement: '改进方案', value: JSON.stringify(improvedSolution) });
-    }
-
-    await handleNextPage({ nextPageId: 'ticket-filter' });
-  };
+  const interactiveSolutionZones = INTERACTIVE_SOLUTION_CONFIG.map(config => ({
+    key: config.key,
+    mainY: config.mainY,
+    subY: config.subY,
+    label: '改进方案（请拖入此处）',
+    showTimeInput: true,
+    timeInputProps: {
+      value: userInputTime,
+      onChange: handleTimeInput,
+      readOnly: false,
+    },
+  }));
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>评估小明的方案</h2>
-        <p>观察小明设计的方案，判断是否能进一步优化</p>
+        <div className={styles.titleRow}>
+          <span className={styles.titleBadge}>8</span>
+          <h1 className={styles.title}>火车购票：出发时间</h1>
+        </div>
+        <p className={styles.description}>如下图，小明也提出了一种安排方案。</p>
       </div>
 
       <div className={styles.xiaomingSolution}>
-        <h3>小明的方案（总用时：{XIAOMING_SOLUTION.totalTime}分钟）</h3>
-        <TaskBlockDnd
-          solutions={{ solution1: XIAOMING_SOLUTION }}
-          showDualSolutions={false}
-          showDualAxis={true}
-          readOnly={true}
+        <TimelineCanvas
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT_READONLY}
+          initialBlocks={[]}
+          placedBlocks={xiaomingPlacedBlocks}
+          solutionZones={xiaomingSolutionZones}
+          disabled={true}
+          svgProps={{
+            className: styles.svgCanvas,
+            'aria-label': '小明的方案展示',
+          }}
         />
       </div>
 
-      <div className={styles.question}>
-        <p>小明的方案是否已经是最短用时？</p>
-        <div className={styles.radioGroup}>
-          <label className={styles.radioLabel}>
-            <input
-              type="radio"
-              name="isOptimal"
-              checked={isOptimal === true}
-              onChange={() => handleOptimalChange(true)}
-            />
-            <span>是</span>
-          </label>
-          <label className={styles.radioLabel}>
-            <input
-              type="radio"
-              name="isOptimal"
-              checked={isOptimal === false}
-              onChange={() => handleOptimalChange(false)}
-            />
-            <span>否</span>
-          </label>
-        </div>
-      </div>
+      <p className={styles.taskDesc}>
+        <span className={styles.taskBlue}>① 洗水壶（1分钟）</span>
+        <span className={styles.taskOrange}>② 用水壶烧热水（10分钟）</span>
+        <span className={styles.taskGray}>③ 灌水到保温杯（2分钟）</span>
+        <span className={styles.taskGreen}>④ 整理背包（2分钟）</span>
+        <span className={styles.taskPink}>⑤ 吃早饭（6分钟）</span>
+      </p>
+
+      <p className={styles.questionInline}>
+        请问小明的方案是否是用时最短的方案？
+        <label className={styles.radioLabelInline}>
+          <input
+            type="radio"
+            name="isOptimal"
+            checked={isOptimal === true}
+            onChange={() => handleOptimalChange(true)}
+          />
+          <span>是</span>
+        </label>
+        <label className={styles.radioLabelInline}>
+          <input
+            type="radio"
+            name="isOptimal"
+            checked={isOptimal === false}
+            onChange={() => handleOptimalChange(false)}
+          />
+          <span>否</span>
+        </label>
+      </p>
 
       {isOptimal === false && (
         <div className={styles.improveSection}>
-          <h3>请设计你的改进方案</h3>
-          <TaskBlockDnd
-            solutions={{ solution1: improvedSolution }}
-            onTaskPlaced={handleTaskPlaced}
-            onClearSolution={handleClearSolution}
-            onResetAll={handleClearSolution}
-            onDragOver={(e) => e.preventDefault()}
-            showDualSolutions={false}
-            showDualAxis={true}
+          <TimelineCanvas
+            ref={svgRef}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT_INTERACTIVE}
+            initialBlocks={initialBlocks}
+            placedBlocks={placedBlocks}
+            draggingBlock={draggingBlock}
+            solutionZones={interactiveSolutionZones}
+            onBlockPointerDown={handleBlockPointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerLeave}
+            disabled={false}
+            svgProps={{
+              className: styles.svgCanvas,
+              'aria-label': '改进方案拖放区域',
+            }}
           />
-          <div className={styles.timeInput}>
-            <label>改进方案总用时：</label>
-            <input
-              type="number"
-              min="1"
-              max="999"
-              value={improvedSolution.userInputTime}
-              onChange={(e) => setImprovedSolution(prev => ({ ...prev, userInputTime: e.target.value }))}
-              placeholder="分钟"
-            />
-            <span>分钟</span>
-          </div>
         </div>
       )}
-
-      {error && <div className={styles.error}>{error}</div>}
-
-      <div className={styles.navigation}>
-        <button className={styles.nextBtn} onClick={validateAndNext}>
-          下一页
-        </button>
-      </div>
     </div>
   );
 }

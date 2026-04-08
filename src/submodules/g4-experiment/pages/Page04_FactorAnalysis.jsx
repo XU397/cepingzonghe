@@ -4,6 +4,7 @@ import factorOptions from '../constants/factorOptions';
 import { useG4Context } from '../context/G4Context';
 import useG4Navigation from '../hooks/useG4Navigation';
 import styles from './Page04_FactorAnalysis.module.css';
+import topBgImage from '../../../assets/images/g4_03_bg.jpg';
 
 function Page04_FactorAnalysis() {
   const { state, toggleFactor, logOperation, collectAnswer, flowContext } = useG4Context();
@@ -67,35 +68,31 @@ function Page04_FactorAnalysis() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>因素分析</h1>
-      <p className={styles.prompt}>为解决上述问题,请问小明在购票时需要考虑以下哪些因素?</p>
-      <p className={styles.tip}>提示：单击选择你认为正确的选项,再次单击可取消选择(可多选)。</p>
-
-      <div className={styles.options}>
-        {factorOptions.map((option) => {
-          const checked = selected.includes(option.id);
-          return (
-            <label key={option.id} className={`${styles.option} ${checked ? styles.checked : ''}`}>
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => handleToggle(option.id)}
-              />
-              <span>{option.label}</span>
-            </label>
-          );
-        })}
+      <div className={styles.imageContainer}>
+        <img src={topBgImage} alt="因素分析场景图" className={styles.topImage} />
       </div>
 
-      <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.nextButton}
-          onClick={handleNext}
-          disabled={isSubmitting}
-        >
-          下一页
-        </button>
+      <div className={styles.contentContainer}>
+        <p className={styles.prompt}>为解决上述问题,请问小明在购票时需要考虑以下哪些因素?</p>
+        <p className={styles.tip}>单击选择你认为正确的选项，再次单击可取消选择（可多选） 。
+        </p>
+
+        <div className={styles.options}>
+          {factorOptions.map((option) => {
+            const checked = selected.includes(option.id);
+            return (
+              <label key={option.id} className={`${styles.option} ${checked ? styles.checked : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => handleToggle(option.id)}
+                />
+                <span>{option.label}</span>
+              </label>
+            );
+          })}
+        </div>
+
       </div>
     </div>
   );

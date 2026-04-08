@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePvSandContext } from '../context/PvSandContext';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import styles from '../styles/Page08Conclusion.module.css';
@@ -8,13 +8,18 @@ const Page08Conclusion: React.FC = () => {
     logOperation,
     setPageStartTime,
     collectAnswer,
-    currentPageId,
-    answers
+    answers,
+    getPagePrefix
   } = usePvSandContext();
+
+  const targetPrefix = getPagePrefix();
+  const q4aTarget = `${targetPrefix}Q4a_光伏板有效性`;
+  const q4bTarget = `${targetPrefix}Q4b_结论理由`;
 
   const [selectedOption, setSelectedOption] = useState<string>('');
   const [reason, setReason] = useState<string>('');
   const [showError, setShowError] = useState(false);
+  const pageInitializedRef = useRef(false);
 
   // Initialize from saved answers
   useEffect(() => {
@@ -33,11 +38,11 @@ const Page08Conclusion: React.FC = () => {
     const handleValidationError = () => {
       setShowError(true);
       logOperation({
-        targetElement: 'next_button',
+        targetElement: `${targetPrefix}下一页按钮`,
         eventType: EventTypes.CLICK_BLOCKED,
         value: {
           reason: 'conclusion_incomplete',
-          missing: ['selectedOption', 'reason'],
+          missing: ['Q4a_光伏板有效性', 'Q4b_结论理由'],
           timestamp: new Date().toISOString(),
         },
         time: new Date().toISOString(),
@@ -50,28 +55,17 @@ const Page08Conclusion: React.FC = () => {
     return () => {
       window.removeEventListener('pv-sand-validation-error', handleValidationError);
     };
-  }, []);
+  }, [targetPrefix, logOperation]);
 
   useEffect(() => {
+    if (pageInitializedRef.current) {
+      return;
+    }
+    pageInitializedRef.current = true;
+
     const startTime = new Date();
     setPageStartTime(startTime);
-
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: currentPageId,
-      time: startTime.toISOString()
-    });
-
-    return () => {
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: currentPageId,
-        time: new Date().toISOString()
-      });
-    };
-  }, [logOperation, setPageStartTime, currentPageId]);
+  }, [setPageStartTime]);
 
   const handleOptionChange = (option: string) => {
     setSelectedOption(option);
@@ -81,10 +75,12 @@ const Page08Conclusion: React.FC = () => {
       value: option
     });
 
+    // 格式化为规范的选项格式
+    const formattedValue = option === '是' ? 'A. 是' : 'B. 否';
     logOperation({
-      targetElement: '选项',
+      targetElement: q4aTarget,
       eventType: EventTypes.RADIO_SELECT,
-      value: option,
+      value: formattedValue,
       time: new Date().toISOString()
     });
   };
@@ -112,7 +108,7 @@ const Page08Conclusion: React.FC = () => {
         };
 
     logOperation({
-      targetElement: 'reason',
+      targetElement: q4bTarget,
       eventType,
       value: normalizedValue,
       time: new Date().toISOString()
@@ -121,7 +117,7 @@ const Page08Conclusion: React.FC = () => {
 
   const handleReasonFocus = () => {
     logOperation({
-      targetElement: 'reason',
+      targetElement: q4bTarget,
       eventType: EventTypes.INPUT_FOCUS,
       value: reason ?? '',
       time: new Date().toISOString(),
@@ -130,7 +126,7 @@ const Page08Conclusion: React.FC = () => {
 
   const handleReasonBlur = () => {
     logOperation({
-      targetElement: 'reason',
+      targetElement: q4bTarget,
       eventType: EventTypes.INPUT_BLUR,
       value: reason ?? '',
       time: new Date().toISOString()
@@ -281,4 +277,3 @@ const Page08Conclusion: React.FC = () => {
 };
 
 export default Page08Conclusion;
-

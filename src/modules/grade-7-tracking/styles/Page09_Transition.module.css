@@ -1,30 +1,87 @@
 /**
  * Page09_Transition Styles
  * 过渡页面样式 - 小明介绍页
+ * 参考 Page07_Design.module.css 设计规范
  */
 
 .pageContainer {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 32px 24px 24px 24px;
-  background-color: #f5f7fa;
+  padding: 24px 40px;
+  background: #f5f7fb;
+  position: relative;
 }
 
-/* 标题 */
-.title {
-  font-size: 32px;
+/* 装饰背景 */
+.pageContainer::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(89, 193, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pageContainer::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -40px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(103, 213, 181, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================================================
+   Header Section
+   ============================================================================ */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  animation: slideInDown 0.5s ease-out;
+}
+
+.badge {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 23px;
   font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 16px 0;
-  border-bottom: 3px solid #3498db;
-  padding-bottom: 12px;
-  display: inline-block;
-  text-align: center;
-  width: 200px;
-  margin: 0 auto;
+  color: white;
+  box-shadow:
+    0 4px 15px rgba(103, 213, 181, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
 }
 
+.headerContent {
+  flex: 1;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #2d5b8e;
+  margin: 0;
+  letter-spacing: 1px;
+}
 
 /* ============================================================================
    Content Section - 主内容区域
@@ -126,8 +183,8 @@
   font-size: 22px; /* 从18px增加到22px */
   line-height: 1.7;
   color: #2c3e50;
-  text-align: left;  /* 文本左对齐 */
-  text-indent: 2em;  /* 首行缩进两个字符 */
+  text-align: left; /* 文本左对齐 */
+  text-indent: 2em; /* 首行缩进两个字符 */
   margin: 0;
 }
 
@@ -182,7 +239,8 @@
 }
 
 @keyframes digitBlink {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -195,11 +253,83 @@
    ============================================================================ */
 
 .footer {
-  margin-top: 24px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  align-items: center;
   padding-top: 16px;
-  padding-bottom: 8px;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease-out 0.5s both;
+}
+
+.btnPrimary {
+  height: 44px;
+  padding: 0 36px;
+  background: linear-gradient(135deg, #59c1ff 0%, #3aadf0 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow:
+    0 4px 0 #2d8fc9,
+    0 8px 20px rgba(45, 143, 201, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  top: -2px;
+  box-shadow:
+    0 6px 0 #2d8fc9,
+    0 12px 28px rgba(45, 143, 201, 0.35);
+}
+
+.btnPrimary:active:not(:disabled) {
+  top: 4px;
+  box-shadow:
+    0 0 0 #2d8fc9,
+    0 4px 12px rgba(45, 143, 201, 0.25);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnPrimary svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ============================================================================
+   动画关键帧
+   ============================================================================ */
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ============================================================================

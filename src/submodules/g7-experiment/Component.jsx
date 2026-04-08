@@ -47,10 +47,11 @@ export function G7ExperimentComponent({ userContext, initialPageId, options, flo
   }, [flowContext]);
 
   useEffect(() => {
-    if (isTaskFinished || currentPageId === 'Page_19_Task_Completion') {
+    // 仅在任务完成信号出现时触发 Flow 完成，避免进入 P18 时被立即跳过
+    if (isTaskFinished) {
       handleComplete();
     }
-  }, [currentPageId, handleComplete, isTaskFinished]);
+  }, [handleComplete, isTaskFinished]);
 
   const handleTimeout = useCallback(() => {
     if (!flowContext?.onTimeout || timeoutRef.current) {
@@ -96,6 +97,7 @@ export function G7ExperimentComponent({ userContext, initialPageId, options, flo
       userContext={userContext}
       initialPageId={initialPageId}
       flowContext={flowContext}
+      options={options}
     />
   );
 }

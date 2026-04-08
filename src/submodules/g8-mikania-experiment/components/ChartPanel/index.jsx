@@ -169,7 +169,7 @@ function ChartPanel() {
           fill="#333"
           transform={`rotate(-90, 15, ${height / 2})`}
         >
-          发芽率
+          薇甘菊发芽率
         </text>
 
         {/* 折线图 */}
@@ -211,6 +211,7 @@ function ChartPanel() {
             <span className={styles.legendText}>{concentration}</span>
           </div>
         ))}
+        <div className={styles.legendLabel}>菟丝子水浸液浓度</div>
       </div>
     </div>
   );

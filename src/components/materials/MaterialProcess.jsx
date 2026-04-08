@@ -4,7 +4,7 @@ import processImage from '../../assets/images/P4.png';
 /**
  * 蒸馒头全流程资料内容组件
  * 对应PRD中的P5资料
- * 
+ *
  * @param {Object} props - 组件属性
  * @param {boolean} props.isModal - 是否在模态框中显示，控制样式
  * @returns {React.ReactElement} 资料内容组件
@@ -14,14 +14,6 @@ const MaterialProcess = ({ isModal = true }) => {
     padding: isModal ? '0' : '20px',
     maxWidth: '100%',
     margin: '0 auto',
-  };
-
-  const titleStyle = {
-    color: '#333',
-    fontSize: '1.5rem',
-    textAlign: 'center',
-    marginBottom: '20px',
-    fontWeight: 'bold',
   };
 
   const imageContainerStyle = {
@@ -43,21 +35,15 @@ const MaterialProcess = ({ isModal = true }) => {
 
   return (
     <div style={containerStyle}>
-      
-      
       <div style={imageContainerStyle}>
-        <img 
-          src={processImage} 
-          alt="蒸馒头全流程图" 
-          style={imageStyle}
-        />
+        <img src={processImage} alt="蒸馒头全流程图" style={imageStyle} />
       </div>
     </div>
   );
 };
 
 MaterialProcess.propTypes = {
-  isModal: PropTypes.bool
+  isModal: PropTypes.bool,
 };
 
-export default MaterialProcess; 
+export default MaterialProcess;

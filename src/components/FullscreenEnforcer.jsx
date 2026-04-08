@@ -5,6 +5,7 @@ import {
   showInitialFullscreenGuide,
   hideFullscreenPrompt,
 } from '@/utils/fullscreenPromptManager';
+import { shouldEnforceFullscreen } from '@/utils/fullscreenPreference';
 
 /**
  * Enforces fullscreen across the entire app (including Flow routes) and shows a prompt when exited.
@@ -12,6 +13,7 @@ import {
  */
 export default function FullscreenEnforcer() {
   const { isFullscreen, enterFullscreen } = useFullscreen();
+  const enforceFullscreen = shouldEnforceFullscreen();
   const [hasEnteredFullscreen, setHasEnteredFullscreen] = useState(() => {
     try {
       return sessionStorage.getItem('hasEnteredFullscreen') === 'true';
@@ -21,6 +23,10 @@ export default function FullscreenEnforcer() {
   });
 
   useEffect(() => {
+    if (!enforceFullscreen) {
+      return;
+    }
+
     if (!isFullscreen) {
       return;
     }
@@ -31,9 +37,14 @@ export default function FullscreenEnforcer() {
       // ignore storage errors (private mode, etc.)
     }
     setHasEnteredFullscreen(true);
-  }, [isFullscreen]);
+  }, [enforceFullscreen, isFullscreen]);
 
   useEffect(() => {
+    if (!enforceFullscreen) {
+      hideFullscreenPrompt();
+      return;
+    }
+
     if (!isFullscreen) {
       if (hasEnteredFullscreen) {
         showFullscreenPrompt(enterFullscreen);
@@ -47,7 +58,7 @@ export default function FullscreenEnforcer() {
     return () => {
       hideFullscreenPrompt();
     };
-  }, [isFullscreen, hasEnteredFullscreen, enterFullscreen]);
+  }, [enforceFullscreen, isFullscreen, hasEnteredFullscreen, enterFullscreen]);
 
   return null;
 }

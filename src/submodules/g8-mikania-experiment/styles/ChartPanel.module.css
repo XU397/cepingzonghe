@@ -27,6 +27,7 @@
 /* 图例 */
 .legend {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 24px;
   margin-top: 15px;
@@ -48,4 +49,13 @@
 .legendText {
   font-size: 13px;
   color: var(--text-color, #333333);
+}
+
+.legendLabel {
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary, #666666);
+  margin-top: 4px;
 }

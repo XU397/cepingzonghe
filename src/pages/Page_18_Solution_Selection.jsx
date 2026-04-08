@@ -17,6 +17,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import { usePageSubmissionContext } from '@shared/ui/PageFrame/AssessmentPageFrame.jsx';
+import { formatTimestamp } from '@shared/services/dataLogger.js';
 
 // Register Chart.js components
 ChartJS.register(
@@ -41,9 +42,9 @@ const TIME_OPTIONS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8]
 
 const Page_18_Solution_Selection = () => {
   const {
-    navigateToPage,
     currentPageId,
     setPageEnterTime,
+    setIsTaskFinished,
   } = useAppContext();
   const { submitPage, logOperation } = usePageSubmissionContext();
 
@@ -125,7 +126,10 @@ const Page_18_Solution_Selection = () => {
   };
 
   const recordOperation = useCallback((operation) => {
-    const normalizedOperation = { ...operation };
+    const normalizedOperation = {
+      ...operation,
+      time: formatTimestamp(new Date()),
+    };
     logOperation(normalizedOperation);
     operationsRef.current = [...operationsRef.current, normalizedOperation];
   }, [logOperation]);
@@ -161,7 +165,7 @@ const Page_18_Solution_Selection = () => {
     };
     const nextIndex = tableRows.length + 1;
     recordOperation({
-      targetElement: 'btn_add_solution_row',
+      targetElement: '添加方案行按钮',
       eventType: EventTypes.CLICK,
       value: `add_row_${nextIndex}`
     });
@@ -177,7 +181,7 @@ const Page_18_Solution_Selection = () => {
     setTableRows(prev => prev.filter(row => row.id !== id));
     
     recordOperation({
-      targetElement: 'btn_delete_solution_row',
+      targetElement: '删除方案行按钮',
       eventType: EventTypes.CLICK,
       value: rowIndex >= 0 ? `delete_row_${rowIndex + 1}` : 'delete_row'
     });
@@ -203,13 +207,13 @@ const Page_18_Solution_Selection = () => {
     const rowIndex = tableRows.findIndex(row => row.id === id);
     if (field === 'isBest') {
       recordOperation({
-        targetElement: `solution_row_${rowIndex + 1}_best`,
+        targetElement: `方案行_${rowIndex + 1}_最佳`,
         eventType: value ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
         value: value ? 'set_best' : 'unset_best'
       });
     } else {
       recordOperation({
-        targetElement: `solution_row_${rowIndex + 1}_${field}`,
+        targetElement: `方案行_${rowIndex + 1}_${field}`,
         eventType: EventTypes.SELECT_CHANGE,
         value
       });
@@ -227,14 +231,14 @@ const Page_18_Solution_Selection = () => {
     if (nextValue.length < prev.length) {
       recordOperation({
         eventType: EventTypes.INPUT_DELETE,
-        targetElement: 'solution_reason',
+        targetElement: '方案理由',
         value: { action: 'delete', prevLength: prev.length, nextLength: nextValue.length }
       });
     }
 
     recordOperation({
       eventType: EventTypes.INPUT_CHANGE,
-      targetElement: 'solution_reason',
+      targetElement: '方案理由',
       value: { prev, next: nextValue }
     });
 
@@ -246,7 +250,7 @@ const Page_18_Solution_Selection = () => {
     if (reasonInputStateRef.current.focused) return;
     recordOperation({
       eventType: EventTypes.INPUT_FOCUS,
-      targetElement: 'solution_reason',
+      targetElement: '方案理由',
       value: '聚焦'
     });
     reasonInputStateRef.current.focused = true;
@@ -258,7 +262,7 @@ const Page_18_Solution_Selection = () => {
   const handleReasonBlur = () => {
     recordOperation({
       eventType: EventTypes.INPUT_BLUR,
-      targetElement: 'solution_reason',
+      targetElement: '方案理由',
       value: reasonText
     });
     reasonInputStateRef.current = {
@@ -278,7 +282,7 @@ const Page_18_Solution_Selection = () => {
       setShowAlert(true);
       recordOperation({
         eventType: EventTypes.CLICK_BLOCKED,
-        targetElement: 'btn_next',
+        targetElement: 'next_button',
         value: { reason: 'incomplete', missing }
       });
       return false;
@@ -286,7 +290,7 @@ const Page_18_Solution_Selection = () => {
 
     recordOperation({
       eventType: EventTypes.CLICK,
-      targetElement: 'btn_next',
+      targetElement: 'next_button',
       value: '提交方案选择'
     });
     
@@ -299,11 +303,11 @@ const Page_18_Solution_Selection = () => {
     const bestSolutions = solutionRows.filter((row) => row.isBest);
 
     const answers = [
-      { targetElement: 'solution_combinations', value: JSON.stringify(solutionRows) },
-      { targetElement: 'solution_reason', value: reasonText.trim() },
+      { targetElement: '方案组合', value: JSON.stringify(solutionRows) },
+      { targetElement: '方案理由', value: reasonText.trim() },
     ];
     if (bestSolutions.length > 0) {
-      answers.push({ targetElement: 'best_solutions', value: JSON.stringify(bestSolutions) });
+      answers.push({ targetElement: '最佳方案', value: JSON.stringify(bestSolutions) });
     }
     
     const submissionSuccess = await submitPage({
@@ -312,7 +316,7 @@ const Page_18_Solution_Selection = () => {
     });
     
     if (submissionSuccess) {
-      navigateToPage('Page_19_Task_Completion', { skipSubmit: true });
+      setIsTaskFinished(true);
       return true;
     } else {
       setAlertMessage('数据提交失败，请重试。');
@@ -339,7 +343,7 @@ const Page_18_Solution_Selection = () => {
       <h1 className="page-title" style={{ textAlign: 'center', color: '#333', marginBottom: '10px' }}>蒸馒头: 方案选择</h1>
       
       <p style={{ backgroundColor: '#e3f2fd', padding: '8px', borderRadius: '8px', borderLeft: '5px solid #2196F3', marginBottom: '10px', fontSize: '0.95em', lineHeight: '1.6',textIndent: '2em'}}>
-        经实验,小明绘制出了温度、时间与发酵后面团体积的关系图(见左侧图表)。妈妈告诉小明:当面团膨胀到初始体积的1.5倍时，可停止发酵开始蒸制，蒸出的馒头口感最佳。已知面团初始体积为70ml，请根据折线图，找到面团膨胀到最佳状态时所有可能的温度和时间组合，选入右侧表格中。选择完成后，在你认为最合适的方案前点亮 💡，并在下方方框内，简要说明选择该组合的理由。
+        经实验,小明绘制出了温度、时间与发酵后面团体积的关系图(见左侧图表)。妈妈告诉小明:当面团膨胀到初始体积的1.5倍时，可停止发酵开始蒸制，蒸出的馒头口感最佳。已知面团初始体积为70ml，请根据折线图，找到面团膨胀到最佳状态时所有可能的温度和时间组合，选入右侧表格中。选择完成后，<span style={{ color: '#F44336', fontWeight: 'bold' }}>在你认为最合适的方案前点亮 💡</span>，并在下方方框内，简要说明选择该组合的理由。
       </p>
 
       <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>

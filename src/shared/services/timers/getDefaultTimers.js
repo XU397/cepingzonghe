@@ -89,9 +89,6 @@ export function getDefaultTimers(submoduleType, overrides = {}) {
 export function getTimerConfigForModule(moduleId) {
   // 根据模块ID返回特定配置
   const configs = {
-    'grade-4': {
-      task: { duration: 45 * 60, warningThreshold: 5 * 60, criticalThreshold: 60 },
-    },
     'grade-7': {
       task: { duration: 40 * 60, warningThreshold: 5 * 60, criticalThreshold: 60 },
       questionnaire: { duration: 10 * 60, warningThreshold: 3 * 60, criticalThreshold: 60 },
@@ -113,9 +110,6 @@ export function getTimerConfigForModule(moduleId) {
     },
     'g7-tracking-questionnaire': {
       questionnaire: { duration: 8 * 60, warningThreshold: 2 * 60, criticalThreshold: 60 },
-    },
-    'g4-experiment': {
-      task: { duration: 45 * 60, warningThreshold: 5 * 60, criticalThreshold: 60 },
     },
   };
 

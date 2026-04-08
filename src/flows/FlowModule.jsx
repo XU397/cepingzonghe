@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FlowOrchestrator, parseFlowPageNum } from './orchestrator/FlowOrchestrator';
-import { TransitionPage, CompletionPage } from '@shared/ui/PageFrame';
+import { TransitionPage, CompletionPage, completionDefaultContent } from '@shared/ui/PageFrame';
 import { FlowAppContextBridge } from './FlowAppContextBridge';
 import { FlowProvider } from '@/flows/context';
 import { submoduleRegistry } from '@/submodules/registry';
@@ -18,24 +18,22 @@ import styles from './FlowModule.module.css';
 import { createModuleUserContext } from '@/modules/utils/createModuleUserContext.js';
 import { useRenderCounter } from '@shared/utils/RenderCounter.jsx';
 
-const FLOW_APP_CONTEXT_KEYS_TO_CLEAR = ['hci-pageNum', 'hci-currentStepNumber', 'hci-totalUserSteps'];
+const FLOW_APP_CONTEXT_KEYS_TO_CLEAR = [
+  'hci-pageNum',
+  'hci-currentStepNumber',
+  'hci-totalUserSteps',
+];
 const debugLog = () => {};
-const isDevEnv = typeof process !== 'undefined'
-  ? process.env.NODE_ENV === 'development'
-  : Boolean(import.meta.env?.DEV);
-const DEFAULT_COMPLETION_CONTENT = {
-  title: '蒸馒头任务完成！',
-  message:
-    '经过一番探究，总算真相大白，原来是发酵时间过长，导致了小明蒸的馒头过度发酵。感谢你对小明的帮助！',
-  detail: '接下来，我们还有一份简短的问卷调查，用于了解你的学习体验。',
-  tip: '问卷大约需要10分钟时间。',
-  ctaLabel: '继续完成问卷调查',
-};
+const isDevEnv =
+  typeof process !== 'undefined'
+    ? process.env.NODE_ENV === 'development'
+    : Boolean(import.meta.env?.DEV);
+const COMPLETION_PROGRESS_PAGE_NUM = '999'; // 前端完成标识，不占用真实子模块页码
+const DEFAULT_COMPLETION_CONTENT = completionDefaultContent;
 // 显式开关：仅当设置 VITE_FLOW_DEV_MOCK_AUTH 时才启用 Flow 的 Mock 账号
 const flowDevMockAuthEnabled = Boolean(import.meta.env?.VITE_FLOW_DEV_MOCK_AUTH);
 // Flow 心跳开关：默认开启，VITE_FLOW_HEARTBEAT_ENABLED=0 时可全局关闭
-const flowHeartbeatEnabled =
-  String(import.meta.env?.VITE_FLOW_HEARTBEAT_ENABLED ?? '1') !== '0';
+const flowHeartbeatEnabled = String(import.meta.env?.VITE_FLOW_HEARTBEAT_ENABLED ?? '1') !== '0';
 const PROGRESS_QUEUE_LIMIT = 50;
 const flushingProgressFlows = new Set();
 
@@ -46,9 +44,9 @@ const parseFlag = (val, def) => {
   return s === '1' || s === 'true' || s === 'yes' || s === 'on';
 };
 
-const getProgressQueueKey = (flowId) => `flow.${flowId}.progressQueue`;
+const getProgressQueueKey = flowId => `flow.${flowId}.progressQueue`;
 
-const loadProgressQueue = (flowId) => {
+const loadProgressQueue = flowId => {
   try {
     const raw = localStorage.getItem(getProgressQueueKey(flowId));
     return raw ? JSON.parse(raw) : [];
@@ -165,7 +163,7 @@ const createInitialState = () => ({
   completionConfig: null,
 });
 
-const deriveFlowIdFromUrl = (url) => {
+const deriveFlowIdFromUrl = url => {
   if (typeof url !== 'string' || !url) {
     return null;
   }
@@ -183,7 +181,7 @@ const deriveFlowIdFromUrl = (url) => {
   return match ? decodeURIComponent(match[1]) : null;
 };
 
-const teardownOrchestrator = (instance) => {
+const teardownOrchestrator = instance => {
   if (!instance) {
     return;
   }
@@ -218,9 +216,14 @@ const logFlowContextOnce = (flowId, resolved, logOperation, loggedRef) => {
     submoduleDefinition?.displayName || submoduleId
   );
 
-  debugLog('[FlowModule] flow_context operation value type:', typeof operation.value, operation.value);
+  debugLog(
+    '[FlowModule] flow_context operation value type:',
+    typeof operation.value,
+    operation.value
+  );
   const added = logOperation(operation);
-  if (!added) {
+  // logOperation 可能返回 undefined（表示已接受），仅显式 false 视为失败/重复
+  if (added === false) {
     console.warn('[FlowModule] flow_context logOperation skipped (duplicate?)');
     return;
   }
@@ -228,7 +231,6 @@ const logFlowContextOnce = (flowId, resolved, logOperation, loggedRef) => {
   loggedRef.current.add(cacheKey);
   debugLog('[FlowModule] flow_context logged:', operation);
 };
-
 
 const shouldStartTimerForPage = (submodule, modulePageNum) => {
   if (!submodule || typeof submodule.getInitialPage !== 'function') {
@@ -268,12 +270,23 @@ const buildTimerConfigForStep = (flowId, resolved, step) => {
   const defaultTimers =
     typeof submodule.getDefaultTimers === 'function' ? submodule.getDefaultTimers() || {} : {};
 
-  const taskDuration =
+  const baselineTaskDuration =
+    typeof defaultTimers.task === 'number' && defaultTimers.task > 0 ? defaultTimers.task : null;
+
+  let taskDuration =
     typeof overrides.task === 'number' && overrides.task > 0
       ? overrides.task
       : typeof defaultTimers.task === 'number' && defaultTimers.task > 0
         ? defaultTimers.task
         : null;
+
+  if (resolved.submoduleId === 'g7-tracking-experiment') {
+    const fallbackDuration = baselineTaskDuration ?? 30 * 60;
+    taskDuration =
+      typeof taskDuration === 'number' && taskDuration > 0
+        ? Math.max(taskDuration, fallbackDuration)
+        : fallbackDuration;
+  }
 
   const questionnaireDuration =
     typeof overrides.questionnaire === 'number' && overrides.questionnaire > 0
@@ -358,6 +371,7 @@ const advanceFlowStep = ({
   onFlowCompleted,
   setCompletionState,
   completionConfig,
+  onFlowCompletion,
 }) => {
   const orchestrator = orchestratorRef.current;
   if (!orchestrator) {
@@ -375,6 +389,13 @@ const advanceFlowStep = ({
     if (typeof setCompletionState === 'function') {
       setCompletionState(completionConfig);
     }
+    if (typeof onFlowCompletion === 'function') {
+      try {
+        onFlowCompletion();
+      } catch (err) {
+        console.warn('[FlowModule] onFlowCompletion error:', err);
+      }
+    }
     if (typeof onFlowCompleted === 'function') {
       try {
         onFlowCompleted();
@@ -387,23 +408,28 @@ const advanceFlowStep = ({
 
   // ✅ 只有在确认有下一步后才重置 flag，并在 loadFlow 完成后异步重置
   // 避免在加载过程中的导航事件触发重复完成
-  loadFlow().then(() => {
-    // 延迟重置，等待 React 渲染周期完成，确保新子模块已完全加载并稳定
-    // 使用 requestIdleCallback 或 setTimeout(0) 确保在下一个事件循环中重置
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(() => {
-        completionSignaledRef.current = false;
-        debugLog('[FlowModule] completionSignaledRef reset after idle callback');
-      }, { timeout: 100 });
-    } else {
-      setTimeout(() => {
-        completionSignaledRef.current = false;
-        debugLog('[FlowModule] completionSignaledRef reset after timeout');
-      }, 100);
-    }
-  }).catch(() => {
-    completionSignaledRef.current = false;
-  });
+  loadFlow()
+    .then(() => {
+      // 延迟重置，等待 React 渲染周期完成，确保新子模块已完全加载并稳定
+      // 使用 requestIdleCallback 或 setTimeout(0) 确保在下一个事件循环中重置
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(
+          () => {
+            completionSignaledRef.current = false;
+            debugLog('[FlowModule] completionSignaledRef reset after idle callback');
+          },
+          { timeout: 100 }
+        );
+      } else {
+        setTimeout(() => {
+          completionSignaledRef.current = false;
+          debugLog('[FlowModule] completionSignaledRef reset after timeout');
+        }, 100);
+      }
+    })
+    .catch(() => {
+      completionSignaledRef.current = false;
+    });
 };
 
 const loadFlowState = async ({
@@ -421,7 +447,7 @@ const loadFlowState = async ({
   }
 
   // 开始加载时设置 loading
-  setState((prev) => ({
+  setState(prev => ({
     ...prev,
     loading: true,
     error: null,
@@ -452,7 +478,11 @@ const loadFlowState = async ({
         return;
       }
       const msg = String(err?.message || '');
-      if (msg.includes('disposed') || msg.includes('Disposed') || msg.includes('has been disposed')) {
+      if (
+        msg.includes('disposed') ||
+        msg.includes('Disposed') ||
+        msg.includes('has been disposed')
+      ) {
         console.warn('[FlowModule] Orchestrator disposed during load, aborting.');
         return;
       }
@@ -495,30 +525,66 @@ const loadFlowState = async ({
       }
     }
 
-      const resolved = orchestrator.resolve(definition, progressForResolve);
+    const resolved = orchestrator.resolve(definition, progressForResolve);
 
-      if (!resolved.submoduleDefinition) {
-        throw new Error(`Submodule not found: ${resolved.submoduleId}`);
+    if (!resolved.submoduleDefinition) {
+      throw new Error(`Submodule not found: ${resolved.submoduleId}`);
+    }
+
+    if (shouldAbort?.()) {
+      return;
+    }
+
+    const completedFlag =
+      typeof orchestrator.isCompleted === 'function'
+        ? orchestrator.isCompleted()
+        : Boolean(progressForResolve?.completed);
+    const completionByPageNum =
+      progressForResolve?.modulePageNum &&
+      String(progressForResolve.modulePageNum) === COMPLETION_PROGRESS_PAGE_NUM;
+    const isCompleted = completedFlag || completionByPageNum;
+    if (completionByPageNum && !completedFlag && typeof orchestrator.markCompleted === 'function') {
+      try {
+        orchestrator.markCompleted();
+      } catch (err) {
+        console.warn('[FlowModule] markCompleted failed for completion sentinel', err);
       }
-
-      if (shouldAbort?.()) {
-        return;
+    }
+    if (isCompleted) {
+      try {
+        TimerService.resetAll();
+      } catch (err) {
+        console.warn('[FlowModule] Failed to reset timers on completion restore', err);
       }
+      const completionConfig = definition?.completionPage || DEFAULT_COMPLETION_CONTENT;
+      setState({
+        loading: false,
+        error: null,
+        showTransition: false,
+        showCompletion: true,
+        completionConfig,
+        currentStep: null,
+        submoduleComponent: null,
+        definition,
+        progress: progressForResolve
+          ? {
+              ...progressForResolve,
+              completed: true,
+              modulePageNum: COMPLETION_PROGRESS_PAGE_NUM,
+            }
+          : progressForResolve,
+      });
+      return;
+    }
 
-      logFlowContextOnce(flowId, resolved, logOperation, flowContextLogCacheRef);
+    const timerConfig = buildTimerConfigForStep(flowId, resolved, resolved.step);
+    if (timerConfigRef) {
+      timerConfigRef.current = timerConfig;
+    }
+    const initialModulePageNum = progressForResolve?.modulePageNum || '1';
+    startTimersForConfig(timerConfig, initialModulePageNum);
 
-      if (shouldAbort?.()) {
-        return;
-      }
-
-      const timerConfig = buildTimerConfigForStep(flowId, resolved, resolved.step);
-      if (timerConfigRef) {
-        timerConfigRef.current = timerConfig;
-      }
-      const initialModulePageNum = progressForResolve?.modulePageNum || '1';
-      startTimersForConfig(timerConfig, initialModulePageNum);
-
-      resolved.submoduleDefinition.onInitialize?.();
+    resolved.submoduleDefinition.onInitialize?.();
 
     if (shouldAbort?.()) {
       return;
@@ -545,7 +611,7 @@ const loadFlowState = async ({
       return;
     }
     console.error('[FlowModule] Load failed:', error);
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       loading: false,
       error: msg,
@@ -674,7 +740,8 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
 
   const routeFlowId = params?.flowId || null;
   // DEV Mock only enabled when explicitly requested to avoid impacting real accounts
-  const devMockFlowId = isDevEnv && flowDevMockAuthEnabled ? (flowIdProp || routeFlowId || null) : null;
+  const devMockFlowId =
+    isDevEnv && flowDevMockAuthEnabled ? flowIdProp || routeFlowId || null : null;
   const devAuthAppliedRef = useRef(false);
   const effectiveUserContext = useMemo(() => {
     const hasFullContext =
@@ -759,11 +826,11 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
 
   const contextFlowId = useMemo(
     () => deriveFlowIdFromUrl(effectiveUserContext?.url || effectiveUserContext?.moduleUrl),
-    [effectiveUserContext?.moduleUrl, effectiveUserContext?.url],
+    [effectiveUserContext?.moduleUrl, effectiveUserContext?.url]
   );
   const initialResolvedFlowId = useMemo(
     () => flowIdProp || routeFlowId || contextFlowId || null,
-    [flowIdProp, routeFlowId, contextFlowId],
+    [flowIdProp, routeFlowId, contextFlowId]
   );
 
   const [flowId, setFlowId] = useState(initialResolvedFlowId);
@@ -772,13 +839,20 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   const orchestratorRef = useRef(null);
   const pendingLoadRef = useRef(null);
   const timerConfigRef = useRef(null);
-  const setCompletionState = useCallback((config) => {
-    setState((prev) => ({
+  const setCompletionState = useCallback(config => {
+    setState(prev => ({
       ...prev,
       showCompletion: true,
       completionConfig: config || DEFAULT_COMPLETION_CONTENT,
       showTransition: false,
       loading: false,
+      progress: prev.progress
+        ? {
+            ...prev.progress,
+            completed: true,
+            modulePageNum: COMPLETION_PROGRESS_PAGE_NUM,
+          }
+        : prev.progress,
     }));
   }, []);
 
@@ -795,7 +869,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       if (stableResolvedFlowIdRef.current !== null) {
         stableResolvedFlowIdRef.current = null;
       }
-      setFlowId((prev) => (prev === null ? prev : null));
+      setFlowId(prev => (prev === null ? prev : null));
       return;
     }
 
@@ -803,7 +877,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       stableResolvedFlowIdRef.current = resolvedFlowId;
     }
 
-    setFlowId((prev) => (prev === resolvedFlowId ? prev : resolvedFlowId));
+    setFlowId(prev => (prev === resolvedFlowId ? prev : resolvedFlowId));
   }, [initialResolvedFlowId]);
   const [state, setState] = useState(() => createInitialState());
   const completionSignaledRef = useRef(false);
@@ -815,13 +889,14 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     const newModulePageNum = state.progress?.modulePageNum ?? '1';
 
     if (stableStepIndexRef.current !== newStepIndex) {
-      debugLog(
-        '[FlowModule] stepIndex changed:',
-        stableStepIndexRef.current,
-        '->',
-        newStepIndex,
-      );
+      debugLog('[FlowModule] stepIndex changed:', stableStepIndexRef.current, '->', newStepIndex);
       stableStepIndexRef.current = newStepIndex;
+
+      // 模块切换时清理 AppContext 的操作列表，避免上一模块的事件混入新模块
+      if (appContext?.setCurrentPageData) {
+        debugLog('[FlowModule] Clearing AppContext.currentPageData on step change');
+        appContext.setCurrentPageData({ operationList: [], answerList: [] });
+      }
     }
 
     if (stableModulePageNumRef.current !== newModulePageNum) {
@@ -829,11 +904,11 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
         '[FlowModule] modulePageNum changed:',
         stableModulePageNumRef.current,
         '->',
-        newModulePageNum,
+        newModulePageNum
       );
       stableModulePageNumRef.current = newModulePageNum;
     }
-  }, [state.currentStep, state.progress]);
+  }, [appContext?.setCurrentPageData, state.currentStep, state.progress]);
 
   useEffect(() => {
     if (!redirectingToRoute) {
@@ -865,17 +940,20 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     modulePageNum: null,
   });
 
-  const handleProgressError = useCallback((error) => {
+  const handleProgressError = useCallback(error => {
     console.error('[FlowModule] Progress sync failed:', error);
   }, []);
 
-  const sendProgressUpdate = useCallback(async (payload) => {
-    if (!flowHeartbeatEnabled || !payload?.flowId) {
-      return;
-    }
-    await flushProgressQueue(payload.flowId, handleProgressError);
-    await sendProgressNow(payload, handleProgressError);
-  }, [handleProgressError]);
+  const sendProgressUpdate = useCallback(
+    async payload => {
+      if (!flowHeartbeatEnabled || !payload?.flowId) {
+        return;
+      }
+      await flushProgressQueue(payload.flowId, handleProgressError);
+      await sendProgressNow(payload, handleProgressError);
+    },
+    [handleProgressError]
+  );
 
   useEffect(() => {
     const effectiveFlowId = flowId || contextFlowId;
@@ -884,7 +962,12 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     const examNo = effectiveUserContext?.examNo || flowContextSnapshot?.examNo || null;
     const batchCode = effectiveUserContext?.batchCode || flowContextSnapshot?.batchCode || null;
 
-    if (!effectiveFlowId || stepIndex === null || stepIndex === undefined || modulePageNum == null) {
+    if (
+      !effectiveFlowId ||
+      stepIndex === null ||
+      stepIndex === undefined ||
+      modulePageNum == null
+    ) {
       return;
     }
     if (!examNo || !batchCode) {
@@ -906,6 +989,53 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       batchCode,
       stepIndex,
       modulePageNum: String(modulePageNum),
+      ts: Date.now(),
+    };
+
+    lastProgressSentRef.current = {
+      flowId: effectiveFlowId,
+      stepIndex,
+      modulePageNum: String(modulePageNum),
+    };
+
+    sendProgressUpdate(payload);
+  }, [
+    contextFlowId,
+    effectiveUserContext?.batchCode,
+    effectiveUserContext?.examNo,
+    flowContextSnapshot?.batchCode,
+    flowContextSnapshot?.examNo,
+    flowId,
+    sendProgressUpdate,
+    state.currentStep?.stepIndex,
+    state.progress?.modulePageNum,
+  ]);
+
+  const pushCompletionProgress = useCallback(() => {
+    const effectiveFlowId = flowId || contextFlowId;
+    const stepIndex = state.currentStep?.stepIndex;
+    const modulePageNum = COMPLETION_PROGRESS_PAGE_NUM;
+    const examNo = effectiveUserContext?.examNo || flowContextSnapshot?.examNo || null;
+    const batchCode = effectiveUserContext?.batchCode || flowContextSnapshot?.batchCode || null;
+
+    if (
+      !effectiveFlowId ||
+      stepIndex === null ||
+      stepIndex === undefined ||
+      modulePageNum == null ||
+      !examNo ||
+      !batchCode
+    ) {
+      return;
+    }
+
+    const payload = {
+      flowId: effectiveFlowId,
+      examNo,
+      batchCode,
+      stepIndex,
+      modulePageNum: String(modulePageNum),
+      completed: true,
       ts: Date.now(),
     };
 
@@ -963,7 +1093,12 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       appContext.setCurrentPageId(targetPageId);
       lastSyncedStepRef.current = key;
     }
-  }, [appContext, state.currentStep?.initialPageId, state.currentStep?.stepIndex, state.currentStep?.submoduleId]);
+  }, [
+    appContext,
+    state.currentStep?.initialPageId,
+    state.currentStep?.stepIndex,
+    state.currentStep?.submoduleId,
+  ]);
 
   const loadFlow = useCallback(() => {
     if (!flowId || !orchestratorRef.current) {
@@ -1008,7 +1143,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     const transitionConfig = state.currentStep?.step?.transitionPage;
 
     if (transitionConfig) {
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         showTransition: true,
       }));
@@ -1021,16 +1156,26 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
         onFlowCompleted: appContext?.handleLogout || appContext?.clearAllCache || null,
         setCompletionState,
         completionConfig,
+        onFlowCompletion: pushCompletionProgress,
       });
     }
-  }, [appContext?.clearAllCache, appContext?.handleLogout, loadFlow, navigate, setCompletionState, state.currentStep, state.definition?.completionPage]);
+  }, [
+    appContext?.clearAllCache,
+    appContext?.handleLogout,
+    loadFlow,
+    navigate,
+    pushCompletionProgress,
+    setCompletionState,
+    state.currentStep,
+    state.definition?.completionPage,
+  ]);
 
   /**
    * 过渡页继续
    */
   const handleTransitionNext = useCallback(() => {
     const completionConfig = state.definition?.completionPage || DEFAULT_COMPLETION_CONTENT;
-    setState((prev) => ({
+    setState(prev => ({
       ...prev,
       showTransition: false,
     }));
@@ -1043,8 +1188,17 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       onFlowCompleted: appContext?.handleLogout || appContext?.clearAllCache || null,
       setCompletionState,
       completionConfig,
+      onFlowCompletion: pushCompletionProgress,
     });
-  }, [appContext?.clearAllCache, appContext?.handleLogout, loadFlow, navigate, setCompletionState, state.definition?.completionPage]);
+  }, [
+    appContext?.clearAllCache,
+    appContext?.handleLogout,
+    loadFlow,
+    navigate,
+    pushCompletionProgress,
+    setCompletionState,
+    state.definition?.completionPage,
+  ]);
 
   /**
    * 子模块超时回调
@@ -1055,8 +1209,40 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   }, [handleSubmoduleComplete]);
 
   const handleCompletionCTA = useCallback(() => {
-    navigate('/login', { replace: true });
-  }, [navigate]);
+    const target = state.definition?.completionPage?.ctaLink || '/login';
+
+    try {
+      appContext?.handleLogout?.();
+    } catch (err) {
+      console.warn('[FlowModule] handleLogout on completion failed:', err);
+    }
+    try {
+      appContext?.clearAllCache?.();
+    } catch (err) {
+      console.warn('[FlowModule] clearAllCache on completion failed:', err);
+    }
+
+    try {
+      const isExternal = /^https?:\/\//i.test(target);
+      if (isExternal) {
+        window.location.href = target;
+      } else {
+        navigate(target, { replace: true });
+      }
+    } catch (err) {
+      console.warn('[FlowModule] navigate on completion failed, fallback to location.href', err);
+      try {
+        window.location.href = target;
+      } catch (e) {
+        console.error('[FlowModule] Fallback navigation failed:', e);
+      }
+    }
+  }, [
+    appContext?.clearAllCache,
+    appContext?.handleLogout,
+    navigate,
+    state.definition?.completionPage?.ctaLink,
+  ]);
 
   useEffect(() => {
     debugLog('[FlowModule DEBUG] loadFlow effect triggered, flowId:', flowId);
@@ -1071,7 +1257,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     }
 
     debugLog('[FlowModule] Clearing AppContext state for clean Flow start');
-    FLOW_APP_CONTEXT_KEYS_TO_CLEAR.forEach((key) => {
+    FLOW_APP_CONTEXT_KEYS_TO_CLEAR.forEach(key => {
       try {
         localStorage.removeItem(key);
       } catch (err) {
@@ -1082,7 +1268,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     const orchestrator = new FlowOrchestrator(
       flowId,
       effectiveUserContext?.examNo || null,
-      effectiveUserContext?.batchCode || null,
+      effectiveUserContext?.batchCode || null
     );
     orchestratorRef.current = orchestrator;
     completionSignaledRef.current = false;
@@ -1108,8 +1294,6 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     };
   }, [flowId]);
 
-  
-
   /**
    * 当前步骤用于导航拦截
    */
@@ -1118,7 +1302,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   const currentPageId = appContext?.currentPageId || null;
 
   const persistModuleProgress = useCallback(
-    (nextModulePageNum) => {
+    nextModulePageNum => {
       if (activeStepIndex === null || !nextModulePageNum) {
         return;
       }
@@ -1140,7 +1324,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       startTimersForConfig(timerConfigRef.current, normalized);
 
       orchestrator.updateProgress(activeStepIndex, normalized);
-      setState((prev) => {
+      setState(prev => {
         if (
           prev.progress &&
           prev.progress.stepIndex === activeStepIndex &&
@@ -1163,7 +1347,7 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   );
 
   const handleBeforeNavigate = useCallback(
-    async (nextPageId) => {
+    async nextPageId => {
       if (typeof currentResolver !== 'function' || !nextPageId) {
         return true;
       }
@@ -1186,11 +1370,8 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
         typeof state.currentStep?.submoduleDefinition?.getTotalSteps === 'function'
           ? Number(state.currentStep.submoduleDefinition.getTotalSteps())
           : null;
-      if (
-        totalSteps &&
-        Number(resolvedPageNum) >= totalSteps &&
-        !completionSignaledRef.current
-      ) {
+      // 仅当超出最大页码（> totalSteps）时触发兜底完成，允许最后一页正常渲染/提交
+      if (totalSteps && Number(resolvedPageNum) > totalSteps && !completionSignaledRef.current) {
         console.warn(
           '[FlowModule] Completion fallback triggered via beforeNavigate, advancing flow step.',
           {
@@ -1198,9 +1379,8 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
             submoduleId: state.currentStep?.submoduleId,
             resolvedPageNum,
             totalSteps,
-          },
+          }
         );
-        completionSignaledRef.current = true;
         handleSubmoduleComplete();
       }
       return true;
@@ -1243,13 +1423,16 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
     persistModuleProgress,
   ]);
 
-  const providerProps = useMemo(() => ({
-    flowId,
-    submoduleId: state.currentStep?.submoduleId,
-    stepIndex: state.currentStep?.stepIndex,
-    progress: state.progress,
-    orchestratorRef,
-  }), [flowId, state.currentStep?.submoduleId, state.currentStep?.stepIndex, state.progress]);
+  const providerProps = useMemo(
+    () => ({
+      flowId,
+      submoduleId: state.currentStep?.submoduleId,
+      stepIndex: state.currentStep?.stepIndex,
+      progress: state.progress,
+      orchestratorRef,
+    }),
+    [flowId, state.currentStep?.submoduleId, state.currentStep?.stepIndex, state.progress]
+  );
 
   const bridgeFlowContext = useMemo(() => {
     if (
@@ -1266,6 +1449,135 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
       stepIndex: state.currentStep.stepIndex,
     };
   }, [flowId, state.currentStep?.submoduleId, state.currentStep?.stepIndex]);
+
+  const [devNavPending, setDevNavPending] = useState(false);
+
+  const devBackTarget = useMemo(() => {
+    if (!isDevEnv) return null;
+    const orchestrator = orchestratorRef.current;
+    const definition = orchestrator?.getDefinition?.() || state.definition;
+    const steps = definition?.steps || [];
+    if (!steps.length) {
+      return null;
+    }
+
+    const progress = orchestrator?.getProgress?.() || state.progress;
+    const progressStepIndex =
+      typeof progress?.stepIndex === 'number'
+        ? progress.stepIndex
+        : typeof state.currentStep?.stepIndex === 'number'
+          ? state.currentStep.stepIndex
+          : null;
+    const fallbackStepIndex = steps.length > 0 ? steps.length - 1 : 0;
+    const currentStepIndex =
+      progressStepIndex !== null && progressStepIndex !== undefined
+        ? progressStepIndex
+        : fallbackStepIndex;
+
+    if (currentStepIndex === null || currentStepIndex < 0 || currentStepIndex >= steps.length) {
+      return null;
+    }
+
+    const currentSubmoduleId = steps[currentStepIndex]?.submoduleId ?? null;
+    const currentSubmoduleDef = currentSubmoduleId
+      ? submoduleRegistry.get(currentSubmoduleId)
+      : null;
+    const totalSteps =
+      currentSubmoduleDef && typeof currentSubmoduleDef.getTotalSteps === 'function'
+        ? Number(currentSubmoduleDef.getTotalSteps())
+        : null;
+    const safeTotal = Number.isFinite(totalSteps) && totalSteps > 0 ? totalSteps : 1;
+
+    const currentPageNumRaw = progress?.modulePageNum ?? state.progress?.modulePageNum ?? '1';
+    const currentPageNumParsed = Number.parseFloat(String(currentPageNumRaw || '1'));
+    const currentPageNum =
+      Number.isFinite(currentPageNumParsed) &&
+      currentPageNumParsed > 0 &&
+      currentPageNumParsed !== Number(COMPLETION_PROGRESS_PAGE_NUM)
+        ? Math.min(currentPageNumParsed, safeTotal)
+        : safeTotal;
+
+    if (Number.isFinite(currentPageNum) && currentPageNum > 1) {
+      const prevNum = Math.max(1, Math.floor(currentPageNum - 1));
+      return {
+        stepIndex: currentStepIndex,
+        pageNum: String(prevNum),
+        submoduleId: currentSubmoduleId,
+      };
+    }
+
+    const prevStepIndex = currentStepIndex - 1;
+    if (prevStepIndex < 0 || !steps[prevStepIndex]) {
+      return null;
+    }
+
+    const prevSubmoduleId = steps[prevStepIndex].submoduleId;
+    const prevSubmoduleDef = prevSubmoduleId ? submoduleRegistry.get(prevSubmoduleId) : null;
+    const prevTotalSteps =
+      prevSubmoduleDef && typeof prevSubmoduleDef.getTotalSteps === 'function'
+        ? Number(prevSubmoduleDef.getTotalSteps())
+        : null;
+    const prevSafeTotal =
+      Number.isFinite(prevTotalSteps) && prevTotalSteps > 0 ? prevTotalSteps : 1;
+
+    return {
+      stepIndex: prevStepIndex,
+      pageNum: String(prevSafeTotal),
+      submoduleId: prevSubmoduleId ?? null,
+    };
+  }, [state.currentStep?.stepIndex, state.definition, state.progress?.modulePageNum]);
+
+  const handleDevBackNavigation = useCallback(async () => {
+    if (!devBackTarget || !orchestratorRef.current) {
+      return;
+    }
+    setDevNavPending(true);
+    try {
+      const { stepIndex, pageNum, submoduleId } = devBackTarget;
+      const orchestrator = orchestratorRef.current;
+      orchestrator.updateProgress(stepIndex, pageNum);
+      completionSignaledRef.current = false;
+
+      const definition = orchestrator.getDefinition?.() || state.definition;
+      const steps = definition?.steps || [];
+      const targetSubmoduleId = submoduleId || steps[stepIndex]?.submoduleId || null;
+      const targetSubmoduleDef = targetSubmoduleId
+        ? submoduleRegistry.get(targetSubmoduleId)
+        : null;
+      const targetPageId =
+        targetSubmoduleDef && typeof targetSubmoduleDef.getInitialPage === 'function'
+          ? targetSubmoduleDef.getInitialPage(pageNum)
+          : null;
+
+      await loadFlow();
+
+      if (targetPageId && appContext?.navigateToPage) {
+        await appContext.navigateToPage(targetPageId, { skipSubmit: true });
+      }
+    } catch (err) {
+      console.warn('[FlowModule] Dev back navigation failed:', err);
+    } finally {
+      setDevNavPending(false);
+    }
+  }, [appContext?.navigateToPage, devBackTarget, loadFlow, state.definition]);
+
+  const devNavOverlay = isDevEnv ? (
+    <div className={styles.devNav}>
+      <button
+        type="button"
+        className={styles.devBackButton}
+        onClick={handleDevBackNavigation}
+        disabled={!devBackTarget || devNavPending}
+      >
+        {devNavPending ? 'Jumping...' : 'Prev (DEV)'}
+      </button>
+      <span className={styles.devNavLabel}>
+        {devBackTarget
+          ? `Target step ${devBackTarget.stepIndex + 1} / page ${devBackTarget.pageNum}`
+          : 'At first page'}
+      </span>
+    </div>
+  ) : null;
 
   if (!flowId && redirectingToRoute) {
     return (
@@ -1319,15 +1631,18 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
 
   if (state.showCompletion) {
     return (
-      <CompletionPage
-        title={completionConfig.title || DEFAULT_COMPLETION_CONTENT.title}
-        message={completionConfig.message || DEFAULT_COMPLETION_CONTENT.message}
-        detail={completionConfig.detail || DEFAULT_COMPLETION_CONTENT.detail}
-        tip={completionConfig.tip || DEFAULT_COMPLETION_CONTENT.tip}
-        ctaLabel={completionConfig.ctaLabel || DEFAULT_COMPLETION_CONTENT.ctaLabel}
-        icon={completionConfig.icon || '🎉'}
-        onPrimary={handleCompletionCTA}
-      />
+      <>
+        {devNavOverlay}
+        <CompletionPage
+          title={completionConfig.title || DEFAULT_COMPLETION_CONTENT.title}
+          message={completionConfig.message || DEFAULT_COMPLETION_CONTENT.message}
+          detail={completionConfig.detail || DEFAULT_COMPLETION_CONTENT.detail}
+          tip={completionConfig.tip || DEFAULT_COMPLETION_CONTENT.tip}
+          ctaLabel={completionConfig.ctaLabel || DEFAULT_COMPLETION_CONTENT.ctaLabel}
+          icon={completionConfig.icon || '🎉'}
+          onPrimary={handleCompletionCTA}
+        />
+      </>
     );
   }
 
@@ -1335,12 +1650,15 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   if (state.showTransition) {
     const transitionConfig = state.currentStep?.step?.transitionPage || {};
     return (
-      <TransitionPage
-        title={transitionConfig.title}
-        content={transitionConfig.content}
-        autoNextSeconds={transitionConfig.autoNextSeconds || 0}
-        onNext={handleTransitionNext}
-      />
+      <>
+        {devNavOverlay}
+        <TransitionPage
+          title={transitionConfig.title}
+          content={transitionConfig.content}
+          autoNextSeconds={transitionConfig.autoNextSeconds || 0}
+          onNext={handleTransitionNext}
+        />
+      </>
     );
   }
 
@@ -1368,10 +1686,9 @@ function FlowModuleInner({ userContext, initialPageId, flowId: flowIdProp }) {
   const providerEnabled = parseFlag(import.meta?.env?.VITE_FLOW_PROVIDER_ENABLED, true);
   const bridgeEnabled = parseFlag(import.meta?.env?.VITE_FLOW_BRIDGE_ENABLED, true);
 
-  
-
   return (
     <div className={styles.container}>
+      {devNavOverlay}
       <MaybeFlowProvider enabled={providerEnabled} providerProps={providerProps}>
         <MaybeFlowAppContextBridge
           enabled={bridgeEnabled}
@@ -1401,7 +1718,7 @@ export const FlowModule_Definition = {
   version: '1.0.0',
   ModuleComponent: FlowModule,
 
-  getInitialPage: (pageNum) => {
+  getInitialPage: pageNum => {
     // Flow 使用复合页码 <stepIndex>.<subPageNum>（兼容旧格式 M<stepIndex>:<subPageNum>）
     // 但这里直接返回 null，由 FlowOrchestrator 处理
     return null;

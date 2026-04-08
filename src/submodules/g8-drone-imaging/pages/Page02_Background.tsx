@@ -25,15 +25,8 @@ export default function Page02_Background() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const readingTimerStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Page enter/exit logging
+  // Timer setup/cleanup
   useEffect(() => {
-    logOperation({
-      targetElement: 'page',
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'Page02_Background',
-      time: formatTimestamp(new Date()),
-    });
-
     logOperation({
       targetElement: `${pagePrefix}reading_timer`,
       eventType: EventTypes.TIMER_START,
@@ -61,12 +54,6 @@ export default function Page02_Background() {
       if (readingTimerStopRef.current) {
         clearTimeout(readingTimerStopRef.current);
       }
-      logOperation({
-        targetElement: 'page',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'Page02_Background',
-        time: formatTimestamp(new Date()),
-      });
     };
   }, [logOperation, pagePrefix]);
 

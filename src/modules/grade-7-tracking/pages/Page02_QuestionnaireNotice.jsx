@@ -1,35 +1,26 @@
 /**
- * Page02_QuestionnaireNotice - 问卷说明页 (页码 13)
- *
- * 功能:
- * - 显示问卷说明标题 (带剪贴板图标)
- * - 蓝色提示框: 恭喜完成实验
- * - 4条带复选标记的说明要点
- * - 感谢语句
- * - 30秒倒计时提示 (黄色背景)
- * - "开始作答"按钮 (倒计时期间禁用)
- * - T099: 启动10分钟问卷计时器
+ * Page02_QuestionnaireNotice - 问卷说明页 (页码 0.2)
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { ClipboardList, Check } from 'lucide-react';
 import { useTrackingContext } from '../context/TrackingContext';
 import PageLayout from '../components/layout/PageLayout';
 import Button from '../components/ui/Button';
 import styles from '../styles/Page02_QuestionnaireNotice.module.css';
 
-const READING_TIME_SECONDS = 10; // 30秒倒计时
+const READING_TIME_SECONDS = 10;
 
 const Page02_QuestionnaireNotice = () => {
   const {
     logOperation,
+    collectAnswer,
     clearOperations,
     navigateToPage,
-    currentPageOperations,
-    userContext,
-    submitPageData
+    buildMarkObject,
+    submitPageData,
   } = useTrackingContext();
 
-  const [pageStartTime] = useState(() => new Date());
   const [countdown, setCountdown] = useState(READING_TIME_SECONDS);
   const [canProceed, setCanProceed] = useState(false);
 
@@ -60,7 +51,7 @@ const Page02_QuestionnaireNotice = () => {
     }
 
     const timer = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         const newValue = prev - 1;
         if (newValue <= 0) {
           setCanProceed(true);
@@ -84,27 +75,12 @@ const Page02_QuestionnaireNotice = () => {
     });
 
     try {
-      // 构建MarkObject
-      const pageEndTime = new Date();
-      const markObject = {
-        pageNumber: '13',
-        pageDesc: '问卷说明',
-        operationList: currentPageOperations.map((op) => ({
-          targetElement: op.target,
-          eventType: op.action,
-          value: op.value || '',
-          time: formatDateTime(new Date(op.time || op.timestamp)),
-        })),
-        answerList: [
-          {
-            targetElement: 'questionnaire_notice_read',
-            value: '已阅读问卷说明',
-          },
-        ],
-        beginTime: formatDateTime(pageStartTime),
-        endTime: formatDateTime(pageEndTime),
-        imgList: [],
-      };
+      collectAnswer({
+        targetElement: 'questionnaire_notice_read',
+        value: '已阅读问卷说明',
+      });
+
+      const markObject = buildMarkObject('0.2', '问卷说明');
 
       // 提交数据
       const success = await submitPageData(markObject);
@@ -126,13 +102,12 @@ const Page02_QuestionnaireNotice = () => {
     }
   }, [
     canProceed,
-    currentPageOperations,
-    pageStartTime,
     logOperation,
+    collectAnswer,
+    buildMarkObject,
     submitPageData,
     clearOperations,
     navigateToPage,
-    userContext,
   ]);
 
   return (
@@ -140,10 +115,8 @@ const Page02_QuestionnaireNotice = () => {
       <div className={styles.pageContainer}>
         {/* 标题区域 - 剪贴板图标 + 调查问卷说明 */}
         <div className={styles.titleSection}>
-          <div className={styles.clipboardIcon}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
+          <div className={styles.clipboardIcon} aria-hidden="true">
+            <ClipboardList strokeWidth={2} />
           </div>
           <h1 className={styles.pageTitle}>调查问卷说明</h1>
         </div>
@@ -161,28 +134,35 @@ const Page02_QuestionnaireNotice = () => {
           <div className={styles.instructionsBox}>
             <ul className={styles.checkList}>
               <li className={styles.checkItem}>
-                <span className={styles.checkIcon}>✓</span>
+                <span className={styles.checkIcon} aria-hidden="true">
+                  <Check />
+                </span>
                 <span className={styles.checkText}>
-                  在本问卷中, 回答没有正确或错误之分，你只需要根据自己的真实情况填写即可。如有不明白的地方或不确定如何作答，可以提问。
+                  在本问卷中,
+                  回答没有正确或错误之分，你只需要根据自己的真实情况填写即可。如有不明白的地方或不确定如何作答，可以提问。
                 </span>
               </li>
               <li className={styles.checkItem}>
-                <span className={styles.checkIcon}>✓</span>
+                <span className={styles.checkIcon} aria-hidden="true">
+                  <Check />
+                </span>
                 <span className={styles.checkText}>
                   你可以使用屏幕下方的"下一页"按钮来回答下一个问题。
                 </span>
               </li>
               <li className={styles.checkItem}>
-                <span className={styles.checkIcon}>✓</span>
+                <span className={styles.checkIcon} aria-hidden="true">
+                  <Check />
+                </span>
                 <span className={styles.checkText}>
                   你和其他人的答案将会合并计算成总数和平均数，我们不会辨别个别参加者。
                 </span>
               </li>
               <li className={styles.checkItem}>
-                <span className={styles.checkIcon}>✓</span>
-                <span className={styles.checkText}>
-                  你提供的答案会绝对保密。
+                <span className={styles.checkIcon} aria-hidden="true">
+                  <Check />
                 </span>
+                <span className={styles.checkText}>你提供的答案会绝对保密。</span>
               </li>
             </ul>
 
@@ -192,39 +172,36 @@ const Page02_QuestionnaireNotice = () => {
 
           {/* 倒计时提示 (黄色背景) */}
           {!canProceed && (
-            <div className={styles.countdownBox}>
+            <div
+              className={styles.countdownBox}
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               <p className={styles.countdownText}>
-                请仔细阅读说明，<span className={styles.countdownNumber}>{countdown}</span>秒后可开始作答...
+                请仔细阅读说明，<span className={styles.countdownNumber}>{countdown}</span>
+                秒后可开始作答...
               </p>
             </div>
           )}
 
-          {/* 开始作答按钮 */}
-          <div className={styles.buttonContainer}>
-            <Button
-              variant="primary"
-              size="large"
-              onClick={handleStartClick}
-              disabled={!canProceed}
-            >
-              开始作答
-            </Button>
-          </div>
+          {/* 开始作答按钮 - 倒计时结束后显示 */}
+          {canProceed && (
+            <div className={styles.buttonContainer}>
+              <Button
+                variant="primary"
+                size="large"
+                onClick={handleStartClick}
+                ariaLabel="开始作答问卷"
+              >
+                开始作答
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </PageLayout>
   );
 };
-
-// 辅助函数: 格式化日期时间为 "YYYY-MM-DD HH:mm:ss"
-function formatDateTime(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hour = String(date.getHours()).padStart(2, '0');
-  const minute = String(date.getMinutes()).padStart(2, '0');
-  const second = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-}
 
 export default Page02_QuestionnaireNotice;

@@ -10,9 +10,8 @@
  * "提交"按钮并成功提交数据后调用。此页面不直接调用 onComplete()。
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { EventTypes } from '@shared/services/submission/eventTypes';
-import { getPageSubNum } from '../mapping';
 import { useMikaniaExperiment } from '../Component';
 import ChartPanel from '../components/ChartPanel';
 import styles from '../styles/Page06_Q4_Conc.module.css';
@@ -24,7 +23,7 @@ function Page06Q4Conc() {
     logOperation,
     validateCurrentPage,
     getCurrentMissingFields,
-    flowContext,
+    targetPrefix,
   } = useMikaniaExperiment();
 
   const [selectedJudgment, setSelectedJudgment] = useState(state.answers.Q4a_菟丝子有效性 || '');
@@ -33,33 +32,10 @@ function Page06Q4Conc() {
   const [errorQ4b, setErrorQ4b] = useState('');
   const prevConclusionRef = useRef(state.answers.Q4b_结论理由 || '');
 
-  const subPageNum = getPageSubNum(state.currentPageId);
-  const flowStepIndex = flowContext?.stepIndex;
-  const pageNumber = useMemo(() => {
-    return typeof flowStepIndex === 'number' ? `${flowStepIndex}.${subPageNum}` : String(subPageNum);
-  }, [flowStepIndex, subPageNum]);
-  const targetPrefix = useMemo(() => `P${pageNumber}_`, [pageNumber]);
-  const q4aTarget = `${targetPrefix}Q4a_菟丝子有效性`;
-  const q4bTarget = `${targetPrefix}Q4b_结论理由`;
-  const submitTarget = `${targetPrefix}提交按钮`;
-  const pageTarget = `${targetPrefix}页面`;
-
-  // 记录页面进入
-  useEffect(() => {
-    logOperation({
-      targetElement: pageTarget,
-      eventType: EventTypes.PAGE_ENTER,
-      value: 'page_06_q4_conc',
-    });
-
-    return () => {
-      logOperation({
-        targetElement: pageTarget,
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'page_06_q4_conc',
-      });
-    };
-  }, [logOperation, pageTarget]);
+  const pageTargetPrefix = targetPrefix || '';
+  const q4aTarget = `${pageTargetPrefix}Q4a_菟丝子有效性`;
+  const q4bTarget = `${pageTargetPrefix}Q4b_结论理由`;
+  const submitTarget = `${pageTargetPrefix}提交按钮`;
 
   // 处理判断题变化
   const handleJudgmentChange = (value) => {

@@ -8,22 +8,19 @@ import React, {
   ReactNode,
   useRef,
 } from 'react';
-import { PageId } from '../mapping';
+import { formatTimestamp } from '@shared/services/submission/createMarkObject.js';
+import { PageId, getSubPageNumByPageId } from '../mapping';
 import { Height, FocalLength, lookupGSD, calculateBlurAmount } from '../utils/gsdLookup';
-import { EventTypes } from '@shared/services/submission/eventTypes';
 import { encodeCompositePageNum } from '@shared/utils/pageMapping';
-
-// Event type values from eventTypes.js
-export type EventType = typeof EventTypes[keyof typeof EventTypes];
+import {
+  type LogOperationParams,
+  type Operation as SharedOperation,
+  useOperationLogger,
+} from '@shared/services/submission/submoduleAdapter';
+import type { SubmoduleProps } from '@shared/types/flow';
 
 // Operation interface for logging
-export interface Operation {
-  code: number;
-  targetElement: string;
-  eventType: string;
-  value: string;
-  time: string;
-}
+export type Operation = SharedOperation;
 
 export interface AnswerRecord {
   value: string;
@@ -59,6 +56,7 @@ export interface DroneImagingContextValue {
   stepIndex: number;
   questionIds: ReturnType<typeof buildQuestionIdMap>;
   getPagePrefix: (subPageNum: number) => string;
+  taskDurationMinutes: number;
 
   // Navigation
   navigateToPage: (pageId: PageId) => void;
@@ -68,7 +66,7 @@ export interface DroneImagingContextValue {
   getAnswer: (questionId: string) => string | undefined;
 
   // Operation logging
-  logOperation: (op: Omit<Operation, 'code'>) => void;
+  logOperation: (op: LogOperationParams) => void;
   clearOperations: () => void;
 
   // Experiment operations
@@ -88,12 +86,6 @@ const STORAGE_KEYS = {
   EXPERIMENT_HISTORY: 'module.g8-drone-imaging.experimentHistory',
   LAST_PAGE_ID: 'module.g8-drone-imaging.lastPageId',
 } as const;
-
-// Helper function to format time
-function formatDateTime(date: Date): string {
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-}
 
 // Default experiment state
 const createDefaultExperimentState = (): ExperimentState => {
@@ -141,11 +133,12 @@ interface DroneImagingProviderProps {
     submoduleId: string;
     moduleName?: string;
   };
+  options?: SubmoduleProps['options'];
 }
 
 // 生成页面元素前缀
 export const getPagePrefix = (subPageNum: number, stepIndex: number) => {
-  const pageNumber = encodeCompositePageNum(stepIndex, subPageNum);
+  const pageNumber = encodeCompositePageNum(stepIndex + 1, subPageNum);
   return `P${pageNumber}_`;
 };
 
@@ -160,14 +153,17 @@ export const buildQuestionIdMap = (stepIndex: number) => ({
 });
 
 // Provider component
-export function DroneImagingProvider({ children, initialPageId, stepIndex: stepIndexProp, flowContext }: DroneImagingProviderProps) {
+export function DroneImagingProvider({ children, initialPageId, stepIndex: stepIndexProp, flowContext, options }: DroneImagingProviderProps) {
   // Track if initial load has been completed
   const initialLoadComplete = useRef(false);
-  const flowContextInjected = useRef(false);
 
   const stepIndex = typeof stepIndexProp === 'number' ? stepIndexProp : 0;
   const questionIds = useMemo(() => buildQuestionIdMap(stepIndex), [stepIndex]);
   const getPagePrefixMemo = useCallback((subPageNum: number) => getPagePrefix(subPageNum, stepIndex), [stepIndex]);
+  const taskDurationMinutes = useMemo(() => {
+    const taskSeconds = options?.timers?.task ?? 1200;
+    return Math.round(taskSeconds / 60);
+  }, [options?.timers?.task]);
 
   const migrateLegacyAnswers = useCallback(
     (source: Record<string, string | AnswerRecord> | null | undefined) => {
@@ -237,7 +233,6 @@ export function DroneImagingProvider({ children, initialPageId, stepIndex: stepI
     }
     return {};
   });
-  const [operations, setOperations] = useState<Operation[]>([]);
   const [experimentState, setExperimentState] = useState<ExperimentState>(() => {
     const defaultState = createDefaultExperimentState();
     try {
@@ -254,7 +249,47 @@ export function DroneImagingProvider({ children, initialPageId, stepIndex: stepI
     }
     return defaultState;
   });
-  const [pageStartTime, setPageStartTime] = useState<string>(formatDateTime(new Date()));
+  const [pageStartTime, setPageStartTime] = useState<string>(formatTimestamp(new Date()));
+
+  const currentSubPageNum = useMemo(() => getSubPageNumByPageId(currentPageId), [currentPageId]);
+  const currentPageNumber = useMemo(
+    () => encodeCompositePageNum(stepIndex + 1, currentSubPageNum),
+    [currentSubPageNum, stepIndex],
+  );
+  const currentPagePrefix = useMemo(
+    () => getPagePrefixMemo(currentSubPageNum),
+    [currentSubPageNum, getPagePrefixMemo],
+  );
+  const flowContextForLogger = useMemo(() => {
+    if (!flowContext) {
+      return null;
+    }
+    const moduleName =
+      typeof flowContext.moduleName === 'string' && flowContext.moduleName.trim().length > 0
+        ? flowContext.moduleName
+        : 'g8-drone-imaging';
+    return {
+      flowId: flowContext.flowId,
+      submoduleId: flowContext.submoduleId,
+      stepIndex,
+      moduleName,
+      pageId: currentPageId,
+    };
+  }, [currentPageId, flowContext, stepIndex]);
+
+  const {
+    operations,
+    logOperation: baseLogOperation,
+    clearOperations: resetOperations,
+  } = useOperationLogger({
+    pageNumber: currentPageNumber,
+    targetPrefix: currentPagePrefix,
+    flowContext: flowContextForLogger,
+  });
+
+  const clearOperations = useCallback(() => {
+    resetOperations();
+  }, [resetOperations]);
 
   // Log initial page restoration
   useEffect(() => {
@@ -267,7 +302,8 @@ export function DroneImagingProvider({ children, initialPageId, stepIndex: stepI
   // Navigation
   const navigateToPage = useCallback((pageId: PageId) => {
     setCurrentPageId(pageId);
-    setPageStartTime(formatDateTime(new Date()));
+    setPageStartTime(formatTimestamp(new Date()));
+    clearOperations();
 
     // Save last page to storage
     try {
@@ -275,7 +311,7 @@ export function DroneImagingProvider({ children, initialPageId, stepIndex: stepI
     } catch (e) {
       console.warn('[DroneImagingContext] Failed to save last page ID:', e);
     }
-  }, []);
+  }, [clearOperations]);
 
   // Answer management
   const setAnswer = useCallback((questionId: string, value: string) => {
@@ -304,52 +340,16 @@ export function DroneImagingProvider({ children, initialPageId, stepIndex: stepI
   }, [answers]);
 
   // Operation logging
-  const logOperation = useCallback((op: Omit<Operation, 'code'>) => {
-    setOperations(prev => {
-      const nextCode = prev.length > 0 ? prev[prev.length - 1].code + 1 : 1;
-      const operation: Operation = {
-        code: nextCode,
-        ...op,
-      };
-      const newOperations = [...prev, operation];
-
-      // Auto-inject flow_context after first page_enter (if in Flow mode)
-      if (
-        op.eventType === EventTypes.PAGE_ENTER &&
-        op.targetElement === 'page' &&
-        flowContext &&
-        !flowContextInjected.current
-      ) {
-        const flowContextOp: Operation = {
-          code: nextCode + 1,
-          targetElement: 'flow_context',
-          eventType: EventTypes.FLOW_CONTEXT,
-          value: JSON.stringify({
-            flowId: flowContext.flowId,
-            stepIndex,
-            submoduleId: flowContext.submoduleId,
-            moduleName: flowContext.moduleName || 'g8-drone-imaging',
-            pageId: currentPageId,
-          }),
-          time: formatDateTime(new Date()),
-        };
-        flowContextInjected.current = true;
-        return [...newOperations, flowContextOp];
-      }
-
-      return newOperations;
-    });
-
-    // Update operation count in experiment state
-    setExperimentState(prev => ({
-      ...prev,
-      operationCount: prev.operationCount + 1,
-    }));
-  }, [flowContext, stepIndex, currentPageId]);
-
-  const clearOperations = useCallback(() => {
-    setOperations([]);
-  }, []);
+  const logOperation = useCallback(
+    (op: LogOperationParams) => {
+      baseLogOperation(op);
+      setExperimentState(prev => ({
+        ...prev,
+        operationCount: prev.operationCount + 1,
+      }));
+    },
+    [baseLogOperation],
+  );
 
   // Experiment operations
   const setHeight = useCallback((height: Height) => {
@@ -393,7 +393,7 @@ export function DroneImagingProvider({ children, initialPageId, stepIndex: stepI
         height: prev.currentHeight as 100 | 200 | 300,
         focalLength: prev.currentFocalLength,
         gsd: prev.currentGSD,
-        timestamp: formatDateTime(new Date()),
+        timestamp: formatTimestamp(new Date()),
       };
 
       const updatedHistory = [...prev.captureHistory, record];
@@ -475,6 +475,7 @@ export function DroneImagingProvider({ children, initialPageId, stepIndex: stepI
     stepIndex,
     questionIds,
     getPagePrefix: getPagePrefixMemo,
+    taskDurationMinutes,
 
     // Navigation
     navigateToPage,
