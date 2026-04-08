@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科学探究测评 - 方案设计</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --cartoon-primary: #59c1ff;
+            --cartoon-green: #67d5b5;
+            --cartoon-dark: #2d5b8e;
+            --cartoon-border: #ffd93d;
+            --cartoon-bg: #f5f7fb;
+            --text-primary: #333333;
+            --text-secondary: #5a6b7e;
+            --card-border: #e3eaf3;
+            --space-lg: 24px;
+            --space-md: 16px;
+            --space-sm: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* 主容器 */
+        .frame-container {
+            width: 1280px;
+            height: 750px;
+            background: var(--cartoon-bg);
+            border: 3px solid var(--cartoon-border);
+            border-radius: 18px;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 25px 80px rgba(102, 126, 234, 0.35),
+                0 10px 30px rgba(118, 75, 162, 0.2);
+        }
+
+        /* 装饰背景 */
+        .bg-decoration {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-circle-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(89, 193, 255, 0.08) 0%, transparent 70%);
+            top: -150px;
+            right: -100px;
+            border-radius: 50%;
+        }
+
+        .bg-circle-2 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(103, 213, 181, 0.08) 0%, transparent 70%);
+            bottom: -100px;
+            left: -80px;
+            border-radius: 50%;
+        }
+
+        .bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(255, 217, 61, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(89, 193, 255, 0.05) 0%, transparent 50%);
+            z-index: 0;
+        }
+
+        /* 内容区域 */
+        .content-area {
+            position: relative;
+            z-index: 1;
+            padding: 36px 50px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: var(--space-md);
+            animation: slideInDown 0.5s ease-out;
+        }
+
+        .badge {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--cartoon-green) 0%, #4bc4a0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            box-shadow:
+                0 4px 15px rgba(103, 213, 181, 0.4),
+                inset 0 2px 4px rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--cartoon-dark);
+            letter-spacing: 1px;
+        }
+
+        /* Instruction Card */
+        .instruction-card {
+            background: white;
+            border: 2px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px 28px;
+            margin-bottom: var(--space-lg);
+            box-shadow: 0 4px 20px rgba(45, 91, 142, 0.06);
+            animation: slideInUp 0.5s ease-out 0.1s both;
+        }
+
+        .instruction-text {
+            font-size: 15px;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .instruction-text strong {
+            color: var(--cartoon-dark);
+            font-weight: 600;
+        }
+
+        /* Input Group - 横向排列 */
+        .input-group {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+
+        .input-card {
+            background: white;
+            border: 2px solid var(--card-border);
+            border-radius: 16px;
+            padding: 22px;
+            transition: all 0.25s ease;
+            animation: slideInUp 0.5s ease-out both;
+            box-shadow: 0 2px 12px rgba(45, 91, 142, 0.04);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-card:nth-child(1) {
+            animation-delay: 0.15s;
+        }
+
+        .input-card:nth-child(2) {
+            animation-delay: 0.25s;
+        }
+
+        .input-card:nth-child(3) {
+            animation-delay: 0.35s;
+        }
+
+        .input-card:hover {
+            border-color: rgba(89, 193, 255, 0.4);
+            box-shadow: 0 8px 28px rgba(89, 193, 255, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .input-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: var(--space-md);
+        }
+
+        .input-number {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--cartoon-primary) 0%, #3aadf0 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 3px 10px rgba(89, 193, 255, 0.35);
+            flex-shrink: 0;
+        }
+
+        .input-label {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .check-icon {
+            margin-left: auto;
+            width: 18px;
+            height: 18px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .textarea-wrapper {
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .idea-textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 180px;
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: #fafbfc;
+            resize: none;
+            transition: all 0.15s ease;
+            font-family: inherit;
+            line-height: 1.6;
+        }
+
+        .idea-textarea:hover {
+            border-color: rgba(89, 193, 255, 0.5);
+            background: white;
+        }
+
+        .idea-textarea:focus {
+            outline: none;
+            border-color: var(--cartoon-primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.25);
+        }
+
+        .idea-textarea::placeholder {
+            color: #a0aec0;
+        }
+
+        /* Footer */
+        .footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            animation: fadeIn 0.5s ease-out 0.5s both;
+        }
+
+        .btn-primary {
+            height: 48px;
+            padding: 0 40px;
+            background: linear-gradient(135deg, var(--cartoon-primary) 0%, #3aadf0 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow:
+                0 4px 0 #2d8fc9,
+                0 8px 20px rgba(45, 143, 201, 0.3);
+            transition: all 0.2s ease;
+            position: relative;
+            top: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            top: -2px;
+            box-shadow:
+                0 6px 0 #2d8fc9,
+                0 12px 28px rgba(45, 143, 201, 0.35);
+        }
+
+        .btn-primary:active {
+            top: 4px;
+            box-shadow:
+                0 0 0 #2d8fc9,
+                0 4px 12px rgba(45, 143, 201, 0.25);
+        }
+
+        .btn-primary:focus {
+            outline: none;
+            box-shadow:
+                0 4px 0 #2d8fc9,
+                0 8px 20px rgba(45, 143, 201, 0.3),
+                0 0 0 3px rgba(89, 193, 255, 0.4);
+        }
+
+        /* 进度指示器 */
+        .progress-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #d4dff0;
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            width: 32px;
+            border-radius: 5px;
+            background: var(--cartoon-primary);
+        }
+
+        .progress-dot.completed {
+            background: var(--cartoon-green);
+        }
+
+        /* 动画关键帧 */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* 减少动画偏好 */
+        @media (prefers-reduced-motion: reduce) {
+
+            .header,
+            .instruction-card,
+            .input-card,
+            .footer {
+                animation: none;
+                opacity: 1;
+                transform: none;
+            }
+
+            .input-card:hover,
+            .btn-primary:hover {
+                transform: none;
+            }
+        }
+
+        /* 字数统计 */
+        .char-count {
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            font-size: 11px;
+            color: #a0aec0;
+            transition: color 0.2s ease;
+            background: linear-gradient(to left, #fafbfc 70%, transparent);
+            padding-left: 20px;
+        }
+
+        .char-count.warning {
+            color: #e67e22;
+        }
+
+        .char-count.limit {
+            color: #e74c3c;
+        }
+
+        .idea-textarea:focus+.char-count {
+            background: linear-gradient(to left, white 70%, transparent);
+        }
+
+        /* 完成状态 */
+        .input-card.filled {
+            border-color: rgba(103, 213, 181, 0.4);
+        }
+
+        .input-card.filled .input-number {
+            background: linear-gradient(135deg, var(--cartoon-green) 0%, #4bc4a0 100%);
+            box-shadow: 0 3px 10px rgba(103, 213, 181, 0.35);
+        }
+
+        .input-card.filled .check-icon {
+            opacity: 1;
+        }
+
+        /* 提示标签 */
+        .hint-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f0f5ff;
+            color: var(--cartoon-dark);
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: auto;
+            padding-top: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="frame-container">
+        <!-- 背景装饰 -->
+        <div class="bg-pattern"></div>
+        <div class="bg-decoration bg-circle-1"></div>
+        <div class="bg-decoration bg-circle-2"></div>
+
+        <div class="content-area">
+            <!-- Header -->
+            <header class="header">
+                <div class="badge">5</div>
+                <h1 class="page-title">蜂蜜变稀：方案设计</h1>
+            </header>
+
+            <!-- Instruction Card -->
+            <div class="instruction-card">
+                <p class="instruction-text">
+                    <strong>引导语：</strong>为验证小明的猜想，首先要确定评估蜂蜜黏度的方法。请提出三个可能的想法，简要陈述在下方。可以从实验器材、操作步骤、观察指标等方面进行思考。
+                </p>
+            </div>
+
+            <!-- Input Group - 横向排列 -->
+            <div class="input-group">
+                <div class="input-card" data-index="1">
+                    <div class="input-header">
+                        <div class="input-number">1</div>
+                        <span class="input-label">想法 1</span>
+                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="#67d5b5" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    </div>
+                    <div class="textarea-wrapper">
+                        <textarea class="idea-textarea" placeholder="请输入你的第一个想法&#10;&#10;例如：通过观察蜂蜜流动的速度来判断黏度..."
+                            maxlength="300"></textarea>
+                        <span class="char-count">0/300</span>
+                    </div>
+                    <div class="hint-tag">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 16v-4M12 8h.01" />
+                        </svg>
+                        提示：从简单观察入手
+                    </div>
+                </div>
+
+                <div class="input-card" data-index="2">
+                    <div class="input-header">
+                        <div class="input-number">2</div>
+                        <span class="input-label">想法 2</span>
+                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="#67d5b5" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    </div>
+                    <div class="textarea-wrapper">
+                        <textarea class="idea-textarea" placeholder="请输入你的第二个想法&#10;&#10;例如：用不同方法测量蜂蜜的下落时间..."
+                            maxlength="300"></textarea>
+                        <span class="char-count">0/300</span>
+                    </div>
+                    <div class="hint-tag">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 16v-4M12 8h.01" />
+                        </svg>
+                        提示：考虑定量测量
+                    </div>
+                </div>
+
+                <div class="input-card" data-index="3">
+                    <div class="input-header">
+                        <div class="input-number">3</div>
+                        <span class="input-label">想法 3</span>
+                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="#67d5b5" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    </div>
+                    <div class="textarea-wrapper">
+                        <textarea class="idea-textarea" placeholder="请输入你的第三个想法&#10;&#10;例如：比较蜂蜜在不同条件下的形态变化..."
+                            maxlength="300"></textarea>
+                        <span class="char-count">0/300</span>
+                    </div>
+                    <div class="hint-tag">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 16v-4M12 8h.01" />
+                        </svg>
+                        提示：对比实验思路
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <button class="btn-primary" id="nextBtn">
+                    <span>下一页</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </footer>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-dot completed"></div>
+            <div class="progress-dot completed"></div>
+            <div class="progress-dot completed"></div>
+            <div class="progress-dot completed"></div>
+            <div class="progress-dot active"></div>
+            <div class="progress-dot"></div>
+            <div class="progress-dot"></div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化元素引用
+        const textareas = document.querySelectorAll('.idea-textarea');
+        const inputCards = document.querySelectorAll('.input-card');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressDots = document.querySelectorAll('.progress-dot');
+
+        // 字数统计功能
+        function updateCharCount(textarea) {
+            const wrapper = textarea.parentElement;
+            const charCount = wrapper.querySelector('.char-count');
+            const currentLength = textarea.value.length;
+            const maxLength = parseInt(textarea.getAttribute('maxlength'));
+
+            charCount.textContent = `${currentLength}/${maxLength}`;
+
+            charCount.classList.remove('warning', 'limit');
+            if (currentLength > maxLength * 0.9) {
+                charCount.classList.add('limit');
+            } else if (currentLength > maxLength * 0.7) {
+                charCount.classList.add('warning');
+            }
+        }
+
+        // 更新卡片状态
+        function updateCardState(card, hasContent) {
+            if (hasContent) {
+                card.classList.add('filled');
+            } else {
+                card.classList.remove('filled');
+            }
+        }
+
+        // 为每个文本框添加事件监听
+        textareas.forEach((textarea, index) => {
+            const card = inputCards[index];
+
+            // 输入事件
+            textarea.addEventListener('input', function () {
+                updateCharCount(this);
+                updateCardState(card, this.value.trim().length > 0);
+            });
+
+            // 聚焦事件
+            textarea.addEventListener('focus', function () {
+                card.style.borderColor = 'rgba(89, 193, 255, 0.5)';
+            });
+
+            // 失焦事件
+            textarea.addEventListener('blur', function () {
+                if (!this.value.trim()) {
+                    card.style.borderColor = '';
+                }
+            });
+        });
+
+        // 下一页按钮点击
+        nextBtn.addEventListener('click', function () {
+            // 检查是否所有输入框都有内容
+            let allFilled = true;
+            const emptyIndices = [];
+
+            textareas.forEach((textarea, index) => {
+                if (!textarea.value.trim()) {
+                    allFilled = false;
+                    emptyIndices.push(index);
+                }
+            });
+
+            if (!allFilled) {
+                // 高亮未填写的输入框
+                emptyIndices.forEach(index => {
+                    const card = inputCards[index];
+                    card.style.borderColor = '#e74c3c';
+                    card.style.animation = 'shake 0.4s ease';
+
+                    setTimeout(() => {
+                        card.style.borderColor = '';
+                        card.style.animation = '';
+                    }, 1000);
+                });
+
+                // 聚焦第一个未填写的输入框
+                textareas[emptyIndices[0]].focus();
+                return;
+            }
+
+            // 成功状态
+            this.innerHTML = `
+        <span>提交成功</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      `;
+            this.style.background = 'linear-gradient(135deg, #67d5b5 0%, #4bc4a0 100%)';
+            this.style.boxShadow = '0 4px 0 #3da88a, 0 8px 20px rgba(103, 213, 181, 0.3)';
+
+            // 更新进度指示器
+            progressDots[4].classList.remove('active');
+            progressDots[4].classList.add('completed');
+            progressDots[5].classList.add('active');
+
+            // 模拟页面跳转
+            setTimeout(() => {
+                this.innerHTML = `
+          <span>下一页</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        `;
+                this.style.background = '';
+                this.style.boxShadow = '';
+            }, 1500);
+        });
+
+        // 添加抖动动画
+        const shakeStyle = document.createElement('style');
+        shakeStyle.textContent = `
+      @keyframes shake {
+        0%, 100% { transform: translateY(-4px) translateX(0); }
+        20% { transform: translateY(-4px) translateX(-6px); }
+        40% { transform: translateY(-4px) translateX(6px); }
+        60% { transform: translateY(-4px) translateX(-4px); }
+        80% { transform: translateY(-4px) translateX(4px); }
+      }
+    `;
+        document.head.appendChild(shakeStyle);
+
+        // 键盘导航支持
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                nextBtn.click();
+            }
+        });
+
+        // 检测减少动画偏好
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        if (prefersReducedMotion.matches) {
+            document.querySelectorAll('.input-card').forEach(card => {
+                card.style.animation = 'none';
+                card.style.opacity = '1';
+            });
+        }
+    </script>
+</body>
+
+</html>

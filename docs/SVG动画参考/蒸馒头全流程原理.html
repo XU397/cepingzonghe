@@ -1,0 +1,312 @@
+import React from 'react';
+
+const MantouProcess = () => {
+
+  // --- 1. 原料组件 (竖向排列) ---
+  const Ingredients = () => (
+    <div className="flex flex-col items-center justify-center gap-2">
+      {/* 面粉 */}
+      <div className="flex flex-col items-center">
+        <svg width="60" height="70" viewBox="0 0 80 100" className="drop-shadow-md">
+          <path d="M10,20 Q5,50 10,90 Q40,100 70,90 Q75,50 70,20 Q60,10 40,15 Q20,10 10,20 Z" fill="#F5F5DC" stroke="#8B4513" strokeWidth="3" />
+          <rect x="20" y="40" width="40" height="20" fill="white" stroke="#8B4513" strokeWidth="2" />
+        </svg>
+        <span className="text-sm font-bold text-gray-700">面粉</span>
+      </div>
+      
+      <span className="text-xl text-gray-400 font-bold leading-none">+</span>
+      
+      {/* 水 */}
+      <div className="flex flex-col items-center">
+        <svg width="40" height="50" viewBox="0 0 60 80" className="drop-shadow-md">
+          <path d="M10,10 L15,70 Q17,80 30,80 Q43,80 45,70 L50,10 Z" fill="rgba(200, 230, 255, 0.5)" stroke="#4A90E2" strokeWidth="3" />
+          <path d="M12,25 L48,25" fill="#ADD8E6" fillOpacity="0.6" />
+          <rect x="12" y="25" width="36" height="45" fill="#ADD8E6" fillOpacity="0.6" />
+        </svg>
+        <span className="text-sm font-bold text-gray-700">水</span>
+      </div>
+
+      <span className="text-xl text-gray-400 font-bold leading-none">+</span>
+
+      {/* 酵母粉 */}
+      <div className="flex flex-col items-center">
+        <svg width="50" height="40" viewBox="0 0 80 60" className="drop-shadow-md">
+          <path d="M10,40 Q40,60 70,40" fill="#D2691E" stroke="#8B4513" strokeWidth="3" />
+          <path d="M15,40 Q40,25 65,40" fill="#E6CBA8" />
+        </svg>
+        <span className="text-sm font-bold text-gray-700">酵母粉</span>
+      </div>
+    </div>
+  );
+
+  // --- 2. 面团组件 (宏观 - 去掉动画) ---
+  const DoughMacro = ({ size = "normal" }) => {
+    const scale = size === "large" ? 1.3 : 1;
+    const color = size === "large" ? "#FEF3C7" : "#FDE68A"; 
+    
+    return (
+      <div className="flex flex-col items-center z-10">
+        <div className="relative">
+          <svg width="160" height="100" viewBox="0 0 160 100" className="drop-shadow-xl">
+             {/* 菜板 */}
+             <path d="M10,70 L150,70 L140,95 L20,95 Z" fill="#DEB887" stroke="#8B4513" strokeWidth="2" />
+             <rect x="10" y="70" width="140" height="4" fill="#CD853F" />
+             
+             {/* 面团 */}
+             <g transform={`translate(80, 65) scale(${scale}) translate(-80, -65)`}>
+                <ellipse cx="80" cy="65" rx="35" ry="25" fill={color} stroke="#D97706" strokeWidth="2" />
+                <ellipse cx="70" cy="55" rx="10" ry="6" fill="white" opacity="0.3" />
+             </g>
+             
+             {/* 蓝色圆圈指示取样点 (无动画) */}
+             <circle cx="80" cy="65" r="5" fill="none" stroke="#2563EB" strokeWidth="2" />
+          </svg>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 3. 蒸笼组件 (宏观) ---
+  const SteamerMacro = () => (
+    <div className="flex flex-col items-center z-10">
+      <div className="relative">
+        {/* 定义蒸汽动画样式 */}
+        <style>{`
+          @keyframes steam-rise {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
+          }
+          .steam-path { animation: steam-rise 2s infinite ease-out; transform-origin: center bottom; }
+          .delay-1 { animation-delay: 0s; }
+          .delay-2 { animation-delay: 0.6s; }
+          .delay-3 { animation-delay: 1.2s; }
+        `}</style>
+        
+        <svg width="160" height="120" viewBox="0 0 160 120" className="drop-shadow-xl overflow-visible">
+           {/* 蒸汽 (添加动画效果，颜色改为浅灰以便在白底可见) */}
+           <g stroke="#9CA3AF" strokeWidth="2" fill="none" strokeLinecap="round">
+             <path d="M50,40 Q60,25 70,40" className="steam-path delay-1" />
+             <path d="M80,30 Q90,15 100,30" className="steam-path delay-2" />
+             <path d="M110,40 Q120,25 130,40" className="steam-path delay-3" />
+           </g>
+
+           {/* 蒸笼身 (位置下移适应蒸汽空间) */}
+           <g transform="translate(0, 10)">
+             <path d="M20,50 L140,50 L130,90 Q80,100 30,90 Z" fill="#D2691E" stroke="#8B4513" strokeWidth="3" />
+             <line x1="20" y1="65" x2="140" y2="65" stroke="#8B4513" strokeWidth="1" />
+             
+             {/* 馒头们 */}
+             <circle cx="50" cy="45" r="20" fill="#FFF" stroke="#E5E7EB" strokeWidth="2" />
+             <circle cx="110" cy="45" r="20" fill="#FFF" stroke="#E5E7EB" strokeWidth="2" />
+             <circle cx="80" cy="55" r="22" fill="#FFF" stroke="#E5E7EB" strokeWidth="2" />
+             
+             {/* 蓝色圆圈指示取样点 */}
+             <circle cx="80" cy="55" r="5" fill="none" stroke="#2563EB" strokeWidth="2" />
+           </g>
+        </svg>
+      </div>
+    </div>
+  );
+
+  // --- 4. 微观结构 (包含CO2多孔结构) ---
+  const MicroView = ({ type }) => {
+    return (
+      <div className="flex flex-col items-center w-full">
+        {/* 向下的蓝色箭头 */}
+        <div className="h-10 w-0.5 bg-blue-400 my-1 relative">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 text-blue-400 text-lg">▼</div>
+        </div>
+
+        {/* 微观圆圈 */}
+        <div className="w-40 h-40 rounded-full border-4 border-gray-600 bg-white shadow-inner flex items-center justify-center overflow-hidden relative">
+          
+          <svg width="100%" height="100%" viewBox="0 0 160 160">
+            {/* 背景纹理 */}
+            <rect width="100%" height="100%" fill="#FAFAFA" />
+
+            {/* 1. 紧密结构 (未发酵) */}
+            {type === 'tight' && (
+              <g>
+                <text x="80" y="25" textAnchor="middle" fontSize="10" fill="#666" fontWeight="bold">面团内部呈网状结构</text>
+                {/* 混乱密集的线条模拟面筋 */}
+                <path d="M20,40 Q50,20 80,40 T140,40" stroke="#D97706" strokeWidth="2" fill="none" />
+                <path d="M20,80 Q50,60 80,80 T140,80" stroke="#D97706" strokeWidth="2" fill="none" />
+                <path d="M20,120 Q50,100 80,120 T140,120" stroke="#D97706" strokeWidth="2" fill="none" />
+                
+                <path d="M40,20 Q60,50 40,80 T40,140" stroke="#D97706" strokeWidth="2" fill="none" />
+                <path d="M80,20 Q100,50 80,80 T80,140" stroke="#D97706" strokeWidth="2" fill="none" />
+                <path d="M120,20 Q140,50 120,80 T120,140" stroke="#D97706" strokeWidth="2" fill="none" />
+                
+                {/* 交叉连接 */}
+                <path d="M30,30 L130,130 M130,30 L30,130" stroke="#B45309" strokeWidth="1" opacity="0.5" />
+              </g>
+            )}
+
+            {/* 2. 发酵结构 (被CO2撑开的网) */}
+            {type === 'gas' && (
+              <g>
+                {/* 模拟多个被撑开的气室 - 类似Voronoi图的效果 */}
+                <path d="M80,80 L80,20 L130,50 L130,110 L80,140 L30,110 L30,50 L80,20" stroke="none" fill="#FEF9C3" opacity="0.3" />
+                
+                {/* 中心的大气室 */}
+                <path d="M50,60 Q80,40 110,60 Q120,90 100,120 Q60,130 40,110 Q30,80 50,60" stroke="#D97706" strokeWidth="3" fill="#FFF" />
+                <text x="80" y="95" textAnchor="middle" fontSize="18" fontWeight="bold" fill="#059669">CO₂</text>
+                {/* 红色箭头表示撑开的力 */}
+                <path d="M80,75 L80,55" stroke="#EF4444" strokeWidth="1.5" markerEnd="url(#force-arrow)" />
+                <path d="M95,90 L115,90" stroke="#EF4444" strokeWidth="1.5" markerEnd="url(#force-arrow)" />
+                <path d="M80,105 L80,125" stroke="#EF4444" strokeWidth="1.5" markerEnd="url(#force-arrow)" />
+                <path d="M65,90 L45,90" stroke="#EF4444" strokeWidth="1.5" markerEnd="url(#force-arrow)" />
+
+                {/* 旁边的小气室 (部分显示) */}
+                <path d="M110,60 Q140,50 150,80" stroke="#D97706" strokeWidth="2" fill="none" strokeDasharray="4,2" />
+                <text x="135" y="75" textAnchor="middle" fontSize="10" fill="#059669" opacity="0.7">CO₂</text>
+                
+                <path d="M50,60 Q20,50 10,80" stroke="#D97706" strokeWidth="2" fill="none" strokeDasharray="4,2" />
+                <text x="25" y="75" textAnchor="middle" fontSize="10" fill="#059669" opacity="0.7">CO₂</text>
+
+                <path d="M100,120 Q120,150 90,160" stroke="#D97706" strokeWidth="2" fill="none" strokeDasharray="4,2" />
+                
+              </g>
+            )}
+
+            {/* 3. 蒸制结构 (固定的气孔) */}
+            {type === 'steamed' && (
+              <g>
+                 {/* 剖面背景 */}
+                 <rect x="0" y="0" width="160" height="160" fill="#FFF" />
+                 
+                 {/* 气孔 */}
+                 <circle cx="40" cy="40" r="12" fill="#EEE" stroke="#DDD" />
+                 <circle cx="80" cy="30" r="18" fill="#EEE" stroke="#DDD" />
+                 <circle cx="120" cy="50" r="10" fill="#EEE" stroke="#DDD" />
+                 
+                 <circle cx="30" cy="90" r="15" fill="#EEE" stroke="#DDD" />
+                 <circle cx="80" cy="90" r="25" fill="#EEE" stroke="#DDD" />
+                 <circle cx="130" cy="90" r="12" fill="#EEE" stroke="#DDD" />
+                 
+                 <circle cx="50" cy="140" r="14" fill="#EEE" stroke="#DDD" />
+                 <circle cx="100" cy="130" r="10" fill="#EEE" stroke="#DDD" />
+                 
+                 <text x="80" y="150" textAnchor="middle" fontSize="11" fill="#555" fontWeight="bold">馒头内部有气孔</text>
+              </g>
+            )}
+
+            <defs>
+              <marker id="force-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill="#EF4444" />
+              </marker>
+            </defs>
+          </svg>
+        </div>
+        
+        {/* 文字描述 - 位于下方 */}
+        <div className="mt-2 text-sm text-gray-700 font-medium text-center max-w-[140px]">
+          {type === 'tight' && "面团内部呈网状结构"}
+          {type === 'gas' && "网状结构包裹住发酵产生的二氧化碳气体，使面团膨胀"}
+          {type === 'steamed' && "蒸好的馒头 (气孔固化)"}
+        </div>
+      </div>
+    );
+  };
+
+  // --- 箭头组件 (横向) ---
+  const ProcessArrow = () => (
+    <div className="hidden lg:flex flex-col justify-start pt-32 px-2">
+      <svg width="40" height="40" viewBox="0 0 40 40" className="text-gray-400">
+        <path d="M0,20 L35,20 M35,20 L25,10 M35,20 L25,30" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </div>
+  );
+
+  // --- 标题组件 ---
+  const StepTitle = ({ number, title }) => (
+    <div className="flex items-center justify-center gap-2 mb-4 bg-amber-50 py-2 rounded-lg w-full border border-amber-100 shadow-sm">
+      <span className="bg-amber-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">{number}</span>
+      <h3 className="text-lg font-bold text-amber-900">{title}</h3>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center font-sans">
+      <div className="w-full max-w-7xl bg-white rounded-3xl shadow-xl p-8 border-4 border-amber-50">
+        
+        {/* Header */}
+        <div className="text-center mb-10 border-b border-gray-100 pb-4">
+          <h1 className="text-3xl font-black text-amber-800 tracking-wider">
+            蒸馒头全流程原理
+          </h1>
+        </div>
+
+        {/* Main Process Flow */}
+        <div className="flex flex-col lg:flex-row justify-between items-stretch gap-4">
+
+          {/* Column 1: Ingredients */}
+          <div className="flex flex-col items-center flex-1 min-w-[150px]">
+            <StepTitle number="1" title="原料准备" />
+            <div className="flex-1 flex flex-col justify-center py-4 bg-blue-50/50 rounded-xl w-full border border-blue-100">
+              <Ingredients />
+            </div>
+          </div>
+
+          <ProcessArrow />
+
+          {/* Column 2: Unfermented Dough */}
+          <div className="flex flex-col items-center flex-1">
+             <StepTitle number="2" title="和面、揉面" />
+             <div className="flex-1 flex flex-col items-center w-full">
+                {/* 宏观 */}
+                <div className="h-40 flex items-center justify-center w-full">
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm font-bold text-amber-900 mb-2">具有弹性的面团</span>
+                    <DoughMacro size="normal" />
+                  </div>
+                </div>
+                {/* 微观 */}
+                <MicroView type="tight" />
+             </div>
+          </div>
+
+          <ProcessArrow />
+
+          {/* Column 3: Fermented Dough */}
+          <div className="flex flex-col items-center flex-1">
+             <StepTitle number="3" title="酵母菌发酵" />
+             <div className="flex-1 flex flex-col items-center w-full">
+                {/* 宏观 */}
+                <div className="h-40 flex items-center justify-center w-full">
+                   <div className="flex flex-col items-center">
+                      <span className="text-sm font-bold text-amber-900 mb-2">体积变大的面团</span>
+                      <DoughMacro size="large" />
+                   </div>
+                </div>
+                {/* 微观 */}
+                <MicroView type="gas" />
+             </div>
+          </div>
+
+          <ProcessArrow />
+
+          {/* Column 4: Steamed Buns */}
+          <div className="flex flex-col items-center flex-1">
+             <StepTitle number="4" title="蒸制" />
+             <div className="flex-1 flex flex-col items-center w-full">
+                {/* 宏观 */}
+                <div className="h-40 flex items-center justify-center w-full">
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm font-bold text-amber-900 mb-2">蒸好的馒头</span>
+                    <SteamerMacro />
+                  </div>
+                </div>
+                {/* 微观 */}
+                <MicroView type="steamed" />
+             </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MantouProcess;

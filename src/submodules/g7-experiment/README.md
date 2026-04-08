@@ -63,7 +63,6 @@ export function getDefaultTimers(): { task?: number; questionnaire?: number };
 - `g7-questionnaire` - 7年级问卷
 - `g7-tracking-experiment` - 7年级追踪实验
 - `g7-tracking-questionnaire` - 7年级追踪问卷
-- `g4-experiment` - 4年级实验
 
 每个子模块需要：
 1. 创建目录 `submodules/<submoduleId>/`

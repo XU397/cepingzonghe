@@ -312,6 +312,23 @@ const {
 />
 ```
 
+## 倒计时显示控制
+
+- `displayOptions.hideTimerDisplay`：控制是否隐藏倒计时显示，默认 `false`。仅影响 UI（不渲染计时组件），计时逻辑、超时触发、持久化行为保持不变。
+- 配置来源：登录成功后读取后端响应中的 `displayOptions.hideTimerDisplay`，在 `handleLoginSuccess` 内通过 `updateDisplayOptions(..., { forceOverwrite: true })` 写入 AppContext，并覆盖旧的 localStorage 持久化值。
+- 传递链路：后端登录响应 → AppContext 存储 `displayOptions` 并计算 `shouldHideTimer` → `TimerContainer` 读取 `shouldHideTimer` → `TimerDisplay` 接收 `hidden` 属性并决定是否渲染。
+- 子模块适配：优先复用 `TimerContainer` / `TimerDisplay`（已支持 `hidden`）。若子模块存在自定义 Timer 组件（如 GlobalTimer、QuestionnaireTimer 等），需在渲染前读取 `shouldHideTimer` 进行短路，计时器服务可继续运行：
+
+```jsx
+import { useAppContext } from '@/context/AppContext.jsx';
+
+function CustomTimer() {
+  const { shouldHideTimer } = useAppContext();
+  if (shouldHideTimer) return null;
+  // 继续渲染自定义计时 UI，计时逻辑不变
+}
+```
+
 ## 默认配置
 
 ### 计时器类型配置

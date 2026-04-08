@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>香蕉变黑动画</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #FAFAFA;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: radial-gradient(circle at 50% 40%, #FFF8E7, #FFE4A0);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        svg {
+            display: block;
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+        }
+
+        .controls {
+            margin-top: 24px;
+        }
+
+        button {
+            background-color: #D97706;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(217, 119, 6, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #B45309;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(217, 119, 6, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="canvas-container">
+        <svg id="banana-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- 地面阴影的模糊滤镜 -->
+                <filter id="shadow-blur" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="15" />
+                </filter>
+                
+                <!-- 定义香蕉的形状，用于将黑斑限制在香蕉内部 -->
+                <clipPath id="banana-clip">
+                    <path d="M 150,370 C 280,600 540,560 650,300 Q 655,250 620,220 C 480,410 300,420 160,330 Q 140,350 150,370 Z" />
+                </clipPath>
+
+                <!-- 香蕉表皮的基础黄色渐变 -->
+                <linearGradient id="skin-grad" x1="0%" y1="0%" x2="80%" y2="100%">
+                    <stop offset="0%" stop-color="#FEF08A" />
+                    <stop offset="40%" stop-color="#FACC15" />
+                    <stop offset="90%" stop-color="#CA8A04" />
+                </linearGradient>
+            </defs>
+
+            <!-- 底部阴影 (为竖立的香蕉重新调整位置和尺寸，使其聚拢在底部尖端下方) -->
+            <ellipse cx="400" cy="580" rx="120" ry="18" fill="#D97706" opacity="0.25" filter="url(#shadow-blur)" />
+            <ellipse cx="395" cy="580" rx="70" ry="10" fill="#92400E" opacity="0.3" filter="url(#shadow-blur)" />
+
+            <!-- 将整个香蕉旋转为竖直方向 (逆时针旋转75度，并微调位置) -->
+            <g transform="translate(0, 20) rotate(-75 400 300)">
+                <!-- 香蕉右侧的根茎 (Stem) -->
+                <!-- 配合香蕉的变粗，下方呈宽大状态然后快速聚拢 -->
+                <path d="M 620,220 Q 645,160 665,140 L 700,155 Q 680,210 645,295 Z" fill="#84CC16" />
+                <path d="M 620,220 Q 645,160 665,140 L 700,155 Q 680,210 645,295 Z" fill="#65A30D" opacity="0.6" />
+                <polygon points="665,140 700,155 695,165 655,150" fill="#3F2723" />
+
+                <!-- 香蕉左侧的底部尖端 (Tip) -->
+                <path d="M 150,370 L 125,375 L 130,325 L 160,330 Z" fill="#3F2723" />
+
+                <!-- 核心部分：使用Clip-Path剪裁的香蕉主体 -->
+                <g clip-path="url(#banana-clip)">
+                    <!-- 1. 完美的黄色背景 -->
+                    <rect x="0" y="0" width="800" height="600" fill="url(#skin-grad)" />
+
+                    <!-- 2. 香蕉表面的棱线，增加立体感 -->
+                    <path d="M 155,360 C 300,530 530,510 645,280" fill="none" stroke="#A16207" stroke-width="4" opacity="0.6" />
+                    <path d="M 160,345 C 310,440 500,430 635,240" fill="none" stroke="#FEF08A" stroke-width="6" opacity="0.7" />
+
+                    <!-- === 动画层：斑点与腐坏过程 === -->
+
+                    <!-- 阶段 1：早期出现的微小雀斑 -->
+                    <circle cx="280" cy="440" r="0" fill="#5D4037"><animate attributeName="r" to="5" begin="0.5s" dur="1s" fill="freeze"/></circle>
+                    <circle cx="350" cy="480" r="0" fill="#5D4037"><animate attributeName="r" to="6" begin="1s" dur="1s" fill="freeze"/></circle>
+                    <circle cx="480" cy="400" r="0" fill="#5D4037"><animate attributeName="r" to="4" begin="1.5s" dur="1s" fill="freeze"/></circle>
+                    <circle cx="550" cy="320" r="0" fill="#5D4037"><animate attributeName="r" to="7" begin="1.8s" dur="1s" fill="freeze"/></circle>
+                    <circle cx="400" cy="430" r="0" fill="#5D4037"><animate attributeName="r" to="5" begin="2s" dur="1s" fill="freeze"/></circle>
+                    <circle cx="220" cy="390" r="0" fill="#5D4037"><animate attributeName="r" to="5" begin="2.2s" dur="1s" fill="freeze"/></circle>
+
+                    <!-- 阶段 2：中等大小的斑块开始扩散 -->
+                    <circle cx="250" cy="450" r="0" fill="#3E2723"><animate attributeName="r" to="35" begin="2.5s" dur="3s" fill="freeze"/></circle>
+                    <circle cx="360" cy="490" r="0" fill="#3E2723"><animate attributeName="r" to="45" begin="3s" dur="3s" fill="freeze"/></circle>
+                    <circle cx="470" cy="420" r="0" fill="#3E2723"><animate attributeName="r" to="50" begin="3.5s" dur="3s" fill="freeze"/></circle>
+                    <circle cx="550" cy="360" r="0" fill="#3E2723"><animate attributeName="r" to="30" begin="4s" dur="3s" fill="freeze"/></circle>
+
+                    <!-- 阶段 3：大面积的深黑色斑块呈椭圆形蔓延，模拟真实的腐坏形状 -->
+                    <ellipse cx="230" cy="440" rx="0" ry="0" fill="#1C1917" transform="rotate(20 230 440)">
+                        <animate attributeName="rx" to="120" begin="4.5s" dur="4s" fill="freeze"/>
+                        <animate attributeName="ry" to="90" begin="4.5s" dur="4s" fill="freeze"/>
+                    </ellipse>
+                    
+                    <ellipse cx="340" cy="490" rx="0" ry="0" fill="#1C1917" transform="rotate(10 340 490)">
+                        <animate attributeName="rx" to="140" begin="5s" dur="4s" fill="freeze"/>
+                        <animate attributeName="ry" to="100" begin="5s" dur="4s" fill="freeze"/>
+                    </ellipse>
+
+                    <ellipse cx="460" cy="460" rx="0" ry="0" fill="#1C1917" transform="rotate(-15 460 460)">
+                        <animate attributeName="rx" to="150" begin="5.5s" dur="4s" fill="freeze"/>
+                        <animate attributeName="ry" to="110" begin="5.5s" dur="4s" fill="freeze"/>
+                    </ellipse>
+
+                    <ellipse cx="570" cy="340" rx="0" ry="0" fill="#1C1917" transform="rotate(-35 570 340)">
+                        <animate attributeName="rx" to="130" begin="6s" dur="4s" fill="freeze"/>
+                        <animate attributeName="ry" to="90" begin="6s" dur="4s" fill="freeze"/>
+                    </ellipse>
+
+                    <ellipse cx="630" cy="260" rx="0" ry="0" fill="#1C1917" transform="rotate(-50 630 260)">
+                        <animate attributeName="rx" to="100" begin="6.5s" dur="4s" fill="freeze"/>
+                        <animate attributeName="ry" to="70" begin="6.5s" dur="4s" fill="freeze"/>
+                    </ellipse>
+
+                    <ellipse cx="170" cy="370" rx="0" ry="0" fill="#1C1917" transform="rotate(40 170 370)">
+                        <animate attributeName="rx" to="90" begin="6.8s" dur="4s" fill="freeze"/>
+                        <animate attributeName="ry" to="60" begin="6.8s" dur="4s" fill="freeze"/>
+                    </ellipse>
+
+                    <!-- 阶段 4：最后淡入一层纯黑，缝合所有可能剩余的黄色缝隙，完成变黑全过程 -->
+                    <rect x="0" y="0" width="800" height="600" fill="#151312" opacity="0">
+                        <animate attributeName="opacity" to="0.95" begin="8s" dur="3s" fill="freeze"/>
+                    </rect>
+                </g>
+            </g>
+        </svg>
+    </div>
+
+    <div class="controls">
+        <button onclick="replayAnimation()">重新播放动画</button>
+    </div>
+
+    <script>
+        function replayAnimation() {
+            const svg = document.getElementById('banana-svg');
+            // 将SVG内部的时间轴重置为0，这会重新触发所有的 <animate> 标签
+            svg.setCurrentTime(0);
+        }
+    </script>
+
+</body>
+</html>

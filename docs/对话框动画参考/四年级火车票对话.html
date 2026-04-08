@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>假期安排讨论群</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 自定义字体和动画 */
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f0f8ff; /* 浅蓝背景 */
+            background-image: radial-gradient(#e0f2fe 15%, transparent 16%), radial-gradient(#e0f2fe 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+        }
+
+        .cartoon-font {
+            font-family: 'ZCOOL KuaiLe', cursive; /* 可爱的卡通标题字体 */
+        }
+
+        /* 消息气泡动画 */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .message-enter {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 头像样式 */
+        .avatar-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center overflow-hidden">
+
+    <!-- 手机外框容器 -->
+    <div class="relative w-full h-full md:max-w-md md:h-[90vh] bg-white md:rounded-[3rem] shadow-2xl overflow-hidden border-8 border-gray-800 flex flex-col">
+        
+        <!-- 顶部刘海/状态栏 (仅装饰) -->
+        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-40 h-6 bg-gray-800 rounded-b-xl z-20 hidden md:block"></div>
+        
+        <!-- 头部导航栏 -->
+        <header class="bg-blue-500 p-4 pt-6 md:pt-8 text-white flex items-center shadow-md z-10">
+            <button class="mr-3 hover:bg-blue-600 p-1 rounded-full transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="flex-1">
+                <h1 class="text-xl font-bold cartoon-font tracking-wide">假期安排讨论群 (4)</h1>
+            </div>
+            <button class="hover:bg-blue-600 p-1 rounded-full transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+        </header>
+
+        <!-- 聊天内容区域 -->
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50 no-scrollbar relative">
+            <!-- 消息会通过 JS 动态插入到这里 -->
+            
+            <!-- 正在输入提示 -->
+            <div id="typing-indicator" class="hidden flex items-center space-x-2 p-2 w-fit ml-12">
+                <div class="flex space-x-1">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                </div>
+            </div>
+            
+            <!-- 底部占位，防止内容被输入框遮挡 -->
+            <div class="h-4"></div>
+        </div>
+
+        <!-- 底部输入栏 (装饰用) -->
+        <div class="bg-white p-3 border-t border-gray-200 flex items-center gap-2">
+            <button class="text-gray-500 p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </button>
+            <div class="flex-1 bg-gray-100 rounded-full h-10 px-4 flex items-center text-gray-400 text-sm">
+                想说点什么...
+            </div>
+            <button class="bg-blue-500 text-white rounded-full p-2 w-10 h-10 flex items-center justify-center shadow-lg transform active:scale-95 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+        </div>
+
+        <!-- 重播按钮 -->
+        <button onclick="restartChat()" class="absolute bottom-20 right-4 bg-white/80 backdrop-blur text-blue-600 p-2 rounded-full shadow-lg border border-blue-100 hover:bg-blue-50 transition z-20 group" title="重新播放">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:-rotate-180 transition duration-500"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/></svg>
+        </button>
+    </div>
+
+    <script>
+        // 定义角色数据 (SVG 头像)
+        const characters = {
+            uncle: {
+                name: '舅舅',
+                color: 'bg-blue-100', // 气泡颜色
+                textColor: 'text-gray-800',
+                side: 'left',
+                // SVG Avatar
+                avatar: `<svg viewBox="0 0 100 100" class="w-full h-full bg-yellow-100"><circle cx="50" cy="50" r="45" fill="#fde68a"/><path d="M30,40 Q50,55 70,40" stroke="#333" stroke-width="3" fill="none"/><circle cx="35" cy="35" r="4" fill="#333"/><circle cx="65" cy="35" r="4" fill="#333"/><path d="M50,20 Q65,10 80,25" fill="#5c4033"/><path d="M50,20 Q35,10 20,25" fill="#5c4033"/><rect x="40" y="80" width="20" height="20" fill="#ef4444"/><path d="M40,80 L50,90 L60,80" fill="white"/></svg>`
+            },
+            ming: {
+                name: '小明',
+                color: 'bg-orange-300', // 气泡颜色 (原图橙色)
+                textColor: 'text-gray-900',
+                side: 'right',
+                avatar: `<svg viewBox="0 0 100 100" class="w-full h-full bg-blue-100"><circle cx="50" cy="50" r="45" fill="#bfdbfe"/><path d="M30,55 Q50,75 70,55" stroke="#333" stroke-width="3" fill="none"/><circle cx="35" cy="45" r="4" fill="#333"/><circle cx="65" cy="45" r="4" fill="#333"/><path d="M20,30 Q50,10 80,30" fill="#374151"/><path d="M10,40 Q20,30 20,50" fill="#374151"/><path d="M90,40 Q80,30 80,50" fill="#374151"/></svg>`
+            },
+            mom: {
+                name: '妈妈',
+                color: 'bg-blue-100',
+                textColor: 'text-gray-800',
+                side: 'left',
+                avatar: `<svg viewBox="0 0 100 100" class="w-full h-full bg-pink-100"><circle cx="50" cy="50" r="45" fill="#fbcfe8"/><path d="M35,60 Q50,70 65,60" stroke="#c026d3" stroke-width="2" fill="none"/><circle cx="35" cy="45" r="4" fill="#333"/><circle cx="65" cy="45" r="4" fill="#333"/><path d="M20,20 Q50,60 80,20 L85,80 Q50,100 15,80 Z" fill="#701a75"/></svg>`
+            },
+            dad: {
+                name: '爸爸',
+                color: 'bg-blue-100',
+                textColor: 'text-gray-800',
+                side: 'left',
+                avatar: `<svg viewBox="0 0 100 100" class="w-full h-full bg-green-100"><circle cx="50" cy="50" r="45" fill="#dcfce7"/><rect x="25" y="40" width="20" height="12" rx="2" stroke="#333" stroke-width="2" fill="none"/><rect x="55" y="40" width="20" height="12" rx="2" stroke="#333" stroke-width="2" fill="none"/><line x1="45" y1="46" x2="55" y2="46" stroke="#333" stroke-width="2"/><path d="M35,65 Q50,75 65,65" stroke="#333" stroke-width="2" fill="none"/><path d="M25,25 Q50,15 75,25" fill="#1e293b"/></svg>`
+            }
+        };
+
+        // 聊天脚本
+        const script = [
+            { id: 'uncle', text: '<span class="text-blue-600 font-bold">@小明</span> 你什么时候放暑假呀？' },
+            { id: 'ming', text: '舅舅，我7月8号放暑假！' },
+            { id: 'uncle', text: '这个假期有时间来成都看大熊猫吗？' },
+            { id: 'ming', text: '好呀，我有时间！爸爸妈妈有时间陪我一起去吗？' },
+            { id: 'mom', text: '没问题，我们可以选一个周末去，南充离成都不远。' },
+            { id: 'dad', text: '7月27号怎么样？那天是周六，我们不用上班。' },
+            { id: 'ming', text: '太好啦！那我来负责买火车票吧。' },
+            { id: 'uncle', text: '记得到达站选择成都东站，那里交通方便。<span class="text-blue-600 font-bold">@小明</span>' },
+            { id: 'mom', text: '另外路上不要花太长时间，争取在18时30分前到成都东站。' }
+        ];
+
+        const chatContainer = document.getElementById('chat-container');
+        const typingIndicator = document.getElementById('typing-indicator');
+        let currentIndex = 0;
+        let isTyping = false;
+
+        function createMessageElement(messageData) {
+            const char = characters[messageData.id];
+            const isRight = char.side === 'right';
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex w-full message-enter mb-6 ${isRight ? 'justify-end' : 'justify-start'}`;
+            
+            // 头像 HTML
+            const avatarHtml = `
+                <div class="flex flex-col items-center space-y-1 ${isRight ? 'order-2 ml-3' : 'mr-3'}">
+                    <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white avatar-shadow transform hover:scale-110 transition duration-300 bg-white">
+                        ${char.avatar}
+                    </div>
+                    <span class="text-xs text-gray-500 font-medium">${char.name}</span>
+                </div>
+            `;
+
+            // 气泡 HTML
+            // 小明的气泡带有一个特殊的尖角样式
+            const bubbleHtml = `
+                <div class="relative max-w-[70%] ${isRight ? 'order-1' : ''}">
+                    <div class="${char.color} ${char.textColor} px-5 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed relative z-10 break-words border border-black/5">
+                        ${messageData.text}
+                    </div>
+                    <!-- 气泡尖角 -->
+                    <div class="absolute top-4 ${isRight ? '-right-2 bg-orange-300' : '-left-2 bg-blue-100'} w-4 h-4 transform rotate-45 z-0 rounded-sm"></div>
+                </div>
+            `;
+
+            wrapper.innerHTML = avatarHtml + bubbleHtml;
+            return wrapper;
+        }
+
+        async function showNextMessage() {
+            if (currentIndex >= script.length) return;
+
+            // 显示"正在输入"动画
+            isTyping = true;
+            typingIndicator.style.display = 'flex';
+            // 确保正在输入时也能看到底部
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // 模拟打字/阅读延迟 (根据字数动态调整，至少 800ms)
+            const delay = Math.min(Math.max(script[currentIndex].text.length * 100, 1200), 2500);
+            
+            await new Promise(r => setTimeout(r, delay));
+
+            // 隐藏正在输入
+            typingIndicator.style.display = 'none';
+            isTyping = false;
+
+            // 添加消息
+            const msgElement = createMessageElement(script[currentIndex]);
+            // 插入到 typing indicator 之前
+            chatContainer.insertBefore(msgElement, typingIndicator);
+            
+            // 播放轻微的提示音效 (可选，这里仅做 DOM 操作)
+            
+            // 滚动到底部
+            chatContainer.scrollTo({
+                top: chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+
+            currentIndex++;
+            
+            // 继续下一条，稍微快一点的节奏
+            setTimeout(showNextMessage, 500);
+        }
+
+        function restartChat() {
+            // 清空除 typing indicator 之外的所有消息
+            const messages = chatContainer.querySelectorAll('.message-enter');
+            messages.forEach(msg => msg.remove());
+            currentIndex = 0;
+            // 稍微延迟后开始
+            setTimeout(showNextMessage, 500);
+        }
+
+        // 页面加载完成后开始对话
+        window.onload = () => {
+            setTimeout(showNextMessage, 1000);
+        };
+
+    </script>
+</body>
+</html>

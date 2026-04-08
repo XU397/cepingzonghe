@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务条拖动动画演示</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    }
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // 图标组件
+    const Play = ({ size = 24, fill = "currentColor" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill={fill}>
+        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+      </svg>
+    );
+
+    const RotateCcw = ({ size = 24 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <polyline points="1 4 1 10 7 10"></polyline>
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+      </svg>
+    );
+
+    const TASKS = [
+      { id: 1, label: '①', fullLabel: '① 洗水壶 (1分钟)', color: '#2563EB', width: 40 },
+      { id: 2, label: '②', fullLabel: '② 烧热水 (10分钟)', color: '#EA580C', width: 400 },
+      { id: 3, label: '③', fullLabel: '③ 灌水 (2分钟)', color: '#6B7280', width: 80 },
+      { id: 4, label: '④', fullLabel: '④ 整理背包 (2分钟)', color: '#15803D', width: 80 },
+      { id: 5, label: '⑤', fullLabel: '⑤ 吃早饭 (6分钟)', color: '#DB2777', width: 240 },
+    ];
+
+    // --- 布局参数调整 ---
+    const CANVAS_WIDTH = 1000;
+    const CANVAS_HEIGHT = 450;
+    const INITIAL_Y = 50;
+
+    // 缩减间距：从 180 上移到 130
+    const TIMELINE_ZONE_Y = 130;
+    // 降低高度：从 300 减小到 220
+    const TIMELINE_ZONE_HEIGHT = 220;
+
+    // 内部行位置自适应调整
+    const TIMELINE_Y_MAIN = TIMELINE_ZONE_Y + 70;
+    const TIMELINE_Y_SUB = TIMELINE_ZONE_Y + 130;
+
+    const TIMELINE_START_X = 50;
+    const SNAP_THRESHOLD = 30; // 吸附阈值
+
+    function App() {
+      const [blocks, setBlocks] = useState([]);
+      const blocksRef = useRef([]);
+
+      const [draggingId, setDraggingId] = useState(null);
+      const [offset, setOffset] = useState({ x: 0, y: 0 });
+      const [isAnimating, setIsAnimating] = useState(false);
+      const [cursor, setCursor] = useState({
+        x: CANVAS_WIDTH / 2,
+        y: CANVAS_HEIGHT / 2,
+        visible: false,
+        grabbing: false
+      });
+
+      // 同步 Ref
+      useEffect(() => {
+        blocksRef.current = blocks;
+      }, [blocks]);
+
+      useEffect(() => {
+        resetBlocks();
+      }, []);
+
+      const resetBlocks = () => {
+        let currentX = 50;
+        const gap = 20;
+
+        const initialBlocks = TASKS.map((task) => {
+          const blockX = currentX;
+          currentX += task.width + gap;
+          return {
+            ...task,
+            x: blockX,
+            y: INITIAL_Y,
+            initialX: blockX,
+            isPlaced: false,
+          };
+        });
+        setBlocks(initialBlocks);
+        setCursor({ x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, visible: false, grabbing: false });
+        setIsAnimating(false);
+      };
+
+      // --- Drag and Drop Logic ---
+
+      const handlePointerDown = (e, id) => {
+        if (isAnimating) return;
+        const block = blocks.find(b => b.id === id);
+        if (!block) return;
+
+        const svg = e.currentTarget.closest('svg');
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        setDraggingId(id);
+        setOffset({ x: svgP.x - block.x, y: svgP.y - block.y });
+
+        // 提到最上层
+        setBlocks(prev => [...prev.filter(b => b.id !== id), block]);
+
+        e.currentTarget.setPointerCapture(e.pointerId);
+      };
+
+      const handlePointerMove = (e) => {
+        if (draggingId === null || isAnimating) return;
+
+        const svg = e.currentTarget.closest('svg');
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        setBlocks(prev => prev.map(b => {
+          if (b.id === draggingId) {
+            return { ...b, x: svgP.x - offset.x, y: svgP.y - offset.y };
+          }
+          return b;
+        }));
+      };
+
+      const handlePointerUp = (e) => {
+        if (draggingId === null) return;
+
+        const draggingBlock = blocks.find(b => b.id === draggingId);
+        if (draggingBlock) {
+          let newX = draggingBlock.x;
+          let newY = draggingBlock.y;
+
+          // 1. Y轴吸附 (行对齐：第一行 或 第二行)
+          let isSnappedY = false;
+
+          if (Math.abs(newY - TIMELINE_Y_MAIN) < SNAP_THRESHOLD) {
+            newY = TIMELINE_Y_MAIN;
+            isSnappedY = true;
+          } else if (Math.abs(newY - TIMELINE_Y_SUB) < SNAP_THRESHOLD) {
+            newY = TIMELINE_Y_SUB;
+            isSnappedY = true;
+          } else if (Math.abs(newY - INITIAL_Y) < SNAP_THRESHOLD) {
+            newY = INITIAL_Y;
+          }
+
+          // 2. X轴吸附 (增强版智能对齐：支持 左-左, 左-右, 右-右, 右-左)
+          if (isSnappedY) {
+            let bestX = newX;
+            let minDiff = SNAP_THRESHOLD;
+            let foundSnap = false;
+
+            // 2.1. 吸附到时间轴起点
+            if (Math.abs(newX - TIMELINE_START_X) < SNAP_THRESHOLD) {
+              bestX = TIMELINE_START_X;
+              minDiff = Math.abs(newX - TIMELINE_START_X);
+              foundSnap = true;
+            }
+
+            // 2.2. 与其他方块边缘对齐
+            blocks.forEach(otherBlock => {
+              if (otherBlock.id === draggingId) return;
+              if (otherBlock.y < 100) return; // 忽略待办区的方块
+
+              const otherLeft = otherBlock.x;
+              const otherRight = otherBlock.x + otherBlock.width;
+              const myWidth = draggingBlock.width;
+
+              // --- 情况 A: 左侧对齐 (Start Together) ---
+              // 我的左边 == 你的左边
+              const distLL = Math.abs(newX - otherLeft);
+              if (distLL < minDiff) {
+                minDiff = distLL;
+                bestX = otherLeft;
+                foundSnap = true;
+              }
+
+              // --- 情况 B: 首尾相接 (Sequential) ---
+              // 我的左边 == 你的右边
+              const distLR = Math.abs(newX - otherRight);
+              if (distLR < minDiff) {
+                minDiff = distLR;
+                bestX = otherRight;
+                foundSnap = true;
+              }
+
+              // --- 情况 C: 右侧对齐 (Finish Together) ---
+              // 我的右边 == 你的右边 => myX + myW = otherRight => myX = otherRight - myW
+              const targetX_RR = otherRight - myWidth;
+              const distRR = Math.abs(newX - targetX_RR);
+              if (distRR < minDiff) {
+                minDiff = distRR;
+                bestX = targetX_RR;
+                foundSnap = true;
+              }
+
+              // --- 情况 D: 紧贴左侧 (Insert Before) ---
+              // 我的右边 == 你的左边 => myX + myW = otherLeft => myX = otherLeft - myW
+              const targetX_RL = otherLeft - myWidth;
+              const distRL = Math.abs(newX - targetX_RL);
+              if (distRL < minDiff) {
+                minDiff = distRL;
+                bestX = targetX_RL;
+                foundSnap = true;
+              }
+            });
+
+            if (foundSnap) {
+              newX = bestX;
+            }
+          }
+
+          setBlocks(prev => prev.map(b =>
+            b.id === draggingId ? { ...b, x: newX, y: newY } : b
+          ));
+        }
+
+        setDraggingId(null);
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      };
+
+      // --- Animation Logic ---
+
+      const animateMove = async (blockId, targetX, targetY) => {
+        return new Promise(resolve => {
+          const duration = 800;
+          const start = performance.now();
+
+          const currentBlock = blocksRef.current.find(item => item.id === blockId);
+          if (!currentBlock) {
+            resolve();
+            return;
+          }
+
+          const startX = currentBlock.x;
+          const startY = currentBlock.y;
+          const blockWidth = currentBlock.width;
+
+          const animate = (time) => {
+            const elapsed = time - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+            const currentX = startX + (targetX - startX) * ease(progress);
+            const currentY = startY + (targetY - startY) * ease(progress);
+
+            setBlocks(prev => prev.map(b =>
+              b.id === blockId ? { ...b, x: currentX, y: currentY } : b
+            ));
+
+            setCursor(prev => ({ ...prev, x: currentX + blockWidth / 2, y: currentY + 25 }));
+
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              resolve();
+            }
+          };
+
+          requestAnimationFrame(animate);
+        });
+      };
+
+      const animateCursor = async (targetX, targetY) => {
+        return new Promise(resolve => {
+          const duration = 500;
+          const start = performance.now();
+
+          let startCursorX, startCursorY;
+          setCursor(prev => {
+            startCursorX = prev.x;
+            startCursorY = prev.y;
+            return prev;
+          });
+
+          const animate = (time) => {
+            const elapsed = time - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = t => t * (2 - t);
+
+            const currentX = startCursorX + (targetX - startCursorX) * ease(progress);
+            const currentY = startCursorY + (targetY - startCursorY) * ease(progress);
+
+            setCursor(prev => ({ ...prev, x: currentX, y: currentY }));
+
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              resolve();
+            }
+          };
+
+          requestAnimationFrame(animate);
+        });
+      };
+
+      const runSimulation = async () => {
+        if (isAnimating) return;
+        setIsAnimating(true);
+        resetBlocks();
+
+        await new Promise(r => setTimeout(r, 100));
+        setCursor({ x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, visible: true, grabbing: false });
+
+        const steps = [
+          { id: 1, x: TIMELINE_START_X, y: TIMELINE_Y_MAIN },
+          { id: 2, x: TIMELINE_START_X + 40, y: TIMELINE_Y_MAIN },
+          { id: 4, x: TIMELINE_START_X + 40, y: TIMELINE_Y_SUB },
+          { id: 5, x: TIMELINE_START_X + 40 + 400, y: TIMELINE_Y_MAIN },
+          { id: 3, x: TIMELINE_START_X + 40 + 400 + 240, y: TIMELINE_Y_MAIN },
+        ];
+
+        for (let step of steps) {
+          const taskIndex = TASKS.findIndex(t => t.id === step.id);
+
+          let currentX = 50;
+          for (let i = 0; i < taskIndex; i++) {
+            currentX += TASKS[i].width + 20;
+          }
+
+          const sourceX = currentX + TASKS[taskIndex].width / 2;
+          const sourceY = INITIAL_Y + 25;
+
+          setBlocks(prev => {
+            const b = prev.find(item => item.id === step.id);
+            if (!b) return prev;
+            return [...prev.filter(item => item.id !== step.id), b];
+          });
+
+          await new Promise(r => setTimeout(r, 20));
+
+          await animateCursor(sourceX, sourceY);
+          setCursor(prev => ({ ...prev, grabbing: true }));
+          await new Promise(r => setTimeout(r, 200));
+
+          await animateMove(step.id, step.x, step.y);
+
+          setCursor(prev => ({ ...prev, grabbing: false }));
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        setCursor(prev => ({ ...prev, visible: false }));
+        setIsAnimating(false);
+      };
+
+      return (
+        <div className="w-full min-h-screen bg-slate-50 flex flex-col items-center p-4 font-sans text-slate-800">
+          <div className="flex gap-4 mb-4 mt-6">
+            <button
+              onClick={runSimulation}
+              disabled={isAnimating}
+              className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors ${
+                isAnimating
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
+              }`}
+            >
+              <Play size={20} fill={isAnimating ? "currentColor" : "currentColor"} />
+              {isAnimating ? '演示中...' : '播放演示'}
+            </button>
+
+            <button
+              onClick={resetBlocks}
+              disabled={isAnimating}
+              className="flex items-center gap-2 px-6 py-2 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+            >
+              <RotateCcw size={20} />
+              重置
+            </button>
+          </div>
+
+          <div className="relative w-full max-w-5xl bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden select-none">
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+              <div className="absolute top-[20px] left-[20px] text-sm font-bold text-slate-400 uppercase tracking-widest">
+                代办任务区
+              </div>
+
+              <div
+                className="absolute left-[20px] text-sm font-bold text-slate-400 uppercase tracking-widest"
+                style={{ top: `${TIMELINE_Y_MAIN - SNAP_THRESHOLD - 25}px` }}
+              >
+                时间安排区 (请拖入此处)
+              </div>
+
+              <div
+                className="absolute left-[20px] right-[20px] border-2 border-dashed border-slate-300 rounded-xl"
+                style={{
+                  top: `${TIMELINE_Y_MAIN - SNAP_THRESHOLD}px`,
+                  height: `${(TIMELINE_Y_SUB + 50 + SNAP_THRESHOLD) - (TIMELINE_Y_MAIN - SNAP_THRESHOLD)}px`
+                }}
+              >
+              </div>
+            </div>
+
+            <svg
+              viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`}
+              className="w-full h-auto touch-none"
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+            >
+              {blocks.map((block) => (
+                <g
+                  key={block.id}
+                  transform={`translate(${block.x}, ${block.y})`}
+                  className={`${isAnimating ? 'transition-none' : 'cursor-grab active:cursor-grabbing'}`}
+                  onPointerDown={(e) => handlePointerDown(e, block.id)}
+                >
+                  <rect
+                    width={block.width}
+                    height="50"
+                    rx="0"
+                    fill={block.color}
+                    className="transition-colors hover:brightness-110"
+                  />
+                  <text
+                    x={block.width / 2}
+                    y={33}
+                    textAnchor="middle"
+                    fill="rgba(255,255,255,0.95)"
+                    fontSize="24"
+                    fontWeight="900"
+                    pointerEvents="none"
+                    style={{ fontFamily: 'Arial, sans-serif' }}
+                  >
+                    {block.label}
+                  </text>
+                </g>
+              ))}
+
+              {cursor.visible && (
+                <g transform={`translate(${cursor.x}, ${cursor.y})`} style={{ pointerEvents: 'none' }}>
+                  <circle r="20" fill="rgba(255, 255, 255, 0.5)" className="animate-pulse" />
+                  <g transform="translate(-12, -4)">
+                    <path
+                      d={
+                        cursor.grabbing
+                          ? "M12 2C12 2 11 3 9 3C7 3 6 4 6 6V14C6 16 8 18 10 18H14C16 18 18 16 18 14V8C18 6 17 5 15 5C13 5 12 2 12 2Z"
+                          : "M8.5 13.5L3.5 17.5L2 16L6 9L2 5L3.5 3.5L12 8.5V13.5Z"
+                      }
+                      fill="white"
+                      stroke="black"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                      transform={cursor.grabbing ? "scale(1.2) rotate(-10)" : "rotate(-45)"}
+                    />
+                  </g>
+                </g>
+              )}
+            </svg>
+          </div>
+        </div>
+      );
+    }
+
+    // 渲染应用
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

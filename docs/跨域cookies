@@ -1,0 +1,166 @@
+后端配置说明文档（给后端开发人员）
+问题背景
+前端部署在 sz.scpaxy.cn，需要跨域请求后端 API bc.scpaxy.cn。当前 /stu/saveHcMark 接口报错：
+java.lang.NullPointerException: Cannot read field "schoolCode" because "stu" is null
+原因：跨子域名请求时，浏览器未携带 Session Cookie，导致后端无法识别用户身份。
+需要的后端配置修改
+1. Cookie 配置（关键）
+登录成功后设置 Cookie 时，需要添加以下属性：
+// Spring Boot 示例
+Cookie cookie = new Cookie("JSESSIONID", session.getId());
+cookie.setDomain(".scpaxy.cn");    // 允许所有子域名共享
+cookie.setPath("/");                // 所有路径可用
+cookie.setSecure(true);             // 仅 HTTPS 传输
+cookie.setHttpOnly(true);           // 防止 XSS
+// SameSite=None 需要通过 response header 设置
+response.addCookie(cookie);
+response.setHeader("Set-Cookie", 
+    "JSESSIONID=" + session.getId() + 
+    "; Domain=.scpaxy.cn" +
+    "; Path=/" +
+    "; SameSite=None" +
+    "; Secure" +
+    "; HttpOnly");
+或使用 Spring Session 配置：
+# application.yml
+server:
+  servlet:
+    session:
+      cookie:
+        domain: .scpaxy.cn
+        same-site: none
+        secure: true
+        http-only: true
+2. CORS 配置
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            // 不能使用 *，必须指定具体域名
+            .allowedOrigins(
+                "https://sz.scpaxy.cn",
+                "https://bc.scpaxy.cn"
+            )
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true)  // 关键：允许携带凭证
+            .maxAge(3600);
+    }
+}
+或使用 Filter 方式：
+@Component
+public class CorsFilter implements Filter {
+    
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+        
+        HttpServletResponse response = (HttpServletResponse) res;
+        HttpServletRequest request = (HttpServletRequest) req;
+        
+        String origin = request.getHeader("Origin");
+        
+        // 允许的域名列表
+        List<String> allowedOrigins = Arrays.asList(
+            "https://sz.scpaxy.cn",
+            "https://bc.scpaxy.cn"
+        );
+        
+        if (origin != null && allowedOrigins.contains(origin)) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+        }
+        
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+        response.setHeader("Access-Control-Max-Age", "3600");
+        
+        // 处理预检请求
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
+        
+        chain.doFilter(req, res);
+    }
+}
+3. 配置检查清单
+配置项	需要的值	说明
+Cookie Domain	.scpaxy.cn	注意前面的点，表示所有子域名
+Cookie SameSite	None	允许跨站请求携带
+Cookie Secure	true	SameSite=None 必须配合 HTTPS
+CORS Allow-Origin	具体域名（不能是 *）	当 credentials=true 时必须
+CORS Allow-Credentials	true	允许携带 Cookie
+OPTIONS 预检	返回 200	浏览器会先发送预检请求
+4. Nginx 配置（如果使用反向代理）
+server {
+    listen 443 ssl;
+    server_name bc.scpaxy.cn;
+    
+    location / {
+        proxy_pass http://backend-server;
+        
+        # 传递原始 Host
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # 关键：传递 Cookie
+        proxy_set_header Cookie $http_cookie;
+        proxy_pass_header Set-Cookie;
+        
+        # CORS headers（如果后端未配置）
+        add_header Access-Control-Allow-Origin "https://sz.scpaxy.cn" always;
+        add_header Access-Control-Allow-Credentials "true" always;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Content-Type, Accept" always;
+        
+        # 处理 OPTIONS 预检
+        if ($request_method = OPTIONS) {
+            return 204;
+        }
+    }
+}
+5. 验证步骤
+配置完成后，请验证： 步骤 1：检查登录响应头
+curl -I "https://bc.scpaxy.cn/stu/login?accountName=xxx&accountPass=xxx"
+期望看到：
+Set-Cookie: JSESSIONID=xxx; Domain=.scpaxy.cn; Path=/; SameSite=None; Secure; HttpOnly
+Access-Control-Allow-Origin: https://sz.scpaxy.cn
+Access-Control-Allow-Credentials: true
+步骤 2：检查 OPTIONS 预检响应
+curl -X OPTIONS -I "https://bc.scpaxy.cn/stu/saveHcMark" \
+  -H "Origin: https://sz.scpaxy.cn" \
+  -H "Access-Control-Request-Method: POST"
+期望返回 200/204 和正确的 CORS 头。
+配置关系图
+                    前端 (sz.scpaxy.cn)
+                           │
+                           │ 1. 登录请求
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   后端 (bc.scpaxy.cn)                        │
+│                                                              │
+│  2. 返回 Set-Cookie:                                         │
+│     JSESSIONID=xxx;                                          │
+│     Domain=.scpaxy.cn;  ← 关键：允许子域名共享               │
+│     SameSite=None;      ← 关键：允许跨站携带                 │
+│     Secure;             ← 必须 HTTPS                         │
+│                                                              │
+│  3. 返回 CORS 头:                                            │
+│     Access-Control-Allow-Origin: https://sz.scpaxy.cn        │
+│     Access-Control-Allow-Credentials: true                   │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           │ 4. 浏览器保存 Cookie
+                           ▼
+                    前端 (sz.scpaxy.cn)
+                           │
+                           │ 5. saveHcMark 请求
+                           │    Cookie: JSESSIONID=xxx
+                           ▼
+                   后端正确识别 Session → stu 不为 null
+如有问题，请联系前端开发确认请求格式。

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蜂蜜变稀的讨论</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 自定义字体和动画 */
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f0f9ff; /* 极浅蓝背景 */
+            background-image: radial-gradient(#bae6fd 15%, transparent 16%), radial-gradient(#bae6fd 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+        }
+
+        .cartoon-font {
+            font-family: 'ZCOOL KuaiLe', cursive;
+        }
+
+        /* 消息气泡动画 */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .message-enter {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 头像样式 */
+        .avatar-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center overflow-hidden">
+
+    <!-- 手机外框容器 -->
+    <div class="relative w-full h-full md:max-w-md md:h-[90vh] bg-white md:rounded-[3rem] shadow-2xl overflow-hidden border-8 border-gray-800 flex flex-col">
+        
+        <!-- 顶部刘海/状态栏 (仅装饰) -->
+        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-40 h-6 bg-gray-800 rounded-b-xl z-20 hidden md:block"></div>
+        
+        <!-- 头部导航栏 -->
+        <header class="bg-blue-500 p-4 pt-6 md:pt-8 text-white flex items-center shadow-md z-10">
+            <button class="mr-3 hover:bg-blue-600 p-1 rounded-full transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="flex-1">
+                <h1 class="text-xl font-bold cartoon-font tracking-wide">爸爸</h1>
+            </div>
+            <button class="hover:bg-blue-600 p-1 rounded-full transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+        </header>
+
+        <!-- 聊天内容区域 -->
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-6 bg-blue-50/50 no-scrollbar relative">
+            <!-- 消息会通过 JS 动态插入到这里 -->
+            
+            <!-- 正在输入提示 -->
+            <div id="typing-indicator" class="hidden flex items-center space-x-2 p-2 w-fit ml-12">
+                <div class="flex space-x-1">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                </div>
+            </div>
+            
+            <!-- 底部占位 -->
+            <div class="h-4"></div>
+        </div>
+
+        <!-- 底部输入栏 (装饰用) -->
+        <div class="bg-white p-3 border-t border-gray-200 flex items-center gap-2">
+            <button class="text-gray-500 p-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </button>
+            <div class="flex-1 bg-gray-100 rounded-full h-10 px-4 flex items-center text-gray-400 text-sm">
+                好的！
+            </div>
+            <button class="bg-blue-500 text-white rounded-full p-2 w-10 h-10 flex items-center justify-center shadow-lg transform active:scale-95 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+        </div>
+
+        <!-- 重播按钮 -->
+        <button onclick="restartChat()" class="absolute bottom-20 right-4 bg-white/80 backdrop-blur text-blue-500 p-2 rounded-full shadow-lg border border-blue-100 hover:bg-blue-50 transition z-20 group" title="重新播放">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:-rotate-180 transition duration-500"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"/></svg>
+        </button>
+    </div>
+
+    <script>
+        // 定义角色数据 (SVG 头像)
+        const characters = {
+            ming: {
+                name: '小明',
+                color: 'bg-sky-200', // 天蓝色气泡
+                arrowColor: 'bg-sky-200',
+                textColor: 'text-gray-900',
+                side: 'right',
+                // 小明头像
+                avatar: `<svg viewBox="0 0 100 100" class="w-full h-full bg-blue-100"><circle cx="50" cy="50" r="45" fill="#bfdbfe"/><path d="M30,55 Q50,75 70,55" stroke="#333" stroke-width="3" fill="none"/><circle cx="35" cy="45" r="4" fill="#333"/><circle cx="65" cy="45" r="4" fill="#333"/><path d="M20,30 Q50,10 80,30" fill="#374151"/><path d="M10,40 Q20,30 20,50" fill="#374151"/><path d="M90,40 Q80,30 80,50" fill="#374151"/></svg>`
+            },
+            dad: {
+                name: '爸爸',
+                color: 'bg-indigo-200', // 蓝紫色气泡
+                arrowColor: 'bg-indigo-200',
+                textColor: 'text-gray-800',
+                side: 'left',
+                // 爸爸头像 (穿西装打领带，无眼镜，棕色头发 - 复用之前舅舅的风格但作为爸爸)
+                avatar: `<svg viewBox="0 0 100 100" class="w-full h-full bg-yellow-100"><circle cx="50" cy="50" r="45" fill="#fde68a"/><path d="M30,40 Q50,55 70,40" stroke="#333" stroke-width="3" fill="none"/><circle cx="35" cy="35" r="4" fill="#333"/><circle cx="65" cy="35" r="4" fill="#333"/><path d="M50,20 Q65,10 80,25" fill="#5c4033"/><path d="M50,20 Q35,10 20,25" fill="#5c4033"/><rect x="40" y="80" width="20" height="20" fill="#ef4444"/><path d="M40,80 L50,90 L60,80" fill="white"/></svg>`
+            }
+        };
+
+        // 聊天脚本
+        const script = [
+            { id: 'ming', text: '爸爸，今天倒蜂蜜时，我发现蜂蜜没有之前那么黏稠了。' },
+            { id: 'dad', text: '我看看，好像是变稀了。' },
+            { id: 'ming', text: '怎么会这样呢？' },
+            { id: 'dad', text: '是不是蜂蜜过保质期了？' },
+            { id: 'ming', text: '不是啊，爸爸，还有一年才过期呢。' },
+            { id: 'dad', text: '那是不是最近天气太热，或者存放的地方不对？' },
+            { id: 'ming', text: '我看了说明，蜂蜜是要避光保存的。我平时就放在橱柜里，应该不会被太阳晒到。是不是有别的原因呢？' },
+            { id: 'dad', text: '这我就不清楚了，你可以上网查查，回头也给我讲讲。' },
+            { id: 'ming', text: '好的！' }
+        ];
+
+        const chatContainer = document.getElementById('chat-container');
+        const typingIndicator = document.getElementById('typing-indicator');
+        let currentIndex = 0;
+        let isTyping = false;
+
+        function createMessageElement(messageData) {
+            const char = characters[messageData.id];
+            const isRight = char.side === 'right';
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex w-full message-enter mb-6 ${isRight ? 'justify-end' : 'justify-start'}`;
+            
+            // 头像 HTML
+            const avatarHtml = `
+                <div class="flex flex-col items-center space-y-1 ${isRight ? 'order-2 ml-3' : 'mr-3'}">
+                    <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white avatar-shadow transform hover:scale-110 transition duration-300 bg-white">
+                        ${char.avatar}
+                    </div>
+                    <span class="text-xs text-gray-500 font-medium">${char.name}</span>
+                </div>
+            `;
+
+            // 气泡 HTML
+            const bubbleHtml = `
+                <div class="relative max-w-[70%] ${isRight ? 'order-1' : ''}">
+                    <div class="${char.color} ${char.textColor} px-5 py-3 rounded-2xl shadow-sm text-[15px] leading-relaxed relative z-10 break-words border border-black/5">
+                        ${messageData.text}
+                    </div>
+                    <!-- 气泡尖角 -->
+                    <div class="absolute top-4 ${isRight ? `-right-2 ${char.arrowColor}` : `-left-2 ${char.arrowColor}`} w-4 h-4 transform rotate-45 z-0 rounded-sm"></div>
+                </div>
+            `;
+
+            wrapper.innerHTML = avatarHtml + bubbleHtml;
+            return wrapper;
+        }
+
+        async function showNextMessage() {
+            if (currentIndex >= script.length) {
+                // 对话结束后显示提示信息
+                const tipDiv = document.createElement('div');
+                tipDiv.className = 'text-center text-gray-400 text-sm py-4 message-enter animate-pulse';
+                tipDiv.innerHTML = '✨ 滚动鼠标滚轮可以查看被遮挡的对话 ✨';
+                chatContainer.insertBefore(tipDiv, typingIndicator);
+                
+                // 滚动到底部确保能看到提示
+                chatContainer.scrollTo({
+                    top: chatContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
+                return;
+            }
+
+            // 显示"正在输入"动画
+            isTyping = true;
+            typingIndicator.style.display = 'flex';
+            // 确保正在输入时也能看到底部
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // 模拟打字/阅读延迟 (根据字数动态调整，至少 1000ms)
+            const delay = Math.min(Math.max(script[currentIndex].text.length * 80, 1000), 2000);
+            
+            await new Promise(r => setTimeout(r, delay));
+
+            // 隐藏正在输入
+            typingIndicator.style.display = 'none';
+            isTyping = false;
+
+            // 添加消息
+            const msgElement = createMessageElement(script[currentIndex]);
+            chatContainer.insertBefore(msgElement, typingIndicator);
+            
+            // 滚动到底部
+            chatContainer.scrollTo({
+                top: chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+
+            currentIndex++;
+            
+            // 继续下一条
+            setTimeout(showNextMessage, 500);
+        }
+
+        function restartChat() {
+            const messages = chatContainer.querySelectorAll('.message-enter');
+            messages.forEach(msg => msg.remove());
+            currentIndex = 0;
+            setTimeout(showNextMessage, 500);
+        }
+
+        // 页面加载完成后开始对话
+        window.onload = () => {
+            setTimeout(showNextMessage, 1000);
+        };
+
+    </script>
+</body>
+</html>

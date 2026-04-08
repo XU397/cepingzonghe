@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>植物细胞多酚与多酚氧化酶示意图</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0; /* 外围背景，区分画布 */
+        }
+        svg {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 750" width="1000" height="750">
+    <defs>
+        <!-- 液泡渐变 (模拟半透明立体感) -->
+        <radialGradient id="vacuoleGrad" cx="35%" cy="35%" r="70%">
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="50%" stop-color="#E1F5FE"/>
+            <stop offset="100%" stop-color="#B3E5FC"/>
+        </radialGradient>
+        
+        <!-- 细胞核渐变 -->
+        <radialGradient id="nucleusGrad" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#B39DDB"/>
+            <stop offset="40%" stop-color="#7E57C2"/>
+            <stop offset="100%" stop-color="#4527A0"/>
+        </radialGradient>
+        
+        <!-- 细胞质渐变 -->
+        <linearGradient id="cytoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#F2ECD8"/>
+            <stop offset="100%" stop-color="#DFD5BE"/>
+        </linearGradient>
+
+        <!-- 阴影效果 -->
+        <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+            <feDropShadow dx="3" dy="6" stdDeviation="5" flood-color="#000000" flood-opacity="0.25"/>
+        </filter>
+        <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.15"/>
+        </filter>
+    </defs>
+
+    <!-- === 背景区域 === -->
+    <!-- 左侧/主体米色背景 -->
+    <rect width="1000" height="750" fill="#FDF4E8"/>
+    <!-- 右侧浅橘色色块 -->
+    <rect x="580" y="160" width="420" height="460" fill="#FDE3C8"/>
+
+    <!-- === 植物细胞主体 === -->
+    <!-- 整体向右偏移以留出左侧标注空间 -->
+    <g transform="translate(60, 20)">
+        
+        <!-- 1. 细胞壁与细胞主体轮廓 (立体模拟) -->
+        <!-- 后侧细胞壁 -->
+        <path d="M 450 100 L 760 70 L 930 180 L 890 470 L 670 590 L 390 480 L 350 250 Z" fill="#9CCC65" stroke="#558B2F" stroke-width="8"/>
+        
+        <!-- 细胞质基质 (主体内部) -->
+        <path d="M 470 120 L 730 95 L 890 190 L 860 450 L 670 550 L 420 460 L 380 260 Z" fill="url(#cytoGrad)" stroke="#33691E" stroke-width="4"/>
+
+        <!-- 前侧/侧面细胞壁 (厚度与立体感) -->
+        <!-- 左下角壁柱 -->
+        <path d="M 350 250 L 380 260 L 420 460 L 390 480 Z" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+        <!-- 底部中间壁柱 -->
+        <path d="M 390 480 L 420 460 L 670 550 L 670 590 Z" fill="#66BB6A" stroke="#2E7D32" stroke-width="2"/>
+        <!-- 左上角壁柱 -->
+        <path d="M 450 100 L 470 120 L 380 260 L 350 250 Z" fill="#81C784" stroke="#2E7D32" stroke-width="2"/>
+        
+        <!-- 添加一些切面线条，增强原图中的几何立体切割感 -->
+        <path d="M 390 480 L 420 460 L 420 530 L 390 550 Z" fill="#4CAF50"/> 
+        <path d="M 670 550 L 700 540 L 700 600 L 670 610 Z" fill="#66BB6A"/>
+        
+        <!-- 细胞骨架/细微线条点缀背景 -->
+        <path d="M 480 350 Q 550 400 600 380" fill="none" stroke="#D7CCC8" stroke-width="1.5"/>
+        <path d="M 650 450 Q 750 480 800 420" fill="none" stroke="#D7CCC8" stroke-width="1.5"/>
+
+        <!-- 2. 中央大液泡 (多酚所在处) -->
+        <g filter="url(#dropShadow)">
+            <!-- 液泡主体 -->
+            <path d="M 440 220 C 580 160, 760 210, 780 280 C 810 360, 760 430, 620 410 C 510 390, 460 460, 390 350 C 340 270, 340 250, 440 220 Z" fill="url(#vacuoleGrad)" stroke="#B3E5FC" stroke-width="2"/>
+            <!-- 液泡高光 -->
+            <path d="M 470 230 C 580 190, 680 220, 710 260 C 670 240, 550 210, 470 240 Z" fill="rgba(255,255,255,0.9)"/>
+            <path d="M 690 300 C 740 330, 750 370, 730 380 C 750 350, 720 320, 690 300 Z" fill="rgba(255,255,255,0.6)"/>
+        </g>
+
+        <!-- 3. 细胞核 -->
+        <g transform="translate(690, 160)" filter="url(#dropShadow)">
+            <!-- 细胞核主球体 -->
+            <circle cx="0" cy="0" r="75" fill="url(#nucleusGrad)"/>
+            <!-- 切割剖面 -->
+            <path d="M 0 0 L -65 -40 A 75 75 0 0 1 55 -50 Z" fill="#311B92" stroke="#512DA8" stroke-width="2"/>
+            <!-- 核仁 -->
+            <circle cx="-5" cy="-25" r="22" fill="#1A237E" filter="url(#softShadow)"/>
+            <!-- 染色质 (剖面内的线条) -->
+            <path d="M -45 -25 Q -25 -5 -5 -15 T 35 -25" fill="none" stroke="#9575CD" stroke-width="2.5"/>
+            <path d="M -35 -10 Q -15 0 5 -10 T 25 0" fill="none" stroke="#9575CD" stroke-width="2.5"/>
+            <!-- 核孔 (表面小紫点) -->
+            <circle cx="20" cy="30" r="2" fill="#311B92"/><circle cx="-20" cy="40" r="2" fill="#311B92"/><circle cx="40" cy="10" r="2" fill="#311B92"/><circle cx="-40" cy="15" r="2" fill="#311B92"/>
+        </g>
+
+        <!-- 4. 内质网 (包裹细胞核的蓝色折叠膜) -->
+        <path d="M 590 120 C 550 150, 610 190, 580 220 C 550 250, 630 280, 660 260" fill="none" stroke="#64B5F6" stroke-width="14" stroke-linecap="round"/>
+        <path d="M 560 140 C 520 170, 580 210, 550 240 C 530 260, 590 280, 630 290" fill="none" stroke="#42A5F5" stroke-width="14" stroke-linecap="round"/>
+        <!-- 核糖体 (红色附着点) -->
+        <g fill="#D32F2F">
+            <circle cx="585" cy="130" r="2.5"/><circle cx="575" cy="145" r="2.5"/><circle cx="590" cy="170" r="2.5"/><circle cx="595" cy="190" r="2.5"/><circle cx="585" cy="210" r="2.5"/><circle cx="610" cy="240" r="2.5"/><circle cx="635" cy="265" r="2.5"/><circle cx="550" cy="160" r="2.5"/><circle cx="560" cy="190" r="2.5"/><circle cx="555" cy="225" r="2.5"/><circle cx="590" cy="275" r="2.5"/>
+        </g>
+
+        <!-- 5. 高尔基体 (黄色堆叠膜) -->
+        <g transform="translate(800, 270) rotate(15)">
+            <path d="M -35 -15 Q 0 -30 35 -15" fill="none" stroke="#FFCA28" stroke-width="8" stroke-linecap="round"/>
+            <path d="M -40 0 Q 0 -15 40 0" fill="none" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/>
+            <path d="M -45 15 Q 0 0 45 15" fill="none" stroke="#FFB300" stroke-width="8" stroke-linecap="round"/>
+        </g>
+
+        <!-- 6. 线粒体 (橙色椭圆含嵴) -->
+        <g id="mitochondrion">
+            <ellipse cx="0" cy="0" rx="24" ry="12" fill="#FF9800" stroke="#E65100" stroke-width="1.5" filter="url(#softShadow)"/>
+            <path d="M -18 0 Q -12 -8 -6 0 T 6 0 T 18 0" fill="none" stroke="#E65100" stroke-width="2"/>
+        </g>
+        <use href="#mitochondrion" x="480" y="430" transform="rotate(-15 480 430)"/>
+        <use href="#mitochondrion" x="780" y="390" transform="rotate(35 780 390)"/>
+        <use href="#mitochondrion" x="510" y="150" transform="rotate(65 510 150)"/>
+
+        <!-- 7. 叶绿体 (绿色椭圆含基粒) -->
+        <g id="chloroplast" filter="url(#softShadow)">
+            <ellipse cx="0" cy="0" rx="32" ry="18" fill="#66BB6A" stroke="#2E7D32" stroke-width="1.5"/>
+            <!-- 内部基粒/类囊体堆叠 -->
+            <rect x="-20" y="-10" width="7" height="20" rx="2" fill="#2E7D32"/>
+            <rect x="-6" y="-12" width="7" height="24" rx="2" fill="#2E7D32"/>
+            <rect x="8" y="-10" width="7" height="20" rx="2" fill="#2E7D32"/>
+            <path d="M -13 0 L -6 0 M 1 0 L 8 0" stroke="#2E7D32" stroke-width="1.5"/>
+        </g>
+        <use href="#chloroplast" x="760" y="460" transform="rotate(-25 760 460)"/>
+        <use href="#chloroplast" x="450" y="290" transform="rotate(40 450 290)"/>
+        <use href="#chloroplast" x="850" y="240" transform="rotate(-50 850 240)"/>
+        
+        <!-- 重点引出：用于底部标注的叶绿体 -->
+        <use href="#chloroplast" x="600" y="460" transform="rotate(10 600 460)"/>
+        <!-- 引线起点圆点 (叶绿体上) -->
+        <circle id="target_chloro" cx="600" cy="460" r="3.5" fill="#1B5E20"/>
+
+        <!-- 重点引出：用于顶部标注的液泡位置点 -->
+        <circle id="target_vacuole" cx="500" cy="240" r="3.5" fill="#0277BD"/>
+    </g>
+
+
+    <!-- === 引线与标注区域 (基于绝对坐标，确保位置精确) === -->
+
+    <!-- ==================== 顶部标注：多酚 ==================== -->
+    <!-- 引线：从液泡起点(560, 260) 直达左侧圆圈(160, 260) -->
+    <!-- (500+60=560, 240+20=260) -->
+    <line x1="560" y1="260" x2="235" y2="260" stroke="#111111" stroke-width="1.5"/>
+    
+    <!-- 标注文字 "多酚" -->
+    <text x="360" y="245" font-size="28" font-family="'Microsoft YaHei', 'SimHei', sans-serif" font-weight="bold" fill="#000000" text-anchor="middle">多酚</text>
+
+    <!-- 顶部虚线圆圈组 -->
+    <g transform="translate(160, 260)">
+        <!-- 虚线外圆 -->
+        <circle cx="0" cy="0" r="75" fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-dasharray="8,5"/>
+        
+        <!-- 内部浅蓝色不规则图形 (代表液泡内容物) -->
+        <path d="M -45 -15 C -45 -45, -5 -50, 25 -35 C 55 -20, 65 5, 45 25 C 25 45, -15 45, -35 30 C -55 15, -45 5, -45 -15 Z" fill="#D0E9F5" stroke="#81D4FA" stroke-width="2"/>
+        
+        <!-- 内部红色文字 "酚" -->
+        <!-- 使用白色描边让文字在压住虚线时依然清晰，模拟原图的融合效果 -->
+        <text x="0" y="55" font-size="34" font-family="'Microsoft YaHei', 'SimHei', sans-serif" font-weight="bold" fill="#C62828" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round" text-anchor="middle">酚</text>
+        <text x="0" y="55" font-size="34" font-family="'Microsoft YaHei', 'SimHei', sans-serif" font-weight="bold" fill="#C62828" text-anchor="middle">酚</text>
+    </g>
+
+
+    <!-- ==================== 底部标注：多酚氧化酶 ==================== -->
+    <!-- 引线：从叶绿体起点(660, 480) 垂直向下至(660, 610)，再水平向左至圆圈(235, 610) -->
+    <polyline points="660,480 660,610 235,610" fill="none" stroke="#111111" stroke-width="1.5" stroke-linejoin="miter"/>
+    
+    <!-- 标注文字 "多酚氧化酶" -->
+    <text x="440" y="595" font-size="28" font-family="'Microsoft YaHei', 'SimHei', sans-serif" font-weight="bold" fill="#000000" text-anchor="middle">多酚氧化酶</text>
+
+    <!-- 底部虚线圆圈组 -->
+    <g transform="translate(160, 610)">
+        <!-- 虚线外圆 -->
+        <circle cx="0" cy="0" r="75" fill="#FFFFFF" stroke="#000000" stroke-width="2" stroke-dasharray="8,5"/>
+        
+        <!-- 内部绿色椭圆 (代表叶绿体放大) -->
+        <ellipse cx="0" cy="-15" rx="48" ry="28" fill="#7CB342" stroke="#558B2F" stroke-width="2"/>
+        
+        <!-- 叶绿体内部深绿色网格排列点阵 -->
+        <g fill="#388E3C">
+            <!-- 上排 -->
+            <circle cx="-30" cy="-25" r="4.5"/><circle cx="-15" cy="-25" r="4.5"/><circle cx="0" cy="-25" r="4.5"/><circle cx="15" cy="-25" r="4.5"/><circle cx="30" cy="-25" r="4.5"/>
+            <!-- 中排 -->
+            <circle cx="-38" cy="-12" r="4.5"/><circle cx="-22" cy="-12" r="4.5"/><circle cx="-7" cy="-12" r="4.5"/><circle cx="8" cy="-12" r="4.5"/><circle cx="24" cy="-12" r="4.5"/><circle cx="38" cy="-12" r="4.5"/>
+            <!-- 下排 -->
+            <circle cx="-28" cy="1" r="4.5"/><circle cx="-13" cy="1" r="4.5"/><circle cx="2" cy="1" r="4.5"/><circle cx="17" cy="1" r="4.5"/><circle cx="28" cy="1" r="4.5"/>
+        </g>
+        
+        <!-- 内部红色文字 "酶" -->
+        <text x="0" y="55" font-size="34" font-family="'Microsoft YaHei', 'SimHei', sans-serif" font-weight="bold" fill="#C62828" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round" text-anchor="middle">酶</text>
+        <text x="0" y="55" font-size="34" font-family="'Microsoft YaHei', 'SimHei', sans-serif" font-weight="bold" fill="#C62828" text-anchor="middle">酶</text>
+    </g>
+
+</svg>
+
+</body>
+</html>

@@ -1,14 +1,17 @@
 <!-- OPENSPEC:START -->
+
 # OpenSpec Instructions
 
 These instructions are for AI assistants working in this project.
 
 Always open `@/openspec/AGENTS.md` when the request:
+
 - Mentions planning or proposals (words like proposal, spec, change, plan)
 - Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
 - Sounds ambiguous and you need the authoritative spec before coding
 
 Use `@/openspec/AGENTS.md` to learn:
+
 - How to create and apply change proposals
 - Spec format and conventions
 - Project structure and guidelines
@@ -17,7 +20,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
 
-﻿# CLAUDE.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -25,9 +28,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-HCI-Evaluation is a **modular React assessment platform** for educational interactive evaluations. Built with React 18 + Vite 4, the system supports multiple grade-level modules, each with distinct assessment flows and state management.
+HCI-Evaluation is a **modular React assessment platform** for educational interactive evaluations. Built with React 18 + Vite 4, the system supports multiple grade-level modules and a composable Flow system for mixed assessment flows.
 
 **Tech Stack:**
+
 - React 18.2 (functional components, Hooks, lazy loading)
 - Vite 4 (build tool, HMR, path aliases)
 - React Router 7
@@ -35,7 +39,7 @@ HCI-Evaluation is a **modular React assessment platform** for educational intera
 - CSS Modules (style isolation)
 - Vitest (testing with vmThreads for WSL2)
 
-**Critical Constraint:** The platform runs in **WSL2 environment**. Use `pool: 'vmThreads'` for tests (see vite.config.js:121).
+**Critical Constraint:** The platform runs in **WSL2 environment**. Use `pool: 'vmThreads'` for tests (see vite.config.js:250).
 
 ---
 
@@ -47,76 +51,119 @@ npm run dev              # Start dev server on port 3000 (mock mode by default)
 
 # Build & Preview
 npm run build            # Production build with code splitting
+npm run build:bc         # Build with bc mode
 npm run preview          # Preview production build
 
 # Testing
 npm test                 # Run Vitest once
 npm run test:watch       # Watch mode
 npm run test:coverage    # Coverage report
+npm run test:submission  # Run submission service tests only
+npm run test:submission-format  # Run submission format snapshot tests
 
 # Code Quality
 npm run lint             # ESLint check (max 0 warnings)
+npm run lint:submission  # Lint submission services with strict rules
 ```
 
 **Environment Variables:**
+
 ```bash
 # .env.local
-VITE_USE_MOCK=1          # Use mock API (default: 1)
-VITE_API_TARGET=http://... # Real backend URL when mock disabled
-VITE_BASE=./             # Build base path (default: relative)
+VITE_USE_MOCK=1              # Use mock API (default: 1)
+VITE_API_TARGET=http://...   # Real backend URL when mock disabled
+VITE_BASE=./                 # Build base path (default: relative)
+VITE_PASSWORD_FREE=1         # Enable password-free login (dev only)
+VITE_FLOW_HEARTBEAT_ENABLED=1  # Enable Flow progress heartbeat
 ```
 
 ---
 
-## Architecture: Module System
+## Architecture: Dual System
 
-### Core Concept
+The platform has two parallel systems:
 
-The platform uses a **module registry + dynamic loading** pattern. Each assessment (grade-4, grade-7, grade-7-tracking) is an independent module with its own:
-- Context (state management)
-- Pages (assessment flow)
-- Styles (CSS Modules)
-- Timer management
-- Data submission logic
+### 1. Module System (Legacy)
 
-**Flow:**
-```
-Login → Backend returns {url, pageNum} → ModuleRegistry.getByUrl(url)
-  → module.getInitialPage(pageNum) → <ModuleComponent /> renders
-  → User completes → module.onDestroy() cleans up
-```
+Traditional modules registered via `ModuleRegistry`:
 
-### Module Registration
-
-**Location:** [src/modules/ModuleRegistry.js](src/modules/ModuleRegistry.js:193-226)
+**Location:** [src/modules/ModuleRegistry.js](src/modules/ModuleRegistry.js)
 
 **Current Modules:**
-1. **Grade 7 Traditional** (`/seven-grade`) - Legacy wrapper, uses traditional PageRouter
-2. **Grade 4** (`/four-grade`) - Modern: CSS Modules, Grade4Context, 11 pages
-3. **Grade 7 Tracking** (`/grade-7-tracking`) - Advanced: physics simulation, questionnaires, 23 pages
+
+- **Grade 7 Traditional** (`/seven-grade`) - Legacy wrapper, uses traditional PageRouter
+- **Grade 7 Tracking** (`/grade-7-tracking`) - Advanced: physics simulation, questionnaires, 23 pages
 
 **Module Interface:**
+
 ```javascript
 export const YourModule = {
-  moduleId: 'unique-id',        // kebab-case
+  moduleId: 'unique-id', // kebab-case
   displayName: 'Display Name',
-  url: '/module-path',          // Must match backend login response
+  url: '/module-path', // Must match backend login response
   version: '1.0.0',
-  ModuleComponent: Component,   // React component
-  getInitialPage: (pageNum) => 'page-id',  // Resume logic
-  onInitialize: () => {},       // Optional
-  onDestroy: () => {}            // Optional cleanup
+  ModuleComponent: Component, // React component
+  getInitialPage: pageNum => 'page-id', // Resume logic
+  onInitialize: () => {}, // Optional
+  onDestroy: () => {}, // Optional cleanup
 };
 ```
 
-**Add New Module:**
-1. Create `src/modules/grade-N/index.jsx` with module definition
-2. Register in `ModuleRegistry.initialize()`:
-   ```javascript
-   const { GradeNModule } = await import('./grade-N/index.jsx');
-   this.register(GradeNModule);
-   ```
-3. Coordinate with backend to ensure login returns matching `url`
+### 2. Flow System (Modern)
+
+Composable assessment flows using submodules:
+
+**Location:** [src/flows/FlowModule.jsx](src/flows/FlowModule.jsx)
+
+**URL Pattern:** `/flow/:flowId`
+
+**Flow Architecture:**
+
+```
+Login → Backend returns {url: "/flow/g8-physics-assessment", pageNum}
+  → FlowOrchestrator loads flow definition
+  → Resolves current step → Loads submodule from registry
+  → SubmoduleComponent renders with flowContext
+  → onComplete → next step or completion page
+```
+
+**Key Components:**
+
+- `FlowOrchestrator` - Manages flow state, progress, step transitions
+- `FlowProvider` - Context provider for flow state
+- `FlowAppContextBridge` - Bridges Flow context with legacy AppContext
+- `submoduleRegistry` - Central registry for all submodules
+
+### 3. Submodule System
+
+Submodules are composable units used within Flows:
+
+**Location:** `src/submodules/`
+
+**Current Submodules:**
+
+- `g7-experiment`, `g7-questionnaire` - Grade 7 experiment and questionnaire
+- `g7-tracking-experiment`, `g7-tracking-questionnaire` - Grade 7 tracking variants
+- `g8-drone-imaging` - Drone imaging assessment (TypeScript)
+- `g8-mikania-experiment` - Mikania experiment
+- `g8-pv-sand-experiment` - PV sand experiment (TypeScript)
+
+**Submodule Interface:**
+
+```javascript
+export const submodule = {
+  id: 'g8-drone-imaging',
+  displayName: '无人机航拍',
+  Component: SubmoduleComponent,
+  getInitialPage: pageNum => 'Page01_Cover',
+  getNavigationMode: pageId => 'experiment' | 'questionnaire' | 'hidden',
+  resolvePageNum: pageId => '1', // Maps pageId to pageNum
+  getTotalSteps: () => 8,
+  getDefaultTimers: () => ({ task: 2400, questionnaire: 600 }),
+  onInitialize: () => {},
+  onDestroy: () => {},
+};
+```
 
 ---
 
@@ -131,7 +178,7 @@ export const YourModule = {
   batchCode: string,
   examNo: string,
   mark: JSON.stringify({
-    pageNumber: string,        // "1", "2", "3"
+    pageNumber: string,        // "1", "2", "3" or composite "1.5"
     pageDesc: string,          // "问题1"
     operationList: [           // All user interactions
       {
@@ -155,201 +202,130 @@ export const YourModule = {
 ```
 
 **Shared Services:**
-- [src/shared/services/apiService.js](src/shared/services/apiService.js) - API calls, 401 handling
-- [src/shared/services/dataLogger.js](src/shared/services/dataLogger.js) - Data submission wrapper
 
-**Error Handling:**
-- **401 Unauthorized** → Auto-redirect to login, clear localStorage
-- Network failures → Retry with exponential backoff (3 attempts)
-- Log all operations for debugging (`logOperation`, `collectAnswer`)
+- [src/shared/services/api/](src/shared/services/api/) - API client, endpoints
+- [src/shared/services/submission/](src/shared/services/submission/) - Unified submission pipeline
+- [src/shared/services/timers/](src/shared/services/timers/) - Timer service
 
 ---
 
 ## Authentication & Session
 
 **Login Flow:**
+
 1. [LoginPage.jsx](src/pages/LoginPage.jsx) → `POST /stu/login`
-2. Backend response:
+2. Backend response determines module or flow:
    ```json
    {
      "code": 200,
      "obj": {
        "batchCode": "250619",
        "examNo": "1001",
-       "url": "/four-grade",      // Determines module
-       "pageNum": "1",             // Resume point
+       "url": "/flow/g8-physics-assessment", // Flow pattern
+       "pageNum": "1.5", // Composite: step 1, page 5
        "studentName": "张三"
      }
    }
    ```
 3. AppContext stores to localStorage (`hci-*` keys)
-4. ModuleRouter resolves module by URL
-5. Module's `getInitialPage(pageNum)` restores progress
+4. Router dispatches to `/flow/:flowId` or legacy module
 
 **Session Persistence:**
+
 - Keys: `hci-isAuthenticated`, `hci-moduleUrl`, `hci-pageNum`, `hci-batchCode`, `hci-examNo`
-- Heartbeat: `/stu/checkSession` every 30s (optional per module)
-- Page refresh → Restores to exact same page with timer state
+- Flow progress: `flow.<flowId>.progressQueue` for offline queue
+- Heartbeat: Flow progress sync via `/api/flows/:flowId/progress`
 
 ---
 
 ## Mock Mode vs Production
 
 **Mock Mode (Default):**
-- Enable: `VITE_USE_MOCK=1` (see [vite.config.js:11-58](vite.config.js:11-58))
-- Intercepts `/stu/login`, `/stu/saveHcMark`, `/stu/checkSession`
+
+- Enable: `VITE_USE_MOCK=1`
+- Intercepts: `/stu/login`, `/stu/saveHcMark`, `/stu/checkSession`, `/api/flows/*`
+- Mock users: `g4test` → Grade 4 flow, default → Grade 8 physics flow
 - Returns predefined responses (no backend needed)
-- Default login → Grade 4 module
 
 **Production Mode:**
+
 ```bash
 VITE_USE_MOCK=0
 VITE_API_TARGET=http://117.72.14.166:9002
 ```
-- Proxies `/stu` and `/api` requests to backend
-- Preserves cookies via proxy configuration
 
 ---
 
 ## Key Implementation Patterns
 
-### 1. Page Lifecycle Tracking
+### 1. Flow Context Pattern
 
-Every page must log entry/exit:
+Submodules receive flow context for integration:
 
 ```javascript
-useEffect(() => {
-  logOperation({
-    targetElement: '页面',
-    eventType: 'page_enter',
-    value: 'Page_01_Notice',
-    time: new Date().toISOString()
-  });
+function SubmoduleComponent({ userContext, flowContext, initialPageId }) {
+  const { flowId, submoduleId, stepIndex, onComplete, onTimeout } = flowContext;
 
-  return () => {
-    logOperation({
-      targetElement: '页面',
-      eventType: 'page_exit',
-      value: 'Page_01_Notice',
-      time: new Date().toISOString()
-    });
+  // Signal completion when done
+  const handleFinish = () => {
+    onComplete(); // Triggers FlowModule to advance
   };
-}, []);
+}
 ```
 
-### 2. Navigation Pattern
+### 2. Timer Management
 
-**Forward-only navigation** (no back button during assessment):
+**Unified TimerService:**
 
 ```javascript
-const handleNext = async () => {
-  // 1. Collect answer
-  collectAnswer({
-    targetElement: 'question-1',
-    value: userAnswer
-  });
+import { TimerService } from '@shared/services/timers';
 
-  // 2. Build mark object
-  const mark = {
-    pageNumber: String(currentPageNum),
-    pageDesc: '问题1',
-    operationList: [...operations],
-    answerList: [...answers],
-    beginTime: pageStartTime,
-    endTime: formatDateTime(new Date())
-  };
+// Start task timer (40 min default)
+TimerService.startTask(2400, { scope: 'flow::g8::experiment::0::task' });
 
-  // 3. Submit before navigation
-  await submitPageMarkData({ batchCode, examNo, mark });
+// Start questionnaire timer (10 min default)
+TimerService.startQuestionnaire(600, { scope: 'flow::g8::questionnaire::1::questionnaire' });
 
-  // 4. Clear operations
-  clearOperations();
+// Get remaining time
+const remaining = TimerService.getInstance('task').getRemainingSeconds();
+```
 
-  // 5. Navigate
-  navigateToPage(nextPageId);
+### 3. Navigation Mode
+
+Submodules declare navigation mode per page:
+
+```javascript
+getNavigationMode: pageId => {
+  if (pageId.includes('Notice') || pageId.includes('Cover')) return 'hidden';
+  if (pageId.includes('Questionnaire')) return 'questionnaire';
+  return 'experiment';
 };
-```
-
-### 3. Module Context Pattern
-
-Each module should have its own Context (see [Grade4Context.jsx](src/modules/grade-4/context/Grade4Context.jsx)):
-
-```javascript
-const Grade4Context = createContext();
-
-export const Grade4Provider = ({ children, initialPage }) => {
-  const [currentPage, setCurrentPage] = useState(initialPage);
-  const [operations, setOperations] = useState([]);
-  const [answers, setAnswers] = useState([]);
-
-  const logOperation = (op) => setOperations(prev => [...prev, op]);
-  const collectAnswer = (ans) => setAnswers(prev => [...prev, ans]);
-  const clearOperations = () => setOperations([]);
-
-  return (
-    <Grade4Context.Provider value={{
-      currentPage,
-      operations,
-      answers,
-      logOperation,
-      collectAnswer,
-      clearOperations,
-      navigateToPage: setCurrentPage
-    }}>
-      {children}
-    </Grade4Context.Provider>
-  );
-};
-```
-
-### 4. Timer Management
-
-**Global Timer (AppContext):**
-```javascript
-const { startTaskTimer, taskTimeRemaining } = useAppContext();
-
-useEffect(() => {
-  startTaskTimer(45 * 60); // 45 minutes
-}, []);
-
-// Auto-submit on timer expiration
-useEffect(() => {
-  if (taskTimeRemaining === 0) {
-    handleTimeExpired();
-  }
-}, [taskTimeRemaining]);
-```
-
-**Module-Specific Timer:**
-```javascript
-// See Grade4Context for countdown implementation
-const { startCountdown } = useGrade4Context();
-
-startCountdown(40, () => {
-  navigateToNextPage();
-});
 ```
 
 ---
 
-## Performance Optimization
+## Path Aliases
 
-**Code Splitting:** ([vite.config.js:79-82](vite.config.js:79-82))
-- All pages use `React.lazy()` + `<Suspense>`
-- Automatic chunk splitting by Vite/Rollup
-- Chunk size warning limit: 1000 KB
-
-**Grade 7 Tracking Best Practices:**
-- Uses SVG inline instead of image files → Zero network requests
-- Physics animation: `will-change: transform`, `translateZ(0)` for GPU
-- Target: 60 FPS for ball drop animation
-
-**Path Aliases:** ([vite.config.js:65-77](vite.config.js:65-77))
 ```javascript
-import { Component } from '@modules/grade-4/Component';
-import { apiClient } from '@shared/services/api/apiClient';
+import { Component } from '@modules/grade-7-tracking/Component';
+import { apiClient } from '@shared/services/api';
+import { TimerService } from '@shared/services/timers';
+import { FlowProvider } from '@flows/context';
+import { submodule } from '@submodules/g8-drone-imaging';
 import { useTimer } from '@hooks/useTimer';
 ```
+
+**Aliases** (vite.config.js:194-206):
+
+- `@` → `src/`
+- `@app` → `src/app/`
+- `@flows` → `src/flows/`
+- `@submodules` → `src/submodules/`
+- `@shared` → `src/shared/`
+- `@hooks` → `src/hooks/`
+- `@modules` → `src/modules/`
+- `@pages` → `src/pages/`
+- `@services` → `src/services/`
 
 ---
 
@@ -357,90 +333,94 @@ import { useTimer } from '@hooks/useTimer';
 
 ```
 src/
-├── modules/                    # Module system
-│   ├── ModuleRegistry.js       # Central registry (singleton)
-│   ├── ModuleRouter.jsx        # Module loader & router
-│   ├── ErrorBoundary.jsx       # Error boundary wrapper
-│   ├── grade-7-tracking/       # Modern module example
-│   │   ├── index.jsx           # Module definition
-│   │   ├── context/            # TrackingContext + Provider
-│   │   ├── pages/              # 23 pages (Page01-Page23)
-│   │   ├── components/         # UI components
-│   │   ├── hooks/              # useDataLogger, useNavigation
-│   │   ├── utils/              # physicsModel, validation
-│   │   ├── styles/             # CSS Modules
-│   │   └── assets/             # JSON data files
-│   ├── grade-4/                # CSS Modules, Grade4Context
-│   └── grade-7/                # Legacy wrapper
-├── context/
-│   └── AppContext.jsx          # Global state, timer, auth
+├── flows/                      # Flow orchestration system
+│   ├── FlowModule.jsx          # Flow entry component
+│   ├── FlowAppContextBridge.jsx
+│   ├── context/                # FlowProvider
+│   └── orchestrator/           # FlowOrchestrator, mock definitions
+├── submodules/                 # Composable assessment units
+│   ├── registry.js             # Central submodule registry
+│   ├── g7-experiment/
+│   ├── g7-tracking-experiment/
+│   ├── g8-drone-imaging/       # TypeScript submodule
+│   ├── g8-mikania-experiment/
+│   └── g8-pv-sand-experiment/  # TypeScript submodule
+├── modules/                    # Legacy module system
+│   ├── ModuleRegistry.js
+│   ├── ModuleRouter.jsx
+│   ├── grade-7-tracking/
+│   └── grade-7/
 ├── shared/
-│   ├── components/             # Shared UI components
-│   └── services/               # apiService, dataLogger
-├── config/
-│   └── apiConfig.js            # API configuration
+│   ├── services/
+│   │   ├── api/                # API client, endpoints
+│   │   ├── submission/         # Unified submission pipeline
+│   │   └── timers/             # TimerService
+│   ├── ui/                     # PageFrame, TransitionPage, CompletionPage
+│   └── types/                  # TypeScript types, flow types
+├── context/
+│   └── AppContext.jsx          # Global state, auth, legacy timers
 ├── pages/
-│   └── LoginPage.jsx           # Entry point
-├── App.jsx                     # Root component
-└── main.jsx                    # React DOM render
+│   └── LoginPage.jsx
+├── App.jsx
+└── main.jsx
 ```
 
 ---
 
 ## OpenSpec Workflow
 
-**This project uses OpenSpec for spec-driven development.**
-
 **Before making architecture changes:**
+
 1. Read [openspec/AGENTS.md](openspec/AGENTS.md)
 2. Check existing specs: `openspec list --specs`
 3. Check active changes: `openspec list`
 
 **Creating Proposals:**
+
 - Required for: new features, breaking changes, architecture modifications
 - Skip for: bug fixes, typos, dependency updates
 - Structure: `openspec/changes/<change-id>/` with `proposal.md`, `tasks.md`, optional `design.md`, and `specs/` deltas
 
 **Key Commands:**
+
 ```bash
 openspec list                   # List active changes
 openspec list --specs           # List specifications
 openspec show [item]            # Display change or spec
 openspec validate [item] --strict  # Validate before implementation
-openspec archive <change-id>    # Archive after deployment
+openspec archive <change-id> --yes  # Archive after deployment
 ```
-
-**Project Conventions:** [openspec/project.md](openspec/project.md)
-- Naming: `core.*` (platform), `module.<id>.*` (module state), `flow.<id>.*` (future)
-- Timer modes: task (40 min), questionnaire (10 min), notice (40 sec)
-- Navigation: forward-only, no back button
 
 ---
 
 ## Troubleshooting
 
-**Module not loading:**
-- Check `url` matches backend response exactly (case-sensitive)
-- Verify registration in `ModuleRegistry.initialize()`
-- Console logs: `[ModuleRegistry]`, `[ModuleRouter]`
+**Flow not loading:**
 
-**Page not restoring after refresh:**
-- Check localStorage: `hci-moduleUrl`, `hci-pageNum`
-- Verify `getInitialPage(pageNum)` handles all valid values
-- Module must handle `null` or invalid pageNum → return default
+- Check `/flow/<flowId>` matches mock definition in `mockFlowDefinitions.js`
+- Verify submodule registered in `submoduleRegistry`
+- Console logs: `[FlowModule]`, `[FlowOrchestrator]`
 
-**Data submission fails:**
-- Verify FormData structure (not JSON body)
-- Ensure `mark` field is JSON.stringify()
-- Check `batchCode` and `examNo` present
-- 401 → Should auto-redirect to login
+**Submodule not found:**
+
+- Check `submoduleRegistry.initialize()` was called
+- Verify submodule exported correctly from index file
+- Check `id` in submodule definition matches flow step's `submoduleId`
 
 **Timer issues:**
-- Check timer persistence in module context
-- Verify timer stops on component unmount
-- Handle page refresh: restore timer from localStorage
+
+- Check scope format: `flow::<flowId>::<submoduleId>::<stepIndex>::<type>`
+- Use `TimerService.getInstance('task').getDebugInfo()` for debugging
+- Timer only starts on non-hidden pages
+
+**Data submission fails:**
+
+- Verify FormData structure (not JSON body)
+- Ensure `mark` field is JSON.stringify()
+- Check for 401 → Should auto-redirect to login
 
 **WSL2 Test Failures:**
+
 - Vitest configured with `pool: 'vmThreads'` (avoid forks/threads)
 - Increase timeouts if needed (testTimeout: 10000ms)
 
@@ -449,106 +429,71 @@ openspec archive <change-id>    # Archive after deployment
 ## Style Guidelines
 
 **CSS Modules:**
-- New modules: Use CSS Modules (`*.module.css`)
+
+- All new components: Use CSS Modules (`*.module.css`)
 - Import: `import styles from './Component.module.css'`
-- Apply: `<div className={styles.container}>`
 
 **Component Naming:**
-- Components: `PascalCase.jsx`
+
+- Components: `PascalCase.jsx` or `PascalCase.tsx`
 - Hooks: `useCamelCase.js`
 - Utils: `camelCase.js`
 - Styles: `ComponentName.module.css`
-
-**Avoid:**
-- Global CSS pollution (use CSS Modules)
-- Hardcoded colors (use CSS variables or tokens)
-- Components deeper than 3 levels of nesting
 
 ---
 
 ## Testing
 
 **Unit Tests:**
+
 ```bash
 npm test                    # Run once
 npm run test:watch          # Watch mode
 npm run test:coverage       # Coverage report
+npm run test:submission     # Submission service tests
 ```
 
-**Manual Testing Checklist:**
-- [ ] Login successful (mock or real backend)
-- [ ] Module loads without console errors
-- [ ] Page refresh maintains progress
-- [ ] Timer persists across refresh
-- [ ] Navigation submits data before advancing
-- [ ] 401 error redirects to login
-- [ ] Operations logged correctly
-- [ ] Data submission format matches contract
+**Test File Location:**
 
-**Performance Testing:**
-- Chrome DevTools → Performance → Record page load
-- Target: <2s first paint, 60 FPS animations
-- Check bundle size: `npm run build` → inspect `dist/assets/`
-
----
-
-## Migration to Unified Architecture (In Progress)
-
-**Status:** Architecture refactoring via OpenSpec proposals
-
-**Goals:**
-1. Unified services: timers, submission, API client → `shared/services/`
-2. Unified UI: navigation, timer display, page frame → `shared/ui/`
-3. Submodule interface (CMI): wrap existing modules as composable units
-4. Flow orchestrator: support mixed assessment flows (`/flow/<flowId>`)
-
-**Key Documents:**
-- [docs/需求-交互前端改造方案.md](docs/需求-交互前端改造方案.md) - Detailed migration plan
-- [docs/交互前端目录结构-新架构.md](docs/交互前端目录结构-新架构.md) - Target directory structure
-- `openspec/changes/` - Active proposals
-
-**Development Principle:**
-- Maintain backward compatibility (wrapper pattern)
-- Incremental migration (not big-bang rewrite)
-- Module isolation (changes don't affect other modules)
+- Component tests: `__tests__/` folder adjacent to component
+- Integration tests: `src/submodules/<name>/__tests__/`
 
 ---
 
 ## Important Constraints
 
-1. **Zero Impact Rule:** New modules must NOT modify existing module files
+1. **Zero Impact Rule:** New submodules must NOT modify existing module files
 2. **API Compatibility:** All submissions must use FormData + JSON.stringify format
-3. **Linear Navigation:** Forward-only assessment flow (no back button)
+3. **Linear Navigation:** Forward-only assessment flow (no back button in production)
 4. **Session Integrity:** Never expose credentials in logs or console
 5. **WSL2 Environment:** Use vmThreads for tests, handle path differences
 6. **UTF-8 Encoding (MANDATORY):**
    - ALL source files MUST use UTF-8 encoding (without BOM)
-   - This includes: `.js`, `.jsx`, `.ts`, `.tsx`, `.css`, `.md`, `.json`, `.html`
-   - Chinese characters must be properly encoded (验证中文显示正常)
-   - When creating or editing files, explicitly ensure UTF-8 encoding
-   - Use `Write` tool default UTF-8 encoding for all file operations
+   - Chinese characters must be properly encoded
    - **Critical:** Never use ANSI, GB2312, or other legacy encodings
 
 ---
 
-## File References
+## Key File References
 
-**Core System:**
+**Flow System:**
+
+- [src/flows/FlowModule.jsx](src/flows/FlowModule.jsx) - Flow entry point
+- [src/flows/orchestrator/FlowOrchestrator.js](src/flows/orchestrator/FlowOrchestrator.js) - Flow state management
+- [src/submodules/registry.js](src/submodules/registry.js) - Submodule registry
+
+**Shared Services:**
+
+- [src/shared/services/timers/](src/shared/services/timers/) - TimerService
+- [src/shared/services/submission/](src/shared/services/submission/) - Submission pipeline
+- [src/shared/services/api/](src/shared/services/api/) - API client
+
+**Legacy System:**
+
 - [src/modules/ModuleRegistry.js](src/modules/ModuleRegistry.js) - Module registration
-- [src/modules/ModuleRouter.jsx](src/modules/ModuleRouter.jsx) - Module loading
 - [src/context/AppContext.jsx](src/context/AppContext.jsx) - Global state
-- [vite.config.js](vite.config.js) - Build config, mock server, aliases
-
-**Module Examples:**
-- [src/modules/grade-7-tracking/](src/modules/grade-7-tracking/) - Modern pattern
-- [src/modules/grade-4/](src/modules/grade-4/) - CSS Modules + Context
-- [src/modules/grade-7/](src/modules/grade-7/) - Legacy wrapper
-
-**Services:**
-- [src/shared/services/apiService.js](src/shared/services/apiService.js) - API client
-- [src/shared/services/dataLogger.js](src/shared/services/dataLogger.js) - Submission
 
 **Documentation:**
-- [README.md](README.md) - Project overview, features, setup
+
 - [openspec/project.md](openspec/project.md) - Conventions, naming, policies
 - [openspec/AGENTS.md](openspec/AGENTS.md) - OpenSpec workflow

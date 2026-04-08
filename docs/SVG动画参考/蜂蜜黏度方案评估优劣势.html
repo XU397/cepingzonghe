@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蜂蜜变稀：方案评估 - 科学测评</title>
+    <style>
+        :root {
+            /* 核心色彩 */
+            --cartoon-primary: #59c1ff;
+            --cartoon-secondary: #ffce6b;
+            --cartoon-green: #67d5b5;
+            --cartoon-dark: #2d5b8e;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-light: #e3eaf3;
+
+            /* 容器与背景 */
+            --frame-bg: #f5f7fb;
+            --card-bg: #ffffff;
+            --frame-border: 3px solid #ffd93d;
+
+            /* 尺寸与圆角 */
+            --radius-card: 18px;
+            --radius-input: 12px;
+            --radius-btn: 14px;
+            --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.14);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #e8f4fd 0%, #fef9e7 50%, #e8f8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* 整体容器 */
+        .page-frame {
+            width: 1280px;
+            height: 750px;
+            background: var(--frame-bg);
+            border: var(--frame-border);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(255, 193, 7, 0.2);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 装饰性背景元素 */
+        .page-frame::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(102, 213, 181, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .page-frame::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            left: -60px;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(89, 193, 255, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* 标题区 */
+        .header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 28px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .badge {
+            width: 46px;
+            height: 46px;
+            background: var(--cartoon-green);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 23px;
+            font-weight: 700;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(103, 213, 181, 0.4);
+        }
+
+        .header-content {
+            flex: 1;
+        }
+
+        .title {
+            color: var(--cartoon-dark);
+            font-size: 27px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .description {
+            color: var(--text-primary);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* 三栏布局 */
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            align-content: center;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: rgba(89, 193, 255, 0.3);
+        }
+
+        .card-number {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .card-number .num {
+            width: 26px;
+            height: 26px;
+            background: var(--cartoon-primary);
+            color: white;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .card-number .method-name {
+            color: var(--cartoon-dark);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* 描述文字 - 固定两行空间 */
+        .card-description {
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.65;
+            min-height: 2.8em;
+            margin-bottom: 14px;
+            flex-shrink: 0;
+        }
+
+        /* 图片占位符 - SVG动画区域 */
+        .image-placeholder {
+            background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            border-radius: 12px;
+            height: 150px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+        }
+
+        .image-placeholder svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 输入区 */
+        .input-group {
+            margin-bottom: 10px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .input-label.pros {
+            color: #2d9f8f;
+        }
+
+        .input-label.cons {
+            color: #d87878;
+        }
+
+        textarea {
+            width: 100%;
+            height: 54px;
+            padding: 9px 12px;
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-input);
+            font-family: inherit;
+            font-size: 12px;
+            line-height: 1.5;
+            resize: none;
+            background: #fafbfc;
+            color: var(--text-primary);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+        }
+
+        textarea::placeholder {
+            color: #b0b8c4;
+        }
+
+        textarea:hover {
+            border-color: #c5d0dd;
+            background: white;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--cartoon-primary);
+            box-shadow: 0 0 0 4px rgba(89, 193, 255, 0.15);
+            background: white;
+        }
+
+        /* 底部导航 */
+        .footer {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 20px;
+            position: relative;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        .btn-next {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 32px;
+            background: var(--cartoon-primary);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-btn);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            box-shadow: 0 4px 14px rgba(89, 193, 255, 0.35);
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(89, 193, 255, 0.45);
+            background: #4db8f7;
+        }
+
+        .btn-next:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(89, 193, 255, 0.3);
+        }
+
+        .btn-next:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(89, 193, 255, 0.3), 0 4px 14px rgba(89, 193, 255, 0.35);
+        }
+
+        .btn-next svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-next:hover svg {
+            transform: translateX(3px);
+        }
+
+        /* 进度指示 */
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 217, 61, 0.2);
+            border-radius: 0 0 20px 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 60%;
+            background: linear-gradient(90deg, var(--cartoon-secondary), var(--cartoon-primary));
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* SVG 动画样式 */
+        @media (prefers-reduced-motion: no-preference) {
+            .honey-drop {
+                animation: honeyPulse 2s ease-in-out infinite;
+            }
+
+            .ball-fall-left {
+                animation: ballFallLeft 3.5s ease-in-out infinite;
+            }
+
+            .ball-fall-right {
+                animation: ballFallRight 3.5s ease-in-out infinite;
+                animation-delay: 1.75s;
+            }
+
+            .honey-flow-left {
+                animation: honeyFlowLeft 2.8s linear infinite;
+            }
+
+            .honey-flow-right {
+                animation: honeyFlowRight 2s linear infinite;
+            }
+        }
+
+        @keyframes honeyPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.03);
+            }
+        }
+
+        @keyframes ballFallLeft {
+            0% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(75px);
+            }
+
+            35% {
+                transform: translateY(75px);
+            }
+
+            36% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes ballFallRight {
+            0% {
+                transform: translateY(0);
+            }
+
+            25% {
+                transform: translateY(75px);
+            }
+
+            30% {
+                transform: translateY(75px);
+            }
+
+            31% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes honeyFlowLeft {
+            0% {
+                transform: translateY(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.8;
+            }
+
+            90% {
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes honeyFlowRight {
+            0% {
+                transform: translateY(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.8;
+            }
+
+            90% {
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translateY(60px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page-frame">
+        <!-- 标题区 -->
+        <header class="header">
+            <div class="badge" aria-label="第6题">6</div>
+            <div class="header-content">
+                <h1 class="title">蜂蜜变稀：方案评估</h1>
+                <p class="description">小明提出了以下三种比较蜂蜜黏度的方法。请分析三种方法的优缺点，并写在相应的方框内。</p>
+            </div>
+        </header>
+
+        <!-- 三栏卡片 -->
+        <section class="cards-container" aria-label="方案卡片区域">
+            <!-- 方案一：观察法 -->
+            <article class="card">
+                <div class="card-number">
+                    <span class="num">1</span>
+                    <span class="method-name">方法一：观察法</span>
+                </div>
+                <p class="card-description">从两瓶蜂蜜中各取一滴，分别滴在纸上，观察形状。</p>
+                <div class="image-placeholder" role="img" aria-label="蜂蜜滴在纸上的对比示意图">
+                    <svg viewBox="0 0 320 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 纸张背景 -->
+                        <rect x="15" y="25" width="130" height="105" rx="4" fill="#fff" stroke="#ddd"
+                            stroke-width="1.5" />
+                        <rect x="175" y="25" width="130" height="105" rx="4" fill="#fff" stroke="#ddd"
+                            stroke-width="1.5" />
+
+                        <!-- 圆润的蜂蜜滴 - 浓稠 -->
+                        <g class="honey-drop" transform-origin="80 78">
+                            <ellipse cx="80" cy="80" rx="28" ry="26" fill="#e8a020" />
+                            <ellipse cx="80" cy="75" rx="22" ry="18" fill="#f5a623" />
+                            <ellipse cx="72" cy="68" rx="8" ry="5" fill="#ffd93d" opacity="0.6" />
+                            <ellipse cx="85" cy="72" rx="4" ry="3" fill="#ffd93d" opacity="0.4" />
+                        </g>
+
+                        <!-- 扁平扩散的蜂蜜滴 - 稀 -->
+                        <g transform="translate(240, 78)">
+                            <ellipse cx="0" cy="18" rx="55" ry="16" fill="#e8a020" opacity="0.5" />
+                            <ellipse cx="0" cy="14" rx="48" ry="13" fill="#f5a623" />
+                            <ellipse cx="0" cy="10" rx="38" ry="9" fill="#f7b742" />
+                            <ellipse cx="-18" cy="8" rx="10" ry="5" fill="#ffd93d" opacity="0.5" />
+                            <ellipse cx="12" cy="6" rx="6" ry="3" fill="#ffd93d" opacity="0.4" />
+                        </g>
+                    </svg>
+                </div>
+                <div class="input-group">
+                    <label class="input-label pros" for="pros1">优点：</label>
+                    <textarea id="pros1" placeholder="请填写此方法的优点..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label class="input-label cons" for="cons1">缺点：</label>
+                    <textarea id="cons1" placeholder="请填写此方法的缺点..."></textarea>
+                </div>
+            </article>
+
+            <!-- 方案二：落球法 -->
+            <article class="card">
+                <div class="card-number">
+                    <span class="num">2</span>
+                    <span class="method-name">方法二：落球法</span>
+                </div>
+                <p class="card-description">从两瓶蜂蜜中各取 200ml，分别装入量筒。将小钢球垂直落入，测量落到底部的时间。</p>
+                <div class="image-placeholder" role="img" aria-label="量筒落球实验示意图">
+                    <svg viewBox="0 0 320 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 左侧量筒 - 浓稠蜂蜜 -->
+                        <g transform="translate(50, 8)">
+                            <!-- 量筒主体 -->
+                            <path d="M5 20 L5 115 Q5 128 18 128 L52 128 Q65 128 65 115 L65 20 Z" fill="#e8f4fc"
+                                stroke="#7ab8dc" stroke-width="2" />
+                            <!-- 蜂蜜 -->
+                            <rect x="8" y="45" width="54" height="80" fill="#e8a020" opacity="0.75" />
+                            <!-- 刻度线 -->
+                            <line x1="62" y1="35" x2="70" y2="35" stroke="#666" stroke-width="1" />
+                            <line x1="62" y1="55" x2="67" y2="55" stroke="#666" stroke-width="0.7" />
+                            <line x1="62" y1="75" x2="67" y2="75" stroke="#666" stroke-width="0.7" />
+                            <line x1="62" y1="95" x2="67" y2="95" stroke="#666" stroke-width="0.7" />
+                            <!-- 下落的小球 - 浓稠蜂蜜中下落慢 -->
+                            <g class="ball-fall-left">
+                                <circle cx="35" cy="30" r="7" fill="#4a4a4a" />
+                                <circle cx="33" cy="28" r="2.5" fill="#6a6a6a" />
+                            </g>
+                        </g>
+
+                        <!-- 右侧量筒 - 稀蜂蜜 -->
+                        <g transform="translate(185, 8)">
+                            <!-- 量筒主体 -->
+                            <path d="M5 20 L5 115 Q5 128 18 128 L52 128 Q65 128 65 115 L65 20 Z" fill="#e8f4fc"
+                                stroke="#7ab8dc" stroke-width="2" />
+                            <!-- 蜂蜜 - 颜色更浅 -->
+                            <rect x="8" y="45" width="54" height="80" fill="#f5c86a" opacity="0.65" />
+                            <!-- 刻度线 -->
+                            <line x1="62" y1="35" x2="70" y2="35" stroke="#666" stroke-width="1" />
+                            <line x1="62" y1="55" x2="67" y2="55" stroke="#666" stroke-width="0.7" />
+                            <line x1="62" y1="75" x2="67" y2="75" stroke="#666" stroke-width="0.7" />
+                            <line x1="62" y1="95" x2="67" y2="95" stroke="#666" stroke-width="0.7" />
+                            <!-- 下落的小球 - 稀蜂蜜中下落快 -->
+                            <g class="ball-fall-right">
+                                <circle cx="35" cy="30" r="7" fill="#4a4a4a" />
+                                <circle cx="33" cy="28" r="2.5" fill="#6a6a6a" />
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+                <div class="input-group">
+                    <label class="input-label pros" for="pros2">优点：</label>
+                    <textarea id="pros2" placeholder="请填写此方法的优点..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label class="input-label cons" for="cons2">缺点：</label>
+                    <textarea id="cons2" placeholder="请填写此方法的缺点..."></textarea>
+                </div>
+            </article>
+
+            <!-- 方案三：流速法 -->
+            <article class="card">
+                <div class="card-number">
+                    <span class="num">3</span>
+                    <span class="method-name">方法三：流速法</span>
+                </div>
+                <p class="card-description">用滴管从两瓶蜂蜜中各取一滴，滴到倾斜角度相同的试管内壁上，观察蜂蜜流到试管底部的时间。</p>
+                <div class="image-placeholder" role="img" aria-label="倾斜试管流速示意图">
+                    <svg viewBox="0 0 320 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 左侧试管 - 浓稠蜂蜜流动慢 -->
+                        <g transform="translate(35, 10)">
+                            <!-- 试管主体 - 顶部平口 -->
+                            <path d="M0 0 L0 100 Q0 125 25 125 Q50 125 50 100 L50 0 L0 0 Z" fill="#f0f7fc"
+                                stroke="#7ab8dc" stroke-width="2" />
+                            <!-- 蜂蜜滴在壁上 -->
+                            <ellipse cx="15" cy="20" rx="8" ry="6" fill="#e8a020" />
+                            <!-- 流动痕迹 -->
+                            <path d="M15 26 Q12 45 18 65 Q22 80 15 95" stroke="#e8a020" stroke-width="5"
+                                stroke-linecap="round" fill="none" opacity="0.5" />
+                            <!-- 流动的蜂蜜滴 - 左侧慢 -->
+                            <g class="honey-flow-left">
+                                <ellipse cx="15" cy="30" rx="6" ry="5" fill="#f5a623" />
+                            </g>
+                        </g>
+
+                        <!-- 右侧试管 - 稀蜂蜜流动快 -->
+                        <g transform="translate(195, 10)">
+                            <!-- 试管主体 - 顶部平口 -->
+                            <path d="M0 0 L0 100 Q0 125 25 125 Q50 125 50 100 L50 0 L0 0 Z" fill="#f0f7fc"
+                                stroke="#7ab8dc" stroke-width="2" />
+                            <!-- 蜂蜜滴在壁上 -->
+                            <ellipse cx="15" cy="20" rx="8" ry="6" fill="#f5c86a" />
+                            <!-- 流动痕迹 - 更长 -->
+                            <path d="M15 26 Q10 50 20 75 Q25 95 18 115" stroke="#f5c86a" stroke-width="5"
+                                stroke-linecap="round" fill="none" opacity="0.5" />
+                            <!-- 流动的蜂蜜滴 - 右侧快 -->
+                            <g class="honey-flow-right">
+                                <ellipse cx="15" cy="30" rx="6" ry="5" fill="#f7c85a" />
+                            </g>
+                        </g>
+
+                        <!-- 倾斜角度标注线 -->
+                        <line x1="30" y1="140" x2="290" y2="140" stroke="#999" stroke-width="1"
+                            stroke-dasharray="4 3" />
+                    </svg>
+                </div>
+                <div class="input-group">
+                    <label class="input-label pros" for="pros3">优点：</label>
+                    <textarea id="pros3" placeholder="请填写此方法的优点..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label class="input-label cons" for="cons3">缺点：</label>
+                    <textarea id="cons3" placeholder="请填写此方法的缺点..."></textarea>
+                </div>
+            </article>
+        </section>
+
+        <!-- 底部导航 -->
+        <footer class="footer">
+            <button class="btn-next" type="button" aria-label="进入下一页">
+                下一页
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </button>
+        </footer>
+
+        <!-- 进度条 -->
+        <div class="progress-bar" aria-hidden="true"></div>
+    </main>
+</body>
+
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全球分布交互地图 SVG 动画</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #050505; /* 贴合原图的纯黑背景 */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #map-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 国家提示框 */
+        #tooltip {
+            position: absolute;
+            opacity: 0;
+            background: rgba(20, 20, 30, 0.9);
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 8px;
+            pointer-events: none;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: opacity 0.2s ease;
+            transform: translate(-50%, -120%);
+            z-index: 10;
+        }
+
+        /* 呼吸光环动画 */
+        @keyframes pulse {
+            0% {
+                r: 12;
+                opacity: 0.8;
+                stroke-width: 2;
+            }
+            100% {
+                r: 25;
+                opacity: 0;
+                stroke-width: 0;
+            }
+        }
+
+        .pulse-ring {
+            fill: none;
+            stroke: #4CAF50; /* 默认绿色光环，后续在代码中可自定义 */
+            animation: pulse 2s infinite ease-out;
+        }
+
+        /* 加载动画 */
+        #loader {
+            position: absolute;
+            color: #6b93d6;
+            font-size: 20px;
+            letter-spacing: 2px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* 左上角标题文字样式 */
+        .title-text {
+            fill: #6b93d6;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        /* 底部文字描述面板 */
+        #description-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            width: 85%;
+            max-width: 900px;
+            background: rgba(15, 15, 20, 0.85);
+            border: 1px solid rgba(107, 147, 214, 0.3);
+            border-left: 4px solid #6b93d6; /* 增加左侧边框装饰 */
+            border-radius: 8px;
+            padding: 18px 25px;
+            box-sizing: border-box;
+            color: #e2e8f0;
+            font-size: 15px;
+            line-height: 1.7;
+            text-align: justify;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px); /* 磨砂玻璃效果 */
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+            animation: slideUpFade 1s ease-out 1.5s forwards; /* 地图加载后自动浮现 */
+            pointer-events: none; /* 防止遮挡地图拖拽和交互 */
+            z-index: 5;
+        }
+
+        #description-panel p {
+            margin: 0 0 8px 0;
+        }
+
+        #description-panel p:last-child {
+            margin: 0;
+        }
+
+        @keyframes slideUpFade {
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map-container">
+        <div id="loader">加载地图数据中...</div>
+        <div id="tooltip"></div>
+        
+        <!-- 底部科普文字描述 -->
+        <div id="description-panel">
+            <p>全球香蕉主要产自赤道附近（南北纬30°内），分布在亚洲（如马来西亚、菲律宾、中国）、美洲（如巴拿马、巴西）和非洲（如卢旺达、布隆迪）。</p>
+            <p>不同品种的香蕉在皮厚度和酶活性等特征上也有所不同。例如，南美洲卡文迪什香蕉皮较厚（0.3-0.5毫米），菲律宾香蕉皮较薄（0.2-0.3毫米）；而海南芝麻蕉则表现为多酚氧化酶活性更高，保存时间更短。</p>
+        </div>
+
+        <svg id="world-map" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <!-- 定义地图填充的点阵图案，还原原图的像素/点阵质感 -->
+                <pattern id="dot-pattern" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+                    <circle cx="2" cy="2" r="1.2" fill="#5A82D7" opacity="0.8"></circle>
+                </pattern>
+
+                <!-- 标记的阴影效果 -->
+                <filter id="drop-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.8"/>
+                </filter>
+
+                <!-- 圆形裁剪路径，用于裁剪国旗 -->
+                <clipPath id="circle-clip" clipPathUnits="objectBoundingBox">
+                    <circle cx="0.5" cy="0.5" r="0.5" />
+                </clipPath>
+            </defs>
+            
+            <g id="map-layer"></g>
+            <g id="grid-layer"></g>
+            <g id="marker-layer"></g>
+        </svg>
+    </div>
+
+    <script>
+        // 国家数据配置 (ID对应flagcdn的国旗代码，coords为经纬度 [经度, 纬度])
+        // 根据您提供的图片，在美洲、非洲、亚洲添加了相应的分布点，中国标记略微放大
+        // 本次修改：根据香蕉种植分布调整标记，新增了马来西亚、卢旺达、布隆迪，移除了非洲部分重叠的小国
+        const locations = [
+            // 美洲 (保持主要的香蕉产区)
+            { id: "mx", name: "墨西哥", coords: [-102.5, 23.6], size: 1, color: "#10B981" },
+            { id: "gt", name: "危地马拉", coords: [-90.2, 15.7], size: 0.9, color: "#3B82F6" },
+            { id: "hn", name: "洪都拉斯", coords: [-86.2, 15.1], size: 0.9, color: "#3B82F6" },
+            { id: "jm", name: "牙买加", coords: [-77.2, 18.1], size: 0.9, color: "#FBBF24" },
+            { id: "do", name: "多米尼加", coords: [-70.1, 18.7], size: 0.9, color: "#EF4444" },
+            { id: "cr", name: "哥斯达黎加", coords: [-83.7, 9.7], size: 0.9, color: "#EF4444" },
+            { id: "pa", name: "巴拿马", coords: [-80.7, 8.5], size: 0.9, color: "#3B82F6" },
+            { id: "co", name: "哥伦比亚", coords: [-74.2, 4.5], size: 1, color: "#FBBF24" },
+            { id: "ve", name: "委内瑞拉", coords: [-66.5, 6.4], size: 1, color: "#FBBF24" },
+            { id: "ec", name: "厄瓜多尔", coords: [-78.1, -1.8], size: 0.9, color: "#FBBF24" },
+            { id: "pe", name: "秘鲁", coords: [-75.0, -9.1], size: 1, color: "#EF4444" },
+            { id: "br", name: "巴西", coords: [-51.9, -14.2], size: 1.1, color: "#10B981" },
+
+            // 非洲 (参考新提供的图片，补充和调整了非洲国家的标记)
+            { id: "sn", name: "塞内加尔", coords: [-14.4, 14.4], size: 0.9, color: "#10B981" }, // 新增
+            { id: "ng", name: "尼日利亚", coords: [8.6, 9.0], size: 1, color: "#10B981" }, // 新增
+            { id: "cm", name: "喀麦隆", coords: [12.3, 3.8], size: 1, color: "#FBBF24" }, // 新增
+            { id: "et", name: "埃塞俄比亚", coords: [40.4, 9.1], size: 1, color: "#10B981" },
+            { id: "rw", name: "卢旺达", coords: [24.0, 1.5], size: 0.9, color: "#FBBF24" }, // 人为向西北偏移，避免与布隆迪重叠
+            { id: "bi", name: "布隆迪", coords: [35.0, -6.0], size: 0.9, color: "#EF4444" }, // 人为向东南偏移，避免与卢旺达重叠
+
+            // 亚洲 (新增马来西亚)
+            { id: "cn", name: "中国", coords: [104.1, 35.8], size: 1.5, color: "#EF4444" }, // 中国标记放大
+            { id: "in", name: "印度", coords: [78.9, 20.5], size: 1.1, color: "#F97316" },
+            { id: "th", name: "泰国", coords: [100.9, 15.8], size: 1, color: "#3B82F6" },
+            { id: "ph", name: "菲律宾", coords: [121.7, 12.8], size: 1, color: "#3B82F6" },
+            { id: "my", name: "马来西亚", coords: [101.9, 4.2], size: 1, color: "#3B82F6" } // 新增
+        ];
+
+        const svg = d3.select("#world-map");
+        const mapLayer = d3.select("#map-layer");
+        const gridLayer = d3.select("#grid-layer");
+        const markerLayer = d3.select("#marker-layer");
+        const tooltip = d3.select("#tooltip");
+
+        // 设置地图投影方式（墨卡托投影，与原图最吻合）
+        const projection = d3.geoMercator()
+            .scale(140)
+            .translate([500, 300]); // 居中调整
+
+        const path = d3.geoPath().projection(projection);
+
+        // 获取地图数据 (加载简化的世界地图GeoJSON)
+        d3.json("https://unpkg.com/world-atlas@2.0.2/countries-110m.json").then(world => {
+            document.getElementById('loader').style.display = 'none';
+
+            // 提取陆地数据（将国家边界合并，只填充整体陆地，保持点阵美观）
+            const land = topojson.feature(world, world.objects.land);
+
+            // 1. 绘制带有打字机效果/透明度渐变的点阵地图
+            mapLayer.append("path")
+                .datum(land)
+                .attr("d", path)
+                .attr("fill", "url(#dot-pattern)") // 使用点阵填充
+                .attr("stroke", "rgba(90, 130, 215, 0.2)") // 极其轻微的描边
+                .attr("stroke-width", 0.5)
+                .style("opacity", 0)
+                .transition()
+                .duration(1500)
+                .style("opacity", 1);
+
+            // 2. 添加左上角装饰性标题 (可选)
+            svg.append("text")
+                .attr("x", 40)
+                .attr("y", 60)
+                .attr("class", "title-text")
+                .style("opacity", 0)
+                .text("全球香蕉种植分布") // 修改标题以反映主题
+                .transition()
+                .delay(1000)
+                .duration(1000)
+                .style("opacity", 1);
+
+            // 绘制纬线 (30°N, 0°, 30°S)
+            const latitudes = [
+                { lat: 30, label: "30°N" },
+                { lat: 0, label: "0°" },
+                { lat: -30, label: "30°S" }
+            ];
+
+            latitudes.forEach(d => {
+                // 利用投影计算经纬度在画布上的实际坐标
+                const leftPoint = projection([-180, d.lat]);
+                const rightPoint = projection([180, d.lat]);
+                
+                // 绘制虚线
+                gridLayer.append("line")
+                    .attr("x1", leftPoint[0])
+                    .attr("y1", leftPoint[1])
+                    .attr("x2", rightPoint[0])
+                    .attr("y2", rightPoint[1])
+                    .attr("stroke", d.lat === 0 ? "rgba(107, 147, 214, 0.6)" : "rgba(107, 147, 214, 0.4)") // 0度线稍微亮一点
+                    .attr("stroke-width", d.lat === 0 ? 1.5 : 1)
+                    .attr("stroke-dasharray", "6, 4")
+                    .style("opacity", 0)
+                    .transition()
+                    .delay(800)
+                    .duration(1000)
+                    .style("opacity", 1);
+                    
+                // 添加纬度文字标签
+                gridLayer.append("text")
+                    .attr("x", rightPoint[0] - 10)
+                    .attr("y", rightPoint[1] - 5)
+                    .attr("fill", "rgba(107, 147, 214, 0.7)")
+                    .attr("font-size", "12px")
+                    .attr("text-anchor", "end")
+                    .text(d.label)
+                    .style("opacity", 0)
+                    .transition()
+                    .delay(800)
+                    .duration(1000)
+                    .style("opacity", 1);
+            });
+
+            // 绘制本初子午线 (0°经线)
+            const topPoint = projection([0, 85]);
+            const bottomPoint = projection([0, -85]);
+            
+            gridLayer.append("line")
+                .attr("x1", topPoint[0])
+                .attr("y1", topPoint[1])
+                .attr("x2", bottomPoint[0])
+                .attr("y2", bottomPoint[1])
+                .attr("stroke", "rgba(107, 147, 214, 0.6)")
+                .attr("stroke-width", 1.5)
+                .attr("stroke-dasharray", "6, 4")
+                .style("opacity", 0)
+                .transition()
+                .delay(800)
+                .duration(1000)
+                .style("opacity", 1);
+                
+            gridLayer.append("text")
+                .attr("x", topPoint[0] + 5)
+                .attr("y", topPoint[1] + 15)
+                .attr("fill", "rgba(107, 147, 214, 0.7)")
+                .attr("font-size", "12px")
+                .text("0°")
+                .style("opacity", 0)
+                .transition()
+                .delay(800)
+                .duration(1000)
+                .style("opacity", 1);
+
+            // 3. 渲染并动态弹出国家标记
+            const markers = markerLayer.selectAll(".marker-group")
+                .data(locations)
+                .enter()
+                .append("g")
+                .attr("class", "marker-group")
+                .attr("transform", d => {
+                    const [x, y] = projection(d.coords);
+                    return `translate(${x}, ${y}) scale(0)`; // 初始 scale 为 0
+                })
+                .style("cursor", "pointer");
+
+            // 外部呼吸光环
+            markers.append("circle")
+                .attr("class", "pulse-ring")
+                .attr("cx", 0)
+                .attr("cy", 0)
+                .style("stroke", d => d.color)
+                .style("animation-delay", (d, i) => `${i * 0.1}s`); // 错开呼吸时间
+
+            // 白色底色圆边框 (加阴影增加立体感)
+            const baseRadius = 11;
+            markers.append("circle")
+                .attr("r", d => baseRadius * d.size)
+                .attr("fill", "#ffffff")
+                .attr("filter", "url(#drop-shadow)");
+
+            // 内部国旗图片（利用 clipPath 裁剪为完美的圆形）
+            markers.append("image")
+                .attr("href", d => `https://flagcdn.com/w40/${d.id}.png`) // 动态高清国旗
+                .attr("x", d => -baseRadius * d.size)
+                .attr("y", d => -baseRadius * d.size)
+                .attr("width", d => baseRadius * 2 * d.size)
+                .attr("height", d => baseRadius * 2 * d.size)
+                .attr("clip-path", "url(#circle-clip)")
+                .attr("preserveAspectRatio", "xMidYMid slice");
+
+            // 入场动画：错开时间依次弹出 (Pop-up)
+            markers.transition()
+                .delay((d, i) => 1000 + i * 100) // 等地图加载完再依次弹出
+                .duration(800)
+                .ease(d3.easeElastic) // 弹性特效
+                .attr("transform", d => {
+                    const [x, y] = projection(d.coords);
+                    return `translate(${x}, ${y}) scale(1)`;
+                });
+
+            // 4. 交互事件：鼠标悬停放大，并显示国家名称提示框
+            markers.on("mouseover", function(event, d) {
+                // 放大当前标记
+                d3.select(this).transition()
+                    .duration(200)
+                    .ease(d3.easeCubicOut)
+                    .attr("transform", `translate(${projection(d.coords)[0]}, ${projection(d.coords)[1]}) scale(1.4)`);
+
+                // 显示提示框
+                tooltip.style("opacity", 1)
+                       .html(`📍 ${d.name}`)
+                       .style("left", event.pageX + "px")
+                       .style("top", event.pageY + "px");
+            })
+            .on("mousemove", function(event) {
+                // 让提示框跟随鼠标稍微移动
+                tooltip.style("left", event.pageX + "px")
+                       .style("top", event.pageY + "px");
+            })
+            .on("mouseout", function(event, d) {
+                // 恢复大小
+                d3.select(this).transition()
+                    .duration(300)
+                    .ease(d3.easeCubicOut)
+                    .attr("transform", `translate(${projection(d.coords)[0]}, ${projection(d.coords)[1]}) scale(1)`);
+                
+                // 隐藏提示框
+                tooltip.style("opacity", 0);
+            });
+
+        }).catch(err => {
+            console.error("加载地图数据失败:", err);
+            document.getElementById('loader').innerText = "加载地图失败，请检查网络";
+        });
+
+    </script>
+</body>
+</html>

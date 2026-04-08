@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚂 小小列车长：路线规划实验</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // Lucide Icons 简化版本
+    const Train = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <rect x="4" y="6" width="16" height="12" rx="2"/>
+        <path d="M4 11h16"/>
+        <path d="M12 6v5"/>
+        <circle cx="9" cy="16" r="1"/>
+        <circle cx="15" cy="16" r="1"/>
+      </svg>
+    );
+
+    const Home = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    );
+
+    const MapPin = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    );
+
+    const TrainMap = () => {
+      // --- 1. 站点定义 ---
+      const [stations] = useState([
+        // 左上角区域
+        { id: 'nanchong_north', name: '南充北站', x: 10, y: 15, isCore: true, showLabel: true },
+        { id: 'nn_a', name: '北郊站A', x: 30, y: 20, isCore: false, showLabel: false },
+        { id: 'nn_b', name: '北郊站B', x: 20, y: 40, isCore: false, showLabel: false },
+
+        // 核心区域
+        { id: 'xiaoming', name: '小明家', x: 50, y: 50, isCore: true, showLabel: true },
+
+        // 右下角区域
+        { id: 'nanchong', name: '南充站', x: 90, y: 85, isCore: true, showLabel: true },
+        { id: 'n1', name: '枢纽东', x: 80, y: 75, isCore: false, showLabel: false },
+        { id: 'n2a', name: '东路站1', x: 75, y: 55, isCore: false, showLabel: false },
+        { id: 'n3a', name: '东路站2', x: 62, y: 45, isCore: false, showLabel: false },
+        { id: 'n2b', name: '南路站1', x: 68, y: 80, isCore: false, showLabel: false },
+        { id: 'n3b', name: '南路站2', x: 55, y: 70, isCore: false, showLabel: false },
+      ]);
+
+      // --- 2. 物理连接线 (基础底图) ---
+      const baseLines = [
+        { from: 'nanchong_north', to: 'nn_a' },
+        { from: 'nn_a', to: 'xiaoming' },
+        { from: 'nanchong_north', to: 'nn_b' },
+        { from: 'nn_b', to: 'xiaoming' },
+        { from: 'nanchong', to: 'n1' },
+        { from: 'n1', to: 'n2a' },
+        { from: 'n1', to: 'n2b' },
+        { from: 'n2a', to: 'n3a' },
+        { from: 'n3a', to: 'xiaoming' },
+        { from: 'n2b', to: 'n3b' },
+        { from: 'n3b', to: 'xiaoming' },
+        { from: 'n2a', to: 'n3b' }, // 跨线连接
+      ];
+
+      // --- 3. 线路数据定义 ---
+      const routes = useMemo(() => ({
+        1: {
+          id: 1,
+          name: '线路 1',
+          color: '#F59E0B', // 橙色
+          path: ['nanchong_north', 'nn_a', 'xiaoming'],
+          distances: [4.26, 3.64]
+        },
+        2: {
+          id: 2,
+          name: '线路 2',
+          color: '#10B981', // 绿色
+          path: ['nanchong_north', 'nn_b', 'xiaoming'],
+          distances: [3.33, 5.32]
+        },
+        3: {
+          id: 3,
+          name: '线路 3',
+          color: '#3B82F6', // 蓝色
+          path: ['nanchong', 'n1', 'n2a', 'n3a', 'xiaoming'],
+          distances: [2.3, 2.4, 3.0, 2.5]
+        },
+        4: {
+          id: 4,
+          name: '线路 4',
+          color: '#8B5CF6', // 紫色
+          path: ['nanchong', 'n1', 'n2a', 'n3b', 'xiaoming'],
+          distances: [2.3, 2.4, 2.93, 2.0]
+        },
+        5: {
+          id: 5,
+          name: '线路 5',
+          color: '#EC4899', // 粉色
+          path: ['nanchong', 'n1', 'n2b', 'n3b', 'xiaoming'],
+          distances: [2.3, 1.49, 2.09, 2.0]
+        }
+      }), []);
+
+      const [activeLineId, setActiveLineId] = useState(1);
+      const [trainProgress, setTrainProgress] = useState(0);
+
+      useEffect(() => {
+        setTrainProgress(0);
+      }, [activeLineId]);
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setTrainProgress(prev => {
+            if (prev >= 100) return 0;
+            return prev + 0.3;
+          });
+        }, 20);
+        return () => clearInterval(interval);
+      }, []);
+
+      const getStationPos = (id) => {
+        const s = stations.find(s => s.id === id);
+        return s ? { x: s.x, y: s.y } : { x: 0, y: 0 };
+      };
+
+      const activePathPoints = useMemo(() => {
+        const route = routes[activeLineId];
+        if (!route) return [];
+        return route.path.map(id => getStationPos(id));
+      }, [activeLineId, stations, routes]);
+
+      const getTrainPosition = (progress) => {
+        if (activePathPoints.length < 2) return activePathPoints[0] || { x: 0, y: 0 };
+
+        const totalSegments = activePathPoints.length - 1;
+        const segmentSize = 100 / totalSegments;
+        const currentSegmentIndex = Math.min(
+          Math.floor(progress / segmentSize),
+          totalSegments - 1
+        );
+        const segmentPercent = (progress - currentSegmentIndex * segmentSize) / segmentSize;
+        const p1 = activePathPoints[currentSegmentIndex];
+        const p2 = activePathPoints[currentSegmentIndex + 1];
+
+        return {
+          x: p1.x + (p2.x - p1.x) * segmentPercent,
+          y: p1.y + (p2.y - p1.y) * segmentPercent
+        };
+      };
+
+      const trainPos = getTrainPosition(trainProgress);
+      const currentRoute = routes[activeLineId];
+
+      // 判断某条物理连接线是否属于当前激活的路线
+      const isLineActive = (fromId, toId) => {
+        if (!currentRoute) return false;
+        const path = currentRoute.path;
+        // 检查 path 中是否存在相邻的 [fromId, toId] 或 [toId, fromId]
+        for (let i = 0; i < path.length - 1; i++) {
+          if (
+            (path[i] === fromId && path[i + 1] === toId) ||
+            (path[i] === toId && path[i + 1] === fromId)
+          ) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      // 渲染距离标签
+      const renderDistanceLabels = () => {
+        if (!currentRoute) return null;
+        const labels = [];
+        for (let i = 0; i < currentRoute.path.length - 1; i++) {
+          const startId = currentRoute.path[i];
+          const endId = currentRoute.path[i + 1];
+          const startPos = getStationPos(startId);
+          const endPos = getStationPos(endId);
+          const dist = currentRoute.distances[i];
+          const midX = (startPos.x + endPos.x) / 2;
+          const midY = (startPos.y + endPos.y) / 2;
+
+          labels.push(
+            <div
+              key={`dist-${i}`}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
+              style={{ left: `${midX}%`, top: `${midY}%` }}
+            >
+              <div
+                className="px-2 py-1 rounded-full text-[12px] font-bold shadow-md border-2 bg-white transition-colors duration-500"
+                style={{
+                  color: currentRoute.color,
+                  borderColor: currentRoute.color,
+                }}
+              >
+                {dist}km
+              </div>
+            </div>
+          );
+        }
+        return labels;
+      };
+
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-blue-50 p-6 font-sans">
+          <div className="mb-6 text-center">
+            <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
+              🚂 小小列车长：路线规划实验
+            </h1>
+            <p className="text-slate-500 mt-2">点击左侧按钮切换路线,观察火车怎么走最近?</p>
+          </div>
+
+          <div className="relative w-full max-w-5xl aspect-[16/9] bg-white rounded-3xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border-4 border-white overflow-hidden ring-1 ring-slate-100">
+            {/* --- 按钮区域 (位置已调整至偏下方) --- */}
+            <div className="absolute left-6 top-[65%] transform -translate-y-1/2 z-40 flex flex-col gap-3">
+              {[1, 2, 3, 4, 5].map((id) => {
+                const route = routes[id];
+                const isActive = activeLineId === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setActiveLineId(id)}
+                    className="relative pl-12 pr-6 py-3 rounded-2xl font-bold text-lg transition-all duration-300 shadow-sm hover:scale-105 hover:shadow-md"
+                    style={{
+                      backgroundColor: isActive ? route.color : '#F1F5F9',
+                      color: isActive ? 'white' : '#64748B',
+                    }}
+                  >
+                    {/* 序号圈圈 */}
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black bg-white/20">
+                      {id}
+                    </div>
+                    线路{id}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* --- 地图绘图区 --- */}
+
+            {/* 背景网格 */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-30"
+              style={{
+                backgroundImage: 'radial-gradient(#CBD5E1 1px, transparent 1px)',
+                backgroundSize: '30px 30px'
+              }}
+            />
+
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              {/* 渲染所有轨道线段,根据是否激活决定颜色 */}
+              {baseLines.map((line, idx) => {
+                const s = getStationPos(line.from);
+                const e = getStationPos(line.to);
+                const active = isLineActive(line.from, line.to);
+
+                return (
+                  <g key={`line-${idx}`}>
+                    {/* 底部光晕/阴影 (仅激活时显示) */}
+                    {active && (
+                      <line
+                        x1={`${s.x}%`}
+                        y1={`${s.y}%`}
+                        x2={`${e.x}%`}
+                        y2={`${e.y}%`}
+                        stroke={currentRoute.color}
+                        strokeWidth="16"
+                        strokeLinecap="round"
+                        className="opacity-30 blur-sm transition-all duration-500"
+                      />
+                    )}
+
+                    {/* 实体轨道 */}
+                    <line
+                      x1={`${s.x}%`}
+                      y1={`${s.y}%`}
+                      x2={`${e.x}%`}
+                      y2={`${e.y}%`}
+                      stroke={active ? currentRoute.color : "#E2E8F0"}
+                      strokeWidth="12"
+                      strokeLinecap="round"
+                      className="transition-colors duration-500 ease-in-out"
+                    />
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* 3. 距离标签 */}
+            {renderDistanceLabels()}
+
+            {/* 4. 站点渲染 */}
+            {stations.map((station) => {
+              const isActive = currentRoute?.path.includes(station.id);
+              const isStartOrEnd = station.id === 'nanchong_north' || station.id === 'nanchong';
+
+              return (
+                <div
+                  key={station.id}
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10"
+                  style={{ left: `${station.x}%`, top: `${station.y}%` }}
+                >
+                  {/* 站点圆圈 */}
+                  <div
+                    className={`rounded-full transition-all duration-500 flex items-center justify-center border-4 bg-white ${
+                      station.showLabel ? 'w-10 h-10 shadow-lg' : 'w-5 h-5 shadow-sm'
+                    } ${isActive ? 'scale-110' : 'scale-100'}`}
+                    style={{
+                      borderColor: isActive ? currentRoute.color : '#CBD5E1',
+                    }}
+                  >
+                    {/* 只有核心站点显示图标 */}
+                    {station.id === 'xiaoming' && <Home size={18} className="text-slate-700" />}
+                    {isStartOrEnd && <MapPin size={18} className="text-slate-700" />}
+
+                    {/* 中间普通站点只是一个实心点 */}
+                    {!station.showLabel && (
+                      <div
+                        className="w-full h-full rounded-full transition-colors duration-500"
+                        style={{
+                          backgroundColor: isActive ? currentRoute.color : 'transparent'
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  {/* 站点名称 (只显示三个核心站) */}
+                  {station.showLabel && (
+                    <div
+                      className={`mt-2 px-3 py-1.5 rounded-xl text-sm font-bold shadow-md border-2 bg-white transition-all duration-500 ${
+                        isActive ? 'text-slate-800 scale-105' : 'text-slate-400 scale-100'
+                      }`}
+                      style={{
+                        borderColor: isActive ? currentRoute.color : '#E2E8F0'
+                      }}
+                    >
+                      {station.name}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* 5. 小火车 */}
+            <div
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none transition-all duration-75 ease-linear"
+              style={{ left: `${trainPos.x}%`, top: `${trainPos.y}%` }}
+            >
+              <div className="relative">
+                <div
+                  className="p-2 rounded-full shadow-xl border-4 border-white transition-colors duration-500"
+                  style={{ backgroundColor: currentRoute.color }}
+                >
+                  <Train size={24} className="text-white" />
+                </div>
+                {/* 气泡 */}
+                <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-white px-3 py-1 rounded-full text-xs font-bold text-slate-600 shadow-md whitespace-nowrap">
+                  出发啦!
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // 渲染 React 应用
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<TrainMap />);
+  </script>
+</body>
+</html>

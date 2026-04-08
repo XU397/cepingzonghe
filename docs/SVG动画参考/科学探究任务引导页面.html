@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蜂蜜的奥秘 - 互动探索</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 25%, #fbbf24 50%, #d97706 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* SVG背景容器 */
+        .svg-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 玻璃态卡片 - 符合设计系统 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow:
+                0 20px 60px rgba(217, 119, 6, 0.25),
+                0 8px 24px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            padding: 48px;
+            max-width: 640px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: cardFloat 6s ease-in-out infinite;
+        }
+
+        /* 卡片顶部装饰线 */
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent);
+            border-radius: 0 0 4px 4px;
+            opacity: 0.8;
+        }
+
+        @keyframes cardFloat {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* 标题样式 */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 24px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '🍯';
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.8rem;
+            animation: honeyDrip 3s ease-in-out infinite;
+        }
+
+        @keyframes honeyDrip {
+
+            0%,
+            100% {
+                transform: translateY(-50%) scale(1);
+            }
+
+            50% {
+                transform: translateY(-40%) scale(1.1);
+            }
+        }
+
+        /* 内容文本 */
+        .content-text {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: #78350f;
+            margin-bottom: 20px;
+            text-align: justify;
+            text-align-last: center;
+        }
+
+        .highlight {
+            color: #b45309;
+            font-weight: 600;
+            background: linear-gradient(120deg, rgba(251, 191, 36, 0.3) 0%, rgba(251, 191, 36, 0.3) 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 40%;
+            background-position: 0 88%;
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        /* 按钮样式 - 渐变紫罗兰色 */
+        .btn-primary {
+            margin-top: 32px;
+            padding: 16px 48px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow:
+                0 4px 16px rgba(124, 58, 237, 0.4),
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 8px 24px rgba(124, 58, 237, 0.5),
+                0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            .glass-card {
+                padding: 32px 24px;
+                border-radius: 20px;
+            }
+
+            h1 {
+                font-size: 1.875rem;
+            }
+
+            h1::after {
+                right: -32px;
+                font-size: 1.4rem;
+            }
+
+            .content-text {
+                font-size: 1rem;
+            }
+        }
+
+        /* 浮动装饰粒子 */
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            opacity: 0.6;
+            animation: particleFloat 20s infinite linear;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.6;
+            }
+
+            90% {
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SVG动画背景 -->
+    <svg class="svg-background" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <!-- 渐变定义 -->
+            <linearGradient id="honeyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:0.9" />
+                <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:0.95" />
+                <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+            </linearGradient>
+
+            <linearGradient id="glassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)" />
+                <stop offset="100%" style="stop-color:rgba(255,255,255,0.1)" />
+            </linearGradient>
+
+            <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#fde68a" />
+                <stop offset="50%" style="stop-color:#fbbf24" />
+                <stop offset="100%" style="stop-color:#f59e0b" />
+            </linearGradient>
+
+            <!-- 阴影滤镜 -->
+            <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+                <feOffset dx="2" dy="4" result="offsetblur" />
+                <feComponentTransfer>
+                    <feFuncA type="linear" slope="0.3" />
+                </feComponentTransfer>
+                <feMerge>
+                    <feMergeNode />
+                    <feMergeNode in="SourceGraphic" />
+                </feMerge>
+            </filter>
+        </defs>
+
+        <!-- 左侧：温度计 -->
+        <g transform="translate(120, 200)" filter="url(#dropShadow)">
+            <!-- 温度计主体 -->
+            <rect x="0" y="0" width="40" height="300" rx="20" fill="url(#glassGradient)" stroke="#92400e"
+                stroke-width="2" />
+            <!-- 温度刻度 -->
+            <g stroke="#92400e" stroke-width="2" opacity="0.6">
+                <line x1="10" y1="30" x2="30" y2="30" />
+                <line x1="10" y1="60" x2="30" y2="60" />
+                <line x1="10" y1="90" x2="25" y2="90" />
+                <line x1="10" y1="120" x2="30" y2="120" />
+                <line x1="10" y1="150" x2="25" y2="150" />
+                <line x1="10" y1="180" x2="30" y2="180" />
+                <line x1="10" y1="210" x2="25" y2="210" />
+                <line x1="10" y1="240" x2="30" y2="240" />
+            </g>
+            <!-- 红色液柱 - 动画 -->
+            <rect x="15" y="80" width="10" height="200" rx="5" fill="#dc2626">
+                <animate attributeName="height" values="180;200;190;210;185;195" dur="4s" repeatCount="indefinite" />
+                <animate attributeName="y" values="100;80;90;70;95;85" dur="4s" repeatCount="indefinite" />
+            </rect>
+            <!-- 底部球泡 -->
+            <circle cx="20" cy="280" r="18" fill="#dc2626" />
+        </g>
+
+        <!-- 左侧：锥形瓶（有气泡） -->
+        <g transform="translate(280, 600)" filter="url(#dropShadow)">
+            <!-- 瓶身 -->
+            <path d="M 0,0 L 60,0 L 80,120 L 80,160 L -20,160 L -20,120 Z" fill="url(#glassGradient)" stroke="#92400e"
+                stroke-width="2" transform="translate(0, -160)" />
+            <!-- 蜂蜜液体 -->
+            <path d="M -15,120 L 75,120 L 70,155 L -10,155 Z" fill="url(#honeyGradient)" opacity="0.8"
+                transform="translate(0, -160)">
+                <animate attributeName="d"
+                    values="M -15,120 L 75,120 L 70,155 L -10,155 Z;M -15,120 L 75,120 L 72,155 L -12,155 Z;M -15,120 L 75,120 L 70,155 L -10,155 Z"
+                    dur="3s" repeatCount="indefinite" />
+            </path>
+            <!-- 气泡动画 -->
+            <circle cx="20" cy="-20" r="4" fill="#fbbf24" opacity="0.8">
+                <animate attributeName="cy" values="40;-40" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="40" cy="-10" r="3" fill="#fbbf24" opacity="0.6">
+                <animate attributeName="cy" values="50;-30" dur="2.5s" begin="0.5s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0;0.8;0" dur="2.5s" begin="0.5s" repeatCount="indefinite" />
+            </circle>
+        </g>
+
+        <!-- 中央底部：蜂蜜罐（主要元素） -->
+        <g transform="translate(960, 850)" filter="url(#dropShadow)">
+            <!-- 罐身 -->
+            <rect x="-80" y="-100" width="160" height="180" rx="20" fill="url(#glassGradient)" stroke="#92400e"
+                stroke-width="3" />
+            <!-- 蜂蜜 -->
+            <rect x="-70" y="-90" width="140" height="160" rx="15" fill="url(#honeyGradient)" />
+            <!-- 高光 -->
+            <rect x="-60" y="-80" width="20" height="100" rx="10" fill="white" opacity="0.3" />
+            <!-- 罐口 -->
+            <rect x="-85" y="-110" width="170" height="30" rx="5" fill="#78350f" />
+            <rect x="-80" y="-105" width="160" height="20" rx="3" fill="#92400e" />
+
+            <!-- 滴落的蜂蜜 - 关键动画 -->
+            <path d="M 0,70 Q 0,90 0,100 Q 0,120 0,130 Q 0,140 0,150" stroke="url(#honeyGradient)" stroke-width="12"
+                fill="none" stroke-linecap="round">
+                <animate attributeName="d"
+                    values="M 0,70 Q 0,90 0,100 Q 0,120 0,130 Q 0,140 0,150;M 0,70 Q 5,90 0,100 Q -5,120 0,130 Q 3,140 0,150;M 0,70 Q -3,90 0,100 Q 3,120 0,130 Q -2,140 0,150;M 0,70 Q 0,90 0,100 Q 0,120 0,130 Q 0,140 0,150"
+                    dur="3s" repeatCount="indefinite" />
+                <animate attributeName="stroke-width" values="12;14;12" dur="3s" repeatCount="indefinite" />
+            </path>
+            <!-- 滴落的水滴 -->
+            <ellipse cx="0" cy="150" rx="6" ry="8" fill="url(#honeyGradient)">
+                <animate attributeName="ry" values="8;10;8" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="1;0.8;1" dur="3s" repeatCount="indefinite" />
+            </ellipse>
+            <!-- 地面上的蜂蜜渍 -->
+            <ellipse cx="0" cy="170" rx="40" ry="10" fill="#d97706" opacity="0.4">
+                <animate attributeName="rx" values="40;42;40" dur="3s" repeatCount="indefinite" />
+            </ellipse>
+        </g>
+
+        <!-- 右侧：天平 -->
+        <g transform="translate(1600, 300)" filter="url(#dropShadow)">
+            <!-- 支柱 -->
+            <rect x="-5" y="0" width="10" height="200" fill="#78350f" />
+            <rect x="-20" y="200" width="40" height="15" rx="3" fill="#92400e" />
+            <!-- 横梁 - 摆动动画 -->
+            <g>
+                <animateTransform attributeName="transform" type="rotate" values="-2 0 20; 2 0 20; -2 0 20" dur="6s"
+                    repeatCount="indefinite" />
+                <rect x="-120" y="15" width="240" height="8" rx="4" fill="#f59e0b" stroke="#92400e" stroke-width="1" />
+                <!-- 中心支点 -->
+                <circle cx="0" cy="20" r="8" fill="#dc2626" />
+
+                <!-- 左盘 -->
+                <line x1="-100" y1="20" x2="-100" y2="80" stroke="#92400e" stroke-width="2" />
+                <ellipse cx="-100" cy="85" rx="35" ry="8" fill="url(#goldGradient)" stroke="#92400e" stroke-width="2" />
+
+                <!-- 右盘 -->
+                <line x1="100" y1="20" x2="100" y2="80" stroke="#92400e" stroke-width="2" />
+                <ellipse cx="100" cy="85" rx="35" ry="8" fill="url(#goldGradient)" stroke="#92400e" stroke-width="2" />
+            </g>
+        </g>
+
+        <!-- 右侧：烧杯 -->
+        <g transform="translate(1700, 700)" filter="url(#dropShadow)">
+            <!-- 杯身 -->
+            <path d="M -40,-80 L 40,-80 L 35,40 L -35,40 Z" fill="url(#glassGradient)" stroke="#92400e"
+                stroke-width="2" />
+            <!-- 边缘 -->
+            <ellipse cx="0" cy="-80" rx="40" ry="8" fill="none" stroke="#92400e" stroke-width="2" />
+            <ellipse cx="0" cy="-80" rx="35" ry="6" fill="rgba(255,255,255,0.3)" />
+            <!-- 液体 -->
+            <path d="M -32,-20 L 32,-20 L 30,35 L -30,35 Z" fill="url(#honeyGradient)" opacity="0.85">
+                <animate attributeName="d"
+                    values="M -32,-20 L 32,-20 L 30,35 L -30,35 Z;M -32,-20 L 32,-20 L 32,35 L -28,35 Z;M -32,-20 L 32,-20 L 30,35 L -30,35 Z"
+                    dur="4s" repeatCount="indefinite" />
+            </path>
+            <!-- 刻度线 -->
+            <line x1="-25" y1="-10" x2="-15" y2="-10" stroke="white" stroke-width="2" opacity="0.7" />
+            <line x1="-25" y1="10" x2="-15" y2="10" stroke="white" stroke-width="2" opacity="0.7" />
+        </g>
+
+        <!-- 装饰性花朵（左下角） -->
+        <g transform="translate(200, 900)">
+            <g>
+                <animateTransform attributeName="transform" type="rotate" values="0; 5; 0" dur="4s"
+                    repeatCount="indefinite" />
+                <!-- 花瓣 -->
+                <ellipse cx="0" cy="-20" rx="8" ry="18" fill="#f59e0b" opacity="0.8" />
+                <ellipse cx="18" cy="-10" rx="8" ry="18" fill="#fbbf24" opacity="0.8" transform="rotate(60)" />
+                <ellipse cx="18" cy="10" rx="8" ry="18" fill="#f59e0b" opacity="0.8" transform="rotate(120)" />
+                <ellipse cx="0" cy="20" rx="8" ry="18" fill="#fbbf24" opacity="0.8" transform="rotate(180)" />
+                <ellipse cx="-18" cy="10" rx="8" ry="18" fill="#f59e0b" opacity="0.8" transform="rotate(240)" />
+                <ellipse cx="-18" cy="-10" rx="8" ry="18" fill="#fbbf24" opacity="0.8" transform="rotate(300)" />
+                <!-- 花心 -->
+                <circle cx="0" cy="0" r="10" fill="#92400e" />
+            </g>
+        </g>
+
+        <!-- 装饰性花朵（右下角） -->
+        <g transform="translate(1720, 950)">
+            <g>
+                <animateTransform attributeName="transform" type="rotate" values="0; -3; 0" dur="5s"
+                    repeatCount="indefinite" />
+                <ellipse cx="0" cy="-15" rx="6" ry="14" fill="#fbbf24" opacity="0.7" />
+                <ellipse cx="13" cy="-8" rx="6" ry="14" fill="#f59e0b" opacity="0.7" transform="rotate(60)" />
+                <ellipse cx="13" cy="8" rx="6" ry="14" fill="#fbbf24" opacity="0.7" transform="rotate(120)" />
+                <ellipse cx="0" cy="15" rx="6" ry="14" fill="#f59e0b" opacity="0.7" transform="rotate(180)" />
+                <ellipse cx="-13" cy="8" rx="6" ry="14" fill="#fbbf24" opacity="0.7" transform="rotate(240)" />
+                <ellipse cx="-13" cy="-8" rx="6" ry="14" fill="#f59e0b" opacity="0.7" transform="rotate(300)" />
+                <circle cx="0" cy="0" r="8" fill="#78350f" />
+            </g>
+        </g>
+
+        <!-- 漂浮的分子/原子符号（装饰） -->
+        <g opacity="0.3">
+            <text x="400" y="200" font-family="Arial" font-size="24" fill="#92400e">
+                H₂O
+                <animate attributeName="y" values="200;180;200" dur="5s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.3;0.6;0.3" dur="5s" repeatCount="indefinite" />
+            </text>
+            <text x="1500" y="150" font-family="Arial" font-size="20" fill="#92400e">
+                C₆H₁₂O₆
+                <animate attributeName="y" values="150;170;150" dur="6s" repeatCount="indefinite" />
+                <animate attributeName="x" values="1500;1520;1500" dur="6s" repeatCount="indefinite" />
+            </text>
+        </g>
+    </svg>
+
+    <!-- 浮动粒子（通过JS生成） -->
+    <div id="particles"></div>
+
+    <!-- 主内容 -->
+    <div class="container">
+        <div class="glass-card">
+            <h1>蜂蜜的奥秘</h1>
+            <p class="content-text">
+                蜂蜜源自大自然的馈赠，富含多种有益成分。成都的中学生<span class="highlight">小明</span>在超市购买了一瓶蜂蜜，存放一段时间后，他发现蜂蜜的状态似乎发生了变化。
+            </p>
+            <p class="content-text" style="margin-top: 16px;">
+                这是怎么回事呢？请你和他一起探索吧！
+            </p>
+            <button class="btn-primary" onclick="nextPage()">下一页</button>
+        </div>
+    </div>
+
+    <script>
+        // 生成浮动金色粒子
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const particleCount = 15;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+
+                // 随机大小和位置
+                const size = Math.random() * 20 + 10;
+                const left = Math.random() * 100;
+                const delay = Math.random() * 20;
+                const duration = Math.random() * 10 + 15;
+
+                particle.style.cssText = `
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${left}%;
+                    background: radial-gradient(circle, rgba(251, 191, 36, 0.8) 0%, rgba(251, 191, 36, 0) 70%);
+                    border-radius: 50%;
+                    animation-delay: ${delay}s;
+                    animation-duration: ${duration}s;
+                `;
+
+                container.appendChild(particle);
+            }
+        }
+
+        // 页面加载时生成粒子
+        window.addEventListener('load', createParticles);
+
+        // 按钮点击事件
+        function nextPage() {
+            // 添加点击动画
+            const btn = document.querySelector('.btn-primary');
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                btn.style.transform = '';
+                alert('即将进入探索页面...\n（这里可以连接到下一页内容）');
+            }, 150);
+        }
+
+        // 鼠标视差效果（增强沉浸感）
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+
+            const svg = document.querySelector('.svg-background');
+            svg.style.transform = `translate(${x * 0.5}px, ${y * 0.5}px) scale(1.05)`;
+        });
+
+        // 卡片3D倾斜效果
+        const card = document.querySelector('.glass-card');
+        document.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+
+            const rotateX = (y / rect.height) * -5;
+            const rotateY = (x / rect.width) * 5;
+
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+        });
+
+        // 鼠标离开时重置
+        document.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+        });
+    </script>
+</body>
+
+</html>

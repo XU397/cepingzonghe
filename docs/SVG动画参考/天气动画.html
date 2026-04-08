@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气日历</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --border: #e0e4e8;
+            --header-text: #2563eb;
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --accent-sun: #f59e0b;
+            --accent-rain: #3b82f6;
+            --accent-cloud: #94a3b8;
+            --weekend-text: #dc2626;
+            --today-bg: #fff7ed;
+            --today-border: #f97316;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .calendar-container {
+            max-width: 840px;
+            margin: 0 auto;
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow:
+                0 1px 2px rgba(0, 0, 0, 0.04),
+                0 4px 16px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .weekday {
+            padding: 14px 8px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--header-text);
+            letter-spacing: 0.5px;
+        }
+
+        .weekday:first-child,
+        .weekday:last-child {
+            color: var(--weekend-text);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .day-cell {
+            background: var(--card);
+            min-height: 120px;
+            padding: 10px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .day-cell:not(.empty):hover {
+            background: #fafbfc;
+            z-index: 1;
+        }
+
+        .day-cell.empty {
+            background: #fafbfc;
+        }
+
+        .day-number {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .day-cell.weekend .day-number {
+            color: var(--weekend-text);
+        }
+
+        .lunar-date {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .weather-icon {
+            width: 44px;
+            height: 44px;
+            margin: 4px auto;
+            display: block;
+        }
+
+        .weather-text {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+
+        .temperature {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .temp-high {
+            color: #e53e3e;
+            font-weight: 500;
+        }
+
+        .temp-low {
+            color: #3182ce;
+            font-weight: 500;
+        }
+
+        /* SVG 动画 */
+        @keyframes sunRotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes sunPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(0.96);
+            }
+        }
+
+        @keyframes cloudFloat {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            50% {
+                transform: translateX(2px);
+            }
+        }
+
+        @keyframes rainDrop {
+            0% {
+                transform: translateY(-6px);
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(14px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes rainDrop2 {
+            0% {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+
+            25% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(10px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes heavyRain {
+            0% {
+                transform: translateY(-8px);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(16px);
+                opacity: 0;
+            }
+        }
+
+        .sun-rays {
+            transform-origin: center;
+            animation: sunRotate 18s linear infinite;
+        }
+
+        .sun-body {
+            animation: sunPulse 3s ease-in-out infinite;
+        }
+
+        .cloud-main {
+            animation: cloudFloat 4s ease-in-out infinite;
+        }
+
+        .rain-line {
+            animation: rainDrop 1.2s linear infinite;
+        }
+
+        .rain-line-2 {
+            animation: rainDrop2 1.4s linear infinite;
+            animation-delay: -0.4s;
+        }
+
+        .rain-line-3 {
+            animation: rainDrop 1s linear infinite;
+            animation-delay: -0.7s;
+        }
+
+        .heavy-rain-line {
+            animation: heavyRain 0.7s linear infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .sun-rays,
+            .sun-body,
+            .cloud-main,
+            .rain-line,
+            .rain-line-2,
+            .rain-line-3,
+            .heavy-rain-line {
+                animation: none;
+            }
+        }
+
+        /* 响应式 */
+        @media (max-width: 640px) {
+            body {
+                padding: 16px 12px;
+            }
+
+            .day-cell {
+                min-height: 100px;
+                padding: 8px 6px;
+            }
+
+            .weather-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .weekday {
+                padding: 10px 4px;
+                font-size: 11px;
+            }
+
+            .day-number {
+                font-size: 14px;
+            }
+
+            .weather-text {
+                font-size: 10px;
+            }
+
+            .temperature {
+                font-size: 11px;
+            }
+
+            .lunar-date {
+                font-size: 9px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .day-cell {
+                min-height: 88px;
+                padding: 6px 4px;
+            }
+
+            .weather-icon {
+                width: 30px;
+                height: 30px;
+            }
+
+            .day-number {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="calendar-container">
+        <div class="weekdays">
+            <div class="weekday">日</div>
+            <div class="weekday">一</div>
+            <div class="weekday">二</div>
+            <div class="weekday">三</div>
+            <div class="weekday">四</div>
+            <div class="weekday">五</div>
+            <div class="weekday">六</div>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <script>
+        // 天气数据
+        const weatherData = [
+            { day: 1, weekday: 5, lunar: '十七', icon: 'cloud-rain', text: '小雨~多云', temp: [19, 26] },
+            { day: 2, weekday: 6, lunar: '十八', icon: 'sunny', text: '多云~晴', temp: [20, 32] },
+            { day: 3, weekday: 0, lunar: '十九', icon: 'sunny', text: '晴', temp: [21, 34] },
+            { day: 4, weekday: 1, lunar: '二十', icon: 'sun-cloud', text: '多云~晴', temp: [22, 34] },
+            { day: 5, weekday: 2, lunar: '廿一', icon: 'cloud-rain', text: '多云', temp: [23, 34] },
+            { day: 6, weekday: 3, lunar: '廿二', icon: 'cloud', text: '阴~多云', temp: [23, 31] },
+            { day: 7, weekday: 4, lunar: '廿三', icon: 'cloud', text: '阴~多云', temp: [23, 32] },
+            { day: 8, weekday: 5, lunar: '廿四', icon: 'cloud-sun', text: '阴~小雨', temp: [23, 33] },
+            { day: 9, weekday: 6, lunar: '廿五', icon: 'cloud-rain', text: '多云~大雨', temp: [23, 33] },
+            { day: 10, weekday: 0, lunar: '廿六', icon: 'heavy-rain', text: '大雨', temp: [23, 33] },
+            { day: 11, weekday: 1, lunar: '廿七', icon: 'dark-rain', text: '大雨~阵雨', temp: [19, 22] },
+            { day: 12, weekday: 2, lunar: '廿八', icon: 'cloud', text: '阴~多云', temp: [17, 29] },
+            { day: 13, weekday: 3, lunar: '廿九', icon: 'cloud-sun', text: '阴~晴', temp: [20, 31] },
+            { day: 14, weekday: 4, lunar: '三十', icon: 'cloud-rain', text: '阴~多云', temp: [21, 31] },
+            { day: 15, weekday: 5, lunar: '初一', icon: 'cloud-rain', text: '阴~多云', temp: [22, 29] },
+            { day: 16, weekday: 6, lunar: '初二', icon: 'cloud-sun', text: '阴~多云', temp: [22, 30] }
+        ];
+
+        // SVG 图标生成
+        function createSunnyIcon() {
+            return `
+                <svg class="weather-icon" viewBox="0 0 64 64" fill="none">
+                    <g class="sun-rays">
+                        <line x1="32" y1="6" x2="32" y2="14" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="32" y1="50" x2="32" y2="58" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="6" y1="32" x2="14" y2="32" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="50" y1="32" x2="58" y2="32" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="13.4" y1="13.4" x2="19" y2="19" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="45" y1="45" x2="50.6" y2="50.6" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="13.4" y1="50.6" x2="19" y2="45" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="45" y1="19" x2="50.6" y2="13.4" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+                    </g>
+                    <circle class="sun-body" cx="32" cy="32" r="13" fill="#fbbf24"/>
+                    <circle cx="32" cy="32" r="8" fill="#fcd34d"/>
+                </svg>
+            `;
+        }
+
+        function createCloudIcon() {
+            return `
+                <svg class="weather-icon" viewBox="0 0 64 64" fill="none">
+                    <g class="cloud-main">
+                        <ellipse cx="22" cy="38" rx="14" ry="10" fill="#e5e7eb"/>
+                        <ellipse cx="38" cy="36" rx="16" ry="12" fill="#d1d5db"/>
+                        <ellipse cx="30" cy="32" rx="12" ry="9" fill="#e5e7eb"/>
+                    </g>
+                </svg>
+            `;
+        }
+
+        function createCloudRainIcon() {
+            return `
+                <svg class="weather-icon" viewBox="0 0 64 64" fill="none">
+                    <g class="cloud-main">
+                        <ellipse cx="20" cy="24" rx="12" ry="8" fill="#e5e7eb"/>
+                        <ellipse cx="34" cy="22" rx="14" ry="10" fill="#d1d5db"/>
+                        <ellipse cx="28" cy="18" rx="10" ry="7" fill="#e5e7eb"/>
+                    </g>
+                    <line class="rain-line" x1="22" y1="36" x2="20" y2="48" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+                    <line class="rain-line-2" x1="32" y1="38" x2="30" y2="50" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+                    <line class="rain-line-3" x1="42" y1="36" x2="40" y2="48" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            `;
+        }
+
+        function createSunCloudIcon() {
+            return `
+                <svg class="weather-icon" viewBox="0 0 64 64" fill="none">
+                    <g class="sun-rays" style="transform-origin: 18px 20px;">
+                        <line x1="18" y1="4" x2="18" y2="10" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="4" y1="20" x2="10" y2="20" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="8" y1="10" x2="12" y2="14" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="26" y1="10" x2="22" y2="14" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+                    </g>
+                    <circle class="sun-body" cx="18" cy="20" r="9" fill="#fbbf24"/>
+                    <circle cx="18" cy="20" r="5" fill="#fcd34d"/>
+                    <g class="cloud-main">
+                        <ellipse cx="36" cy="42" rx="14" ry="10" fill="#e5e7eb"/>
+                        <ellipse cx="48" cy="40" rx="10" ry="8" fill="#d1d5db"/>
+                        <ellipse cx="42" cy="36" rx="10" ry="8" fill="#e5e7eb"/>
+                    </g>
+                </svg>
+            `;
+        }
+
+        function createCloudSunIcon() {
+            return `
+                <svg class="weather-icon" viewBox="0 0 64 64" fill="none">
+                    <g class="sun-rays" style="transform-origin: 50px 18px;">
+                        <line x1="50" y1="4" x2="50" y2="9" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="58" y1="18" x2="62" y2="18" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="56" y1="10" x2="59" y2="7" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+                    <circle class="sun-body" cx="50" cy="18" r="7" fill="#fbbf24"/>
+                    <g class="cloud-main">
+                        <ellipse cx="22" cy="40" rx="14" ry="10" fill="#e5e7eb"/>
+                        <ellipse cx="38" cy="38" rx="16" ry="12" fill="#d1d5db"/>
+                        <ellipse cx="30" cy="34" rx="12" ry="9" fill="#e5e7eb"/>
+                    </g>
+                </svg>
+            `;
+        }
+
+        function createHeavyRainIcon() {
+            return `
+                <svg class="weather-icon" viewBox="0 0 64 64" fill="none">
+                    <g class="cloud-main">
+                        <ellipse cx="20" cy="16" rx="12" ry="8" fill="#6b7280"/>
+                        <ellipse cx="34" cy="14" rx="14" ry="10" fill="#4b5563"/>
+                        <ellipse cx="28" cy="10" rx="10" ry="7" fill="#374151"/>
+                    </g>
+                    <line class="heavy-rain-line" x1="14" y1="28" x2="11" y2="44" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+                    <line class="heavy-rain-line" x1="24" y1="30" x2="21" y2="46" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" style="animation-delay: -0.2s"/>
+                    <line class="heavy-rain-line" x1="34" y1="28" x2="31" y2="44" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" style="animation-delay: -0.4s"/>
+                    <line class="heavy-rain-line" x1="44" y1="30" x2="41" y2="46" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" style="animation-delay: -0.15s"/>
+                    <line class="heavy-rain-line" x1="19" y1="36" x2="17" y2="48" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" style="animation-delay: -0.3s"/>
+                    <line class="heavy-rain-line" x1="29" y1="34" x2="27" y2="46" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" style="animation-delay: -0.5s"/>
+                    <line class="heavy-rain-line" x1="39" y1="36" x2="37" y2="48" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" style="animation-delay: -0.1s"/>
+                </svg>
+            `;
+        }
+
+        function createDarkRainIcon() {
+            return `
+                <svg class="weather-icon" viewBox="0 0 64 64" fill="none">
+                    <g class="cloud-main">
+                        <ellipse cx="22" cy="18" rx="12" ry="8" fill="#6b7280"/>
+                        <ellipse cx="36" cy="16" rx="14" ry="10" fill="#4b5563"/>
+                        <ellipse cx="30" cy="12" rx="10" ry="7" fill="#6b7280"/>
+                    </g>
+                    <line class="rain-line" x1="20" y1="30" x2="17" y2="44" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+                    <line class="rain-line-2" x1="32" y1="32" x2="29" y2="46" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+                    <line class="rain-line-3" x1="44" y1="30" x2="41" y2="44" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+                    <line class="rain-line" x1="26" y1="36" x2="24" y2="46" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" style="animation-delay: -0.5s"/>
+                    <line class="rain-line-2" x1="38" y1="34" x2="36" y2="44" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" style="animation-delay: -0.3s"/>
+                </svg>
+            `;
+        }
+
+        function getWeatherIcon(iconType) {
+            switch (iconType) {
+                case 'sunny': return createSunnyIcon();
+                case 'cloud': return createCloudIcon();
+                case 'cloud-rain': return createCloudRainIcon();
+                case 'sun-cloud': return createSunCloudIcon();
+                case 'cloud-sun': return createCloudSunIcon();
+                case 'heavy-rain': return createHeavyRainIcon();
+                case 'dark-rain': return createDarkRainIcon();
+                default: return createCloudIcon();
+            }
+        }
+
+        // 渲染日历
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // 1号是周五(weekday=5)，所以前面有5个空格（周日到周四）
+            for (let i = 0; i < 5; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                grid.appendChild(emptyCell);
+            }
+
+            // 添加天气数据
+            weatherData.forEach(data => {
+                const cell = document.createElement('div');
+                const isWeekend = data.weekday === 0 || data.weekday === 6;
+                cell.className = 'day-cell' + (isWeekend ? ' weekend' : '');
+
+                cell.innerHTML = `
+                    <div class="day-number">${data.day}</div>
+                    <div class="lunar-date">农历${data.lunar}</div>
+                    ${getWeatherIcon(data.icon)}
+                    <div class="weather-text">${data.text}</div>
+                    <div class="temperature">
+                        <span class="temp-low">${data.temp[0]}°</span>
+                        <span>~</span>
+                        <span class="temp-high">${data.temp[1]}°</span>
+                    </div>
+                `;
+
+                grid.appendChild(cell);
+            });
+
+            // 不再添加剩余日期
+        }
+
+        // 初始化
+        renderCalendar();
+    </script>
+</body>
+
+</html>

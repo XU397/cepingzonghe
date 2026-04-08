@@ -1,0 +1,11 @@
+
+- 2026-04-07：香蕉 mapping 基线测试已切换为真实 Q5/Q6/Q7 元数据校验，并增加 formatter 对选项键/原始文本输入的期望，能直接暴露当前仅支持 A-D 键值直出的缺口。
+- 2026-04-07：banana 单选题 formatter 采用 tolerant 模式最稳妥：先识别直接选项标签，再反查原始选项文本，最后统一输出 `"<label>. <text>"`；同时测试名要显式带 `Q5`/`unknown`，保证 `vitest -t` 不会误跳过。
+- 2026-04-07：当子模块本地 operation 允许对象值时，不要去改 shared adapter 合同；在 context 的 flow_context 注入边界把本地日志归一化成 `value: string`，注入返回后再映射回本地 `OperationLog`，这样能同时保住本地灵活性和 shared 兼容性。
+- 2026-04-07：banana 的页面校验最好统一返回结构化结果而不是只回 message；`missing[]` 必须用稳定机器键并在 `handleFrameNext()` 统一组装 next-button `click_blocked`，这样后续格式测试才能直接断言 intro/Q5/Q8 的阻断载荷。
+- 2026-04-07：Notice 页这类“暂不可操作但要可观测”的控件不能继续依赖原生 `disabled`；应改用受控 handler + `aria-disabled`，这样既能维持业务阻断，又能真实记录 `click_blocked` 与 `missing: ['timer_completed']`。
+- 2026-04-07：banana 单选题若 answerDraft 继续存原始文案，页面就必须用 `answers[answerKey]` 做受控回填，而操作日志单独记录 `radio_select + <label>. <text>`，才能同时满足 UI 回显与提交语义约束。
+- 2026-04-07：banana 模拟实验的开始与结果事件最好都由复用 `SimulationPanel` 在单一动画流水线内产出；这样 page 09-12 只复用 `logOperation/targetPrefix` 就能稳定拿到 `simulation_timing_started` 与 6 条条件结果，避免页面层重复埋点和双路径提交风险。
+- 2026-04-07：banana 的 submission-format 回归更适合用“手工 contract fixture + shared schema 校验”锁定协议，而不是依赖 UI 录制或 buildMark 快照；这样能稳定覆盖 intro/Q5/Q8 的 `missing[]`、Q5-Q7 标签化答案、单个 `flow_context` 与前缀规则。
+- 2026-04-08：已收敛 banana mapping.ts 的 formatAnswerValue 为 tolerant 模式，镜像 mikania 实现（先识别选项标签，再反查选项文本，统一输出 "<label>. <text>"）；修复前 formatAnswerValue('Q5', 'E') 返回 'E'，现在正确返回 'E. 15天'；Q5-Q7 单选题的所有选项键输入和原始文案输入（A/E/15天/海南香蕉/18℃）均已通过测试锁定；formatter 逻辑保持最简洁，与 mikania 对齐，无需改动测试文件。
+- 2026-04-08：在 `.ts` 测试文件里新增渲染 helper 时不能直接写 JSX；最小修复是补 `import React from 'react'` 并改用 `React.createElement(...)`，这样无需改名为 `.tsx` 也能通过 esbuild/vitest。
