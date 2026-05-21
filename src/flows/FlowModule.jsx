@@ -25,9 +25,9 @@ const FLOW_APP_CONTEXT_KEYS_TO_CLEAR = [
 ];
 const debugLog = () => {};
 const isDevEnv =
-  typeof process !== 'undefined'
-    ? process.env.NODE_ENV === 'development'
-    : Boolean(import.meta.env?.DEV);
+  Boolean(import.meta.env?.DEV) ||
+  import.meta.env?.MODE === 'development' ||
+  (typeof process !== 'undefined' && process.env.NODE_ENV === 'development');
 const COMPLETION_PROGRESS_PAGE_NUM = '999'; // 前端完成标识，不占用真实子模块页码
 const DEFAULT_COMPLETION_CONTENT = completionDefaultContent;
 // 显式开关：仅当设置 VITE_FLOW_DEV_MOCK_AUTH 时才启用 Flow 的 Mock 账号

@@ -1,19 +1,73 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { loginUser } from '../shared/services/apiService';
+import { useLoginPageConfig } from '../shared/services/loginPageConfig';
 import '../styles/LoginPage.css';
 import logoImage from '../assets/images/img_logo.png';
 import demoImage from '../assets/images/logoinback.png';
+
+const VALID_DISPLAY_TYPES = new Set(['none', 'image', 'text', 'image_text']);
+const VALID_POSITIONS = new Set(['top_left', 'top_center', 'top_right']);
+const URL_SCHEME_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:/;
+
+function getAllowedLogoOrigins() {
+  return String(import.meta.env.VITE_LOGIN_LOGO_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+function isSafeLogoImageUrl(imageUrl) {
+  if (!imageUrl || typeof imageUrl !== 'string') return false;
+
+  const trimmedUrl = imageUrl.trim();
+  if (!trimmedUrl || trimmedUrl.startsWith('//')) return false;
+  if (trimmedUrl.startsWith('/') || trimmedUrl.startsWith('./') || trimmedUrl.startsWith('../')) {
+    return true;
+  }
+
+  const baseOrigin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'http://localhost';
+
+  try {
+    const parsedUrl = new URL(trimmedUrl, baseOrigin);
+    const isAbsoluteUrl = URL_SCHEME_PATTERN.test(trimmedUrl);
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) return false;
+    if (!isAbsoluteUrl) return true;
+
+    return parsedUrl.origin === baseOrigin || getAllowedLogoOrigins().includes(parsedUrl.origin);
+  } catch {
+    return false;
+  }
+}
+
+function getLogoImageSrc(imageUrl) {
+  return isSafeLogoImageUrl(imageUrl) ? imageUrl.trim() : logoImage;
+}
 
 const LoginPage = () => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [cooldownTime, setCooldownTime] = useState(0);  // 冷却剩余秒数
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [logoImageError, setLogoImageError] = useState(false);
   const { handleLoginSuccess } = useAppContext();
 
-  const isPasswordFreeMode = import.meta.env.VITE_PASSWORD_FREE === '1' || import.meta.env.VITE_PASSWORD_FREE === 'true';
+  const config = useLoginPageConfig();
+
+  const isPasswordFreeEnv = import.meta.env.VITE_PASSWORD_FREE === '1'
+    || String(import.meta.env.VITE_PASSWORD_FREE).toLowerCase() === 'true';
+  const hidePassword = config.password.hidden || isPasswordFreeEnv;
+
+  const displayType = VALID_DISPLAY_TYPES.has(config.logo.displayType) ? config.logo.displayType : 'none';
+  const position = VALID_POSITIONS.has(config.logo.position) ? config.logo.position : 'top_center';
+
+  const highlightText = config.title.highlightText || '';
+  const mainText = config.title.mainText || '';
+  const subtitleText = config.title.subtitleText || '';
+  const loginBoxTitle = config.loginBoxTitle || '登录';
 
   useEffect(() => {
     if (cooldownTime <= 0) return;
@@ -29,10 +83,9 @@ const LoginPage = () => {
     return () => clearInterval(timer);
   }, [cooldownTime]);
 
-  // 注意：由于浏览器安全策略，不能自动进入全屏
-  // 必须由用户交互触发，全屏提示将由 App.jsx 全局控制
-
-  // Images are bundled via Vite asset imports
+  const handleLogoImageError = useCallback(() => {
+    setLogoImageError(true);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,31 +93,28 @@ const LoginPage = () => {
     setErrorMessage('');
 
     try {
-      if (!userId || (!isPasswordFreeMode && !password)) {
-        setErrorMessage(isPasswordFreeMode ? '请输入账号' : '请输入账号与密码');
+      if (!userId || (!hidePassword && !password)) {
+        setErrorMessage(hidePassword ? '请输入账号' : '请输入账号与密码');
         return;
       }
 
-      // 验证账号格式：只允许英文字符和数字
       const validPattern = /^[a-zA-Z0-9]+$/;
       if (!validPattern.test(userId)) {
         setErrorMessage('账号不符合规范，只允许输入英文字符和数字，请重新输入');
         return;
       }
 
-      // 验证账号长度：7-15个字符
-      if (userId.length < 7 || userId.length > 15) {
-        setErrorMessage('账号长度不符合规范，必须为7-15个字符，请重新输入');
+      if (userId.length < 7 || userId.length > 20) {
+        setErrorMessage('账号长度不符合规范，必须为7-20个字符，请重新输入');
         return;
       }
 
-      // 验证密码格式（非免密模式下）
-      if (!isPasswordFreeMode && !validPattern.test(password)) {
+      if (!hidePassword && !validPattern.test(password)) {
         setErrorMessage('密码不符合规范，只允许输入英文字符和数字，请重新输入');
         return;
       }
 
-      const actualPassword = isPasswordFreeMode ? '1234' : password;
+      const actualPassword = hidePassword ? '1234' : password;
       const result = await loginUser({ userId, password: actualPassword });
       if (result?.code === 429) {
         setCooldownTime(60);
@@ -82,7 +132,6 @@ const LoginPage = () => {
       };
       await handleLoginSuccess(userData);
     } catch (err) {
-      // 检测 429 限流错误（可能在错误消息中）
       const errorMsg = err?.message || '';
       if (errorMsg.includes('429') || errorMsg.includes('请求过于频繁')) {
         setCooldownTime(60);
@@ -95,19 +144,26 @@ const LoginPage = () => {
     }
   };
 
+  const logoContainerClass = `login-logo-container login-logo--${position.replace('_', '-')}`;
+
   return (
     <div className="login-page">
-      {/* 全屏提示已由 App.jsx 全局控制，此处无需重复渲染 */}
-
       <header className="login-header">
-        <div className="login-logo-container">
-          深圳市教育督导评估监测中心
-          {/* <img
-            src={logoImage}
-            alt="Logo"
-            className="login-header-logo"
-            onError={(e) => { e.target.style.display = 'none'; }}
-          />  */}
+        <div className={logoContainerClass}>
+          {displayType !== 'none' && (displayType === 'image' || displayType === 'image_text') && (
+            !logoImageError && (
+              <img
+                src={getLogoImageSrc(config.logo.imageUrl)}
+                alt={config.logo.imageAlt || config.logo.text || 'Logo'}
+                className="login-header-logo"
+                onError={handleLogoImageError}
+                referrerPolicy="no-referrer"
+              />
+            )
+          )}
+          {displayType !== 'none' && (displayType === 'text' || displayType === 'image_text') && (
+            <span className="login-logo-text">{config.logo.text}</span>
+          )}
         </div>
       </header>
 
@@ -115,9 +171,10 @@ const LoginPage = () => {
         <div className="login-content-container">
           <section className="login-product-intro">
             <h1 className="login-product-title">
-              <span className="login-product-highlight">深圳市“三有”青少年幸福成长</span>专项监测项目
+              {highlightText && <span className="login-product-highlight">{highlightText}</span>}
+              {mainText}
             </h1>
-            {/* <p className="login-product-subtitle">数据驱动的监测与分析平台</p> */}
+            {subtitleText && <p className="login-product-subtitle">{subtitleText}</p>}
             <div className="login-product-demo">
               <img
                 src={demoImage}
@@ -132,9 +189,7 @@ const LoginPage = () => {
 
           <section className="login-form-container">
             <div className="login-welcome-section">
-              <h2 className="login-welcome-title">
-                学生科学探究能力监测平台
-              </h2>
+              <h2 className="login-welcome-title">{loginBoxTitle}</h2>
             </div>
 
             {errorMessage && (
@@ -157,7 +212,7 @@ const LoginPage = () => {
                 />
               </div>
 
-              {!isPasswordFreeMode && (
+              {!hidePassword && (
                 <div className="login-input-container">
                   <label className="login-input-label">密码</label>
                   <input
@@ -173,7 +228,7 @@ const LoginPage = () => {
 
               <button type="submit" className="login-submit-button" disabled={isLoading || cooldownTime > 0}>
                 {isLoading && <div className="login-loading-spinner"></div>}
-                {cooldownTime > 0 ? `请等待 ${cooldownTime} 秒` : (isLoading ? '登录中…' : (isPasswordFreeMode ? '快速登录' : '登录'))}
+                {cooldownTime > 0 ? `请等待 ${cooldownTime} 秒` : (isLoading ? '登录中…' : (hidePassword ? '快速登录' : '登录'))}
               </button>
             </form>
           </section>

@@ -3,36 +3,48 @@
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import styled from 'styled-components';
 
-// 使用Styled-components处理复杂的玻璃拟态效果
-const StyledOverlay = styled(Dialog.Overlay)`
-  background-color: rgba(0, 0, 0, 0.4);
-  position: fixed;
-  inset: 0;
-  backdrop-filter: blur(4px);
-  z-index: 40;
-`;
+const overlayStyle: React.CSSProperties = {
+  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  position: 'fixed',
+  inset: 0,
+  backdropFilter: 'blur(4px)',
+  zIndex: 40,
+};
 
-const StyledContent = styled(Dialog.Content)`
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90vw;
-  max-width: 500px;
-  max-height: 85vh;
-  padding: 25px;
-  z-index: 50;
-  &:focus {
-    outline: none;
-  }
-`;
+const contentStyle: React.CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.1)',
+  borderRadius: 16,
+  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.3)',
+  position: 'fixed',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: '90vw',
+  maxWidth: 500,
+  maxHeight: '85vh',
+  padding: 25,
+  zIndex: 50,
+  outline: 'none',
+};
+
+const closeButtonStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 10,
+  right: 10,
+  display: 'inline-flex',
+  width: 25,
+  height: 25,
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '50%',
+  border: 0,
+  background: 'transparent',
+  color: '#d1d5db',
+  cursor: 'pointer',
+};
 
 interface ModalProps {
   open: boolean;
@@ -46,8 +58,8 @@ export const Modal: React.FC<ModalProps> = ({ open, onOpenChange, title, descrip
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <StyledOverlay />
-        <StyledContent>
+        <Dialog.Overlay style={overlayStyle} />
+        <Dialog.Content style={contentStyle}>
           <Dialog.Title className="text-white text-lg font-medium mb-2">
             {title}
           </Dialog.Title>
@@ -63,11 +75,12 @@ export const Modal: React.FC<ModalProps> = ({ open, onOpenChange, title, descrip
             <button
               className="text-gray-300 hover:text-white absolute top-[10px] right-[10px] inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-white"
               aria-label="Close"
+              style={closeButtonStyle}
             >
               <Cross2Icon />
             </button>
           </Dialog.Close>
-        </StyledContent>
+        </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
   );

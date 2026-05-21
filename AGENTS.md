@@ -1,24 +1,3 @@
-<!-- OPENSPEC:START -->
-
-# OpenSpec Instructions
-
-These instructions are for AI assistants working in this project.
-
-Always open `@/openspec/AGENTS.md` when the request:
-
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
-
-Use `@/openspec/AGENTS.md` to learn:
-
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
 
 # PROJECT KNOWLEDGE BASE
 
@@ -30,6 +9,93 @@ Branch: 005-g4-experiment-submodule
 
 React 18 + Vite assessment platform with two coexistence modes: legacy module routing and modern flow/submodule orchestration.
 Core risk areas: flow state synchronization, submission format compliance, and timer/session behavior across route transitions.
+
+
+<!-- cp-kb-init-start -->
+## VERIFIED REPOSITORY FACTS (cp, 2026-05-22)
+
+This repository is the student assessment frontend. It runs React 18 + Vite 4 and supports two runtime modes: legacy module routing and modern Flow/submodule orchestration. Treat repository code, API behavior, tests, and runtime observations as the source of truth; documentation and the vault are navigation context only.
+
+### Tech Stack
+
+- React `^18.2.0`, React DOM `^18.2.0`, React Router DOM `^7.7.1`.
+- Vite `^4.4.5` with `@vitejs/plugin-react`; dev server port `3000`.
+- TypeScript `^5.9.3` with mixed JS/TS (`allowJs: true`) and path aliases in `vite.config.js` / `tsconfig.json`.
+- UI/data dependencies: Radix Dialog/Icons, lucide-react, Recharts, Chart.js, react-chartjs-2, D3, topojson-client.
+- Auth password encryption uses `jsencrypt` in `src/utils/jsencrypt.ts`.
+- Tests use Vitest `^4.0.10`, Testing Library, jsdom; E2E uses Playwright `^1.56.0`.
+
+### Repository Structure
+
+```
+src/app/          # AppShell, top-level routes, StrictMode split, UserInfoBar visibility
+src/context/      # AppContext auth/session/timers/storage/Flow bridge helpers
+src/flows/        # Flow runtime, orchestrator, context bridge, mock Flow definitions
+src/modules/      # legacy module registry/router and grade modules
+src/submodules/   # Flow submodule registry and submodule implementations
+src/shared/       # shared API, submission, timers, UI frames, types, page mapping
+src/pages/        # legacy G7 steamed-bun pages and questionnaire pages
+tests/            # Playwright E2E and extra test assets
+```
+
+### Key Files
+
+- Boot/routing: `src/main.jsx`, `src/app/AppShell.jsx`, `src/App.jsx`.
+- Auth/session: `src/pages/LoginPage.jsx`, `src/context/AppContext.jsx`, `src/shared/services/storage/storageKeys.js`.
+- API clients/config: `src/config/apiConfig.js`, `src/shared/services/apiService.js`, `src/shared/services/api/endpoints.ts`, `src/shared/services/api/apiClient.ts`.
+- Flow runtime: `src/flows/FlowModule.jsx`, `src/flows/orchestrator/FlowOrchestrator.ts`, `src/hooks/useHeartbeat.ts`.
+- Registry/types: `src/modules/ModuleRegistry.js`, `src/modules/ModuleRouter.jsx`, `src/submodules/registry.ts`, `src/shared/types/flow.ts`.
+- Submission: `src/shared/services/submission/usePageSubmission.js`, `src/shared/ui/PageFrame/AssessmentPageFrame.jsx`, `src/shared/utils/pageMapping.ts`.
+
+### Commands
+
+```bash
+npm run dev
+npm run build
+npm run build:bc
+npm run preview
+npm run lint
+npm run lint:submission
+npm test
+npm run test:watch
+npm run test:ui
+npm run test:coverage
+npm run test:submission-format
+npm run test:submission
+npx playwright test
+```
+
+### API, Auth, Config, Data
+
+- Login: `GET /stu/login` via `buildApiUrl('/login')`, query `accountName`, encrypted `accountPass`, `type=2`.
+- Submission: `POST /stu/saveHcMark` via `buildApiUrl('/saveHcMark')`, FormData fields `batchCode`, `examNo`, `mark` JSON string.
+- Flow APIs: `GET /stu/api/flows/{flowId}`, `GET /stu/api/flows/{flowId}/progress/{examNo}?batchCode=...`, `POST /stu/api/flows/{flowId}/progress`.
+- Login page config: `GET /stu/api/login-page-config/active`; when mock mode is off, Vite proxies it to `VITE_LOGIN_CONFIG_TARGET` / `VITE_ADMIN_API_TARGET` if set, otherwise the public admin backend `http://117.72.14.166:8777`.
+- Legacy session check: G7 tracking calls `GET /stu/checkSession?sessionId=...&studentCode=...`.
+- Auth is session-cookie based; `apiClient` and `apiConfig` use or preserve `credentials: include`; 401 is handled through `AppContext.handleSessionExpired`.
+- No direct database, migration, model, or entity layer exists in this frontend repo.
+- Important env vars: `VITE_USE_MOCK`, `VITE_API_TARGET`, `VITE_API_BASE_URL`, `VITE_LOGIN_CONFIG_TARGET`, `VITE_ADMIN_API_TARGET`, `VITE_BASE`, `VITE_ROUTER_BASENAME`, `VITE_FLOW_HEARTBEAT_ENABLED`, `VITE_FLOW_DEV_MOCK_AUTH`, `VITE_FLOW_PROVIDER_ENABLED`, `VITE_FLOW_BRIDGE_ENABLED`, `VITE_FULLSCREEN_ENABLED`, `VITE_REQUIRE_FULLSCREEN_IN_DEV`, `VITE_RENDER_COUNTER_ENABLED`.
+
+## CROSS-REPO KNOWLEDGE BASE
+
+Shared Obsidian Markdown vault:
+
+`D:\myproject\assessment-platform-kb`
+
+Before any cross-repo task, read:
+
+1. `D:\myproject\assessment-platform-kb\00-index.md`
+2. `D:\myproject\assessment-platform-kb\VAULT_RULES.md`
+3. Relevant files under `架构/`, `代码库/`, `API契约/`, `术语表/`, `排错手册/`, and `需求/<change-id>/`.
+
+Rules:
+
+- Any change touching 2+ repositories is a cross-repo change.
+- Use one shared `change-id` across all repositories: `YYYY-MM-DD-kebab-case-title`.
+- Cross-repo workflow: create/read `D:\myproject\assessment-platform-kb\需求\<change-id>\unified-plan.md`; get human confirmation for the unified plan; each repository creates its own OpenSpec proposal; each repository implements and verifies under the same `change-id`.
+- Write defaults: agents may write only `D:\myproject\assessment-platform-kb\inbox\` and `D:\myproject\assessment-platform-kb\需求\<change-id>\`; long-term knowledge areas are read-only unless the current task explicitly authorizes edits.
+- Code-is-truth: the vault is navigation and collaboration context, not the final fact source. Current code, schema, API implementation, tests, and runtime behavior win.
+<!-- cp-kb-init-end -->
 
 ## STRUCTURE
 
@@ -60,7 +126,7 @@ Core risk areas: flow state synchronization, submission format compliance, and t
 | API endpoints and client    | src/shared/services/api/endpoints.ts, src/shared/services/api/apiClient.ts | `/stu/*` proxy conventions                           |
 | App auth/session state      | src/context/AppContext.jsx                                                 | login persistence + flow bridge helpers              |
 | CI policy                   | .github/workflows/ci.yml, .github/workflows/submission-guard.yml           | submission checks are merge blockers                 |
-| Spec governance             | openspec/AGENTS.md, openspec/project.md                                    | proposal-before-implementation rules                 |
+| Spec governance             | openspec/project.md                                                        | proposal-before-implementation rules                 |
 
 ### Documentation References
 
@@ -69,7 +135,7 @@ Core risk areas: flow state synchronization, submission format compliance, and t
 | **Architecture Overview**  | `docs/ARCHITECTURE.md`                    | Before major feature development, system design decisions                |
 | **Architecture Decisions** | `docs/DECISIONS.md`                       | When proposing architectural changes, understanding "why" behind designs |
 | **Project Memory**         | `docs/project_notes/`                     | Check before debugging, after fixing bugs, for project configuration     |
-| **OpenSpec Guide**         | `openspec/AGENTS.md`                      | For planning, proposals, spec changes, ambiguous requirements            |
+| **OpenSpec Guide**         | `.claude/skills/openspec-*` / `/opsx:*`   | For planning, proposals, spec changes, ambiguous requirements            |
 | **子模块构建流程手册**     | `docs/submodule-page-build-process.md`    | 构建新子模块、理解 Phase 0-5 流程与验收标准                              |
 | **子模块架构决策分析**     | `docs/submodule-build-workflow.md`        | 任务拆分策略、两种构建模式对比、Legacy→标准迁移打法                      |
 | **数据提交规范**           | `docs/submission-spec.md`                 | 目标态提交规范：MarkObject 结构、事件类型、前缀规则、flow_context 注入   |
@@ -417,7 +483,7 @@ npm run test:submission        # 完整提交测试套件
 
 - Existing codebase includes both modernized and legacy segments; prefer incremental changes over broad refactors.
 - Many docs/spec artifacts are historical; verify active behavior against runtime files in `src/` first.
-- For architecture or capability changes, read `openspec/AGENTS.md` before implementation.
+- For architecture or capability changes, use `/opsx:explore` or `/opsx:propose` before implementation.
 - Check `docs/project_notes/` before debugging to see if issue has been encountered before.
 
 ## graphify

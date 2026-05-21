@@ -108,13 +108,13 @@ const buildValidationFailure = (
 const validatePage = (
   pageId: PageId,
   answers: Record<string, unknown>,
-  validationContext: { operations?: OperationLog[] } = {}
+  validationContext?: { operations?: OperationLog[] }
 ): PageValidationResult => {
-  const { operations = [] } = validationContext;
+  const operations = validationContext?.operations ?? [];
   const hasTextAnswer = (value: unknown) => String(value || '').trim().length > 0;
   const hasSelectionAnswer = (value: unknown) =>
     value !== undefined && value !== null && value !== '';
-  const hasSimulationResult = operations.some(
+  const hasSimulationRunResult = operations.some(
     operation => operation.eventType === EventTypes.SIMULATION_RUN_RESULT
   );
   const buildMissingResult = (
@@ -184,10 +184,10 @@ const validatePage = (
     case 'simulation_question_1': {
       return buildMissingResult(
         collectMissingKeys(
-          ['simulation_run_result', 'Q5_海南香蕉变黑时间'],
+          [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
           key =>
-            key === 'simulation_run_result'
-              ? hasSimulationResult
+            key === EventTypes.SIMULATION_RUN_RESULT
+              ? hasSimulationRunResult
               : hasSelectionAnswer(answers[key])
         ),
         '请完成当前页面必填项'
@@ -196,10 +196,10 @@ const validatePage = (
     case 'simulation_question_2': {
       return buildMissingResult(
         collectMissingKeys(
-          ['simulation_run_result', 'Q6_常温储存品种'],
+          [EventTypes.SIMULATION_RUN_RESULT, 'Q6_常温储存品种'],
           key =>
-            key === 'simulation_run_result'
-              ? hasSimulationResult
+            key === EventTypes.SIMULATION_RUN_RESULT
+              ? hasSimulationRunResult
               : hasSelectionAnswer(answers[key])
         ),
         '请完成当前页面必填项'
@@ -208,10 +208,10 @@ const validatePage = (
     case 'simulation_question_3': {
       return buildMissingResult(
         collectMissingKeys(
-          ['simulation_run_result', 'Q7_平缓温度'],
+          [EventTypes.SIMULATION_RUN_RESULT, 'Q7_平缓温度'],
           key =>
-            key === 'simulation_run_result'
-              ? hasSimulationResult
+            key === EventTypes.SIMULATION_RUN_RESULT
+              ? hasSimulationRunResult
               : hasSelectionAnswer(answers[key])
         ),
         '请完成当前页面必填项'

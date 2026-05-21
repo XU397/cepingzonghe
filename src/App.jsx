@@ -163,7 +163,7 @@ const AppContent = () => {
   useEffect(() => {
     if (isTimeUp && !isTaskFinished && currentPageId !== 'Page_18_Solution_Selection') {
       console.log("时间到，自动提交当前页面并标记完成...");
-      
+
       // 使用AppContext的submitPageData，它已包含session过期处理
       const doTimeUpSubmission = async () => {
         await submitPageData();
@@ -171,7 +171,7 @@ const AppContent = () => {
         setIsTaskFinished(true);
         setCurrentPageId('Page_18_Solution_Selection');
       };
-      
+
       doTimeUpSubmission();
     }
   }, [isTimeUp, isTaskFinished, currentPageId, submitPageData, setCurrentPageId, setIsTaskFinished]);
@@ -194,7 +194,7 @@ const AppContent = () => {
         'Page_17_Simulation_Question_3',
         'Page_18_Solution_Selection'
       ];
-      
+
       if (taskPages.includes(currentPageId)) {
         console.log(`[App] 🚨 检测到用户在任务页面 ${currentPageId} 但计时器未启动，立即启动计时器`);
         startTaskTimer();
@@ -226,7 +226,7 @@ const AppContent = () => {
   // 任务进行中，显示计时器和页面路由器（注意事项页面开始显示计时器）
   const showTimer = currentPageId !== 'Page_01_Precautions'; // 注意事项页面不显示计时器
   const showStepNavigation = currentStepNumber > 0;
-  
+
   // 判断是否是问卷页面
   const isCurrentPageQuestionnaire = isQuestionnairePage(currentPageId);
   const currentQuestionnaireStep = getQuestionnaireStepNumber(currentPageId);
@@ -235,43 +235,37 @@ const AppContent = () => {
   // 如果有模块URL，使用模块路由器
   // 但必须确保用户已认证（双重检查，防止localStorage残留导致的问题）
   if (moduleUrl && isAuthenticated) {
-    // 只在第一次或moduleUrl变化时输出日志
+    // Log module rendering once per module URL.
     if (process.env.NODE_ENV === 'development' && !moduleLoggedRef.current) {
-      console.log('[App] 📦 渲染模块系统界面');
+      console.log('[App] Rendering module route');
       moduleLoggedRef.current = true;
     }
     return (
-      <div className="app-container">
-        {/* 全屏提示现在使用DOM管理器处理，不再使用React组件 */}
+      <div className="app-container module-app-container">
+        {/* Fullscreen prompt is managed outside this React subtree. */}
 
-        {/* UserInfoBar 已移到 AppShell 全局渲染 */}
-        {showTimer && (isCurrentPageQuestionnaire ? <QuestionnaireTimer /> : <Timer />)}
-        <div className="main-content-wrapper">
-          {/* 模块系统下不显示全局导航，模块内部有自己的导航系统 */}
-          <div className="task-wrapper">
-            <React.Suspense fallback={
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '200px',
-                fontSize: '16px'
-              }}>
-                🚀 正在加载模块系统...
-              </div>
-            }>
-              <ModuleRouter
-                globalContext={globalContext}
-                authInfo={authInfo}
-              />
-            </React.Suspense>
+        {/* Module pages own their frame/timer; avoid the legacy global shell here. */}
+        <React.Suspense fallback={
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '200px',
+            fontSize: '16px'
+          }}>
+            Loading module...
           </div>
-        </div>
+        }>
+          <ModuleRouter
+            globalContext={globalContext}
+            authInfo={authInfo}
+          />
+        </React.Suspense>
       </div>
     );
   }
 
-  // 重置日志标志（当不使用模块系统时）
+  // Reset the module log flag when leaving the module route.
   if (moduleLoggedRef.current) {
     moduleLoggedRef.current = false;
   }
@@ -309,7 +303,7 @@ const AppContent = () => {
 function App() {
   // 显示调试信息（可以通过查询参数控制）
   const showDebug = new URLSearchParams(window.location.search).get('debug') === 'true';
-  
+
   return (
     <>
       <AppContent />

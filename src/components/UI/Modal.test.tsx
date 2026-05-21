@@ -4,9 +4,10 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Modal } from './Modal';
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 describe('Modal', () => {
-  const mockOnOpenChange = jest.fn();
+  const mockOnOpenChange = vi.fn();
 
   it('should render the modal when open is true', () => {
     render(

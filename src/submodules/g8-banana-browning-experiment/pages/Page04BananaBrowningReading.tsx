@@ -122,7 +122,7 @@ function OverlayContentLayer4() {
           <div className={styles.bookGuideSection}>
             <span className={styles.bookGuideCheck}>✓</span>
             <div>
-              <h4 className={styles.bookGuideSectionTitle}>温度别太冷也别太热</h4>
+              <h4 className={styles.bookGuideSectionTitle}>温度不宜太冷或太热</h4>
               <p className={styles.bookGuideSectionText}>
                 太冷会冻伤，果肉变黑变硬；太热熟得快，也容易发黑。常温阴凉处最适合。
               </p>

@@ -43,19 +43,21 @@ Object.defineProperty(window, 'sessionStorage', {
   writable: true
 });
 
-// Mock ResizeObserver for SVG components
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn()
-}));
+// Mock observers for SVG/chart components. Recharts instantiates these with `new`.
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
 
-// Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn()
-}));
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
+global.ResizeObserver = MockResizeObserver;
+global.IntersectionObserver = MockIntersectionObserver;
 
 // Mock requestAnimationFrame for animations
 global.requestAnimationFrame = vi.fn((callback) => {

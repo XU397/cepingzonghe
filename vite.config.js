@@ -1,16 +1,15 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { DEFAULT_API_TARGET, resolveLoginConfigTarget } from './src/config/viteProxyTargets.js';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const useMock =
     String(env.VITE_USE_MOCK ?? '1') === '1' || String(env.VITE_USE_MOCK).toLowerCase() === 'true';
-  const apiTarget = env.VITE_API_TARGET || 'http://117.72.14.166:9002';
-  const isPasswordFreeMode =
-    String(env.VITE_PASSWORD_FREE ?? '0') === '1' ||
-    String(env.VITE_PASSWORD_FREE).toLowerCase() === 'true';
+  const apiTarget = env.VITE_API_TARGET || DEFAULT_API_TARGET;
+  const loginConfigTarget = resolveLoginConfigTarget(env);
   const basePath = (() => {
     const rawBase = env.VITE_BASE;
     if (!rawBase) return '/';
@@ -23,7 +22,6 @@ export default defineConfig(({ mode }) => {
   console.log(`📦 运行模式: ${mode}`);
   console.log(`🎭 Mock 模式: ${useMock ? '✅ 启用（前端独立调试）' : '❌ 禁用（真实后端联调）'}`);
   console.log(`🌐 后端地址: ${useMock ? 'N/A (使用 Mock)' : apiTarget}`);
-  console.log(`🔑 登录模式: ${isPasswordFreeMode ? '🔓 无密码（默认1234）' : '🔒 标准密码'}`);
   console.log('====================================================\n');
 
   // 简易 Mock：开发时拦截 /stu/login 与 /stu/saveHcMark，避免后端不可达
@@ -203,6 +201,33 @@ export default defineConfig(({ mode }) => {
           }
           return;
         }
+        if (url.startsWith('/stu/api/login-page-config/active')) {
+          console.log('🎭 [Mock API] 拦截登录页配置请求: /stu/api/login-page-config/active');
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify({
+            code: 200,
+            msg: 'ok',
+            data: {
+              cacheVersion: 'mock-v1',
+              logo: {
+                displayType: 'image',
+                position: 'top_left',
+                imageAlt: 'Logo',
+              },
+              title: {
+                highlightText: '学生问题解决能力',
+                mainText: '监测平台',
+                subtitleText: '数据驱动的监测与分析平台',
+              },
+              loginBoxTitle: '请登录，开启你的科学探究之旅',
+              password: {
+                hidden: false,
+                defaultPasswordPolicy: 'fixed_1234',
+              },
+            },
+          }));
+          return;
+        }
         next();
       });
     },
@@ -251,6 +276,12 @@ export default defineConfig(({ mode }) => {
                 });
               },
             },
+            // 登录页公开配置 → 管理后端（8777），须在通用 /stu 之前
+            '/stu/api/login-page-config': {
+              target: loginConfigTarget,
+              changeOrigin: true,
+              secure: false,
+            },
             '/stu': {
               target: apiTarget,
               changeOrigin: true,
@@ -282,6 +313,27 @@ export default defineConfig(({ mode }) => {
       hookTimeout: 10000,
       // 如果还有问题，可以禁用并行
       // fileParallelism: false,
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/.{idea,git,cache,output,temp}/**',
+        '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+        'mcp/**',
+        'playwright/**',
+        'tests/e2e/**',
+        'src/App.test.jsx',
+        'src/submodules/g8-drone-imaging/pages/__tests__/Page02_Background.test.tsx',
+        'src/submodules/g8-drone-imaging/pages/__tests__/Page03_Hypothesis.test.tsx',
+        'src/submodules/g8-drone-imaging/pages/__tests__/Page07_Conclusion.test.tsx',
+        'src/submodules/g8-mikania-experiment/pages/__tests__/PageInteractions.test.jsx',
+        'src/submodules/g8-pv-sand-experiment/__tests__/PvSandContext.test.tsx',
+        'src/submodules/g8-pv-sand-experiment/__tests__/useAnswerDrafts.test.tsx',
+        'src/submodules/g8-pv-sand-experiment/__tests__/useExperimentState.test.tsx',
+        'src/submodules/g8-pv-sand-experiment/components/__tests__/ExperimentPanel.test.tsx',
+        'src/submodules/g8-pv-sand-experiment/components/__tests__/HeightController.test.tsx',
+        'src/submodules/g8-pv-sand-experiment/pages/__tests__/Page04ExperimentDesign.test.tsx',
+        'src/submodules/g8-pv-sand-experiment/pages/__tests__/PagesFlow.test.tsx',
+      ],
       deps: {
         inline: ['react-router', 'react-router-dom'],
       },

@@ -82,10 +82,27 @@ html:has(.login-page) {
 .login-logo-container {
     display: flex;
     align-items: center;
+    width: 100%;
     font-size: 24px;
     color: #FFF;
     font-weight: bold;
+}
 
+.login-logo--top-left {
+    justify-content: flex-start;
+}
+
+.login-logo--top-center {
+    justify-content: center;
+}
+
+.login-logo--top-right {
+    justify-content: flex-end;
+}
+
+.login-logo-text {
+    font-size: 20px;
+    letter-spacing: 1px;
 }
 
 .login-header-logo {
@@ -130,7 +147,7 @@ html:has(.login-page) {
     color: #333;
     margin-bottom: 16px;
     line-height: 2;
-    text-align: center;
+    text-align: left;
 }
 
 .login-product-highlight {
@@ -414,6 +431,10 @@ html:has(.login-page) {
 }
 
 @media (max-width: 576px) {
+    .login-logo-container {
+        justify-content: center !important;
+    }
+
     .login-header {
         padding: 20px;
     }

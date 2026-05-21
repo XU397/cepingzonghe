@@ -197,7 +197,7 @@ describe('Simulation question pages', () => {
   });
 
   it.each(cases)(
-    'requires simulation_run_result before submit for $pageId',
+    'requires simulation result and answer before submit for $pageId',
     async ({ pageId, questionKey }) => {
       renderExperiment(pageId);
 
@@ -222,18 +222,38 @@ describe('Simulation question pages', () => {
   );
 
   it.each(cases)(
-    'passes after result and answer for $pageId',
+    'still blocks when answer is selected before simulation runs for $pageId',
     async ({ pageId, answerLabel }) => {
       renderExperiment(pageId);
 
-      await screen.findByTestId('simulation-run-result');
+      await screen.findByTestId('frame-next-button');
+      fireEvent.click(screen.getByLabelText(answerLabel));
+      fireEvent.click(screen.getByTestId('frame-next-button'));
+
+      await waitFor(() => {
+        const blockedOperations = readFrameState().operations.filter(
+          operation => operation.eventType === EventTypes.CLICK_BLOCKED
+        );
+
+        expect(blockedOperations).toHaveLength(1);
+        expect(getMissingFromOperationValue(blockedOperations[0].value)).toEqual([
+          'simulation_run_result',
+        ]);
+      });
+
+      expect(defaultSubmitSpy).not.toHaveBeenCalled();
+      expect(lastOnNextResult).toBe(false);
+    }
+  );
+
+  it.each(cases)(
+    'passes after simulation result and answer for $pageId',
+    async ({ pageId, answerLabel }) => {
+      renderExperiment(pageId);
+
+      await screen.findByTestId('frame-next-button');
       fireEvent.click(screen.getByTestId('simulation-run-result'));
       fireEvent.click(screen.getByLabelText(answerLabel));
-
-      expect(
-        readFrameState().operations.some(operation => operation.eventType === EventTypes.CLICK_BLOCKED)
-      ).toBe(false);
-
       fireEvent.click(screen.getByTestId('frame-next-button'));
 
       await waitFor(() => {

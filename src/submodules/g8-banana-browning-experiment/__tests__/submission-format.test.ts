@@ -282,7 +282,7 @@ const marks: MarkFixture[] = [
         eventType: EventTypes.CLICK_BLOCKED,
         value: blockedValue(
           'required_fields_missing',
-          ['simulation_run_result', 'Q5_海南香蕉变黑时间'],
+          [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
           102,
           { message: '请完成当前页面必填项' }
         ),
@@ -345,7 +345,7 @@ const marks: MarkFixture[] = [
     ],
     beginOffset: 100,
     endOffset: 109,
-    expectedBlockedMissing: ['simulation_run_result', 'Q5_海南香蕉变黑时间'],
+    expectedBlockedMissing: [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
     expectedAnswerValues: ['B. 6天'],
   }),
   createMark({
@@ -595,7 +595,7 @@ describe('banana submission-format fixtures', () => {
         pageTestId: 'page-simulation_question_1',
         pageNumber: '1.10',
         reason: 'required_fields_missing',
-        missing: ['simulation_run_result', 'Q5_海南香蕉变黑时间'],
+        missing: [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
         message: '请完成当前页面必填项',
       },
       {
@@ -687,7 +687,7 @@ describe('banana submission-format fixtures', () => {
     });
     expect(blockedOperation?.value).toMatchObject({
       reason: 'required_fields_missing',
-      missing: ['simulation_run_result', 'Q5_海南香蕉变黑时间'],
+      missing: [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
       message: '请完成当前页面必填项',
     });
 

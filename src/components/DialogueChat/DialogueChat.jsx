@@ -39,6 +39,7 @@ const DialogueChat = ({
   const chatContentRef = useRef(null);
   const currentIndexRef = useRef(0);
   const isPlayingRef = useRef(false);
+  const showNextMessageRef = useRef(null);
 
   // 处理鼠标进入对话框
   const handleContainerMouseEnter = useCallback(() => {
@@ -168,6 +169,8 @@ const DialogueChat = ({
     }, delay);
   }, [messages, onComplete, scrollToBottom]);
 
+  showNextMessageRef.current = showNextMessage;
+
   // 重新播放
   const handleReplay = useCallback(() => {
     currentIndexRef.current = 0;
@@ -184,10 +187,10 @@ const DialogueChat = ({
   useEffect(() => {
     if (autoPlay && !isPlayingRef.current && messages.length > 0) {
       isPlayingRef.current = true;
-      const timer = setTimeout(showNextMessage, initialDelay);
+      const timer = setTimeout(() => showNextMessageRef.current(), initialDelay);
       return () => clearTimeout(timer);
     }
-  }, [autoPlay, initialDelay, messages.length, showNextMessage]);
+  }, [autoPlay, initialDelay, messages.length]);
 
   // 渲染单条消息
   const renderMessage = (message, index) => {

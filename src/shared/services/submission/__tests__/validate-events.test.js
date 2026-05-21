@@ -86,7 +86,7 @@ describe('eventType whitelist guard', () => {
         "flow_context",
         "focus",
         "hover_enter",
-        "hover_leave"
+        "hover_leave",
         "input",
         "input_blur",
         "input_change",
