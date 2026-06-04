@@ -24,6 +24,7 @@ const CONTENT_EVENTS = new Set([
 ]);
 const ANSWER_EVENTS = new Set(['CHECKBOX_TOGGLE', 'SELECT_ANSWER']);
 const ROW_EVENTS = new Set(['ADD_ROW', 'DELETE_ROW', 'SET_PLAN_PARAM', 'SELECT_BEST']);
+const CHART_EVENTS = new Set(['CHART_HOVER']);
 const EXP_PARAM_EVENTS = new Set(['SET_EXP_PARAM']);
 const EXP_EXECUTE_EVENTS = new Set(['EXECUTE_EXP']);
 const EXP_RESET_EVENTS = new Set(['RESET_EXP']);
@@ -119,6 +120,10 @@ const validateOperation = (operation: any, index: number) => {
   }
   if (operation.eventType === 'SET_PLAN_PARAM') {
     requireStringField(value, 'param_id', index);
+  }
+  if (CHART_EVENTS.has(operation.eventType)) {
+    requireStringField(value, 'chart_id', index);
+    requireStringField(value, 'point_id', index);
   }
   if (EXP_PARAM_EVENTS.has(operation.eventType)) {
     requireStringField(value, 'param_id', index);

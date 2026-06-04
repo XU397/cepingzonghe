@@ -245,6 +245,27 @@ describe('validateTraceMark', () => {
       /param_id/,
     ],
     [
+      'CHART_HOVER',
+      createOperation('CHART_HOVER', {
+        page_id: 'page_12_solution_selection',
+        page_type: 'E1_CHART_PLAN_DECISION',
+        target_id: 'banana_browning_chart',
+        target_type: 'chart',
+      }),
+      /chart_id/,
+    ],
+    [
+      'CHART_HOVER',
+      createOperation('CHART_HOVER', {
+        page_id: 'page_12_solution_selection',
+        page_type: 'E1_CHART_PLAN_DECISION',
+        target_id: 'banana_browning_chart',
+        target_type: 'chart',
+        chart_id: 'banana_browning_chart',
+      }),
+      /point_id/,
+    ],
+    [
       'SUBMIT_ATTEMPT',
       createOperation('SUBMIT_ATTEMPT', {
         target_id: 'next_button',
@@ -272,6 +293,20 @@ describe('validateTraceMark', () => {
     ],
   ])('rejects %s when event-specific data is missing', (_eventType, operation, message) => {
     expect(() => validateTraceMark(markWithOperations([validMark.operationList[0], operation]))).toThrow(message);
+  });
+
+  it('accepts CHART_HOVER with chart and point IDs', () => {
+    const chartHover = createOperation('CHART_HOVER', {
+      page_id: 'page_12_solution_selection',
+      page_type: 'E1_CHART_PLAN_DECISION',
+      target_id: 'banana_browning_chart',
+      target_type: 'chart',
+      chart_id: 'banana_browning_chart',
+      point_id: 'day_6_point',
+      metadata: { hover_ms: 250 },
+    });
+
+    expect(() => validateTraceMark(markWithOperations([validMark.operationList[0], chartHover]))).not.toThrow();
   });
 
   it('accepts operations emitted by createPageTraceLogger', () => {
