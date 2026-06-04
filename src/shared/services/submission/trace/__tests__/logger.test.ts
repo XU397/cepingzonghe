@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createPageTraceLogger } from '../logger';
+import { createPageTraceLogger, formatTraceTimestamp } from '../logger';
 import { TRACE_EVENT_TYPES } from '../contracts';
 
 describe('createPageTraceLogger', () => {
@@ -35,6 +35,13 @@ describe('createPageTraceLogger', () => {
     expect(TRACE_EVENT_TYPES).toContain('TEXT_BLUR');
     expect(TRACE_EVENT_TYPES).toContain('EXECUTE_EXP');
     expect(TRACE_EVENT_TYPES).not.toContain('page_enter');
+  });
+
+  it('formats trace timestamps with deterministic timezone offsets', () => {
+    const timestamp = new Date('2026-06-03T02:10:00.000Z');
+
+    expect(formatTraceTimestamp(timestamp)).toBe('2026-06-03T10:10:00.000+08:00');
+    expect(formatTraceTimestamp(timestamp, -300)).toBe('2026-06-02T21:10:00.000-05:00');
   });
 
   it('emits START_PAGE with registry metadata and flow context', () => {

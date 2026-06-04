@@ -1,7 +1,7 @@
-import eventSchema from '../../../../../docs/子模块数据上报规范/engineering_contracts/event_schema.v2.1.json';
-import fieldRegistry from '../../../../../docs/子模块数据上报规范/engineering_contracts/field_registry.v2.1.json';
-import contentRegistry from '../../../../../docs/子模块数据上报规范/engineering_contracts/content_registry.banana.v2.1.json';
-import ruleConfig from '../../../../../docs/子模块数据上报规范/engineering_contracts/rule_config.v2.1.json';
+import eventSchema from './contracts/event_schema.v2.1.json';
+import fieldRegistry from './contracts/field_registry.v2.1.json';
+import contentRegistry from './contracts/content_registry.banana.v2.1.json';
+import ruleConfig from './contracts/rule_config.v2.1.json';
 import type { L2PageType, L2TraceEventType } from './types';
 
 type JsonRecord = Record<string, any>;
