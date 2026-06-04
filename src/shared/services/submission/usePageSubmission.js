@@ -708,7 +708,7 @@ export function usePageSubmission(options = {}) {
           : resolveProvidedOperations();
 
       let composedOperations = [...mergedOperations];
-      if (mode === 'timeout') {
+      if (mode === 'timeout' && !isL2TraceMode) {
         composedOperations = appendTimeoutOperations(composedOperations, {
           pageNumber: resolvedPageNumber,
           autoSubmitReason: timeoutOptions.autoSubmitReason,
@@ -723,7 +723,7 @@ export function usePageSubmission(options = {}) {
       let composedAnswers =
         baseAnswers.length > 0 ? cloneAnswerList(baseAnswers) : resolveProvidedAnswers();
 
-      if (mode === 'timeout') {
+      if (mode === 'timeout' && !isL2TraceMode) {
         composedAnswers = appendTimeoutAnswers(
           composedAnswers,
           timeoutOptions.missingAnswerTargets,
@@ -828,18 +828,22 @@ export function usePageSubmission(options = {}) {
           }
 
           onAfter?.({ response, payload });
-          emitSubmitEvent(EventTypes.PAGE_SUBMIT_SUCCESS, submissionPageSummary, {
-            isTimeout: mode === 'timeout',
-          });
+          if (!isL2TraceMode) {
+            emitSubmitEvent(EventTypes.PAGE_SUBMIT_SUCCESS, submissionPageSummary, {
+              isTimeout: mode === 'timeout',
+            });
+          }
           setIsSubmitting(false);
           return true;
         } catch (error) {
           if (isSessionExpiredError(error)) {
             logger.error('[usePageSubmission] 会话过期，终止重试');
-            emitSubmitEvent(EventTypes.PAGE_SUBMIT_FAILED, submissionPageSummary, {
-              isTimeout: mode === 'timeout',
-              error,
-            });
+            if (!isL2TraceMode) {
+              emitSubmitEvent(EventTypes.PAGE_SUBMIT_FAILED, submissionPageSummary, {
+                isTimeout: mode === 'timeout',
+                error,
+              });
+            }
             setIsSubmitting(false);
             handleSessionExpired(error);
             lastErrorRef.current = error;
@@ -856,10 +860,12 @@ export function usePageSubmission(options = {}) {
           });
 
           if (isLastAttempt) {
-            emitSubmitEvent(EventTypes.PAGE_SUBMIT_FAILED, submissionPageSummary, {
-              isTimeout: mode === 'timeout',
-              error,
-            });
+            if (!isL2TraceMode) {
+              emitSubmitEvent(EventTypes.PAGE_SUBMIT_FAILED, submissionPageSummary, {
+                isTimeout: mode === 'timeout',
+                error,
+              });
+            }
             lastErrorRef.current = error;
             setLastError(error);
             setIsSubmitting(false);

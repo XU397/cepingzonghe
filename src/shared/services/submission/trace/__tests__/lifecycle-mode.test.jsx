@@ -1,55 +1,212 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { usePageSubmission } from '../../usePageSubmission.js';
+import AssessmentPageFrame from '../../../../ui/PageFrame/AssessmentPageFrame.jsx';
+
+const operationValue = {
+  trace_id: 'trace-1',
+  page_id: 'page_09_experiment_question_1',
+  page_type: 'D2_SIMULATION_QUESTION',
+  target_id: 'page',
+  target_type: 'page',
+  metadata: {},
+};
+
+const buildL2Mark = ({ eventType = 'START_PAGE', value = operationValue } = {}) => ({
+  pageNumber: '1.10',
+  pageDesc: '模拟实验 + 问题1',
+  operationList: [
+    {
+      targetElement: 'P1.10_page',
+      eventType,
+      value,
+      time: '2026-06-03T10:10:00.000+08:00',
+      pageId: 'simulation_question_1',
+    },
+  ],
+  answerList: [],
+  beginTime: '2026-06-03T10:10:00.000+08:00',
+  endTime: '2026-06-03T10:10:30.000+08:00',
+  imgList: [],
+});
+
+const getUserContext = () => ({ batchCode: 'B001', examNo: 'E001' });
+
+const getFlowContext = () => ({
+  flowId: 'flow-g8',
+  submoduleId: 'g8-banana-browning-experiment',
+  stepIndex: 0,
+  pageId: 'simulation_question_1',
+});
 
 describe('usePageSubmission l2-trace lifecycle mode', () => {
   it('does not inject legacy lifecycle or flow_context operations', async () => {
     const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
     const traceValidator = vi.fn();
-    const operationValue = {
-      trace_id: 'trace-1',
-      page_id: 'page_09_experiment_question_1',
-      page_type: 'D2_SIMULATION_QUESTION',
-      target_id: 'page',
-      target_type: 'page',
-      metadata: {},
-    };
 
     const { result } = renderHook(() =>
       usePageSubmission({
         lifecycleMode: 'l2-trace',
         traceValidator,
         submitImpl,
-        getUserContext: () => ({ batchCode: 'B001', examNo: 'E001' }),
-        getFlowContext: () => ({
-          flowId: 'flow-g8',
-          submoduleId: 'g8-banana-browning-experiment',
-          stepIndex: 0,
-          pageId: 'simulation_question_1',
-        }),
-        buildMark: () => ({
-          pageNumber: '1.10',
-          pageDesc: '模拟实验 + 问题1',
-          operationList: [
-            {
-              targetElement: 'P1.10_page',
-              eventType: 'START_PAGE',
-              value: operationValue,
-              time: '2026-06-03T10:10:00.000+08:00',
-              pageId: 'simulation_question_1',
-            },
-          ],
-          answerList: [],
-          beginTime: '2026-06-03T10:10:00.000+08:00',
-          endTime: '2026-06-03T10:10:30.000+08:00',
-          imgList: [],
-        }),
+        getUserContext,
+        getFlowContext,
+        buildMark: () => buildL2Mark(),
       })
     );
 
     await act(async () => {
       await result.current.submit();
     });
+
+    const submittedMark = submitImpl.mock.calls[0][0].mark;
+    expect(submittedMark.operationList.map(operation => operation.eventType)).toEqual([
+      'START_PAGE',
+    ]);
+    expect(submittedMark.operationList[0].value).toEqual(operationValue);
+    expect(traceValidator).toHaveBeenCalledWith(submittedMark);
+  });
+
+  it('does not add legacy timeout operations or placeholder answers in l2-trace mode', async () => {
+    const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
+    const traceValidator = vi.fn();
+
+    const { result } = renderHook(() =>
+      usePageSubmission({
+        lifecycleMode: 'l2-trace',
+        traceValidator,
+        submitImpl,
+        getUserContext,
+        buildMark: () => buildL2Mark({ eventType: 'L2_TIMEOUT' }),
+      })
+    );
+
+    await act(async () => {
+      await result.current.submitOnTimeout({
+        missingAnswerTargets: ['Q1'],
+        autoSubmitReason: 'timeout_auto_submit',
+        pageExitReason: 'timeout_auto_submit',
+      });
+    });
+
+    const submittedMark = submitImpl.mock.calls[0][0].mark;
+    expect(submittedMark.operationList.map(operation => operation.eventType)).toEqual([
+      'L2_TIMEOUT',
+    ]);
+    expect(submittedMark.answerList).toEqual([]);
+    expect(traceValidator.mock.calls[0][0].operationList.map(operation => operation.eventType)).toEqual([
+      'L2_TIMEOUT',
+    ]);
+  });
+
+  it('does not emit legacy submit telemetry to external logOperation in l2-trace mode', async () => {
+    const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
+    const traceValidator = vi.fn();
+    const logOperation = vi.fn();
+
+    const { result } = renderHook(() =>
+      usePageSubmission({
+        lifecycleMode: 'l2-trace',
+        traceValidator,
+        submitImpl,
+        logOperation,
+        getUserContext,
+        buildMark: () => buildL2Mark(),
+      })
+    );
+
+    await act(async () => {
+      await result.current.submit();
+    });
+
+    expect(submitImpl).toHaveBeenCalledTimes(1);
+    expect(logOperation).not.toHaveBeenCalled();
+  });
+
+  it('fails before submit when l2-trace mode is missing traceValidator', async () => {
+    const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
+    const onError = vi.fn();
+
+    const { result } = renderHook(() =>
+      usePageSubmission({
+        lifecycleMode: 'l2-trace',
+        submitImpl,
+        onError,
+        getUserContext,
+        buildMark: () => buildL2Mark(),
+      })
+    );
+
+    let success;
+    await act(async () => {
+      success = await result.current.submit();
+    });
+
+    expect(success).toBe(false);
+    expect(submitImpl).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'lifecycleMode="l2-trace" requires traceValidator',
+      })
+    );
+  });
+
+  it('fails before submit when l2-trace traceValidator throws', async () => {
+    const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
+    const validationError = new Error('invalid L2 trace');
+    const traceValidator = vi.fn(() => {
+      throw validationError;
+    });
+    const onError = vi.fn();
+
+    const { result } = renderHook(() =>
+      usePageSubmission({
+        lifecycleMode: 'l2-trace',
+        traceValidator,
+        submitImpl,
+        onError,
+        getUserContext,
+        buildMark: () => buildL2Mark(),
+      })
+    );
+
+    let success;
+    await act(async () => {
+      success = await result.current.submit();
+    });
+
+    expect(success).toBe(false);
+    expect(submitImpl).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(validationError);
+  });
+});
+
+describe('AssessmentPageFrame l2-trace lifecycle mode', () => {
+  it('does not inject frame lifecycle or next_click events by default', async () => {
+    const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
+    const traceValidator = vi.fn();
+
+    render(
+      <AssessmentPageFrame
+        pageId="simulation_question_1"
+        pageTitle="模拟实验 + 问题1"
+        showTimer={false}
+        showNavigation={false}
+        submission={{
+          lifecycleMode: 'l2-trace',
+          traceValidator,
+          submitImpl,
+          getUserContext,
+          buildMark: () => buildL2Mark(),
+        }}
+      >
+        <div>测试页面</div>
+      </AssessmentPageFrame>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '下一页' }));
+
+    await waitFor(() => expect(submitImpl).toHaveBeenCalledTimes(1));
 
     const submittedMark = submitImpl.mock.calls[0][0].mark;
     expect(submittedMark.operationList.map(operation => operation.eventType)).toEqual([
