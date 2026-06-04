@@ -30,6 +30,36 @@ export interface PageConfig {
   pageDesc: string;
 }
 
+export type TracePageType =
+  | 'A1_FLOW'
+  | 'B1_TEXT_SINGLE'
+  | 'B2_TEXT_MULTI_PARALLEL'
+  | 'B3_TEXT_MATRIX_EVALUATION'
+  | 'C1_INFO_SELECTION'
+  | 'D1_SIMULATION_ONLY'
+  | 'D2_SIMULATION_QUESTION'
+  | 'E1_CHART_PLAN_DECISION';
+
+export type TraceLifecycleMode = 'l2-trace';
+
+export interface TraceQuestionBinding {
+  questionId: string;
+  fieldId: string;
+  options: Record<string, string>;
+}
+
+export interface TracePageConfig {
+  legacyPageId: PageId;
+  standardPageId: string;
+  pageIndex: number;
+  pageType: TracePageType;
+  lifecycleMode: TraceLifecycleMode;
+  requiredFields: string[];
+  contentIds?: string[];
+  questions?: Record<string, TraceQuestionBinding>;
+  experimentParams?: Record<string, string>;
+}
+
 export const PAGE_DESC_MAP: Record<PageId, string> = {
   intro_notice: '注意事项',
   page_02_banana_browning: '香蕉变黑',
@@ -264,6 +294,194 @@ export const PAGE_CONFIGS: PageConfig[] = [
     pageDesc: '任务完成',
   },
 ];
+
+export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
+  {
+    legacyPageId: 'page_02_banana_browning',
+    standardPageId: 'page_01_intro',
+    pageIndex: 1,
+    pageType: 'A1_FLOW',
+    lifecycleMode: 'l2-trace',
+    requiredFields: [],
+  },
+  {
+    legacyPageId: 'banana_mystery',
+    standardPageId: 'page_02_question_generation',
+    pageIndex: 2,
+    pageType: 'B1_TEXT_SINGLE',
+    lifecycleMode: 'l2-trace',
+    requiredFields: ['input_question_1'],
+    contentIds: [
+      'chat_bubble_02_01',
+      'chat_bubble_02_02',
+      'chat_bubble_02_03',
+      'chat_bubble_02_04',
+      'chat_bubble_02_05',
+      'instruction_text_02_01',
+    ],
+  },
+  {
+    legacyPageId: 'banana_browning_reading',
+    standardPageId: 'page_03_factor_selection',
+    pageIndex: 3,
+    pageType: 'C1_INFO_SELECTION',
+    lifecycleMode: 'l2-trace',
+    requiredFields: ['factor_options'],
+    contentIds: ['card_1', 'card_2', 'card_3'],
+  },
+  {
+    legacyPageId: 'page_05_banana_browning',
+    standardPageId: 'page_04_transition',
+    pageIndex: 4,
+    pageType: 'A1_FLOW',
+    lifecycleMode: 'l2-trace',
+    requiredFields: [],
+  },
+  {
+    legacyPageId: 'banana_browning_design',
+    standardPageId: 'page_05_plan_generation',
+    pageIndex: 5,
+    pageType: 'B2_TEXT_MULTI_PARALLEL',
+    lifecycleMode: 'l2-trace',
+    requiredFields: ['input_idea_1', 'input_idea_2', 'input_idea_3'],
+  },
+  {
+    legacyPageId: 'banana_browning_evaluation',
+    standardPageId: 'page_06_method_evaluation',
+    pageIndex: 6,
+    pageType: 'B3_TEXT_MATRIX_EVALUATION',
+    lifecycleMode: 'l2-trace',
+    requiredFields: [
+      'method_1_advantage',
+      'method_1_disadvantage',
+      'method_2_advantage',
+      'method_2_disadvantage',
+      'method_3_advantage',
+      'method_3_disadvantage',
+    ],
+  },
+  {
+    legacyPageId: 'page_08_banana_browning',
+    standardPageId: 'page_07_experiment_intro',
+    pageIndex: 7,
+    pageType: 'A1_FLOW',
+    lifecycleMode: 'l2-trace',
+    requiredFields: [],
+  },
+  {
+    legacyPageId: 'banana_browning_simulation_main',
+    standardPageId: 'page_08_simulation_explore',
+    pageIndex: 8,
+    pageType: 'D1_SIMULATION_ONLY',
+    lifecycleMode: 'l2-trace',
+    requiredFields: [],
+    experimentParams: {
+      days: 'exp_param_days',
+    },
+  },
+  {
+    legacyPageId: 'simulation_question_1',
+    standardPageId: 'page_09_experiment_question_1',
+    pageIndex: 9,
+    pageType: 'D2_SIMULATION_QUESTION',
+    lifecycleMode: 'l2-trace',
+    requiredFields: ['question_1_answer'],
+    experimentParams: {
+      days: 'exp_param_days',
+    },
+    questions: {
+      Q5: {
+        questionId: 'question_1',
+        fieldId: 'question_1_answer',
+        options: {
+          A: 'option_a',
+          B: 'option_b',
+          C: 'option_c',
+          D: 'option_d',
+        },
+      },
+    },
+  },
+  {
+    legacyPageId: 'simulation_question_2',
+    standardPageId: 'page_10_experiment_question_2',
+    pageIndex: 10,
+    pageType: 'D2_SIMULATION_QUESTION',
+    lifecycleMode: 'l2-trace',
+    requiredFields: ['question_2_answer'],
+    experimentParams: {
+      days: 'exp_param_days',
+    },
+    questions: {
+      Q6: {
+        questionId: 'question_2',
+        fieldId: 'question_2_answer',
+        options: {
+          A: 'option_a',
+          B: 'option_b',
+          C: 'option_c',
+          D: 'option_d',
+        },
+      },
+    },
+  },
+  {
+    legacyPageId: 'simulation_question_3',
+    standardPageId: 'page_11_experiment_question_3',
+    pageIndex: 11,
+    pageType: 'D2_SIMULATION_QUESTION',
+    lifecycleMode: 'l2-trace',
+    requiredFields: ['question_3_answer'],
+    experimentParams: {
+      days: 'exp_param_days',
+    },
+    questions: {
+      Q7: {
+        questionId: 'question_3',
+        fieldId: 'question_3_answer',
+        options: {
+          A: 'option_a',
+          B: 'option_b',
+          C: 'option_c',
+          D: 'option_d',
+        },
+      },
+    },
+  },
+  {
+    legacyPageId: 'solution_selection',
+    standardPageId: 'page_12_solution_selection',
+    pageIndex: 12,
+    pageType: 'E1_CHART_PLAN_DECISION',
+    lifecycleMode: 'l2-trace',
+    requiredFields: ['chart_evidence_1', 'plan_table', 'reason_text'],
+    contentIds: ['chart_note_12_01'],
+  },
+  {
+    legacyPageId: 'task_completion',
+    standardPageId: 'page_13_finish',
+    pageIndex: 13,
+    pageType: 'A1_FLOW',
+    lifecycleMode: 'l2-trace',
+    requiredFields: [],
+  },
+];
+
+export function getTracePageConfigByLegacyPageId(
+  pageId: string
+): TracePageConfig | undefined {
+  return TRACE_PAGE_CONFIGS.find(config => config.legacyPageId === pageId);
+}
+
+export function getTracePageConfigByStandardPageId(
+  pageId: string
+): TracePageConfig | undefined {
+  return TRACE_PAGE_CONFIGS.find(config => config.standardPageId === pageId);
+}
+
+export function isTraceStandardPage(pageId: string): boolean {
+  return Boolean(getTracePageConfigByLegacyPageId(pageId));
+}
 
 export function getPageIdBySubPageNum(subPageNum: number): PageId {
   const config = PAGE_CONFIGS.find(item => item.subPageNum === subPageNum);
