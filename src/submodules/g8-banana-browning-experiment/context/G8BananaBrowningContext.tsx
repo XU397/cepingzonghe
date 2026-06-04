@@ -100,6 +100,16 @@ function normalizeOperationValueForAdapter(value: OperationLog['value']): string
   return JSON.stringify(value);
 }
 
+function isL2TraceOperation(operation: Omit<OperationLog, 'code'>): boolean {
+  const { value } = operation;
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      typeof value.trace_id === 'string'
+  );
+}
+
 function normalizeOperationsForAdapter(operations: OperationLog[]): AdapterOperation[] {
   return operations.map(({ code, targetElement, eventType, value, time }) => ({
     code,
@@ -230,7 +240,10 @@ export const G8BananaBrowningProvider: React.FC<G8BananaBrowningProviderProps> =
   const logOperation = useCallback((operation: Omit<OperationLog, 'code'>) => {
     const code = sequenceRef.current.next();
     const pageId = operation.pageId || currentPageRef.current;
-    const normalizedTime = formatTimestamp(operation.time ? new Date(operation.time) : new Date());
+    const normalizedTime =
+      isL2TraceOperation(operation) && operation.time
+        ? operation.time
+        : formatTimestamp(operation.time ? new Date(operation.time) : new Date());
     const operationWithCode: OperationLog = {
       ...operation,
       code,

@@ -17,6 +17,25 @@ export function useBananaTraceLogger({
 }: UseBananaTraceLoggerOptions) {
   const { logOperation } = useG8BananaBrowningContext();
   const page = getTracePageConfigByLegacyPageId(pageId);
+  const stableFlowContext = useMemo(
+    () =>
+      flowContext
+        ? {
+            flowId: flowContext.flowId,
+            submoduleId: flowContext.submoduleId,
+            stepIndex: flowContext.stepIndex,
+            moduleName: flowContext.moduleName,
+            pageId: flowContext.pageId,
+          }
+        : flowContext,
+    [
+      flowContext?.flowId,
+      flowContext?.submoduleId,
+      flowContext?.stepIndex,
+      flowContext?.moduleName,
+      flowContext?.pageId,
+    ]
+  );
 
   return useMemo(() => {
     if (!page) {
@@ -25,12 +44,12 @@ export function useBananaTraceLogger({
     return createPageTraceLogger({
       page,
       pageNumber,
-      flowContext,
+      flowContext: stableFlowContext,
       logOperation: (operation: TraceOperationDraft) => {
         logOperation(operation as unknown as Parameters<typeof logOperation>[0]);
       },
     });
-  }, [flowContext, logOperation, page, pageNumber]);
+  }, [stableFlowContext, logOperation, page, pageNumber]);
 }
 
 export { validateTraceMark };

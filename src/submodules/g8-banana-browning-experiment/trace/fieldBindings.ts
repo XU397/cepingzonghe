@@ -36,11 +36,19 @@ export const BANANA_QUESTION_BY_ANSWER_KEY = {
   },
 } as const;
 
+const BANANA_OPTION_ID_BY_LABEL_PREFIX: Record<string, string> = {
+  A: 'option_a',
+  B: 'option_b',
+  C: 'option_c',
+  D: 'option_d',
+  E: 'option_e',
+};
+
 export const optionIdFromOptionLabel = (label: string): string => {
   const normalized = String(label || '').trim();
-  if (normalized.startsWith('A')) return 'option_a';
-  if (normalized.startsWith('B')) return 'option_b';
-  if (normalized.startsWith('C')) return 'option_c';
-  if (normalized.startsWith('D')) return 'option_d';
+  const optionId = BANANA_OPTION_ID_BY_LABEL_PREFIX[normalized.charAt(0)];
+  if (optionId) {
+    return optionId;
+  }
   return normalized;
 };
