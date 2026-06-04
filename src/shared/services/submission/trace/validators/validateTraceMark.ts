@@ -13,6 +13,8 @@ import type { TraceEventValue } from '../types';
 const EVENT_TYPE_SET = new Set<string>(TRACE_EVENT_TYPES);
 const PAGE_TYPE_SET = new Set<string>(TRACE_PAGE_TYPES);
 const TARGET_TYPE_SET = new Set<string>(TRACE_TARGET_TYPES);
+const TRACE_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}(Z|[+-]\d{2}:\d{2})$/;
+const VALIDATION_STATUS_SET = new Set(['success', 'blocked', 'auto', 'timeout', 'none']);
 
 const TEXT_EVENTS = new Set(['TEXT_FOCUS', 'TEXT_CHANGE', 'TEXT_BLUR']);
 const CONTENT_EVENTS = new Set([
@@ -84,12 +86,61 @@ const pageHasQuestionRegistry = (pageId: string): boolean => {
   return Object.keys(questions).length > 0;
 };
 
+const addOptionIds = (optionIds: Set<string>, value: unknown) => {
+  if (Array.isArray(value)) {
+    value.forEach((item) => {
+      if (typeof item === 'string') {
+        optionIds.add(item);
+      } else if (isRecord(item)) {
+        const id = item.option_id ?? item.optionId ?? item.id;
+        if (typeof id === 'string') {
+          optionIds.add(id);
+        }
+      }
+    });
+    return;
+  }
+
+  if (isRecord(value)) {
+    Object.keys(value).forEach((id) => optionIds.add(id));
+  }
+};
+
+const getRegisteredOptionIds = (pageId: string, questionId: string): string[] => {
+  const fieldPage = getFieldRegistryPage(pageId);
+  const questions = isRecord(fieldPage?.questions) ? fieldPage.questions : {};
+  const fields = isRecord(fieldPage?.fields) ? fieldPage.fields : {};
+  const question = isRecord(questions[questionId]) ? questions[questionId] : undefined;
+  const optionIds = new Set<string>();
+
+  if (question) {
+    addOptionIds(optionIds, question.option_ids);
+    addOptionIds(optionIds, question.options);
+    addOptionIds(optionIds, question.option_slots);
+
+    const answerFieldId = typeof question.answer_field_id === 'string' ? question.answer_field_id : '';
+    const answerField = isRecord(fields[answerFieldId]) ? fields[answerFieldId] : undefined;
+    if (answerField) {
+      addOptionIds(optionIds, answerField.option_ids);
+      addOptionIds(optionIds, answerField.options);
+      addOptionIds(optionIds, answerField.option_slots);
+    }
+  }
+
+  if (optionIds.size === 0 && isRecord(fieldPage?.option_slots)) {
+    addOptionIds(optionIds, fieldPage.option_slots);
+  }
+
+  return [...optionIds];
+};
+
 const validateOperation = (operation: any, index: number) => {
   assertCondition(operation.code === index + 1, `operationList[${index}].code must be ${index + 1}`);
   assertCondition(typeof operation.targetElement === 'string' && operation.targetElement.length > 0, `operationList[${index}].targetElement is required`);
   assertCondition(!LEGACY_EVENT_TYPES.has(operation.eventType), `operationList[${index}].eventType is legacy, not L2 trace eventType`);
   assertCondition(EVENT_TYPE_SET.has(operation.eventType), `operationList[${index}].eventType is not an L2 trace eventType`);
   assertCondition(typeof operation.time === 'string' && operation.time.length > 0, `operationList[${index}].time is required`);
+  assertCondition(TRACE_TIMESTAMP_PATTERN.test(operation.time), `operationList[${index}].time must match trace timestamp format`);
 
   const value = asValueObject(operation, index);
   assertCondition(typeof value.trace_id === 'string' && value.trace_id.length > 0, `operationList[${index}].value.trace_id is required`);
@@ -110,9 +161,16 @@ const validateOperation = (operation: any, index: number) => {
   }
   if (ANSWER_EVENTS.has(operation.eventType)) {
     const questionId = requireStringField(value, 'question_id', index);
-    requireStringField(value, 'option_id', index);
+    const optionId = requireStringField(value, 'option_id', index);
     if (pageHasQuestionRegistry(value.page_id)) {
       assertCondition(hasQuestionId(value.page_id, questionId), `operationList[${index}].value.question_id is not in Field Registry`);
+    }
+    const registeredOptionIds = getRegisteredOptionIds(value.page_id, questionId);
+    if (registeredOptionIds.length > 0) {
+      assertCondition(
+        registeredOptionIds.includes(optionId),
+        `operationList[${index}].value.option_id is not in Field Registry`
+      );
     }
   }
   if (ROW_EVENTS.has(operation.eventType)) {
@@ -140,7 +198,11 @@ const validateOperation = (operation: any, index: number) => {
   }
   if (SUBMIT_EVENTS.has(operation.eventType)) {
     requireStringField(value, 'submit_attempt_id', index);
-    requireStringField(value, 'validation_status', index);
+    const validationStatus = requireStringField(value, 'validation_status', index);
+    assertCondition(
+      VALIDATION_STATUS_SET.has(validationStatus),
+      `operationList[${index}].value.validation_status is invalid`
+    );
   }
 };
 

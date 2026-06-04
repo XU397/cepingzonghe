@@ -156,6 +156,42 @@ describe('validateTraceMark', () => {
     expect(() => validateTraceMark(mark)).toThrow(/page_id.*registry/i);
   });
 
+  it('rejects non-ISO operation timestamps', () => {
+    const mark = cloneValidMark();
+    mark.operationList[0].time = 'not a timestamp';
+
+    expect(() => validateTraceMark(mark)).toThrow(/time.*format/i);
+  });
+
+  it('rejects operation timestamps without milliseconds', () => {
+    const mark = cloneValidMark();
+    mark.operationList[0].time = '2026-06-03T10:10:00+08:00';
+
+    expect(() => validateTraceMark(mark)).toThrow(/time.*format/i);
+  });
+
+  it('accepts UTC operation timestamps with milliseconds', () => {
+    const mark = cloneValidMark();
+    mark.operationList[0].time = '2026-06-03T02:10:00.000Z';
+
+    expect(() => validateTraceMark(mark)).not.toThrow();
+  });
+
+  it('rejects invalid submit validation status', () => {
+    const mark = cloneValidMark();
+    mark.operationList[2].value.validation_status = 'maybe';
+
+    expect(() => validateTraceMark(mark)).toThrow(/validation_status/);
+  });
+
+  it('rejects answer option IDs not registered for the question', () => {
+    const mark = cloneValidMark();
+    mark.operationList[1].value.option_id = 'optoin_b';
+    mark.operationList[1].value.target_id = 'question_1_optoin_b';
+
+    expect(() => validateTraceMark(mark)).toThrow(/option_id.*registry/i);
+  });
+
   it.each([
     [
       'SET_EXP_PARAM',
