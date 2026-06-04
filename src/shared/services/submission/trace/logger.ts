@@ -74,6 +74,8 @@ const defaultIdFactory: TraceIdFactory = {
   rowId: (pageId, rowSeq) => `${pageId}_row_${rowSeq}`,
 };
 
+const toTraceText = (value: unknown): string => String(value ?? '');
+
 export function createPageTraceLogger(options: TraceLoggerOptions) {
   const idFactory = { ...defaultIdFactory, ...options.idFactory };
   const now = options.now || (() => new Date());
@@ -103,6 +105,7 @@ export function createPageTraceLogger(options: TraceLoggerOptions) {
     value_after: patch.value_after,
     validation_status: patch.validation_status,
     metadata: {
+      ...metadata,
       schema_version: TRACE_SCHEMA_VERSION,
       field_registry_version: FIELD_REGISTRY_VERSION,
       field_registry_hash: FIELD_REGISTRY_HASH,
@@ -110,7 +113,6 @@ export function createPageTraceLogger(options: TraceLoggerOptions) {
       content_registry_hash: CONTENT_REGISTRY_HASH,
       page_index: options.page.pageIndex,
       legacy_page_id: options.page.legacyPageId,
-      ...metadata,
     },
   });
 
@@ -150,61 +152,66 @@ export function createPageTraceLogger(options: TraceLoggerOptions) {
           targetId: 'page',
           targetType: 'page',
           metadata: {
-            flow_context: options.flowContext || null,
             ...metadata,
+            flow_context: options.flowContext || null,
           },
         }
       );
     },
-    textFocus(fieldId: string, valueBefore: string) {
+    textFocus(fieldId: string, valueBefore: unknown) {
+      const before = toTraceText(valueBefore);
       return emit(
         'TEXT_FOCUS',
         {
           field_id: fieldId,
-          value_before: valueBefore,
+          value_before: before,
         },
         {
           targetId: fieldId,
           targetType: 'text',
-          metadata: { char_count_before: valueBefore.length },
+          metadata: { char_count_before: before.length },
         }
       );
     },
-    textChange(fieldId: string, valueBefore: string, valueAfter: string, metadata = {}) {
+    textChange(fieldId: string, valueBefore: unknown, valueAfter: unknown, metadata = {}) {
+      const before = toTraceText(valueBefore);
+      const after = toTraceText(valueAfter);
       return emit(
         'TEXT_CHANGE',
         {
           field_id: fieldId,
-          value_before: valueBefore,
+          value_before: before,
           value_after: null,
         },
         {
           targetId: fieldId,
           targetType: 'text',
           metadata: {
-            char_count_before: valueBefore.length,
-            char_count_after: valueAfter.length,
-            char_delta: valueAfter.length - valueBefore.length,
+            char_count_before: before.length,
+            char_count_after: after.length,
+            char_delta: after.length - before.length,
             ...metadata,
           },
         }
       );
     },
-    textBlur(fieldId: string, valueBefore: string, valueAfter: string, metadata = {}) {
+    textBlur(fieldId: string, valueBefore: unknown, valueAfter: unknown, metadata = {}) {
+      const before = toTraceText(valueBefore);
+      const after = toTraceText(valueAfter);
       return emit(
         'TEXT_BLUR',
         {
           field_id: fieldId,
-          value_before: valueBefore,
-          value_after: valueAfter,
+          value_before: before,
+          value_after: after,
         },
         {
           targetId: fieldId,
           targetType: 'text',
           metadata: {
-            char_count_before: valueBefore.length,
-            char_count_after: valueAfter.length,
-            char_delta: valueAfter.length - valueBefore.length,
+            char_count_before: before.length,
+            char_count_after: after.length,
+            char_delta: after.length - before.length,
             ...metadata,
           },
         }
