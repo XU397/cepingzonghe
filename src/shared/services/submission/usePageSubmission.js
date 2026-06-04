@@ -914,7 +914,19 @@ export function usePageSubmission(options = {}) {
   );
 
   const submitOnTimeout = useCallback(
-    (timeoutOptions = {}) => submitInternal({ mode: 'timeout', timeoutOptions }),
+    (timeoutOptions = {}) => {
+      const options =
+        timeoutOptions && typeof timeoutOptions === 'object' && !Array.isArray(timeoutOptions)
+          ? timeoutOptions
+          : {};
+      const { markOverride, userContextOverride, ...restTimeoutOptions } = options;
+      return submitInternal({
+        mode: 'timeout',
+        markOverride,
+        userContextOverride,
+        timeoutOptions: restTimeoutOptions,
+      });
+    },
     [submitInternal]
   );
 

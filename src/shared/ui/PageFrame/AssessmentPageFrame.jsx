@@ -589,8 +589,13 @@ export function AssessmentPageFrame({
   );
 
   const resolveTimeoutMark = useCallback(
-    () => lastSubmissionMarkRef.current || composeMarkOverride(),
-    [composeMarkOverride],
+    () => {
+      if (lastSubmissionMarkRef.current) {
+        return lastSubmissionMarkRef.current;
+      }
+      return isL2TraceMode ? null : composeMarkOverride();
+    },
+    [composeMarkOverride, isL2TraceMode],
   );
 
   const forwardSubmissionError = useCallback(
@@ -750,7 +755,14 @@ export function AssessmentPageFrame({
 
   const runSubmitWithMark = useCallback(
     (options = {}) => {
-      const { markOverride, onSuccess, onError, mode = 'default', timeoutOptions } = options;
+      const {
+        markOverride,
+        onSuccess,
+        onError,
+        mode = 'default',
+        timeoutOptions,
+        ...directTimeoutOptions
+      } = options;
       primePerSubmitCallbacks({ onSuccess, onError });
       const isDefaultMode = mode !== 'timeout';
       const normalizedMarkOverride =
@@ -762,9 +774,15 @@ export function AssessmentPageFrame({
       } else if (markOverride) {
         lastSubmissionMarkRef.current = markOverride;
       }
-      const submitFn = mode === 'timeout' ? submitOnTimeout : submit;
-      return submitFn({
-        markOverride: isDefaultMode ? normalizedMarkOverride : markOverride,
+      if (!isDefaultMode) {
+        return submitOnTimeout({
+          ...(timeoutOptions || {}),
+          ...directTimeoutOptions,
+          ...(markOverride ? { markOverride } : {}),
+        });
+      }
+      return submit({
+        markOverride: normalizedMarkOverride,
         timeoutOptions,
       });
     },
@@ -786,7 +804,11 @@ export function AssessmentPageFrame({
   }, [resolvedTimerType, timerWarningThreshold]);
 
   const handleTimerTimeout = useCallback(async () => {
-    await runSubmitWithMark({ markOverride: resolveTimeoutMark(), mode: 'timeout' });
+    const timeoutMark = resolveTimeoutMark();
+    await runSubmitWithMark({
+      ...(timeoutMark ? { markOverride: timeoutMark } : {}),
+      mode: 'timeout',
+    });
     if (typeof timerOnTimeout === 'function') {
       await timerOnTimeout();
     }
