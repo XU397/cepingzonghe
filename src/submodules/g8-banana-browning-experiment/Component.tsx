@@ -8,11 +8,13 @@ import {
 } from '@shared/services/submission/submoduleAdapter';
 import { encodeCompositePageNum } from '@shared/utils/pageMapping';
 import type { OperationLog, SubmoduleProps } from './types';
+import { validateTraceMark, useBananaTraceLogger } from './trace/useBananaTraceLogger';
 import {
   G8BananaBrowningProvider,
   useG8BananaBrowningContext,
 } from './context/G8BananaBrowningContext';
 import {
+  getTracePageConfigByLegacyPageId,
   getSubPageNumByPageId,
   getPageConfig,
   PAGE_CONFIGS,
@@ -257,6 +259,8 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
   }, [flowContext, setFlowContext]);
 
   const pageConfig = getPageConfig(currentPageId as PageId);
+  const tracePageConfig = getTracePageConfigByLegacyPageId(currentPageId);
+  const isL2TracePage = Boolean(tracePageConfig);
   const navigationMode = pageConfig?.navigationMode ?? 'experiment';
   const currentStep = pageConfig?.stepIndex ?? 0;
   const totalSteps = PAGE_CONFIGS.filter(config => config.stepIndex > 0).length;
@@ -266,6 +270,19 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       ? flowContext.stepIndex
       : (pageConfig?.stepIndex ?? 0);
   const pageNumber = formatPageNumber(submissionStepIndex, subPageNum);
+  const frameTraceLogger = useBananaTraceLogger({
+    pageId: currentPageId as PageId,
+    pageNumber,
+    flowContext: flowContext
+      ? {
+          flowId: flowContext.flowId,
+          submoduleId: flowContext.submoduleId,
+          stepIndex: flowContext.stepIndex,
+          moduleName: '8年级香蕉变黑科学探究',
+          pageId: currentPageId,
+        }
+      : null,
+  });
   const pageDesc = pageConfig?.pageDesc ?? currentPageId;
   const showTimer = navigationMode !== 'hidden';
 
@@ -346,6 +363,8 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       getUserContext,
       getFlowContext,
       buildMark,
+      lifecycleMode: isL2TracePage ? 'l2-trace' : 'legacy',
+      traceValidator: isL2TracePage ? validateTraceMark : undefined,
       allowProceedOnFailureInDev: Boolean(import.meta.env?.DEV),
       logOperation,
     };
@@ -354,6 +373,7 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     buildPageDesc,
     currentPageId,
     flowContext,
+    isL2TracePage,
     logOperation,
     operationsForSubmission,
     pageNumber,
@@ -386,22 +406,38 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
         const message = validation.message || '请完成当前页面必填项';
         const timestamp = formatTimestamp(new Date());
         setValidationError(message);
-        logOperation({
-          targetElement: `P${pageNumber}_下一页按钮`,
-          eventType: EventTypes.CLICK_BLOCKED,
-          value: {
-            reason: validation.reason,
-            missing: validation.missing,
-            timestamp,
-            message,
-          },
-          time: timestamp,
-          pageId: currentPageId,
-        });
+        if (isL2TracePage) {
+          frameTraceLogger?.submitAttempt({
+            validationStatus: 'blocked',
+            missingFields: validation.missing || [],
+            targetId: 'next_button',
+          });
+        } else {
+          logOperation({
+            targetElement: `P${pageNumber}_下一页按钮`,
+            eventType: EventTypes.CLICK_BLOCKED,
+            value: {
+              reason: validation.reason,
+              missing: validation.missing,
+              timestamp,
+              message,
+            },
+            time: timestamp,
+            pageId: currentPageId,
+          });
+        }
         return false;
       }
 
       setValidationError('');
+      if (isL2TracePage) {
+        frameTraceLogger?.submitAttempt({
+          validationStatus: 'success',
+          missingFields: [],
+          targetId: 'next_button',
+        });
+      }
+
       if (typeof defaultSubmit === 'function') {
         const ok = await defaultSubmit();
         if (!ok) {
@@ -416,7 +452,9 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       answers,
       clearOperations,
       currentPageId,
+      frameTraceLogger,
       goToNextPage,
+      isL2TracePage,
       logOperation,
       operationsForSubmission,
       pageNumber,
