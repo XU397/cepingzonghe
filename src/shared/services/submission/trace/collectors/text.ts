@@ -39,10 +39,22 @@ export function createTextEventCollector(options: TextEventCollectorOptions) {
     if (currentValue === lastLoggedValue) {
       return;
     }
-    options.logger.textChange(options.fieldId, focusValue, currentValue, {
+    const valueBefore = lastLoggedValue;
+    options.logger.textChange(options.fieldId, valueBefore, currentValue, {
       flush_reason: flushReason,
     });
     lastLoggedValue = currentValue;
+  };
+
+  const flush = (reason: 'submit' | 'dispose') => {
+    clearTimer();
+    logChange(reason);
+    if (focused) {
+      options.logger.textBlur(options.fieldId, focusValue, currentValue, {
+        flush_reason: reason,
+      });
+    }
+    focused = false;
   };
 
   return {
@@ -64,7 +76,10 @@ export function createTextEventCollector(options: TextEventCollectorOptions) {
         return;
       }
       clearTimer();
-      timer = setTimeout(() => logChange('debounce'), options.debounceMs);
+      timer = setTimeout(() => {
+        timer = null;
+        logChange('debounce');
+      }, options.debounceMs);
     },
     onBlur(valueAfter: string) {
       currentValue = valueAfter || '';
@@ -77,18 +92,9 @@ export function createTextEventCollector(options: TextEventCollectorOptions) {
       }
       focused = false;
     },
-    flush(reason: 'submit' | 'dispose') {
-      clearTimer();
-      logChange(reason);
-      if (focused) {
-        options.logger.textBlur(options.fieldId, focusValue, currentValue, {
-          flush_reason: reason,
-        });
-      }
-      focused = false;
-    },
+    flush,
     dispose() {
-      clearTimer();
+      flush('dispose');
     },
   };
 }

@@ -20,7 +20,7 @@ export interface TraceLoggerOptions {
   page: TracePageLike;
   pageNumber: string;
   flowContext?: TraceFlowContext | null;
-  logOperation: (operation: TraceOperationDraft) => void;
+  logOperation: (_operation: TraceOperationDraft) => void;
   now?: () => Date;
   idFactory?: Partial<TraceIdFactory>;
 }

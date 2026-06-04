@@ -103,6 +103,6 @@ export interface TraceOperationDraft {
 export interface TraceIdFactory {
   traceId(): string;
   submitAttemptId(): string;
-  expRunId(pageId: string, runSeq: number): string;
-  rowId(pageId: string, rowSeq: number): string;
+  expRunId(_pageId: string, _runSeq: number): string;
+  rowId(_pageId: string, _rowSeq: number): string;
 }

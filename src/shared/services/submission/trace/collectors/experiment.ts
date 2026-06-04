@@ -1,3 +1,5 @@
+import { cloneJsonLike, stableStringifyJsonLike } from './snapshot';
+
 interface ExperimentLogger {
   setExpParam(
     _paramId: string,
@@ -25,30 +27,32 @@ export function createExperimentEventCollector(options: ExperimentEventCollector
   let lastParamKey = '';
   let paramSnapshot: Record<string, unknown> = {};
 
-  const snapshotKey = (snapshot: Record<string, unknown>) => JSON.stringify(snapshot);
-
   return {
     setParam(paramId: string, paramName: string, valueAfter: unknown) {
-      const valueBefore = paramSnapshot[paramName] ?? null;
-      paramSnapshot = { ...paramSnapshot, [paramName]: valueAfter };
-      options.logger.setExpParam(paramId, paramName, valueBefore, valueAfter, {
-        param_snapshot: paramSnapshot,
+      const valueBefore = cloneJsonLike(paramSnapshot[paramName] ?? null);
+      const clonedValueAfter = cloneJsonLike(valueAfter);
+      paramSnapshot = { ...paramSnapshot, [paramName]: clonedValueAfter };
+      const snapshot = cloneJsonLike(paramSnapshot);
+      options.logger.setExpParam(paramId, paramName, valueBefore, clonedValueAfter, {
+        param_snapshot: snapshot,
       });
     },
     execute(params: Record<string, unknown>, resultSnapshot: Record<string, unknown>) {
       const now = options.nowMs();
-      const key = snapshotKey(params);
+      const paramsSnapshot = cloneJsonLike(params);
+      const resultSnapshotClone = cloneJsonLike(resultSnapshot);
+      const key = stableStringifyJsonLike(paramsSnapshot);
       if (key === lastParamKey && now - lastRunAt < options.expRunDebounceMs) {
         return false;
       }
       runSeq += 1;
       lastRunAt = now;
       lastParamKey = key;
-      paramSnapshot = { ...params };
+      paramSnapshot = cloneJsonLike(paramsSnapshot);
       const expRunId = options.expRunIdFactory(options.standardPageId, runSeq);
       options.logger.executeExp(expRunId, {
-        param_snapshot: params,
-        result_snapshot: resultSnapshot,
+        param_snapshot: paramsSnapshot,
+        result_snapshot: resultSnapshotClone,
         click_debounce_applied: false,
         run_seq: runSeq,
       });
@@ -56,7 +60,7 @@ export function createExperimentEventCollector(options: ExperimentEventCollector
     },
     reset() {
       resetCount += 1;
-      const beforeReset = { ...paramSnapshot };
+      const beforeReset = cloneJsonLike(paramSnapshot);
       paramSnapshot = {};
       options.logger.resetExp({
         param_snapshot_before_reset: beforeReset,

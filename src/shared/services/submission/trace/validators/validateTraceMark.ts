@@ -1,4 +1,6 @@
 import {
+  getContentRegistryPage,
+  getFieldRegistryPage,
   hasContentId,
   hasFieldId,
   hasQuestionId,
@@ -13,10 +15,18 @@ const PAGE_TYPE_SET = new Set<string>(TRACE_PAGE_TYPES);
 const TARGET_TYPE_SET = new Set<string>(TRACE_TARGET_TYPES);
 
 const TEXT_EVENTS = new Set(['TEXT_FOCUS', 'TEXT_CHANGE', 'TEXT_BLUR']);
-const CONTENT_EVENTS = new Set(['CONTENT_EXPOSE', 'CONTENT_ACTIVATE', 'CONTENT_VIEW']);
+const CONTENT_EVENTS = new Set([
+  'CONTENT_EXPOSE',
+  'CONTENT_ACTIVATE',
+  'CONTENT_VIEW',
+  'OPEN_MODAL',
+  'CLOSE_MODAL',
+]);
 const ANSWER_EVENTS = new Set(['CHECKBOX_TOGGLE', 'SELECT_ANSWER']);
 const ROW_EVENTS = new Set(['ADD_ROW', 'DELETE_ROW', 'SET_PLAN_PARAM', 'SELECT_BEST']);
-const EXP_EVENTS = new Set(['EXECUTE_EXP']);
+const EXP_PARAM_EVENTS = new Set(['SET_EXP_PARAM']);
+const EXP_EXECUTE_EVENTS = new Set(['EXECUTE_EXP']);
+const EXP_RESET_EVENTS = new Set(['RESET_EXP']);
 const SUBMIT_EVENTS = new Set(['SUBMIT_ATTEMPT']);
 const LEGACY_EVENT_TYPES = new Set([
   'page_enter',
@@ -40,12 +50,37 @@ const assertCondition = (condition: unknown, message: string) => {
   }
 };
 
-const asValueObject = (operation: any): TraceEventValue => {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value && typeof value === 'object' && !Array.isArray(value));
+
+const asValueObject = (operation: any, index: number): TraceEventValue => {
   assertCondition(
-    operation.value && typeof operation.value === 'object' && !Array.isArray(operation.value),
-    `operationList[${operation.code - 1}].value must be an object`
+    isRecord(operation.value),
+    `operationList[${index}].value must be an object`
   );
   return operation.value as TraceEventValue;
+};
+
+const requireStringField = (
+  value: TraceEventValue,
+  key: keyof TraceEventValue,
+  index: number
+): string => {
+  const fieldValue = value[key];
+  assertCondition(
+    typeof fieldValue === 'string' && fieldValue.length > 0,
+    `operationList[${index}].value.${String(key)} is required`
+  );
+  return fieldValue as string;
+};
+
+const tracePageExists = (pageId: string): boolean =>
+  Boolean(getFieldRegistryPage(pageId) || getContentRegistryPage(pageId));
+
+const pageHasQuestionRegistry = (pageId: string): boolean => {
+  const fieldPage = getFieldRegistryPage(pageId);
+  const questions = isRecord(fieldPage?.questions) ? fieldPage.questions : {};
+  return Object.keys(questions).length > 0;
 };
 
 const validateOperation = (operation: any, index: number) => {
@@ -55,35 +90,52 @@ const validateOperation = (operation: any, index: number) => {
   assertCondition(EVENT_TYPE_SET.has(operation.eventType), `operationList[${index}].eventType is not an L2 trace eventType`);
   assertCondition(typeof operation.time === 'string' && operation.time.length > 0, `operationList[${index}].time is required`);
 
-  const value = asValueObject(operation);
+  const value = asValueObject(operation, index);
   assertCondition(typeof value.trace_id === 'string' && value.trace_id.length > 0, `operationList[${index}].value.trace_id is required`);
   assertCondition(typeof value.page_id === 'string' && value.page_id.length > 0, `operationList[${index}].value.page_id is required`);
+  assertCondition(tracePageExists(value.page_id), `operationList[${index}].value.page_id is not found in trace registry`);
+  assertCondition(typeof value.target_id === 'string' && value.target_id.length > 0, `operationList[${index}].value.target_id is required`);
   assertCondition(PAGE_TYPE_SET.has(value.page_type), `operationList[${index}].value.page_type is invalid`);
   assertCondition(TARGET_TYPE_SET.has(value.target_type), `operationList[${index}].value.target_type is invalid`);
-  assertCondition(value.metadata && typeof value.metadata === 'object', `operationList[${index}].value.metadata is required`);
+  assertCondition(isRecord(value.metadata), `operationList[${index}].value.metadata is required`);
 
   if (TEXT_EVENTS.has(operation.eventType)) {
-    assertCondition(value.field_id && hasFieldId(value.page_id, value.field_id), `operationList[${index}].value.field_id is not in Field Registry`);
+    const fieldId = requireStringField(value, 'field_id', index);
+    assertCondition(hasFieldId(value.page_id, fieldId), `operationList[${index}].value.field_id is not in Field Registry`);
   }
   if (CONTENT_EVENTS.has(operation.eventType)) {
-    assertCondition(value.content_id && hasContentId(value.page_id, value.content_id), `operationList[${index}].value.content_id is not in Content Registry`);
+    const contentId = requireStringField(value, 'content_id', index);
+    assertCondition(hasContentId(value.page_id, contentId), `operationList[${index}].value.content_id is not in Content Registry`);
   }
   if (ANSWER_EVENTS.has(operation.eventType)) {
-    assertCondition(value.question_id, `operationList[${index}].value.question_id is required`);
-    assertCondition(value.option_id, `operationList[${index}].value.option_id is required`);
-    if (String(value.page_id).startsWith('page_09') || String(value.page_id).startsWith('page_10') || String(value.page_id).startsWith('page_11')) {
-      assertCondition(value.question_id && hasQuestionId(value.page_id, value.question_id), `operationList[${index}].value.question_id is not in Field Registry`);
+    const questionId = requireStringField(value, 'question_id', index);
+    requireStringField(value, 'option_id', index);
+    if (pageHasQuestionRegistry(value.page_id)) {
+      assertCondition(hasQuestionId(value.page_id, questionId), `operationList[${index}].value.question_id is not in Field Registry`);
     }
   }
   if (ROW_EVENTS.has(operation.eventType)) {
-    assertCondition(value.row_id, `operationList[${index}].value.row_id is required`);
+    requireStringField(value, 'row_id', index);
   }
-  if (EXP_EVENTS.has(operation.eventType)) {
-    assertCondition(value.exp_run_id, `operationList[${index}].value.exp_run_id is required`);
+  if (operation.eventType === 'SET_PLAN_PARAM') {
+    requireStringField(value, 'param_id', index);
+  }
+  if (EXP_PARAM_EVENTS.has(operation.eventType)) {
+    requireStringField(value, 'param_id', index);
+    requireStringField(value, 'param_name', index);
+  }
+  if (EXP_EXECUTE_EVENTS.has(operation.eventType)) {
+    requireStringField(value, 'exp_run_id', index);
+  }
+  if (EXP_RESET_EVENTS.has(operation.eventType)) {
+    assertCondition(
+      isRecord(value.metadata.param_snapshot_before_reset) && typeof value.metadata.reset_count === 'number',
+      `operationList[${index}].value reset metadata is required`
+    );
   }
   if (SUBMIT_EVENTS.has(operation.eventType)) {
-    assertCondition(value.submit_attempt_id, `operationList[${index}].value.submit_attempt_id is required`);
-    assertCondition(value.validation_status, `operationList[${index}].value.validation_status is required`);
+    requireStringField(value, 'submit_attempt_id', index);
+    requireStringField(value, 'validation_status', index);
   }
 };
 
