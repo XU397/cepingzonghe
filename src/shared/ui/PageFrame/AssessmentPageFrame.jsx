@@ -221,6 +221,8 @@ export function AssessmentPageFrame({
     onError: submissionOnError,
     answers: submissionAnswers,
     operations: submissionOperations,
+    lifecycleMode: submissionLifecycleMode,
+    traceValidator: submissionTraceValidator,
   } = submission || {};
 
   const fallbackGetUserContext = useMemo(() => {
@@ -640,6 +642,8 @@ export function AssessmentPageFrame({
     answers: resolveSubmissionAnswers,
     operations: resolveSubmissionOperations,
     logOperation: logOperationWithPage,
+    lifecycleMode: submissionLifecycleMode,
+    traceValidator: submissionTraceValidator,
   });
 
   /**
@@ -988,6 +992,8 @@ AssessmentPageFrame.propTypes = {
     onError: PropTypes.func,
     answers: PropTypes.oneOfType([PropTypes.array, PropTypes.func, PropTypes.object]),
     operations: PropTypes.oneOfType([PropTypes.array, PropTypes.func]),
+    lifecycleMode: PropTypes.oneOf(['legacy', 'l2-trace']),
+    traceValidator: PropTypes.func,
   }),
   pageMeta: PropTypes.shape({
     pageId: PropTypes.string,

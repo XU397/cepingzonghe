@@ -18,6 +18,8 @@ import {
 const RETRY_DELAYS = [1000, 2000, 4000];
 const debugLog = () => {};
 const DEFAULT_TIMEOUT_PLACEHOLDER = '超时未回答';
+const DEFAULT_LIFECYCLE_MODE = 'legacy';
+const L2_TRACE_LIFECYCLE_MODE = 'l2-trace';
 const SUBMISSION_CHANNEL = 'usePageSubmission';
 const SYSTEM_EVENT_TARGET = 'page_submission';
 const COMPOSITE_TARGET_PREFIX_REGEX = /^P[1-9]\d*\.\d{2}_.+/;
@@ -462,6 +464,8 @@ const answerEntriesFromObject = record => {
  * @param {Object|(() => Object)} [options.pageMeta]
  * @param {Array|(() => Array)|Record<string, string>} [options.answers]
  * @param {Array|(() => Array)} [options.operations]
+ * @param {'legacy'|'l2-trace'} [options.lifecycleMode='legacy']
+ * @param {(mark: object) => void} [options.traceValidator]
  */
 export function usePageSubmission(options = {}) {
   const {
@@ -480,6 +484,8 @@ export function usePageSubmission(options = {}) {
     answers,
     operations,
     logOperation: externalLogOperation,
+    lifecycleMode = DEFAULT_LIFECYCLE_MODE,
+    traceValidator,
   } = options;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -694,6 +700,7 @@ export function usePageSubmission(options = {}) {
       }
       markCandidate.pageNumber = resolvedPageNumber;
 
+      const isL2TraceMode = lifecycleMode === L2_TRACE_LIFECYCLE_MODE;
       const baseOperations = ensureArray(markCandidate.operationList);
       const mergedOperations =
         baseOperations.length > 0
@@ -726,26 +733,26 @@ export function usePageSubmission(options = {}) {
       }
       markCandidate.answerList = filterNonEmptyAnswers(composedAnswers);
 
-      const resolvedFlowContext = injectFlowContextOperation(markCandidate);
+      const resolvedFlowContext = isL2TraceMode ? null : injectFlowContextOperation(markCandidate);
 
       debugLog('[usePageSubmission] resolvedFlowContext:', resolvedFlowContext);
       const pageDescBefore = derivePageDesc(markCandidate, resolvedPageMeta);
       debugLog('[usePageSubmission] pageDesc before enhancement:', pageDescBefore);
 
-      const pageDescAfter = applyPageDescPrefixWithFlow(
-        pageDescBefore,
-        resolvedFlowContext,
-        resolvedPageMeta
-      );
+      const pageDescAfter = isL2TraceMode
+        ? pageDescBefore
+        : applyPageDescPrefixWithFlow(pageDescBefore, resolvedFlowContext, resolvedPageMeta);
       debugLog('[usePageSubmission] pageDesc after enhancement:', pageDescAfter);
       markCandidate.pageDesc = pageDescAfter;
 
-      markCandidate.operationList = ensureLifecycleOperations(markCandidate.operationList, {
-        pageDesc: pageDescAfter,
-        pageId: resolvedPageMeta.pageId,
-        mode,
-        beginTime: markCandidate.beginTime,
-      });
+      if (!isL2TraceMode) {
+        markCandidate.operationList = ensureLifecycleOperations(markCandidate.operationList, {
+          pageDesc: pageDescAfter,
+          pageId: resolvedPageMeta.pageId,
+          mode,
+          beginTime: markCandidate.beginTime,
+        });
+      }
 
       const prefixedOperations = applyOperationTargetPrefix(
         markCandidate.operationList,
@@ -761,7 +768,14 @@ export function usePageSubmission(options = {}) {
 
       let normalizedMark = null;
       try {
-        validateMarkObject(markCandidate);
+        if (isL2TraceMode) {
+          if (typeof traceValidator !== 'function') {
+            throw new Error('lifecycleMode="l2-trace" requires traceValidator');
+          }
+          traceValidator(markCandidate);
+        } else {
+          validateMarkObject(markCandidate);
+        }
       } catch (validationError) {
         lastErrorRef.current = validationError;
         setLastError(validationError);
@@ -874,6 +888,7 @@ export function usePageSubmission(options = {}) {
       handleSessionExpired,
       injectFlowContextOperation,
       isSubmitting,
+      lifecycleMode,
       logger,
       onAfter,
       onBefore,
@@ -883,6 +898,7 @@ export function usePageSubmission(options = {}) {
       resolveUserContext,
       submitImpl,
       emitSubmitEvent,
+      traceValidator,
     ]
   );
 
