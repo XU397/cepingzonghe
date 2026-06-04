@@ -12,6 +12,7 @@ describe('g8 banana trace page config', () => {
   it('keeps legacy PAGE_CONFIGS stable and adds exactly 13 L2 pages', () => {
     expect(PAGE_CONFIGS).toHaveLength(14);
     expect(TRACE_PAGE_CONFIGS).toHaveLength(13);
+    expect(isTraceStandardPage('page_01_intro')).toBe(true);
     expect(isTraceStandardPage('intro_notice')).toBe(false);
     expect(getTracePageConfigByLegacyPageId('intro_notice')).toBeUndefined();
   });
@@ -49,8 +50,21 @@ describe('g8 banana trace page config', () => {
     expect(getTracePageConfigByLegacyPageId('banana_mystery')?.requiredFields).toEqual([
       'input_question_1',
     ]);
+    expect(getTracePageConfigByLegacyPageId('banana_mystery')?.contentIds).toEqual([
+      'chat_bubble_02_01',
+      'chat_bubble_02_02',
+      'chat_bubble_02_03',
+      'chat_bubble_02_04',
+      'chat_bubble_02_05',
+      'instruction_text_02_01',
+    ]);
     expect(getTracePageConfigByLegacyPageId('banana_browning_reading')?.requiredFields).toEqual([
       'factor_options',
+    ]);
+    expect(getTracePageConfigByLegacyPageId('banana_browning_reading')?.contentIds).toEqual([
+      'card_1',
+      'card_2',
+      'card_3',
     ]);
     expect(getTracePageConfigByLegacyPageId('banana_browning_design')?.requiredFields).toEqual([
       'input_idea_1',
@@ -66,10 +80,46 @@ describe('g8 banana trace page config', () => {
           B: 'option_b',
           C: 'option_c',
           D: 'option_d',
+          E: 'option_e',
         },
       },
     });
+    expect(getTracePageConfigByLegacyPageId('simulation_question_2')?.questions).toEqual({
+      Q6: {
+        questionId: 'question_2',
+        fieldId: 'question_2_answer',
+        options: {
+          A: 'option_a',
+          B: 'option_b',
+        },
+      },
+    });
+    expect(getTracePageConfigByLegacyPageId('simulation_question_3')?.questions).toEqual({
+      Q7: {
+        questionId: 'question_3',
+        fieldId: 'question_3_answer',
+        options: {
+          A: 'option_a',
+          B: 'option_b',
+          C: 'option_c',
+        },
+      },
+    });
+    [
+      'banana_browning_simulation_main',
+      'simulation_question_1',
+      'simulation_question_2',
+      'simulation_question_3',
+    ].forEach(pageId => {
+      expect(getTracePageConfigByLegacyPageId(pageId)?.experimentParams).toEqual({
+        days: 'exp_param_days',
+      });
+    });
     expect(getTracePageConfigByLegacyPageId('solution_selection')?.requiredFields).toEqual([
+      'plan_table',
+      'reason_text',
+    ]);
+    expect(getTracePageConfigByLegacyPageId('solution_selection')?.fieldIds).toEqual([
       'chart_evidence_1',
       'plan_table',
       'reason_text',

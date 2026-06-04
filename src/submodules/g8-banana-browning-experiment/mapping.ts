@@ -55,6 +55,7 @@ export interface TracePageConfig {
   pageType: TracePageType;
   lifecycleMode: TraceLifecycleMode;
   requiredFields: string[];
+  fieldIds?: string[];
   contentIds?: string[];
   questions?: Record<string, TraceQuestionBinding>;
   experimentParams?: Record<string, string>;
@@ -398,6 +399,7 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
           B: 'option_b',
           C: 'option_c',
           D: 'option_d',
+          E: 'option_e',
         },
       },
     },
@@ -419,8 +421,6 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
         options: {
           A: 'option_a',
           B: 'option_b',
-          C: 'option_c',
-          D: 'option_d',
         },
       },
     },
@@ -443,7 +443,6 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
           A: 'option_a',
           B: 'option_b',
           C: 'option_c',
-          D: 'option_d',
         },
       },
     },
@@ -454,7 +453,8 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
     pageIndex: 12,
     pageType: 'E1_CHART_PLAN_DECISION',
     lifecycleMode: 'l2-trace',
-    requiredFields: ['chart_evidence_1', 'plan_table', 'reason_text'],
+    requiredFields: ['plan_table', 'reason_text'],
+    fieldIds: ['chart_evidence_1', 'plan_table', 'reason_text'],
     contentIds: ['chart_note_12_01'],
   },
   {
@@ -480,7 +480,9 @@ export function getTracePageConfigByStandardPageId(
 }
 
 export function isTraceStandardPage(pageId: string): boolean {
-  return Boolean(getTracePageConfigByLegacyPageId(pageId));
+  return Boolean(
+    getTracePageConfigByLegacyPageId(pageId) ?? getTracePageConfigByStandardPageId(pageId)
+  );
 }
 
 export function getPageIdBySubPageNum(subPageNum: number): PageId {
