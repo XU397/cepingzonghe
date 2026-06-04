@@ -77,8 +77,8 @@ const requireStringField = (
   return fieldValue as string;
 };
 
-const tracePageExists = (pageId: string): boolean =>
-  Boolean(getFieldRegistryPage(pageId) || getContentRegistryPage(pageId));
+const getTraceRegistryPage = (pageId: string): Record<string, unknown> | undefined =>
+  getFieldRegistryPage(pageId) || getContentRegistryPage(pageId);
 
 const pageHasQuestionRegistry = (pageId: string): boolean => {
   const fieldPage = getFieldRegistryPage(pageId);
@@ -145,9 +145,16 @@ const validateOperation = (operation: any, index: number) => {
   const value = asValueObject(operation, index);
   assertCondition(typeof value.trace_id === 'string' && value.trace_id.length > 0, `operationList[${index}].value.trace_id is required`);
   assertCondition(typeof value.page_id === 'string' && value.page_id.length > 0, `operationList[${index}].value.page_id is required`);
-  assertCondition(tracePageExists(value.page_id), `operationList[${index}].value.page_id is not found in trace registry`);
+  const registeredPage = getTraceRegistryPage(value.page_id);
+  assertCondition(registeredPage, `operationList[${index}].value.page_id is not found in trace registry`);
   assertCondition(typeof value.target_id === 'string' && value.target_id.length > 0, `operationList[${index}].value.target_id is required`);
   assertCondition(PAGE_TYPE_SET.has(value.page_type), `operationList[${index}].value.page_type is invalid`);
+  if (typeof registeredPage?.page_type === 'string') {
+    assertCondition(
+      value.page_type === registeredPage.page_type,
+      `operationList[${index}].value.page_type does not match trace registry`
+    );
+  }
   assertCondition(TARGET_TYPE_SET.has(value.target_type), `operationList[${index}].value.target_type is invalid`);
   assertCondition(isRecord(value.metadata), `operationList[${index}].value.metadata is required`);
 

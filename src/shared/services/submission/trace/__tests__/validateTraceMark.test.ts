@@ -156,6 +156,13 @@ describe('validateTraceMark', () => {
     expect(() => validateTraceMark(mark)).toThrow(/page_id.*registry/i);
   });
 
+  it('rejects page types that do not match the page registry', () => {
+    const mark = cloneValidMark();
+    mark.operationList[0].value.page_type = 'A1_FLOW';
+
+    expect(() => validateTraceMark(mark)).toThrow(/page_type.*registry/i);
+  });
+
   it('rejects non-ISO operation timestamps', () => {
     const mark = cloneValidMark();
     mark.operationList[0].time = 'not a timestamp';
