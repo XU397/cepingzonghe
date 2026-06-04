@@ -25,6 +25,15 @@
 - 标准任务页的 `operationList` 只输出新 L2 事件名，不双写旧事件。
 - `operationList[*].value` 在 Mark JSON 中保持结构化对象，不再提交 JSON 字符串。
 - 验收包含共享轨迹契约测试、香蕉全页 / 关键页快照测试，以及 `npm run lint:submission`、`npm run test:submission-format`、`npm run test:submission`。
+- 权威源、同步副本、运行时依赖和事件边界按“权威源与同步约束”执行。
+
+## 权威源与同步约束
+
+1. 后端仓库 `D:\myproject\assessment-platform-backend\docs\轨迹分析管线构建\` 是轨迹上报规范、Field Registry、Content Registry、event_schema、rule_config 的权威源。
+2. 前端仓库 `D:\myproject\cp\docs\子模块数据上报规范\` 保存同步副本，用于前端本地实现、测试和 CI 校验。
+3. 前端运行时和 CI 不允许依赖 `D:\myproject\assessment-platform-backend\...` 这种本机绝对路径。
+4. 如果前端发现同步副本与权威源不一致，应视为合同同步问题，不允许前端自行修改语义；需要回到权威源修订后再同步。
+5. 当前确认：`eventSeq` 仍由 `operationList[*].code` 表达，不额外塞进 `value`；`value` 保持结构化对象；Page02 自动聊天动画只进入 `START_PAGE.value.metadata.chat_auto_reveal_summary`，不作为主动阅读事件。
 
 ## 目标
 
@@ -85,6 +94,7 @@ Registry 边界：
 - Field Registry 解释字段语义，页面事件只引用 `field_id`。
 - Content Registry 解释 Page02 聊天气泡和材料内容，页面事件只引用 `content_id`。
 - 香蕉专属内容放香蕉 registry；通用字段角色、页面类型和事件语义留共享层。
+- contract 来源与同步规则遵循“权威源与同步约束”。
 
 复用要求：
 
@@ -246,6 +256,7 @@ Page02 聊天气泡自动呈现摘要放入 `START_PAGE.value.metadata.chat_auto
 - 修改符号前按项目要求运行 GitNexus impact analysis。
 - 逐页按页面类型模板迁移，并用快照测试兜底。
 - 用 `event_schema.v2.1.json`、Field Registry、Content Registry 和 acceptance cases 做合同校验。
+- 实施计划中加入 contract 同步校验，按“权威源与同步约束”处理差异。
 - 完成前运行提交相关验证命令。
 
 ## 测试方案
@@ -290,6 +301,7 @@ npm run test:submission
 - 页面类型模板。
 - 事件接入范式。
 - 测试清单。
+- 后端权威 contract 与前端同步副本的维护流程。
 - 蜂蜜黏度、蒸馒头迁移步骤。
 
 完成工作后按项目规则更新：
