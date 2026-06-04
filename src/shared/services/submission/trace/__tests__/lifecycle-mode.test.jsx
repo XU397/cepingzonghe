@@ -107,6 +107,42 @@ describe('usePageSubmission l2-trace lifecycle mode', () => {
     ]);
   });
 
+  it('honors mark and user context overrides on l2-trace timeout submit', async () => {
+    const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
+    const traceValidator = vi.fn();
+    const overrideMark = buildL2Mark({ eventType: 'L2_TIMEOUT_OVERRIDE' });
+    overrideMark.operationList[0].code = 1;
+
+    const { result } = renderHook(() =>
+      usePageSubmission({
+        lifecycleMode: 'l2-trace',
+        traceValidator,
+        submitImpl,
+        getUserContext: () => ({ batchCode: 'DEFAULT_BATCH', examNo: 'DEFAULT_EXAM' }),
+        buildMark: () => buildL2Mark({ eventType: 'SHOULD_NOT_USE_BUILDER' }),
+      })
+    );
+
+    let success;
+    await act(async () => {
+      success = await result.current.submitOnTimeout({
+        markOverride: overrideMark,
+        userContextOverride: { batchCode: 'OVERRIDE_BATCH', examNo: 'OVERRIDE_EXAM' },
+        missingAnswerTargets: ['Q1'],
+        autoSubmitReason: 'timeout_auto_submit',
+        pageExitReason: 'timeout_auto_submit',
+      });
+    });
+
+    const submittedPayload = submitImpl.mock.calls[0][0];
+    expect(success).toBe(true);
+    expect(submittedPayload.batchCode).toBe('OVERRIDE_BATCH');
+    expect(submittedPayload.examNo).toBe('OVERRIDE_EXAM');
+    expect(submittedPayload.mark).toEqual(overrideMark);
+    expect(submittedPayload).not.toHaveProperty('mode');
+    expect(traceValidator).toHaveBeenCalledWith(overrideMark);
+  });
+
   it('does not emit legacy submit telemetry to external logOperation in l2-trace mode', async () => {
     const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
     const traceValidator = vi.fn();
