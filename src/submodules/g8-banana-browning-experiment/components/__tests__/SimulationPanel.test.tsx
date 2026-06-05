@@ -170,6 +170,38 @@ describe('SimulationPanel', () => {
     });
   });
 
+  it('reset restores collector snapshot and clears debounce for an immediate rerun', () => {
+    setupRafController();
+    vi.spyOn(Date, 'now').mockReturnValue(1000);
+
+    render(<SimulationPanel traceLogger={traceLogger} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '增加天数' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始实验' }));
+    fireEvent.click(screen.getByRole('button', { name: '重置' }));
+    fireEvent.click(screen.getByRole('button', { name: '增加天数' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始实验' }));
+
+    expect(events.map(event => event.eventType)).toEqual([
+      'SET_EXP_PARAM',
+      'EXECUTE_EXP',
+      'RESET_EXP',
+      'SET_EXP_PARAM',
+      'EXECUTE_EXP',
+    ]);
+    expect(traceLogger.setExpParam).toHaveBeenNthCalledWith(2, 'exp_param_days', 'days', 0, 3, {
+      param_snapshot: { days: 3 },
+    });
+    expect(traceLogger.executeExp).toHaveBeenCalledTimes(2);
+    expect(traceLogger.executeExp.mock.calls[0]?.[0]).toBe('banana_browning_exp_run_1');
+    expect(traceLogger.executeExp.mock.calls[1]?.[0]).toBe('banana_browning_exp_run_2');
+    expect(traceLogger.executeExp.mock.calls[1]?.[1]).toMatchObject({
+      param_snapshot: { days: 3 },
+      click_debounce_applied: false,
+      run_seq: 2,
+    });
+  });
+
   it('debounces rapid duplicate runs and uses unique run IDs for accepted repeats', () => {
     const raf = setupRafController();
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1000);

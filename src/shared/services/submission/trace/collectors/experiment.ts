@@ -26,9 +26,10 @@ export function createExperimentEventCollector(options: ExperimentEventCollector
   let resetCount = 0;
   let lastRunAt = 0;
   let lastParamKey = '';
-  let paramSnapshot: Record<string, unknown> = cloneJsonLike(
+  const initialParamSnapshot: Record<string, unknown> = cloneJsonLike(
     options.initialParamSnapshot || {}
   );
+  let paramSnapshot: Record<string, unknown> = cloneJsonLike(initialParamSnapshot);
 
   return {
     setParam(paramId: string, paramName: string, valueAfter: unknown) {
@@ -64,7 +65,9 @@ export function createExperimentEventCollector(options: ExperimentEventCollector
     reset() {
       resetCount += 1;
       const beforeReset = cloneJsonLike(paramSnapshot);
-      paramSnapshot = {};
+      paramSnapshot = cloneJsonLike(initialParamSnapshot);
+      lastRunAt = 0;
+      lastParamKey = '';
       options.logger.resetExp({
         param_snapshot_before_reset: beforeReset,
         reset_count: resetCount,

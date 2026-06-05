@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { validateTraceMark } from '@shared/services/submission/trace';
+import {
+  CONTENT_REGISTRY_HASH,
+  FIELD_REGISTRY_HASH,
+  validateTraceMark,
+} from '@shared/services/submission/trace';
 
 const REQUIRED_CASE_IDS = [
   'page02_question_generation_v2_1',
@@ -46,9 +50,9 @@ const cases: AcceptanceCase[] = [
             "metadata": {
               "schema_version": "science-inquiry-trace-v2.1",
               "field_registry_version": "science-inquiry-field-registry-v2.1",
-              "field_registry_hash": "ddb8bd78ded75b126869da68564a511d20117d364c12b3f53126fd6f38ab4630",
+              "field_registry_hash": FIELD_REGISTRY_HASH,
               "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-              "content_registry_hash": "795163be74a48b7fba731838e88911379f8781519a9e92e82171f37c836c6cc0"
+              "content_registry_hash": CONTENT_REGISTRY_HASH
             }
           }
         },
@@ -200,9 +204,9 @@ const cases: AcceptanceCase[] = [
             "metadata": {
               "schema_version": "science-inquiry-trace-v2.1",
               "field_registry_version": "science-inquiry-field-registry-v2.1",
-              "field_registry_hash": "ddb8bd78ded75b126869da68564a511d20117d364c12b3f53126fd6f38ab4630",
+              "field_registry_hash": FIELD_REGISTRY_HASH,
               "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-              "content_registry_hash": "795163be74a48b7fba731838e88911379f8781519a9e92e82171f37c836c6cc0"
+              "content_registry_hash": CONTENT_REGISTRY_HASH
             }
           }
         },
@@ -419,9 +423,9 @@ const cases: AcceptanceCase[] = [
             "metadata": {
               "schema_version": "science-inquiry-trace-v2.1",
               "field_registry_version": "science-inquiry-field-registry-v2.1",
-              "field_registry_hash": "ddb8bd78ded75b126869da68564a511d20117d364c12b3f53126fd6f38ab4630",
+              "field_registry_hash": FIELD_REGISTRY_HASH,
               "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-              "content_registry_hash": "795163be74a48b7fba731838e88911379f8781519a9e92e82171f37c836c6cc0"
+              "content_registry_hash": CONTENT_REGISTRY_HASH
             }
           }
         },
@@ -469,9 +473,9 @@ const cases: AcceptanceCase[] = [
             "metadata": {
               "schema_version": "science-inquiry-trace-v2.1",
               "field_registry_version": "science-inquiry-field-registry-v2.1",
-              "field_registry_hash": "ddb8bd78ded75b126869da68564a511d20117d364c12b3f53126fd6f38ab4630",
+              "field_registry_hash": FIELD_REGISTRY_HASH,
               "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-              "content_registry_hash": "795163be74a48b7fba731838e88911379f8781519a9e92e82171f37c836c6cc0"
+              "content_registry_hash": CONTENT_REGISTRY_HASH
             }
           }
         },
@@ -654,9 +658,9 @@ const cases: AcceptanceCase[] = [
             "metadata": {
               "schema_version": "science-inquiry-trace-v2.1",
               "field_registry_version": "science-inquiry-field-registry-v2.1",
-              "field_registry_hash": "ddb8bd78ded75b126869da68564a511d20117d364c12b3f53126fd6f38ab4630",
+              "field_registry_hash": FIELD_REGISTRY_HASH,
               "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-              "content_registry_hash": "795163be74a48b7fba731838e88911379f8781519a9e92e82171f37c836c6cc0"
+              "content_registry_hash": CONTENT_REGISTRY_HASH
             }
           }
         },
@@ -828,9 +832,9 @@ const cases: AcceptanceCase[] = [
             "metadata": {
               "schema_version": "science-inquiry-trace-v2.1",
               "field_registry_version": "science-inquiry-field-registry-v2.1",
-              "field_registry_hash": "ddb8bd78ded75b126869da68564a511d20117d364c12b3f53126fd6f38ab4630",
+              "field_registry_hash": FIELD_REGISTRY_HASH,
               "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-              "content_registry_hash": "795163be74a48b7fba731838e88911379f8781519a9e92e82171f37c836c6cc0"
+              "content_registry_hash": CONTENT_REGISTRY_HASH
             }
           }
         },

@@ -392,6 +392,125 @@ const getRequiredFieldIdsForTracePage = pageId => {
   return ensureArray(page?.required_fields).filter(fieldId => typeof fieldId === 'string');
 };
 
+const hasOwnProperty = (object, key) =>
+  Boolean(object && Object.prototype.hasOwnProperty.call(object, key));
+
+const getQuestionAnswerFieldIdsForTracePage = pageId => {
+  const page = getFieldRegistryPage(pageId);
+  const questions = isPlainObject(page?.questions) ? page.questions : {};
+  return Object.entries(questions).reduce((mapping, [questionId, question]) => {
+    const answerFieldId = isPlainObject(question) ? question.answer_field_id : null;
+    if (typeof answerFieldId === 'string' && answerFieldId) {
+      mapping[questionId] = answerFieldId;
+    }
+    return mapping;
+  }, {});
+};
+
+const stripTargetElementPrefix = targetElement =>
+  String(targetElement || '').replace(/^P[1-9]\d*\.\d{2}_/, '').replace(/^P\d+(?:\.\d+)?_/, '');
+
+const isNonEmptyTraceValue = value => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'object') return Object.keys(value).length > 0;
+  return true;
+};
+
+const hasPositiveCharCountAfter = value =>
+  isPlainObject(value?.metadata) &&
+  typeof value.metadata.char_count_after === 'number' &&
+  value.metadata.char_count_after > 0;
+
+const deriveCompletedFieldIdsFromAnswers = (answers, requiredFieldIds) => {
+  const completed = new Set();
+  const required = new Set(requiredFieldIds);
+
+  ensureArray(answers).forEach(answer => {
+    if (!isNonEmptyTraceValue(answer?.value)) {
+      return;
+    }
+    const target = stripTargetElementPrefix(answer?.targetElement);
+    requiredFieldIds.forEach(fieldId => {
+      if (target === fieldId || target.endsWith(`_${fieldId}`)) {
+        completed.add(fieldId);
+      }
+    });
+  });
+
+  return [...completed].filter(fieldId => required.has(fieldId));
+};
+
+const deriveCompletedFieldIdsFromOperations = (operations, pageId, requiredFieldIds) => {
+  const completed = new Set();
+  const required = new Set(requiredFieldIds);
+  const questionAnswerFieldById = getQuestionAnswerFieldIdsForTracePage(pageId);
+
+  const setCompletion = (fieldId, isComplete) => {
+    if (!required.has(fieldId)) {
+      return;
+    }
+    if (isComplete) {
+      completed.add(fieldId);
+    } else {
+      completed.delete(fieldId);
+    }
+  };
+
+  ensureArray(operations).forEach(operation => {
+    const value = operation?.value;
+    if (!isPlainObject(value)) {
+      return;
+    }
+    if (typeof value.page_id === 'string' && value.page_id !== pageId) {
+      return;
+    }
+
+    if (typeof value.field_id === 'string') {
+      const isComplete =
+        isNonEmptyTraceValue(value.value_after) ||
+        hasPositiveCharCountAfter(value);
+      setCompletion(value.field_id, isComplete);
+    }
+
+    if (operation?.eventType === 'SELECT_ANSWER' && typeof value.question_id === 'string') {
+      const fieldId = questionAnswerFieldById[value.question_id];
+      if (fieldId) {
+        setCompletion(fieldId, isNonEmptyTraceValue(value.option_id));
+      }
+    }
+
+    if (typeof value.target_id === 'string') {
+      setCompletion(value.target_id, isNonEmptyTraceValue(value.value_after));
+    }
+    if (typeof value.param_id === 'string') {
+      setCompletion(value.param_id, isNonEmptyTraceValue(value.value_after));
+    }
+  });
+
+  return [...completed];
+};
+
+const deriveL2TimeoutMissingFields = ({ operations, pageId, timeoutOptions, answerList }) => {
+  if (hasOwnProperty(timeoutOptions, 'missingFields')) {
+    return ensureArray(timeoutOptions.missingFields).filter(fieldId => typeof fieldId === 'string');
+  }
+
+  const requiredFieldIds = getRequiredFieldIdsForTracePage(pageId);
+  if (requiredFieldIds.length === 0) {
+    return [];
+  }
+
+  const completedFieldIds = new Set([
+    ...deriveCompletedFieldIdsFromAnswers(answerList, requiredFieldIds),
+    ...deriveCompletedFieldIdsFromOperations(operations, pageId, requiredFieldIds),
+  ]);
+
+  return requiredFieldIds.filter(fieldId => !completedFieldIds.has(fieldId));
+};
+
 const hasL2TimeoutSubmitAttempt = operations =>
   operations.some(operation => {
     const value = operation?.value;
@@ -434,7 +553,7 @@ const createL2TimeoutOperation = ({
   };
 };
 
-const appendL2TimeoutOperations = (operations, { pageNumber, timeoutOptions }) => {
+const appendL2TimeoutOperations = (operations, { pageNumber, timeoutOptions, answerList }) => {
   const result = [...operations];
   const baseOperation = getL2BaseOperation(result);
   const baseValue = baseOperation?.value;
@@ -464,10 +583,12 @@ const appendL2TimeoutOperations = (operations, { pageNumber, timeoutOptions }) =
   }
 
   if (!hasL2TimeoutSubmitAttempt(result)) {
-    const explicitMissingFields = ensureArray(timeoutOptions.missingFields).filter(
-      fieldId => typeof fieldId === 'string'
-    );
-    const registryMissingFields = getRequiredFieldIdsForTracePage(baseValue.page_id);
+    const missingFields = deriveL2TimeoutMissingFields({
+      operations: result,
+      pageId: baseValue.page_id,
+      timeoutOptions,
+      answerList,
+    });
     result.push(
       createL2TimeoutOperation({
         baseOperation,
@@ -482,9 +603,7 @@ const appendL2TimeoutOperations = (operations, { pageNumber, timeoutOptions }) =
         },
         metadata: {
           ...timeoutMetadata,
-          missing_fields: explicitMissingFields.length > 0
-            ? explicitMissingFields
-            : registryMissingFields,
+          missing_fields: missingFields,
         },
       })
     );
@@ -846,24 +965,6 @@ export function usePageSubmission(options = {}) {
         baseOperations.length > 0
           ? cloneOperationList(baseOperations)
           : resolveProvidedOperations();
-
-      let composedOperations = [...mergedOperations];
-      if (mode === 'timeout') {
-        composedOperations = isL2TraceMode
-          ? appendL2TimeoutOperations(composedOperations, {
-              pageNumber: resolvedPageNumber,
-              timeoutOptions,
-            })
-          : appendTimeoutOperations(composedOperations, {
-              pageNumber: resolvedPageNumber,
-              autoSubmitReason: timeoutOptions.autoSubmitReason,
-              autoSubmitMeta: timeoutOptions.autoSubmitMeta,
-              pageExitReason: timeoutOptions.pageExitReason,
-              timeoutSeconds: timeoutOptions.timeoutSeconds ?? timeoutOptions.timeout,
-            });
-      }
-      markCandidate.operationList = composedOperations;
-
       const baseAnswers = ensureArray(markCandidate.answerList);
       let composedAnswers =
         baseAnswers.length > 0 ? cloneAnswerList(baseAnswers) : resolveProvidedAnswers();
@@ -877,6 +978,24 @@ export function usePageSubmission(options = {}) {
         );
       }
       markCandidate.answerList = filterNonEmptyAnswers(composedAnswers);
+
+      let composedOperations = [...mergedOperations];
+      if (mode === 'timeout') {
+        composedOperations = isL2TraceMode
+          ? appendL2TimeoutOperations(composedOperations, {
+              pageNumber: resolvedPageNumber,
+              timeoutOptions,
+              answerList: markCandidate.answerList,
+            })
+          : appendTimeoutOperations(composedOperations, {
+              pageNumber: resolvedPageNumber,
+              autoSubmitReason: timeoutOptions.autoSubmitReason,
+              autoSubmitMeta: timeoutOptions.autoSubmitMeta,
+              pageExitReason: timeoutOptions.pageExitReason,
+              timeoutSeconds: timeoutOptions.timeoutSeconds ?? timeoutOptions.timeout,
+            });
+      }
+      markCandidate.operationList = composedOperations;
 
       const resolvedFlowContext = isL2TraceMode ? null : injectFlowContextOperation(markCandidate);
 
