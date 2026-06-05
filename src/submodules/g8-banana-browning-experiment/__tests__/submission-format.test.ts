@@ -104,7 +104,7 @@ vi.mock('../pages/Page10SimulationQuestion1', async () => {
 
   return {
     default: () => {
-      const { collectAnswer } = useG8BananaBrowningContext();
+      const { collectAnswer, logOperation } = useG8BananaBrowningContext();
 
       return ReactModule.createElement(
         'div',
@@ -113,11 +113,38 @@ vi.mock('../pages/Page10SimulationQuestion1', async () => {
         ReactModule.createElement(
           'button',
           {
+            'data-testid': 'simulation-question-1-run',
+            onClick: () =>
+              logOperation({
+                targetElement: 'P1.10_execute_exp',
+                eventType: 'EXECUTE_EXP',
+                value: {
+                  trace_id: 'trace_runtime_simulation_question_1_execute',
+                  page_id: 'page_09_experiment_question_1',
+                  page_type: 'D2_SIMULATION_QUESTION',
+                  target_id: 'execute_exp',
+                  target_type: 'experiment',
+                  exp_run_id: 'banana_days_6',
+                  metadata: {
+                    param_snapshot: { days: 6 },
+                    result_snapshot: { day: 6, results: [] },
+                    click_debounce_applied: false,
+                  },
+                },
+                time: new Date().toISOString(),
+                pageId: 'simulation_question_1',
+              }),
+          },
+          '运行模拟'
+        ),
+        ReactModule.createElement(
+          'button',
+          {
             'data-testid': 'simulation-question-1-answer',
             onClick: () =>
               collectAnswer({
                 targetElement: 'Q5_海南香蕉变黑时间',
-                value: 'B. 6天',
+                value: '6天',
                 pageId: 'simulation_question_1',
               }),
           },
@@ -189,6 +216,18 @@ const FLOW_PREFIX = `${FLOW_ID}/${SUBMODULE_ID}/${STEP_INDEX}`;
 const PAGE_NUMBER_REGEX = /^[1-9]\d*\.\d{2}$/;
 const LOCAL_TIMESTAMP_REGEX = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 const RESERVED_TARGETS = new Set<string>(RESERVED_TARGET_ELEMENTS);
+const L2_SIMULATION_EVENTS = {
+  executeExp: 'EXECUTE_EXP',
+  selectAnswer: 'SELECT_ANSWER',
+  setExpParam: 'SET_EXP_PARAM',
+  submitAttempt: 'SUBMIT_ATTEMPT',
+  startPage: 'START_PAGE',
+} as const;
+const LEGACY_SIMULATION_EVENTS_FORBIDDEN_IN_L2 = new Set([
+  'simulation_operation',
+  'simulation_run_result',
+  'radio_select',
+]);
 const RUNTIME_FLOW_CONTEXT = {
   flowId: 'flow-1',
   submoduleId: 'g8-banana-browning-experiment',
@@ -264,6 +303,163 @@ const blockedValue = (
   timestamp: isoTime(timeOffset),
   ...extras,
 });
+
+type L2SimulationFixtureConfig = {
+  pageNumber: string;
+  pageId: PageId;
+  standardPageId: string;
+  pageIndex: number;
+  questionId: string;
+  questionIndex: number;
+};
+
+const L2_SIMULATION_FIXTURES: Record<string, L2SimulationFixtureConfig> = {
+  simulation_question_1: {
+    pageNumber: '1.10',
+    pageId: 'simulation_question_1',
+    standardPageId: 'page_09_experiment_question_1',
+    pageIndex: 9,
+    questionId: 'question_1',
+    questionIndex: 1,
+  },
+  simulation_question_2: {
+    pageNumber: '1.11',
+    pageId: 'simulation_question_2',
+    standardPageId: 'page_10_experiment_question_2',
+    pageIndex: 10,
+    questionId: 'question_2',
+    questionIndex: 2,
+  },
+  simulation_question_3: {
+    pageNumber: '1.12',
+    pageId: 'simulation_question_3',
+    standardPageId: 'page_11_experiment_question_3',
+    pageIndex: 11,
+    questionId: 'question_3',
+    questionIndex: 3,
+  },
+};
+
+const traceOperation = (
+  config: L2SimulationFixtureConfig,
+  eventType: string,
+  targetId: string,
+  targetType: string,
+  timeOffset: number,
+  valuePatch: Record<string, unknown> = {},
+  metadata: Record<string, unknown> = {}
+): OperationInput => ({
+  targetElement: `P${config.pageNumber}_${targetId}`,
+  eventType,
+  value: {
+    trace_id: `trace_${config.pageId}_${eventType}_${timeOffset}`,
+    page_id: config.standardPageId,
+    page_type: 'D2_SIMULATION_QUESTION',
+    target_id: targetId,
+    target_type: targetType,
+    ...valuePatch,
+    metadata: {
+      schema_version: 'science-inquiry-trace-v2.1',
+      field_registry_version: 'science-inquiry-field-registry-v2.1',
+      content_registry_version: 'science-inquiry-content-registry-banana-v2.1',
+      page_index: config.pageIndex,
+      legacy_page_id: config.pageId,
+      ...metadata,
+    },
+  },
+  time: isoTime(timeOffset),
+  pageId: config.pageId,
+});
+
+const startPageOp = (config: L2SimulationFixtureConfig, timeOffset: number): OperationInput =>
+  traceOperation(config, L2_SIMULATION_EVENTS.startPage, 'page', 'page', timeOffset, {}, {
+    initial_state: { selected_option: null },
+  });
+
+const submitAttemptOp = (
+  config: L2SimulationFixtureConfig,
+  timeOffset: number,
+  validationStatus: 'blocked' | 'success',
+  missingFields: string[]
+): OperationInput =>
+  traceOperation(
+    config,
+    L2_SIMULATION_EVENTS.submitAttempt,
+    'next_button',
+    'button',
+    timeOffset,
+    {
+      submit_attempt_id: `submit_${config.pageId}_${validationStatus}_${timeOffset}`,
+      validation_status: validationStatus,
+    },
+    { missing_fields: missingFields }
+  );
+
+const setExpParamOp = (
+  config: L2SimulationFixtureConfig,
+  timeOffset: number,
+  valueBefore: number,
+  valueAfter: number
+): OperationInput =>
+  traceOperation(
+    config,
+    L2_SIMULATION_EVENTS.setExpParam,
+    'exp_param_days',
+    'experiment',
+    timeOffset,
+    {
+      param_id: 'exp_param_days',
+      param_name: 'days',
+      value_before: valueBefore,
+      value_after: valueAfter,
+    },
+    { param_snapshot: { days: valueAfter } }
+  );
+
+const executeExpOp = (
+  config: L2SimulationFixtureConfig,
+  timeOffset: number,
+  day: number,
+  results: Array<Record<string, unknown>>
+): OperationInput =>
+  traceOperation(
+    config,
+    L2_SIMULATION_EVENTS.executeExp,
+    'execute_exp',
+    'experiment',
+    timeOffset,
+    { exp_run_id: `banana_days_${day}` },
+    {
+      param_snapshot: { days: day },
+      result_snapshot: { day, results },
+      click_debounce_applied: false,
+    }
+  );
+
+const selectAnswerOp = (
+  config: L2SimulationFixtureConfig,
+  timeOffset: number,
+  optionId: string,
+  optionText: string
+): OperationInput =>
+  traceOperation(
+    config,
+    L2_SIMULATION_EVENTS.selectAnswer,
+    `${config.questionId}_${optionId}`,
+    'radio',
+    timeOffset,
+    {
+      question_id: config.questionId,
+      option_id: optionId,
+      value_before: null,
+      value_after: optionId,
+    },
+    {
+      option_text: optionText,
+      question_index: config.questionIndex,
+      total_question_count: 3,
+    }
+  );
 
 const createMark = (config: {
   pageNumber: string;
@@ -350,71 +546,34 @@ const marks: MarkFixture[] = [
     pageId: 'simulation_question_1',
     title: '模拟实验 + 问题1',
     operations: [
-      {
-        targetElement: 'P1.10_页面进入',
-        eventType: EventTypes.PAGE_ENTER,
-        value: 'simulation_question_1',
-        time: isoTime(100),
-      },
-      flowContextOp('simulation_question_1', 101),
-      {
-        targetElement: 'P1.10_下一页按钮',
-        eventType: EventTypes.CLICK_BLOCKED,
-        value: blockedValue(
-          'required_fields_missing',
-          [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
-          102,
-          { message: '请完成当前页面必填项' }
-        ),
-        time: isoTime(102),
-      },
-      {
-        targetElement: 'P1.10_天数增加按钮',
-        eventType: EventTypes.SIMULATION_OPERATION,
-        value: { action: 'increment_day', fromDay: 3, toDay: 6 },
-        time: isoTime(103),
-      },
-      {
-        targetElement: 'P1.10_开始实验按钮',
-        eventType: EventTypes.SIMULATION_TIMING_STARTED,
-        value: { selectedDay: 6, totalConditions: 6 },
-        time: isoTime(104),
-      },
-      {
-        targetElement: 'P1.10_实验结果',
-        eventType: EventTypes.SIMULATION_RUN_RESULT,
-        value: {
-          selectedDay: 6,
-          results: [
-            { origin: '海南', temperature: '2℃', browning: 0.35 },
-            { origin: '海南', temperature: '10℃', browning: 0.04 },
-            { origin: '海南', temperature: '18℃', browning: 0.06 },
-            { origin: '菲律宾', temperature: '2℃', browning: 0.65 },
-            { origin: '菲律宾', temperature: '10℃', browning: 0.03 },
-            { origin: '菲律宾', temperature: '18℃', browning: 0.05 },
-          ],
-        },
-        time: isoTime(105),
-      },
-      {
-        targetElement: 'P1.10_问题1选项',
-        eventType: EventTypes.RADIO_SELECT,
-        value: 'B. 6天',
-        time: isoTime(106),
-      },
-      {
-        targetElement: 'P1.10_下一页按钮',
-        eventType: EventTypes.NEXT_CLICK,
-        value: 'to_simulation_question_2',
-        time: isoTime(107),
-      },
-      {
-        targetElement: 'P1.10_页面退出',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'simulation_question_1',
-        time: isoTime(108),
-      },
-      submitSuccessOp('1.10', 109),
+      startPageOp(L2_SIMULATION_FIXTURES.simulation_question_1, 100),
+      submitAttemptOp(
+        L2_SIMULATION_FIXTURES.simulation_question_1,
+        102,
+        'blocked',
+        ['question_1_answer']
+      ),
+      setExpParamOp(L2_SIMULATION_FIXTURES.simulation_question_1, 103, 3, 6),
+      executeExpOp(
+        L2_SIMULATION_FIXTURES.simulation_question_1,
+        105,
+        6,
+        [
+          { origin: '海南', temperature: '2℃', browning: 0.35 },
+          { origin: '海南', temperature: '10℃', browning: 0.04 },
+          { origin: '海南', temperature: '18℃', browning: 0.06 },
+          { origin: '菲律宾', temperature: '2℃', browning: 0.65 },
+          { origin: '菲律宾', temperature: '10℃', browning: 0.03 },
+          { origin: '菲律宾', temperature: '18℃', browning: 0.05 },
+        ]
+      ),
+      selectAnswerOp(L2_SIMULATION_FIXTURES.simulation_question_1, 106, 'option_b', '6天'),
+      submitAttemptOp(
+        L2_SIMULATION_FIXTURES.simulation_question_1,
+        109,
+        'success',
+        []
+      ),
     ],
     answers: [
       {
@@ -425,7 +584,7 @@ const marks: MarkFixture[] = [
     ],
     beginOffset: 100,
     endOffset: 109,
-    expectedBlockedMissing: [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
+    expectedBlockedMissing: ['question_1_answer'],
     expectedAnswerValues: ['B. 6天'],
   }),
   createMark({
@@ -433,48 +592,27 @@ const marks: MarkFixture[] = [
     pageId: 'simulation_question_2',
     title: '模拟实验 + 问题2',
     operations: [
-      {
-        targetElement: 'P1.11_页面进入',
-        eventType: EventTypes.PAGE_ENTER,
-        value: 'simulation_question_2',
-        time: isoTime(120),
-      },
-      flowContextOp('simulation_question_2', 121),
-      {
-        targetElement: 'P1.11_实验结果',
-        eventType: EventTypes.SIMULATION_RUN_RESULT,
-        value: {
-          selectedDay: 15,
-          results: [
-            { origin: '海南', temperature: '2℃', browning: 1 },
-            { origin: '海南', temperature: '10℃', browning: 0.33 },
-            { origin: '海南', temperature: '18℃', browning: 0.46 },
-            { origin: '菲律宾', temperature: '2℃', browning: 1 },
-            { origin: '菲律宾', temperature: '10℃', browning: 0.25 },
-            { origin: '菲律宾', temperature: '18℃', browning: 0.27 },
-          ],
-        },
-        time: isoTime(122),
-      },
-      {
-        targetElement: 'P1.11_问题2选项',
-        eventType: EventTypes.RADIO_SELECT,
-        value: 'A. 海南香蕉',
-        time: isoTime(123),
-      },
-      {
-        targetElement: 'P1.11_下一页按钮',
-        eventType: EventTypes.NEXT_CLICK,
-        value: 'to_simulation_question_3',
-        time: isoTime(124),
-      },
-      {
-        targetElement: 'P1.11_页面退出',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'simulation_question_2',
-        time: isoTime(125),
-      },
-      submitSuccessOp('1.11', 126),
+      startPageOp(L2_SIMULATION_FIXTURES.simulation_question_2, 120),
+      executeExpOp(
+        L2_SIMULATION_FIXTURES.simulation_question_2,
+        122,
+        15,
+        [
+          { origin: '海南', temperature: '2℃', browning: 1 },
+          { origin: '海南', temperature: '10℃', browning: 0.33 },
+          { origin: '海南', temperature: '18℃', browning: 0.46 },
+          { origin: '菲律宾', temperature: '2℃', browning: 1 },
+          { origin: '菲律宾', temperature: '10℃', browning: 0.25 },
+          { origin: '菲律宾', temperature: '18℃', browning: 0.27 },
+        ]
+      ),
+      selectAnswerOp(L2_SIMULATION_FIXTURES.simulation_question_2, 123, 'option_a', '海南香蕉'),
+      submitAttemptOp(
+        L2_SIMULATION_FIXTURES.simulation_question_2,
+        126,
+        'success',
+        []
+      ),
     ],
     answers: [
       {
@@ -491,48 +629,27 @@ const marks: MarkFixture[] = [
     pageId: 'simulation_question_3',
     title: '模拟实验 + 问题3',
     operations: [
-      {
-        targetElement: 'P1.12_页面进入',
-        eventType: EventTypes.PAGE_ENTER,
-        value: 'simulation_question_3',
-        time: isoTime(140),
-      },
-      flowContextOp('simulation_question_3', 141),
-      {
-        targetElement: 'P1.12_实验结果',
-        eventType: EventTypes.SIMULATION_RUN_RESULT,
-        value: {
-          selectedDay: 15,
-          results: [
-            { origin: '海南', temperature: '2℃', browning: 1 },
-            { origin: '海南', temperature: '10℃', browning: 0.33 },
-            { origin: '海南', temperature: '18℃', browning: 0.46 },
-            { origin: '菲律宾', temperature: '2℃', browning: 1 },
-            { origin: '菲律宾', temperature: '10℃', browning: 0.25 },
-            { origin: '菲律宾', temperature: '18℃', browning: 0.27 },
-          ],
-        },
-        time: isoTime(142),
-      },
-      {
-        targetElement: 'P1.12_问题3选项',
-        eventType: EventTypes.RADIO_SELECT,
-        value: 'C. 18℃',
-        time: isoTime(143),
-      },
-      {
-        targetElement: 'P1.12_下一页按钮',
-        eventType: EventTypes.NEXT_CLICK,
-        value: 'to_solution_selection',
-        time: isoTime(144),
-      },
-      {
-        targetElement: 'P1.12_页面退出',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'simulation_question_3',
-        time: isoTime(145),
-      },
-      submitSuccessOp('1.12', 146),
+      startPageOp(L2_SIMULATION_FIXTURES.simulation_question_3, 140),
+      executeExpOp(
+        L2_SIMULATION_FIXTURES.simulation_question_3,
+        142,
+        15,
+        [
+          { origin: '海南', temperature: '2℃', browning: 1 },
+          { origin: '海南', temperature: '10℃', browning: 0.33 },
+          { origin: '海南', temperature: '18℃', browning: 0.46 },
+          { origin: '菲律宾', temperature: '2℃', browning: 1 },
+          { origin: '菲律宾', temperature: '10℃', browning: 0.25 },
+          { origin: '菲律宾', temperature: '18℃', browning: 0.27 },
+        ]
+      ),
+      selectAnswerOp(L2_SIMULATION_FIXTURES.simulation_question_3, 143, 'option_c', '18℃'),
+      submitAttemptOp(
+        L2_SIMULATION_FIXTURES.simulation_question_3,
+        146,
+        'success',
+        []
+      ),
     ],
     answers: [
       {
@@ -634,6 +751,11 @@ const assertPrefixedTargets = (mark: MarkFixture) => {
   }
 };
 
+const isL2SimulationQuestionFixture = (mark: MarkFixture) =>
+  mark.pageId === 'simulation_question_1' ||
+  mark.pageId === 'simulation_question_2' ||
+  mark.pageId === 'simulation_question_3';
+
 describe('banana submission-format fixtures', () => {
   beforeEach(() => {
     defaultSubmitSpy.mockClear();
@@ -657,12 +779,17 @@ describe('banana submission-format fixtures', () => {
     for (const mark of marks) {
       expect(mark.pageNumber).toMatch(PAGE_NUMBER_REGEX);
       assertPrefixedTargets(mark);
-      expect(mark.operationList.filter(op => op.eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(1);
-      expect(() => validateMarkObject(mark)).not.toThrow();
+      if (isL2SimulationQuestionFixture(mark)) {
+        expect(mark.operationList.filter(op => op.eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(0);
+        expect(() => validateTraceMark(mark)).not.toThrow();
+      } else {
+        expect(mark.operationList.filter(op => op.eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(1);
+        expect(() => validateMarkObject(mark)).not.toThrow();
+      }
     }
   });
 
-  it('handleFrameNext click_blocked payload stays machine-readable for intro_notice, simulation_question_1, and solution_selection', async () => {
+  it('handleFrameNext click_blocked payload stays machine-readable for intro_notice', async () => {
     const cases: Array<{
       pageId: PageId;
       pageTestId: string;
@@ -678,22 +805,6 @@ describe('banana submission-format fixtures', () => {
         reason: 'countdown_not_finished',
         missing: ['timer_completed', 'instructions_read'],
         message: '请仔细阅读注意事项，倒计时结束后才能继续',
-      },
-      {
-        pageId: 'simulation_question_1',
-        pageTestId: 'page-simulation_question_1',
-        pageNumber: '1.10',
-        reason: 'required_fields_missing',
-        missing: [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
-        message: '请完成当前页面必填项',
-      },
-      {
-        pageId: 'solution_selection',
-        pageTestId: 'page-solution_selection',
-        pageNumber: '1.13',
-        reason: 'required_fields_missing',
-        missing: ['Q8_方案表格', 'Q8_最优方案', 'Q8_理由'],
-        message: '请完成当前页面必填项',
       },
     ];
 
@@ -783,7 +894,7 @@ describe('banana submission-format fixtures', () => {
 
     expect(value.validation_status).toBe('blocked');
     expect(value.metadata?.missing_fields).toEqual(['question_1_answer']);
-    expect(value.metadata?.missing_fields).not.toContain(EventTypes.SIMULATION_RUN_RESULT);
+    expect(value.metadata?.missing_fields).not.toContain(L2_SIMULATION_EVENTS.executeExp);
     expect(value.metadata?.missing_fields).not.toContain('Q5_海南香蕉变黑时间');
     expect(defaultSubmitSpy).not.toHaveBeenCalled();
     expect(submitSpy).not.toHaveBeenCalled();
@@ -843,8 +954,35 @@ describe('banana submission-format fixtures', () => {
     expect(value.validation_status).toBe('blocked');
     expect(value.metadata?.missing_fields).toEqual([]);
     expect(value.metadata?.missing_fields).not.toContain('question_1_answer');
+    expect(value.metadata?.missing_fields).not.toContain(L2_SIMULATION_EVENTS.executeExp);
     expect(defaultSubmitSpy).not.toHaveBeenCalled();
     expect(submitSpy).not.toHaveBeenCalled();
+
+    unmount();
+  });
+
+  it('handleFrameNext accepts migrated EXECUTE_EXP plus answer for simulation_question_1', async () => {
+    const { unmount } = renderExperiment('simulation_question_1');
+
+    await screen.findByTestId('page-simulation_question_1');
+    fireEvent.click(screen.getByTestId('simulation-question-1-run'));
+    fireEvent.click(screen.getByTestId('simulation-question-1-answer'));
+    fireEvent.click(screen.getByTestId('frame-next-button'));
+
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalledTimes(1);
+      expect(lastOnNextResult).toBe(true);
+    });
+
+    const submittedMark = submitSpy.mock.calls[0][0]?.markOverride;
+    const eventTypes = submittedMark?.operationList.map(operation => operation.eventType) || [];
+
+    expect(eventTypes).toContain(L2_SIMULATION_EVENTS.executeExp);
+    expect(eventTypes).toContain(L2_SIMULATION_EVENTS.submitAttempt);
+    expect(eventTypes.some(eventType => LEGACY_SIMULATION_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(
+      false
+    );
+    expect(() => validateTraceMark(submittedMark)).not.toThrow();
 
     unmount();
   });
@@ -915,39 +1053,55 @@ describe('banana submission-format fixtures', () => {
     unmount();
   });
 
-  it('simulation_question_1 fixture locks click_blocked missing, semantic events, labeled answer, and flow_context uniqueness', () => {
+  it('simulation_question_1 fixture locks L2 simulation events, blocked submit metadata, and labeled answer', () => {
     const mark = marks.find(item => item.pageId === 'simulation_question_1');
 
     expect(mark).toBeDefined();
     const blockedOperation = mark?.operationList.find(
-      operation => operation.eventType === EventTypes.CLICK_BLOCKED
+      operation =>
+        operation.eventType === L2_SIMULATION_EVENTS.submitAttempt &&
+        (operation.value as Record<string, any>).validation_status === 'blocked'
     );
 
     expect(blockedOperation).toMatchObject({
-      targetElement: 'P1.10_下一页按钮',
-      eventType: EventTypes.CLICK_BLOCKED,
+      targetElement: 'P1.10_next_button',
+      eventType: L2_SIMULATION_EVENTS.submitAttempt,
     });
     expect(blockedOperation?.value).toMatchObject({
-      reason: 'required_fields_missing',
-      missing: [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
-      message: '请完成当前页面必填项',
+      validation_status: 'blocked',
+      metadata: {
+        missing_fields: ['question_1_answer'],
+      },
     });
 
     const eventTypes = mark?.operationList.map(operation => operation.eventType) || [];
-    expect(eventTypes).toContain(EventTypes.SIMULATION_OPERATION);
-    expect(eventTypes).toContain(EventTypes.SIMULATION_TIMING_STARTED);
-    expect(eventTypes).toContain(EventTypes.SIMULATION_RUN_RESULT);
-    expect(eventTypes).toContain(EventTypes.RADIO_SELECT);
-    expect(eventTypes.filter(eventType => eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(1);
+    expect(eventTypes).toContain(L2_SIMULATION_EVENTS.setExpParam);
+    expect(eventTypes).toContain(L2_SIMULATION_EVENTS.executeExp);
+    expect(eventTypes).toContain(L2_SIMULATION_EVENTS.selectAnswer);
+    expect(eventTypes.some(eventType => LEGACY_SIMULATION_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(
+      false
+    );
+    expect(eventTypes.filter(eventType => eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(0);
     expect(mark?.answerList.map(answer => answer.value)).toEqual(['B. 6天']);
   });
 
   it('simulation_question_2 and simulation_question_3 fixtures keep labeled answer values', () => {
-    const labeledValues = marks
-      .filter(mark => mark.pageId === 'simulation_question_2' || mark.pageId === 'simulation_question_3')
-      .flatMap(mark => mark.answerList.map(answer => answer.value));
+    const simulationQuestionMarks = marks.filter(
+      mark => mark.pageId === 'simulation_question_2' || mark.pageId === 'simulation_question_3'
+    );
+    const labeledValues = simulationQuestionMarks.flatMap(mark =>
+      mark.answerList.map(answer => answer.value)
+    );
 
     expect(labeledValues).toEqual(['A. 海南香蕉', 'C. 18℃']);
+    simulationQuestionMarks.forEach(mark => {
+      const eventTypes = mark.operationList.map(operation => operation.eventType);
+      expect(eventTypes).toContain(L2_SIMULATION_EVENTS.executeExp);
+      expect(eventTypes).toContain(L2_SIMULATION_EVENTS.selectAnswer);
+      expect(eventTypes.some(eventType => LEGACY_SIMULATION_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(
+        false
+      );
+    });
   });
 
   it('solution_selection fixture locks click_blocked missing array and navigation events', () => {

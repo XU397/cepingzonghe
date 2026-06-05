@@ -97,6 +97,7 @@ type PageValidationFailure = {
 type PageValidationResult = PageValidationSuccess | PageValidationFailure;
 
 const VALIDATION_REASON = 'required_fields_missing';
+const SIMULATION_EXECUTE_EVENT = 'EXECUTE_EXP';
 const INTRO_COUNTDOWN_REASON = 'countdown_not_finished';
 
 type OperationWithOptionalCode = Omit<OperationLog, 'code'> & { code?: number };
@@ -209,8 +210,8 @@ const validatePage = (
   const hasTextAnswer = (value: unknown) => String(value || '').trim().length > 0;
   const hasSelectionAnswer = (value: unknown) =>
     value !== undefined && value !== null && value !== '';
-  const hasSimulationRunResult = operations.some(
-    operation => operation.eventType === EventTypes.SIMULATION_RUN_RESULT
+  const hasSimulationExecute = operations.some(
+    operation => operation.eventType === SIMULATION_EXECUTE_EVENT
   );
   const buildMissingResult = (
     missing: string[],
@@ -279,10 +280,10 @@ const validatePage = (
     case 'simulation_question_1': {
       return buildMissingResult(
         collectMissingKeys(
-          [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
+          [SIMULATION_EXECUTE_EVENT, 'Q5_海南香蕉变黑时间'],
           key =>
-            key === EventTypes.SIMULATION_RUN_RESULT
-              ? hasSimulationRunResult
+            key === SIMULATION_EXECUTE_EVENT
+              ? hasSimulationExecute
               : hasSelectionAnswer(answers[key])
         ),
         '请完成当前页面必填项'
@@ -291,10 +292,10 @@ const validatePage = (
     case 'simulation_question_2': {
       return buildMissingResult(
         collectMissingKeys(
-          [EventTypes.SIMULATION_RUN_RESULT, 'Q6_常温储存品种'],
+          [SIMULATION_EXECUTE_EVENT, 'Q6_常温储存品种'],
           key =>
-            key === EventTypes.SIMULATION_RUN_RESULT
-              ? hasSimulationRunResult
+            key === SIMULATION_EXECUTE_EVENT
+              ? hasSimulationExecute
               : hasSelectionAnswer(answers[key])
         ),
         '请完成当前页面必填项'
@@ -303,10 +304,10 @@ const validatePage = (
     case 'simulation_question_3': {
       return buildMissingResult(
         collectMissingKeys(
-          [EventTypes.SIMULATION_RUN_RESULT, 'Q7_平缓温度'],
+          [SIMULATION_EXECUTE_EVENT, 'Q7_平缓温度'],
           key =>
-            key === EventTypes.SIMULATION_RUN_RESULT
-              ? hasSimulationRunResult
+            key === SIMULATION_EXECUTE_EVENT
+              ? hasSimulationExecute
               : hasSelectionAnswer(answers[key])
         ),
         '请完成当前页面必填项'
