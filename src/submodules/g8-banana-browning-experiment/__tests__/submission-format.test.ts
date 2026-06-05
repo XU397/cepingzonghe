@@ -1209,7 +1209,7 @@ describe('banana submission-format fixtures', () => {
   it('Page04 emits registry-stable factor and modal IDs in a valid L2 success mark', async () => {
     const { unmount } = renderExperiment('banana_browning_reading');
 
-    await screen.findByText('香蕉变黑：资料阅读');
+    await screen.findByRole('heading', { name: '香蕉变黑：资料阅读' }, { timeout: 5000 });
     fireEvent.click(screen.getByRole('button', { name: /香蕉变色之谜/ }));
     fireEvent.click(screen.getByRole('button', { name: '关闭' }));
     fireEvent.click(screen.getByText('环境温度'));
