@@ -1,0 +1,4 @@
+- 2026-06-04: Standardized `g8-banana-browning-experiment` standard task pages to L2 trace events.
+  - Added shared trace logger, collectors, validator, banana `TRACE_PAGE_CONFIGS`, and L2 submission mode.
+  - `intro_notice` remains legacy/minimal by design; standard pages emit only L2 event names with object `value`.
+  - Verified with `npm run lint:submission`, `npm run test:submission-format`, `npm run test:submission`, banana trace tests, and `npm run build`.
