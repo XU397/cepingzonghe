@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import React, { useState, useCallback, useRef } from 'react';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import styles from '../styles/Page04BananaBrowningReading.module.css';
 import BananaDistributionMap from '../components/BananaDistributionMap';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 import xjbs01 from '@assets/images/xjbs01.jpg';
 import xjbs02 from '@assets/images/xjbs02.jpg';
@@ -169,11 +170,18 @@ function renderOverlayById(overlayId: string): React.ReactNode {
 }
 
 const Page04BananaBrowningReading: React.FC = () => {
-  const { logOperation, collectAnswer, setPageStartTime, answers, getPagePrefix } =
-    useG8BananaBrowningContext();
+  const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
 
-  const targetPrefix = getPagePrefix();
-  const pageLoadedRef = useRef(false);
+  const traceLogger = useTracePageStart({
+    pageId: 'banana_browning_reading' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {},
+    },
+  });
+
+  const modalOpenedAtRef = useRef(0);
   const [openOverlayId, setOpenOverlayId] = useState<string | null>(null);
   const [selectedFactors, setSelectedFactors] = useState<string[]>(() => {
     const saved = answers['Q2_影响因素'];
@@ -183,67 +191,60 @@ const Page04BananaBrowningReading: React.FC = () => {
     return [];
   });
 
-  useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      setPageStartTime(new Date());
-      logOperation({
-        targetElement: `${targetPrefix}页面进入`,
-        eventType: EventTypes.PAGE_ENTER,
-        value: '页面加载完成',
-        time: new Date().toISOString(),
-      });
-    }
-  }, [logOperation, setPageStartTime, targetPrefix]);
-
   const handleOpenOverlay = useCallback(
-    (id: string, title: string) => {
-      setOpenOverlayId(id);
-      logOperation({
-        targetElement: `${targetPrefix}资料按钮_${title}`,
-        eventType: EventTypes.MODAL_OPEN,
-        value: title,
-        time: new Date().toISOString(),
+    (item: (typeof RESOURCE_ITEMS)[number]) => {
+      setOpenOverlayId(item.id);
+      modalOpenedAtRef.current = Date.now();
+      traceLogger?.openModal(item.id, {
+        source: 'material_card',
+        title: item.title,
       });
     },
-    [logOperation, targetPrefix]
+    [traceLogger]
   );
 
   const handleCloseOverlay = useCallback(() => {
     if (!openOverlayId) return;
-    const item = RESOURCE_ITEMS.find(r => r.id === openOverlayId);
-    logOperation({
-      targetElement: `${targetPrefix}弹层关闭_${item?.title ?? openOverlayId}`,
-      eventType: EventTypes.MODAL_CLOSE,
-      value: item?.title ?? openOverlayId,
-      time: new Date().toISOString(),
+    traceLogger?.closeModal(openOverlayId, Date.now() - modalOpenedAtRef.current, {
+      source: 'material_card',
     });
     setOpenOverlayId(null);
-  }, [logOperation, targetPrefix, openOverlayId]);
+  }, [traceLogger, openOverlayId]);
 
   const handleFactorToggle = useCallback(
-    (factorKey: string) => {
-      const isCurrentlySelected = selectedFactors.includes(factorKey);
+    (factor: (typeof FACTOR_OPTIONS)[number]) => {
+      const isCurrentlySelected = selectedFactors.includes(factor.key);
       const willBeSelected = !isCurrentlySelected;
-      const next = willBeSelected
-        ? [...selectedFactors, factorKey]
-        : selectedFactors.filter(f => f !== factorKey);
+      const nextSelectedFactors = willBeSelected
+        ? [...selectedFactors, factor.key]
+        : selectedFactors.filter(f => f !== factor.key);
 
-      setSelectedFactors(next);
+      setSelectedFactors(nextSelectedFactors);
 
-      logOperation({
-        targetElement: `${targetPrefix}因素_${factorKey}`,
-        eventType: willBeSelected ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
-        value: willBeSelected ? '选中' : '取消选中',
-        time: new Date().toISOString(),
-      });
+      traceLogger?.emit(
+        'CHECKBOX_TOGGLE',
+        {
+          field_id: 'factor_options',
+          question_id: 'factor_options',
+          option_id: factor.key,
+          value_before: selectedFactors,
+          value_after: nextSelectedFactors,
+        },
+        {
+          targetId: `factor_options_${factor.key}`,
+          targetType: 'checkbox',
+          metadata: {
+            selected_count: nextSelectedFactors.length,
+          },
+        }
+      );
 
       collectAnswer({
         targetElement: 'Q2_影响因素',
-        value: next.join(','),
+        value: nextSelectedFactors.join(','),
       });
     },
-    [selectedFactors, logOperation, collectAnswer, targetPrefix]
+    [selectedFactors, traceLogger, collectAnswer]
   );
 
   return (
@@ -271,7 +272,7 @@ const Page04BananaBrowningReading: React.FC = () => {
                 key={item.id}
                 type="button"
                 className={styles.infoButton}
-                onClick={() => handleOpenOverlay(item.id, item.title)}
+                onClick={() => handleOpenOverlay(item)}
               >
                 <span className={styles.buttonIcon}>{idx + 1}</span>
                 <span className={styles.buttonText}>{item.title}</span>
@@ -289,14 +290,14 @@ const Page04BananaBrowningReading: React.FC = () => {
                   <div
                     key={factor.key}
                     className={`${styles.checkboxOption} ${isSelected ? styles.checkboxSelected : ''}`}
-                    onClick={() => handleFactorToggle(factor.key)}
+                    onClick={() => handleFactorToggle(factor)}
                     role="checkbox"
                     aria-checked={isSelected}
                     tabIndex={0}
                     onKeyDown={e => {
                       if (e.key === ' ' || e.key === 'Enter') {
                         e.preventDefault();
-                        handleFactorToggle(factor.key);
+                        handleFactorToggle(factor);
                       }
                     }}
                   >

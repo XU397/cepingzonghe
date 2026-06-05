@@ -1,10 +1,11 @@
-import React, { useEffect, useCallback } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import React, { useCallback } from 'react';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import imgMethod1 from '@/assets/images/xjbs07.jpg';
 import imgMethod2 from '@/assets/images/xjbs08.jpg';
 import imgMethod3 from '@/assets/images/xjbs09.jpg';
 import styles from '../styles/Page07BananaBrowningEvaluation.module.css';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 interface MethodConfig {
   id: string;
@@ -53,32 +54,35 @@ const METHODS: MethodConfig[] = [
   },
 ];
 
-const Page07BananaBrowningEvaluation: React.FC = () => {
-  const { logOperation, collectAnswer, setPageStartTime, answers, getPagePrefix } =
-    useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
+const fieldIdByAnswerKey: Record<string, string> = {
+  Q4a_图像法优点: 'method_1_advantage',
+  Q4b_图像法缺点: 'method_1_disadvantage',
+  Q4c_网格法优点: 'method_2_advantage',
+  Q4d_网格法缺点: 'method_2_disadvantage',
+  Q4e_称重法优点: 'method_3_advantage',
+  Q4f_称重法缺点: 'method_3_disadvantage',
+};
 
-  useEffect(() => {
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '页面加载完成',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, setPageStartTime, targetPrefix]);
+const Page07BananaBrowningEvaluation: React.FC = () => {
+  const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
+  const traceLogger = useTracePageStart({
+    pageId: 'banana_browning_evaluation' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {},
+    },
+  });
 
   const handleInputChange = useCallback(
     (answerKey: string, logLabel: string, value: string) => {
       collectAnswer({ targetElement: answerKey, value });
-      logOperation({
-        targetElement: `${targetPrefix}${logLabel}输入`,
-        eventType: EventTypes.INPUT_CHANGE,
-        value,
-        time: new Date().toISOString(),
+      traceLogger?.textChange(fieldIdByAnswerKey[answerKey], String(answers[answerKey] || ''), value, {
+        source_answer_key: answerKey,
+        field_label: logLabel,
       });
     },
-    [collectAnswer, logOperation, targetPrefix]
+    [collectAnswer, traceLogger, answers]
   );
 
   return (

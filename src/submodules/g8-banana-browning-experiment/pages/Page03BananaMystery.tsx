@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
 import momAvatar from '@assets/images/mamaT.png';
 import xiaomingAvatar from '@assets/images/xiaomingT.png';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import styles from '../styles/Page03BananaMystery.module.css';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 interface DialogueMessage {
   role: 'mom' | 'xiaoming';
@@ -30,11 +31,7 @@ const MAX_LENGTH = 200;
 
 interface DialoguePhoneProps {
   messages: DialogueMessage[];
-  onContainerFocus: () => void;
-  onContainerBlur: () => void;
   onMessageClick: (msg: DialogueMessage, idx: number, roleName: string) => void;
-  onMessageFocus: (msg: DialogueMessage, idx: number, roleName: string) => void;
-  onMessageBlur: (msg: DialogueMessage, idx: number, roleName: string) => void;
 }
 
 const CHARACTER_MAP: Record<string, { name: string; avatar: string; side: 'left' | 'right' }> = {
@@ -44,11 +41,7 @@ const CHARACTER_MAP: Record<string, { name: string; avatar: string; side: 'left'
 
 const DialoguePhone: React.FC<DialoguePhoneProps> = ({
   messages,
-  onContainerFocus,
-  onContainerBlur,
   onMessageClick,
-  onMessageFocus,
-  onMessageBlur,
 }) => {
   const [displayed, setDisplayed] = useState<DialogueMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -107,11 +100,7 @@ const DialoguePhone: React.FC<DialoguePhoneProps> = ({
   }, [showNext]);
 
   return (
-    <div
-      className={styles.chatPhone}
-      onMouseEnter={onContainerFocus}
-      onMouseLeave={onContainerBlur}
-    >
+    <div className={styles.chatPhone}>
       <div className={styles.chatHeader}>
         <button type="button" className={styles.headerBtn}>
           <svg
@@ -158,8 +147,6 @@ const DialoguePhone: React.FC<DialoguePhoneProps> = ({
               key={idx}
               className={`${styles.msgRow} ${isRight ? styles.msgRowRight : ''} ${styles.msgEnter} ${styles.msgClickable}`}
               onClick={() => onMessageClick(msg, idx, char.name)}
-              onMouseEnter={() => onMessageFocus(msg, idx, char.name)}
-              onMouseLeave={() => onMessageBlur(msg, idx, char.name)}
               role="button"
               tabIndex={0}
               onKeyDown={e => {
@@ -258,63 +245,37 @@ const DialoguePhone: React.FC<DialoguePhoneProps> = ({
 
 const Page03BananaMystery: React.FC = () => {
   const {
-    logOperation,
     collectAnswer,
-    setPageStartTime,
     answers,
     getPagePrefix,
     validationError,
     setValidationError,
   } = useG8BananaBrowningContext();
 
-  const targetPrefix = getPagePrefix();
+  const traceLogger = useTracePageStart({
+    pageId: 'banana_mystery' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {},
+    },
+  });
+
   const [inputValue, setInputValue] = useState(() => {
     const saved = answers['Q1_科学问题'];
     return typeof saved === 'string' ? saved : '';
   });
 
-  const pageLoadedRef = useRef(false);
-  const inputStateRef = useRef({ focused: false, lastValue: '' });
-
-  useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      setPageStartTime(new Date());
-      logOperation({
-        targetElement: `${targetPrefix}页面进入`,
-        eventType: EventTypes.PAGE_ENTER,
-        value: '页面加载完成',
-        time: new Date().toISOString(),
-      });
-    }
-  }, [setPageStartTime, logOperation, targetPrefix]);
+  const inputStateRef = useRef({ focused: false });
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const nextValue = e.target.value;
-      const prev = inputStateRef.current.lastValue || '';
 
-      if (nextValue.length < prev.length) {
-        logOperation({
-          eventType: EventTypes.INPUT_DELETE,
-          targetElement: `${targetPrefix}科学问题输入`,
-          value: JSON.stringify({
-            action: 'delete',
-            prevLength: prev.length,
-            nextLength: nextValue.length,
-          }),
-          time: new Date().toISOString(),
-        });
-      }
-
-      logOperation({
-        eventType: EventTypes.INPUT_CHANGE,
-        targetElement: `${targetPrefix}科学问题输入`,
-        value: JSON.stringify({ prev, next: nextValue }),
-        time: new Date().toISOString(),
+      traceLogger?.textChange('input_question_1', inputValue, nextValue, {
+        source_answer_key: 'Q1_科学问题',
       });
 
-      inputStateRef.current.lastValue = nextValue;
       setInputValue(nextValue);
       collectAnswer({ targetElement: 'Q1_科学问题', value: nextValue });
 
@@ -322,88 +283,36 @@ const Page03BananaMystery: React.FC = () => {
         setValidationError('');
       }
     },
-    [logOperation, collectAnswer, targetPrefix, validationError, setValidationError]
+    [traceLogger, inputValue, collectAnswer, validationError, setValidationError]
   );
 
   const handleInputFocus = useCallback(() => {
     if (!inputStateRef.current.focused) {
-      logOperation({
-        eventType: EventTypes.INPUT_FOCUS,
-        targetElement: `${targetPrefix}科学问题输入`,
-        value: '聚焦',
-        time: new Date().toISOString(),
-      });
+      traceLogger?.textFocus('input_question_1', inputValue);
       inputStateRef.current.focused = true;
     }
-  }, [logOperation, targetPrefix]);
+  }, [traceLogger, inputValue]);
 
   const handleInputBlur = useCallback(() => {
-    logOperation({
-      eventType: EventTypes.INPUT_BLUR,
-      targetElement: `${targetPrefix}科学问题输入`,
-      value: inputValue,
-      time: new Date().toISOString(),
+    traceLogger?.textBlur('input_question_1', inputValue, inputValue, {
+      source_answer_key: 'Q1_科学问题',
     });
     inputStateRef.current.focused = false;
-    inputStateRef.current.lastValue = inputValue;
-  }, [logOperation, inputValue, targetPrefix]);
-
-  const handleDialogueFocus = useCallback(() => {
-    logOperation({
-      eventType: EventTypes.INPUT_FOCUS,
-      targetElement: `${targetPrefix}对话容器`,
-      value: '对话框聚焦',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, targetPrefix]);
-
-  const handleDialogueBlur = useCallback(() => {
-    logOperation({
-      eventType: EventTypes.INPUT_BLUR,
-      targetElement: `${targetPrefix}对话容器`,
-      value: '对话框失焦',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, targetPrefix]);
+  }, [traceLogger, inputValue]);
 
   const handleMessageClick = useCallback(
-    (message: { text: string }, index: number, roleName: string) => {
-      logOperation({
-        eventType: EventTypes.CLICK,
-        targetElement: `${targetPrefix}对话消息_${index}`,
-        value: JSON.stringify({
-          role: roleName,
-          messageIndex: index,
-          messageText: message.text.substring(0, 50) + (message.text.length > 50 ? '...' : ''),
-        }),
-        time: new Date().toISOString(),
+    (_message: { text: string }, index: number, speakerName: string) => {
+      if (index >= 5) {
+        return;
+      }
+      const contentId = `chat_bubble_02_${String(index + 1).padStart(2, '0')}`;
+      traceLogger?.contentActivate(contentId, 'content', {
+        source: 'chat_bubble',
+        sequence_index: index + 1,
+        speaker_name: speakerName,
       });
     },
-    [logOperation, targetPrefix]
-  );
-
-  const handleMessageFocus = useCallback(
-    (message: { text: string }, index: number, roleName: string) => {
-      logOperation({
-        eventType: EventTypes.INPUT_FOCUS,
-        targetElement: `${targetPrefix}对话消息_${index}`,
-        value: `focus|role=${roleName}|idx=${index}|text=${message.text.substring(0, 50)}${message.text.length > 50 ? '...' : ''}`,
-        time: new Date().toISOString(),
-      });
-    },
-    [logOperation, targetPrefix]
-  );
-
-  const handleMessageBlur = useCallback(
-    (message: { text: string }, index: number, roleName: string) => {
-      logOperation({
-        eventType: EventTypes.INPUT_BLUR,
-        targetElement: `${targetPrefix}对话消息_${index}`,
-        value: `blur|role=${roleName}|idx=${index}|text=${message.text.substring(0, 50)}${message.text.length > 50 ? '...' : ''}`,
-        time: new Date().toISOString(),
-      });
-    },
-    [logOperation, targetPrefix]
+    [traceLogger]
   );
 
   return (
@@ -412,11 +321,7 @@ const Page03BananaMystery: React.FC = () => {
         <div className={styles.dialogueSection}>
           <DialoguePhone
             messages={dialogueMessages}
-            onContainerFocus={handleDialogueFocus}
-            onContainerBlur={handleDialogueBlur}
             onMessageClick={handleMessageClick}
-            onMessageFocus={handleMessageFocus}
-            onMessageBlur={handleMessageBlur}
           />
         </div>
 

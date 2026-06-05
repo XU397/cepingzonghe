@@ -1,7 +1,8 @@
-import React, { useEffect, useCallback } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import React, { useCallback } from 'react';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import styles from '../styles/Page06BananaBrowningDesign.module.css';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 const MAX_CHAR_COUNT = 300;
 const MIN_CHAR_COUNT = 2;
@@ -12,20 +13,22 @@ const IDEAS_CONFIG = [
   { key: 'Q3c_想法3', label: '想法3', index: 3 } as const,
 ];
 
-const Page06BananaBrowningDesign: React.FC = () => {
-  const { logOperation, collectAnswer, setPageStartTime, answers, getPagePrefix } =
-    useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
+const fieldIdByIdeaKey: Record<string, string> = {
+  Q3a_想法1: 'input_idea_1',
+  Q3b_想法2: 'input_idea_2',
+  Q3c_想法3: 'input_idea_3',
+};
 
-  useEffect(() => {
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '页面加载完成',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, setPageStartTime, targetPrefix]);
+const Page06BananaBrowningDesign: React.FC = () => {
+  const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
+  const traceLogger = useTracePageStart({
+    pageId: 'banana_browning_design' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {},
+    },
+  });
 
   const getCharCountClass = (value: string): string => {
     const len = value.length;
@@ -35,16 +38,14 @@ const Page06BananaBrowningDesign: React.FC = () => {
   };
 
   const handleChange = useCallback(
-    (ideaKey: string, label: string, value: string) => {
+    (ideaKey: string, ideaLabel: string, value: string) => {
       collectAnswer({ targetElement: ideaKey, value });
-      logOperation({
-        targetElement: `${targetPrefix}${label}输入`,
-        eventType: EventTypes.INPUT_CHANGE,
-        value,
-        time: new Date().toISOString(),
+      traceLogger?.textChange(fieldIdByIdeaKey[ideaKey], String(answers[ideaKey] || ''), value, {
+        source_answer_key: ideaKey,
+        field_label: ideaLabel,
       });
     },
-    [collectAnswer, logOperation, targetPrefix]
+    [collectAnswer, traceLogger, answers]
   );
 
   return (

@@ -1,21 +1,19 @@
-import React, { useEffect } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import React from 'react';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import styles from '../styles/Page02BananaBrowning.module.css';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 const Page02BananaBrowning: React.FC = () => {
-  const { logOperation, setPageStartTime, getPagePrefix } = useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
-
-  useEffect(() => {
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '页面加载完成',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, setPageStartTime, targetPrefix]);
+  const { getPagePrefix } = useG8BananaBrowningContext();
+  const traceLogger = useTracePageStart({
+    pageId: 'page_02_banana_browning' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {},
+    },
+  });
 
   return (
     <div className={styles.pageContainer}>
