@@ -9,12 +9,20 @@ import {
   type MarkObject,
   type Operation,
 } from '@shared/services/submission/schema.ts';
+import { validateTraceMark } from '../trace/useBananaTraceLogger';
 import G8BananaBrowningExperiment from '../Component';
 import type { PageId } from '../mapping';
 import type { SubmoduleProps } from '../types';
 
 const defaultSubmitSpy = vi.fn(async () => true);
-const submitSpy = vi.fn(async () => true);
+const submitSpy = vi.fn(async (options?: { markOverride?: MarkObject }) => {
+  try {
+    validateTraceMark(options?.markOverride);
+    return true;
+  } catch {
+    return false;
+  }
+});
 let lastOnNextResult: boolean | undefined;
 
 vi.mock('@shared/ui/PageFrame', async () => {
@@ -64,14 +72,29 @@ vi.mock('../pages/Page01Notice', async () => {
 
 vi.mock('../pages/Page02BananaBrowning', async () => {
   const ReactModule = await import('react');
+  const EventTypesModule = await import('@shared/services/submission/eventTypes.js');
+  const { useG8BananaBrowningContext } = await import('../context/G8BananaBrowningContext');
 
   return {
-    default: () =>
-      ReactModule.createElement(
+    default: () => {
+      const { logOperation } = useG8BananaBrowningContext();
+
+      ReactModule.useEffect(() => {
+        logOperation({
+          targetElement: 'P1.02_页面进入',
+          eventType: EventTypesModule.default.PAGE_ENTER,
+          value: 'legacy page enter',
+          time: new Date().toISOString(),
+          pageId: 'page_02_banana_browning',
+        });
+      }, [logOperation]);
+
+      return ReactModule.createElement(
         'div',
         { 'data-testid': 'page-page_02_banana_browning' },
         'page_02_banana_browning'
-      ),
+      );
+    },
   };
 });
 
@@ -575,6 +598,14 @@ describe('banana submission-format fixtures', () => {
   beforeEach(() => {
     defaultSubmitSpy.mockClear();
     submitSpy.mockClear();
+    submitSpy.mockImplementation(async (options?: { markOverride?: MarkObject }) => {
+      try {
+        validateTraceMark(options?.markOverride);
+        return true;
+      } catch {
+        return false;
+      }
+    });
     lastOnNextResult = undefined;
   });
 
@@ -691,10 +722,45 @@ describe('banana submission-format fixtures', () => {
     expect(mark?.operationList.some(operation => operation.eventType === EventTypes.CHECKBOX_CHECK)).toBe(true);
   });
 
-  it('handleFrameNext includes the current L2 success submit attempt in the submitted mark override', async () => {
+  it('handleFrameNext maps L2 blocked missing fields to registry field ids', async () => {
+    const { unmount } = renderExperiment('simulation_question_1');
+
+    await screen.findByTestId('page-simulation_question_1');
+    fireEvent.click(screen.getByTestId('frame-next-button'));
+
+    await waitFor(() => {
+      const submitAttempt = readFrameState().operations.find(
+        operation => operation.eventType === 'SUBMIT_ATTEMPT'
+      );
+      expect(submitAttempt).toBeDefined();
+      expect(lastOnNextResult).toBe(false);
+    });
+
+    const submitAttempt = readFrameState().operations.find(
+      operation => operation.eventType === 'SUBMIT_ATTEMPT'
+    );
+    const value = submitAttempt?.value as Record<string, any>;
+
+    expect(value.validation_status).toBe('blocked');
+    expect(value.metadata?.missing_fields).toEqual(['question_1_answer']);
+    expect(value.metadata?.missing_fields).not.toContain(EventTypes.SIMULATION_RUN_RESULT);
+    expect(value.metadata?.missing_fields).not.toContain('Q5_海南香蕉变黑时间');
+    expect(defaultSubmitSpy).not.toHaveBeenCalled();
+    expect(submitSpy).not.toHaveBeenCalled();
+
+    unmount();
+  });
+
+  it('handleFrameNext includes a validator-compatible current L2 success mark override', async () => {
     const { unmount } = renderExperiment('page_02_banana_browning');
 
     await screen.findByTestId('page-page_02_banana_browning');
+    await waitFor(() => {
+      expect(
+        readFrameState().operations.some(operation => operation.eventType === EventTypes.PAGE_ENTER)
+      ).toBe(true);
+    });
+
     fireEvent.click(screen.getByTestId('frame-next-button'));
 
     await waitFor(() => {
@@ -707,14 +773,31 @@ describe('banana submission-format fixtures', () => {
     const submitOptions = submitSpy.mock.calls[0][0] as {
       markOverride?: MarkObject;
     };
+    const submittedMark = submitOptions.markOverride;
+    const operationList = submittedMark?.operationList || [];
+    const eventTypes = operationList.map(operation => operation.eventType);
     const submitAttempts =
-      submitOptions.markOverride?.operationList.filter(
-        operation => operation.eventType === 'SUBMIT_ATTEMPT'
-      ) || [];
+      operationList.filter(operation => operation.eventType === 'SUBMIT_ATTEMPT') || [];
 
+    expect(() => validateTraceMark(submittedMark)).not.toThrow();
+    expect(eventTypes).toEqual(['START_PAGE', 'SUBMIT_ATTEMPT']);
+    expect(eventTypes).not.toContain(EventTypes.PAGE_ENTER);
+    operationList.forEach((operation, index) => {
+      expect(operation.code).toBe(index + 1);
+    });
+    expect(operationList[0]).toMatchObject({
+      code: 1,
+      targetElement: 'P1.02_page',
+      eventType: 'START_PAGE',
+      pageId: 'page_02_banana_browning',
+      value: {
+        page_id: 'page_01_intro',
+        target_id: 'page',
+      },
+    });
     expect(submitAttempts).toHaveLength(1);
     expect(submitAttempts[0]).toMatchObject({
-      code: 1,
+      code: 2,
       targetElement: 'P1.02_next_button',
       eventType: 'SUBMIT_ATTEMPT',
       pageId: 'page_02_banana_browning',

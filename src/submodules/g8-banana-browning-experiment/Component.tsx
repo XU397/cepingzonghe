@@ -21,6 +21,7 @@ import {
   PAGE_DESC_MAP,
   SUBMODULE_MAPPING_CONFIG,
   type PageId,
+  type TracePageConfig,
 } from './mapping';
 
 const Page01Notice = lazy(() => import('./pages/Page01Notice'));
@@ -99,16 +100,50 @@ type OperationWithOptionalCode = Omit<OperationLog, 'code'> & { code?: number };
 const createSubmitAttemptId = () =>
   `submit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-const isL2SuccessSubmitAttempt = (operation: OperationLog) => {
+const isRecordValue = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value && typeof value === 'object' && !Array.isArray(value));
+
+const isCurrentPageL2TraceOperation = (
+  operation: OperationWithOptionalCode,
+  tracePageConfig: TracePageConfig
+) => {
+  const value = operation.value;
+  return Boolean(
+    isRecordValue(value) &&
+      typeof value.trace_id === 'string' &&
+      value.page_id === tracePageConfig.standardPageId
+  );
+};
+
+const isCurrentPageStartPage = (
+  operation: OperationWithOptionalCode,
+  tracePageConfig: TracePageConfig
+) =>
+  operation.eventType === 'START_PAGE' &&
+  isCurrentPageL2TraceOperation(operation, tracePageConfig);
+
+const isL2SuccessSubmitAttempt = (
+  operation: OperationWithOptionalCode,
+  tracePageConfig: TracePageConfig
+) => {
   const value = operation.value;
   return Boolean(
     operation.eventType === 'SUBMIT_ATTEMPT' &&
-      value &&
-      typeof value === 'object' &&
-      !Array.isArray(value) &&
+      isCurrentPageL2TraceOperation(operation, tracePageConfig) &&
+      isRecordValue(value) &&
       value.validation_status === 'success' &&
       value.target_id === 'next_button'
   );
+};
+
+const mapBlockedMissingFieldsForL2 = (
+  tracePageConfig: TracePageConfig | undefined,
+  missingFields: string[]
+) => {
+  if (tracePageConfig?.requiredFields.length) {
+    return tracePageConfig.requiredFields;
+  }
+  return missingFields;
 };
 
 const withSequentialOperationCodes = (
@@ -295,18 +330,28 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       ? flowContext.stepIndex
       : (pageConfig?.stepIndex ?? 0);
   const pageNumber = formatPageNumber(submissionStepIndex, subPageNum);
+  const traceFlowContext = useMemo(
+    () =>
+      flowContext
+        ? {
+            flowId: flowContext.flowId,
+            submoduleId: flowContext.submoduleId,
+            stepIndex: flowContext.stepIndex,
+            moduleName: '8年级香蕉变黑科学探究',
+            pageId: currentPageId,
+          }
+        : null,
+    [
+      currentPageId,
+      flowContext?.flowId,
+      flowContext?.stepIndex,
+      flowContext?.submoduleId,
+    ]
+  );
   const frameTraceLogger = useBananaTraceLogger({
     pageId: currentPageId as PageId,
     pageNumber,
-    flowContext: flowContext
-      ? {
-          flowId: flowContext.flowId,
-          submoduleId: flowContext.submoduleId,
-          stepIndex: flowContext.stepIndex,
-          moduleName: '8年级香蕉变黑科学探究',
-          pageId: currentPageId,
-        }
-      : null,
+    flowContext: traceFlowContext,
   });
   const pageDesc = pageConfig?.pageDesc ?? currentPageId;
   const showTimer = navigationMode !== 'hidden';
@@ -448,7 +493,10 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
         if (isL2TracePage) {
           frameTraceLogger?.submitAttempt({
             validationStatus: 'blocked',
-            missingFields: validation.missing || [],
+            missingFields: mapBlockedMissingFieldsForL2(
+              tracePageConfig,
+              validation.missing || []
+            ),
             targetId: 'next_button',
           });
         } else {
@@ -469,8 +517,20 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       }
 
       setValidationError('');
-      if (isL2TracePage && typeof submit === 'function') {
-        const submitAttemptOperation = frameTraceLogger?.emit(
+      if (isL2TracePage && tracePageConfig && frameTraceLogger && typeof submit === 'function') {
+        const startPageOperation = frameTraceLogger.emit(
+          'START_PAGE',
+          {},
+          {
+            targetId: 'page',
+            targetType: 'page',
+            metadata: {
+              flow_context: traceFlowContext,
+            },
+            emit: false,
+          }
+        );
+        const submitAttemptOperation = frameTraceLogger.emit(
           'SUBMIT_ATTEMPT',
           {
             submit_attempt_id: createSubmitAttemptId(),
@@ -486,14 +546,17 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
           }
         );
         const baseMark = buildSubmissionMark();
-        const operationList = submitAttemptOperation
-          ? withSequentialOperationCodes([
-              ...baseMark.operationList.filter(operation => !isL2SuccessSubmitAttempt(operation)),
-              submitAttemptOperation,
-            ])
-          : withSequentialOperationCodes(
-              baseMark.operationList.filter(operation => !isL2SuccessSubmitAttempt(operation))
-            );
+        const l2Operations = baseMark.operationList
+          .filter(operation => isCurrentPageL2TraceOperation(operation, tracePageConfig))
+          .filter(operation => !isL2SuccessSubmitAttempt(operation, tracePageConfig));
+        const hasStartPage = l2Operations.some(operation =>
+          isCurrentPageStartPage(operation, tracePageConfig)
+        );
+        const operationList = withSequentialOperationCodes([
+          ...(!hasStartPage ? [startPageOperation] : []),
+          ...l2Operations,
+          submitAttemptOperation,
+        ]);
         const ok = await submit({
           markOverride: {
             ...baseMark,
@@ -526,6 +589,8 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       operationsForSubmission,
       pageNumber,
       setValidationError,
+      traceFlowContext,
+      tracePageConfig,
     ]
   );
 
