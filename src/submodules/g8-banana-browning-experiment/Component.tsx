@@ -10,6 +10,10 @@ import { encodeCompositePageNum } from '@shared/utils/pageMapping';
 import type { OperationLog, SubmoduleProps } from './types';
 import { validateTraceMark, useBananaTraceLogger } from './trace/useBananaTraceLogger';
 import {
+  BANANA_QUESTION_BY_ANSWER_KEY,
+  BANANA_TEXT_FIELD_BY_ANSWER_KEY,
+} from './trace/fieldBindings';
+import {
   G8BananaBrowningProvider,
   useG8BananaBrowningContext,
 } from './context/G8BananaBrowningContext';
@@ -140,10 +144,39 @@ const mapBlockedMissingFieldsForL2 = (
   tracePageConfig: TracePageConfig | undefined,
   missingFields: string[]
 ) => {
-  if (tracePageConfig?.requiredFields.length) {
-    return tracePageConfig.requiredFields;
+  const allowedFields = new Set([
+    ...(tracePageConfig?.requiredFields || []),
+    ...(tracePageConfig?.fieldIds || []),
+  ]);
+  const fallbackFieldByMissingKey: Record<string, string> = {
+    Q2_影响因素: 'factor_options',
+    Q8_方案表格: 'plan_table',
+    Q8_最优方案: 'plan_table',
+  };
+  const mappedFields: string[] = [];
+
+  for (const missingField of missingFields) {
+    const questionBinding =
+      BANANA_QUESTION_BY_ANSWER_KEY[
+        missingField as keyof typeof BANANA_QUESTION_BY_ANSWER_KEY
+      ];
+    const fieldId =
+      BANANA_TEXT_FIELD_BY_ANSWER_KEY[missingField] ||
+      questionBinding?.fieldId ||
+      fallbackFieldByMissingKey[missingField];
+
+    if (!fieldId) {
+      continue;
+    }
+    if (allowedFields.size > 0 && !allowedFields.has(fieldId)) {
+      continue;
+    }
+    if (!mappedFields.includes(fieldId)) {
+      mappedFields.push(fieldId);
+    }
   }
-  return missingFields;
+
+  return mappedFields;
 };
 
 const withSequentialOperationCodes = (

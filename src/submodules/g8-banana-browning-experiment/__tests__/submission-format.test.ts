@@ -100,27 +100,67 @@ vi.mock('../pages/Page02BananaBrowning', async () => {
 
 vi.mock('../pages/Page10SimulationQuestion1', async () => {
   const ReactModule = await import('react');
+  const { useG8BananaBrowningContext } = await import('../context/G8BananaBrowningContext');
 
   return {
-    default: () =>
-      ReactModule.createElement(
+    default: () => {
+      const { collectAnswer } = useG8BananaBrowningContext();
+
+      return ReactModule.createElement(
         'div',
         { 'data-testid': 'page-simulation_question_1' },
-        'simulation_question_1'
-      ),
+        ReactModule.createElement('span', {}, 'simulation_question_1'),
+        ReactModule.createElement(
+          'button',
+          {
+            'data-testid': 'simulation-question-1-answer',
+            onClick: () =>
+              collectAnswer({
+                targetElement: 'Q5_海南香蕉变黑时间',
+                value: 'B. 6天',
+                pageId: 'simulation_question_1',
+              }),
+          },
+          '选择答案'
+        )
+      );
+    },
   };
 });
 
 vi.mock('../pages/Page13SolutionSelection', async () => {
   const ReactModule = await import('react');
+  const { useG8BananaBrowningContext } = await import('../context/G8BananaBrowningContext');
 
   return {
-    default: () =>
-      ReactModule.createElement(
+    default: () => {
+      const { collectAnswer } = useG8BananaBrowningContext();
+
+      return ReactModule.createElement(
         'div',
         { 'data-testid': 'page-solution_selection' },
-        'solution_selection'
-      ),
+        ReactModule.createElement('span', {}, 'solution_selection'),
+        ReactModule.createElement(
+          'button',
+          {
+            'data-testid': 'solution-selection-plan-complete',
+            onClick: () => {
+              collectAnswer({
+                targetElement: 'Q8_方案表格',
+                value: '方案B',
+                pageId: 'solution_selection',
+              });
+              collectAnswer({
+                targetElement: 'Q8_最优方案',
+                value: '方案B',
+                pageId: 'solution_selection',
+              });
+            },
+          },
+          '完成方案选择'
+        )
+      );
+    },
   };
 });
 
@@ -745,6 +785,64 @@ describe('banana submission-format fixtures', () => {
     expect(value.metadata?.missing_fields).toEqual(['question_1_answer']);
     expect(value.metadata?.missing_fields).not.toContain(EventTypes.SIMULATION_RUN_RESULT);
     expect(value.metadata?.missing_fields).not.toContain('Q5_海南香蕉变黑时间');
+    expect(defaultSubmitSpy).not.toHaveBeenCalled();
+    expect(submitSpy).not.toHaveBeenCalled();
+
+    unmount();
+  });
+
+  it('handleFrameNext reports only reason_text when solution_selection is missing only the reason', async () => {
+    const { unmount } = renderExperiment('solution_selection');
+
+    await screen.findByTestId('page-solution_selection');
+    fireEvent.click(screen.getByTestId('solution-selection-plan-complete'));
+    fireEvent.click(screen.getByTestId('frame-next-button'));
+
+    await waitFor(() => {
+      const submitAttempt = readFrameState().operations.find(
+        operation => operation.eventType === 'SUBMIT_ATTEMPT'
+      );
+      expect(submitAttempt).toBeDefined();
+      expect(lastOnNextResult).toBe(false);
+    });
+
+    const submitAttempt = readFrameState().operations.find(
+      operation => operation.eventType === 'SUBMIT_ATTEMPT'
+    );
+    const value = submitAttempt?.value as Record<string, any>;
+
+    expect(value.validation_status).toBe('blocked');
+    expect(value.metadata?.missing_fields).toEqual(['reason_text']);
+    expect(value.metadata?.missing_fields).not.toContain('plan_table');
+    expect(defaultSubmitSpy).not.toHaveBeenCalled();
+    expect(submitSpy).not.toHaveBeenCalled();
+
+    unmount();
+  });
+
+  it('handleFrameNext does not report question answer field when only simulation run is missing', async () => {
+    const { unmount } = renderExperiment('simulation_question_1');
+
+    await screen.findByTestId('page-simulation_question_1');
+    fireEvent.click(screen.getByTestId('simulation-question-1-answer'));
+    fireEvent.click(screen.getByTestId('frame-next-button'));
+
+    await waitFor(() => {
+      const submitAttempt = readFrameState().operations.find(
+        operation => operation.eventType === 'SUBMIT_ATTEMPT'
+      );
+      expect(submitAttempt).toBeDefined();
+      expect(lastOnNextResult).toBe(false);
+    });
+
+    const submitAttempt = readFrameState().operations.find(
+      operation => operation.eventType === 'SUBMIT_ATTEMPT'
+    );
+    const value = submitAttempt?.value as Record<string, any>;
+
+    expect(value.validation_status).toBe('blocked');
+    expect(value.metadata?.missing_fields).toEqual([]);
+    expect(value.metadata?.missing_fields).not.toContain('question_1_answer');
     expect(defaultSubmitSpy).not.toHaveBeenCalled();
     expect(submitSpy).not.toHaveBeenCalled();
 
