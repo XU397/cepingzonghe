@@ -130,13 +130,18 @@ const createSolutionRow = (id: string): SolutionRow => ({
   temperature: '',
 });
 
+const INITIAL_SOLUTION_ROW_ID = 'page_12_solution_selection_row_1';
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 const Page13SolutionSelection: React.FC = () => {
-  const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
+  const { collectAnswer, getPagePrefix } = useG8BananaBrowningContext();
 
   const nextIdRef = useRef(2);
+  const rowsRef = useRef<SolutionRow[]>([createSolutionRow(INITIAL_SOLUTION_ROW_ID)]);
+  const bestIdRef = useRef<string | null>(null);
+  const reasonValueRef = useRef('');
   const reasonFocusValueRef = useRef('');
 
   const traceLogger = useTracePageStart({
@@ -145,17 +150,25 @@ const Page13SolutionSelection: React.FC = () => {
     flowContext: undefined,
     metadata: {
       initial_state: {
-        rows: ['page_12_solution_selection_row_1'],
+        rows: [INITIAL_SOLUTION_ROW_ID],
         best_row_id: null,
       },
     },
   });
 
-  const [rows, setRows] = useState<SolutionRow[]>(() => [
-    createSolutionRow('page_12_solution_selection_row_1'),
-  ]);
-  const [bestId, setBestId] = useState<string | null>(null);
+  const [rows, setRowsState] = useState<SolutionRow[]>(() => rowsRef.current);
+  const [bestId, setBestIdState] = useState<string | null>(null);
   const [reason, setReason] = useState('');
+
+  const updateRows = useCallback((nextRows: SolutionRow[]) => {
+    rowsRef.current = nextRows;
+    setRowsState(nextRows);
+  }, []);
+
+  const updateBestId = useCallback((nextBestId: string | null) => {
+    bestIdRef.current = nextBestId;
+    setBestIdState(nextBestId);
+  }, []);
 
   // ---- persist table answers whenever rows / bestId change ----
   useEffect(() => {
@@ -173,97 +186,105 @@ const Page13SolutionSelection: React.FC = () => {
   // ---- handlers ----
   const handleVarietyChange = useCallback(
     (rowId: string, value: string) => {
-      const row = rows.find(r => r.id === rowId);
+      const row = rowsRef.current.find(r => r.id === rowId);
       if (!row) {
         return;
       }
 
       const previousValue = row.variety;
       const nextRow = { ...row, variety: value };
-      setRows(prev => prev.map(r => (r.id === rowId ? nextRow : r)));
+      updateRows(rowsRef.current.map(r => (r.id === rowId ? nextRow : r)));
       traceLogger?.setPlanParam(rowId, 'plan_param_1', previousValue, value, {
         row_snapshot_after_change: nextRow,
       });
     },
-    [rows, traceLogger]
+    [traceLogger, updateRows]
   );
 
   const handleTemperatureChange = useCallback(
     (rowId: string, value: string) => {
-      const row = rows.find(r => r.id === rowId);
+      const row = rowsRef.current.find(r => r.id === rowId);
       if (!row) {
         return;
       }
 
       const previousValue = row.temperature;
       const nextRow = { ...row, temperature: value };
-      setRows(prev => prev.map(r => (r.id === rowId ? nextRow : r)));
+      updateRows(rowsRef.current.map(r => (r.id === rowId ? nextRow : r)));
       traceLogger?.setPlanParam(rowId, 'plan_param_2', previousValue, value, {
         row_snapshot_after_change: nextRow,
       });
     },
-    [rows, traceLogger]
+    [traceLogger, updateRows]
   );
 
   const handleStarClick = useCallback(
     (rowId: string) => {
-      setBestId(rowId);
-      traceLogger?.selectBest(rowId, bestId);
+      const previousBestId = bestIdRef.current;
+      if (previousBestId === rowId) {
+        return;
+      }
+
+      updateBestId(rowId);
+      traceLogger?.selectBest(rowId, previousBestId);
     },
-    [bestId, traceLogger]
+    [traceLogger, updateBestId]
   );
 
   const handleDeleteRow = useCallback(
     (rowId: string) => {
-      const rowToDelete = rows.find(r => r.id === rowId);
+      const rowToDelete = rowsRef.current.find(r => r.id === rowId);
       if (!rowToDelete) {
         return;
       }
 
-      setRows(prev => prev.filter(r => r.id !== rowId));
-      if (bestId === rowId) {
-        setBestId(null);
+      const wasBestPlan = bestIdRef.current === rowId;
+      updateRows(rowsRef.current.filter(r => r.id !== rowId));
+      if (wasBestPlan) {
+        updateBestId(null);
       }
       traceLogger?.deleteRow(rowId, {
         row_snapshot_before_delete: rowToDelete,
-        was_best_plan: bestId === rowId,
+        was_best_plan: wasBestPlan,
       });
     },
-    [bestId, rows, traceLogger]
+    [traceLogger, updateBestId, updateRows]
   );
 
   const handleAddRow = useCallback(() => {
     const newRow = createSolutionRow(`page_12_solution_selection_row_${nextIdRef.current}`);
     nextIdRef.current += 1;
-    setRows(prev => [...prev, newRow]);
+    updateRows([...rowsRef.current, newRow]);
     traceLogger?.addRow(newRow.id, {
       row_snapshot_after_add: newRow,
     });
-  }, [traceLogger]);
+  }, [traceLogger, updateRows]);
 
   const handleReasonChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value;
+      const previousValue = reasonValueRef.current;
+      reasonValueRef.current = value;
       setReason(value);
       collectAnswer({ targetElement: 'Q8_理由', value });
-      traceLogger?.textChange('reason_text', String(answers.Q8_理由 || ''), value, {
+      traceLogger?.textChange('reason_text', previousValue, value, {
         source_answer_key: 'Q8_理由',
       });
     },
-    [answers.Q8_理由, collectAnswer, traceLogger]
+    [collectAnswer, traceLogger]
   );
 
   const handleReasonFocus = useCallback(() => {
-    reasonFocusValueRef.current = reason;
-  }, [reason]);
+    reasonFocusValueRef.current = reasonValueRef.current;
+  }, []);
 
   const handleReasonBlur = useCallback(
     () => {
-      traceLogger?.textBlur('reason_text', reasonFocusValueRef.current, reason, {
+      traceLogger?.textBlur('reason_text', reasonFocusValueRef.current, reasonValueRef.current, {
         source_answer_key: 'Q8_理由',
       });
     },
-    [reason, traceLogger]
+    [traceLogger]
   );
 
   // ---- render ----

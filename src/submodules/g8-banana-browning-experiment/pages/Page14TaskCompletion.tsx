@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
 import type { PageId } from '../mapping';
 import completionImage from '@assets/images/xjbs12.jpg';
@@ -7,6 +7,7 @@ import { useTracePageStart } from '../trace/useTracePageStart';
 
 const Page14TaskCompletion: React.FC = () => {
   const { getPagePrefix } = useG8BananaBrowningContext();
+  const hasLoggedFinishRef = useRef(false);
   const traceLogger = useTracePageStart({
     pageId: 'task_completion' as PageId,
     pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
@@ -17,7 +18,12 @@ const Page14TaskCompletion: React.FC = () => {
   });
 
   useEffect(() => {
-    traceLogger?.taskFinish({
+    if (hasLoggedFinishRef.current || !traceLogger) {
+      return;
+    }
+
+    hasLoggedFinishRef.current = true;
+    traceLogger.taskFinish({
       completion_source: 'task_completion_page',
     });
   }, [traceLogger]);
