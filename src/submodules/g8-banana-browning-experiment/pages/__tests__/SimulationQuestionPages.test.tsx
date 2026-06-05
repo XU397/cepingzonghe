@@ -6,7 +6,6 @@ import Page09BananaBrowningSimulationMain from '../Page09BananaBrowningSimulatio
 import Page10SimulationQuestion1 from '../Page10SimulationQuestion1';
 import Page11SimulationQuestion2 from '../Page11SimulationQuestion2';
 import Page12SimulationQuestion3 from '../Page12SimulationQuestion3';
-import { optionIdFromOptionLabel } from '../../trace/fieldBindings';
 
 type MockAnswerValue = string | number | boolean | null;
 
@@ -81,6 +80,9 @@ const LEGACY_EVENT_TYPES = new Set([
 
 const cases: Array<{
   answerLabel: string;
+  optionId: string;
+  savedAnswer: string;
+  savedAnswerOptionId: string;
   questionKey: string;
   questionId: string;
   questionIndex: number;
@@ -89,6 +91,9 @@ const cases: Array<{
 }> = [
   {
     answerLabel: '6天',
+    optionId: 'option_b',
+    savedAnswer: '3天',
+    savedAnswerOptionId: 'option_a',
     questionKey: 'Q5_海南香蕉变黑时间',
     questionId: 'question_1',
     questionIndex: 1,
@@ -97,6 +102,9 @@ const cases: Array<{
   },
   {
     answerLabel: '海南香蕉',
+    optionId: 'option_a',
+    savedAnswer: '菲律宾香蕉',
+    savedAnswerOptionId: 'option_b',
     questionKey: 'Q6_常温储存品种',
     questionId: 'question_2',
     questionIndex: 2,
@@ -105,6 +113,9 @@ const cases: Array<{
   },
   {
     answerLabel: '18℃',
+    optionId: 'option_c',
+    savedAnswer: '2℃',
+    savedAnswerOptionId: 'option_a',
     questionKey: 'Q7_平缓温度',
     questionId: 'question_3',
     questionIndex: 3,
@@ -223,9 +234,8 @@ describe('Simulation question pages', () => {
 
   it.each(cases)(
     'SELECT_ANSWER logs option id and metadata for $questionId',
-    ({ PageComponent, answerLabel, questionKey, questionId, questionIndex, targetPrefix }) => {
+    ({ PageComponent, answerLabel, optionId, questionKey, questionId, questionIndex, targetPrefix }) => {
       mockPageContext = buildMockPageContext({}, targetPrefix);
-      const optionId = optionIdFromOptionLabel(answerLabel);
 
       render(<PageComponent />);
       fireEvent.click(screen.getByLabelText(answerLabel));
@@ -261,11 +271,17 @@ describe('Simulation question pages', () => {
 
   it.each(cases)(
     'SELECT_ANSWER uses rehydrated saved answer as value_before for $questionId',
-    ({ PageComponent, answerLabel, questionKey, questionId, targetPrefix }) => {
-      const savedAnswer = questionId === 'question_1' ? '3天' : questionId === 'question_2' ? '菲律宾香蕉' : '2℃';
+    ({
+      PageComponent,
+      answerLabel,
+      optionId,
+      savedAnswer,
+      savedAnswerOptionId,
+      questionKey,
+      questionId,
+      targetPrefix,
+    }) => {
       mockPageContext = buildMockPageContext({ [questionKey]: savedAnswer }, targetPrefix);
-      const previousOptionId = optionIdFromOptionLabel(savedAnswer);
-      const nextOptionId = optionIdFromOptionLabel(answerLabel);
 
       render(<PageComponent />);
       fireEvent.click(screen.getByLabelText(answerLabel));
@@ -276,10 +292,10 @@ describe('Simulation question pages', () => {
 
       expect(selectionOperation).toEqual(
         expect.objectContaining({
-          targetElement: `${targetPrefix}${questionId}_${nextOptionId}`,
+          targetElement: `${targetPrefix}${questionId}_${optionId}`,
           value: expect.objectContaining({
-            value_before: previousOptionId,
-            value_after: nextOptionId,
+            value_before: savedAnswerOptionId,
+            value_after: optionId,
           }),
         })
       );

@@ -11,6 +11,8 @@ const options = [
   { label: 'B', text: '菲律宾香蕉' },
 ];
 const answerKey = 'Q6_常温储存品种';
+const getOptionIdByText = (text: string): string =>
+  optionIdFromOptionLabel(options.find(option => option.text === text)?.label ?? text);
 
 const Page11SimulationQuestion2: React.FC = () => {
   const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
@@ -36,8 +38,8 @@ const Page11SimulationQuestion2: React.FC = () => {
 
   const handleOptionSelect = useCallback(
     ({ text }: (typeof options)[number]) => {
-      const previousOptionId = selectedOption ? optionIdFromOptionLabel(selectedOption) : null;
-      const nextOptionId = optionIdFromOptionLabel(text);
+      const previousOptionId = selectedOption ? getOptionIdByText(selectedOption) : null;
+      const nextOptionId = getOptionIdByText(text);
       setSelectedOption(text);
       collectAnswer({ targetElement: answerKey, value: text });
       traceLogger?.selectAnswer({
