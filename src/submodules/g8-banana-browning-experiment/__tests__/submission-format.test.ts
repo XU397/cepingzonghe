@@ -14,6 +14,7 @@ import type { PageId } from '../mapping';
 import type { SubmoduleProps } from '../types';
 
 const defaultSubmitSpy = vi.fn(async () => true);
+const submitSpy = vi.fn(async () => true);
 let lastOnNextResult: boolean | undefined;
 
 vi.mock('@shared/ui/PageFrame', async () => {
@@ -38,7 +39,10 @@ vi.mock('@shared/ui/PageFrame', async () => {
         {
           'data-testid': 'frame-next-button',
           onClick: async () => {
-            lastOnNextResult = await onNext({ defaultSubmit: defaultSubmitSpy });
+            lastOnNextResult = await onNext({
+              defaultSubmit: defaultSubmitSpy,
+              submit: submitSpy,
+            });
           },
         },
         '下一步'
@@ -55,6 +59,19 @@ vi.mock('../pages/Page01Notice', async () => {
   return {
     default: () =>
       ReactModule.createElement('div', { 'data-testid': 'page-intro_notice' }, 'intro_notice'),
+  };
+});
+
+vi.mock('../pages/Page02BananaBrowning', async () => {
+  const ReactModule = await import('react');
+
+  return {
+    default: () =>
+      ReactModule.createElement(
+        'div',
+        { 'data-testid': 'page-page_02_banana_browning' },
+        'page_02_banana_browning'
+      ),
   };
 });
 
@@ -557,6 +574,7 @@ const assertPrefixedTargets = (mark: MarkFixture) => {
 describe('banana submission-format fixtures', () => {
   beforeEach(() => {
     defaultSubmitSpy.mockClear();
+    submitSpy.mockClear();
     lastOnNextResult = undefined;
   });
 
@@ -671,6 +689,49 @@ describe('banana submission-format fixtures', () => {
     expect(mark?.operationList.some(operation => operation.eventType === EventTypes.TIMER_START)).toBe(true);
     expect(mark?.operationList.some(operation => operation.eventType === EventTypes.TIMER_COMPLETE)).toBe(true);
     expect(mark?.operationList.some(operation => operation.eventType === EventTypes.CHECKBOX_CHECK)).toBe(true);
+  });
+
+  it('handleFrameNext includes the current L2 success submit attempt in the submitted mark override', async () => {
+    const { unmount } = renderExperiment('page_02_banana_browning');
+
+    await screen.findByTestId('page-page_02_banana_browning');
+    fireEvent.click(screen.getByTestId('frame-next-button'));
+
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalledTimes(1);
+      expect(lastOnNextResult).toBe(true);
+    });
+
+    expect(defaultSubmitSpy).not.toHaveBeenCalled();
+
+    const submitOptions = submitSpy.mock.calls[0][0] as {
+      markOverride?: MarkObject;
+    };
+    const submitAttempts =
+      submitOptions.markOverride?.operationList.filter(
+        operation => operation.eventType === 'SUBMIT_ATTEMPT'
+      ) || [];
+
+    expect(submitAttempts).toHaveLength(1);
+    expect(submitAttempts[0]).toMatchObject({
+      code: 1,
+      targetElement: 'P1.02_next_button',
+      eventType: 'SUBMIT_ATTEMPT',
+      pageId: 'page_02_banana_browning',
+      value: {
+        page_id: 'page_01_intro',
+        target_id: 'next_button',
+        validation_status: 'success',
+        metadata: {
+          missing_fields: [],
+        },
+      },
+    });
+    expect(
+      readFrameState().operations.some(operation => operation.eventType === 'SUBMIT_ATTEMPT')
+    ).toBe(false);
+
+    unmount();
   });
 
   it('simulation_question_1 fixture locks click_blocked missing, semantic events, labeled answer, and flow_context uniqueness', () => {

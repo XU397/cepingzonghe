@@ -94,6 +94,31 @@ type PageValidationResult = PageValidationSuccess | PageValidationFailure;
 const VALIDATION_REASON = 'required_fields_missing';
 const INTRO_COUNTDOWN_REASON = 'countdown_not_finished';
 
+type OperationWithOptionalCode = Omit<OperationLog, 'code'> & { code?: number };
+
+const createSubmitAttemptId = () =>
+  `submit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+const isL2SuccessSubmitAttempt = (operation: OperationLog) => {
+  const value = operation.value;
+  return Boolean(
+    operation.eventType === 'SUBMIT_ATTEMPT' &&
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      value.validation_status === 'success' &&
+      value.target_id === 'next_button'
+  );
+};
+
+const withSequentialOperationCodes = (
+  operations: OperationWithOptionalCode[]
+): OperationLog[] =>
+  operations.map((operation, index) => ({
+    ...operation,
+    code: index + 1,
+  }));
+
 const buildValidationSuccess = (): PageValidationSuccess => ({ ok: true });
 
 const buildValidationFailure = (
@@ -333,6 +358,26 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     );
   }, [answers, currentPageId]);
 
+  const buildSubmissionMark = useCallback(
+    () => ({
+      pageNumber,
+      pageDesc: buildPageDesc(currentPageId as PageId),
+      operationList: operationsForSubmission,
+      answerList: buildAnswerList(),
+      beginTime: pageStartTime ? formatTimestamp(pageStartTime) : formatTimestamp(new Date()),
+      endTime: formatTimestamp(new Date()),
+      imgList: [],
+    }),
+    [
+      buildAnswerList,
+      buildPageDesc,
+      currentPageId,
+      operationsForSubmission,
+      pageNumber,
+      pageStartTime,
+    ]
+  );
+
   const submissionConfig = useMemo(() => {
     const getUserContext = () => ({
       batchCode: (userContext as any)?.batchCode || (userContext as any)?.user?.batchCode || '',
@@ -349,35 +394,21 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
         })
       : undefined;
 
-    const buildMark = () => ({
-      pageNumber,
-      pageDesc: buildPageDesc(currentPageId as PageId),
-      operationList: operationsForSubmission,
-      answerList: buildAnswerList(),
-      beginTime: pageStartTime ? formatTimestamp(pageStartTime) : formatTimestamp(new Date()),
-      endTime: formatTimestamp(new Date()),
-      imgList: [],
-    });
-
     return {
       getUserContext,
       getFlowContext,
-      buildMark,
+      buildMark: buildSubmissionMark,
       lifecycleMode: isL2TracePage ? 'l2-trace' : 'legacy',
       traceValidator: isL2TracePage ? validateTraceMark : undefined,
       allowProceedOnFailureInDev: Boolean(import.meta.env?.DEV),
       logOperation,
     };
   }, [
-    buildAnswerList,
-    buildPageDesc,
+    buildSubmissionMark,
     currentPageId,
     flowContext,
     isL2TracePage,
     logOperation,
-    operationsForSubmission,
-    pageNumber,
-    pageStartTime,
     userContext,
   ]);
 
@@ -397,7 +428,15 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
   }, [currentPageId, flowContext, navigateToPage]);
 
   const handleFrameNext = useCallback(
-    async ({ defaultSubmit }: { defaultSubmit?: () => Promise<boolean> }) => {
+    async ({
+      defaultSubmit,
+      submit,
+    }: {
+      defaultSubmit?: () => Promise<boolean>;
+      submit?: (options?: {
+        markOverride?: ReturnType<typeof buildSubmissionMark>;
+      }) => Promise<boolean>;
+    }) => {
       const validation = validatePage(currentPageId as PageId, answers, {
         operations: operationsForSubmission,
       });
@@ -430,26 +469,54 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       }
 
       setValidationError('');
-      if (isL2TracePage) {
-        frameTraceLogger?.submitAttempt({
-          validationStatus: 'success',
-          missingFields: [],
-          targetId: 'next_button',
+      if (isL2TracePage && typeof submit === 'function') {
+        const submitAttemptOperation = frameTraceLogger?.emit(
+          'SUBMIT_ATTEMPT',
+          {
+            submit_attempt_id: createSubmitAttemptId(),
+            validation_status: 'success',
+          },
+          {
+            targetId: 'next_button',
+            targetType: 'button',
+            metadata: {
+              missing_fields: [],
+            },
+            emit: false,
+          }
+        );
+        const baseMark = buildSubmissionMark();
+        const operationList = submitAttemptOperation
+          ? withSequentialOperationCodes([
+              ...baseMark.operationList.filter(operation => !isL2SuccessSubmitAttempt(operation)),
+              submitAttemptOperation,
+            ])
+          : withSequentialOperationCodes(
+              baseMark.operationList.filter(operation => !isL2SuccessSubmitAttempt(operation))
+            );
+        const ok = await submit({
+          markOverride: {
+            ...baseMark,
+            operationList,
+          },
         });
-      }
-
-      if (typeof defaultSubmit === 'function') {
+        if (!ok) {
+          return false;
+        }
+      } else if (typeof defaultSubmit === 'function') {
         const ok = await defaultSubmit();
         if (!ok) {
           return false;
         }
       }
+
       clearOperations();
       goToNextPage();
       return true;
     },
     [
       answers,
+      buildSubmissionMark,
       clearOperations,
       currentPageId,
       frameTraceLogger,
