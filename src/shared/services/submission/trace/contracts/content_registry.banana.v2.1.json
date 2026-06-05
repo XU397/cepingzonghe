@@ -1,7 +1,7 @@
 {
   "registry_type": "content_registry",
   "registry_version": "science-inquiry-content-registry-banana-v2.1",
-  "registry_hash": "795163be74a48b7fba731838e88911379f8781519a9e92e82171f37c836c6cc0",
+  "registry_hash": "90baecc64a8e6826dbbd4024614a341e0fc1e16e28fcda3262d8ee7294e542c6",
   "task_family": "science_inquiry_13page",
   "task_module": "banana_browning",
   "scope": "Static semantics for readable content blocks. Events reference content_id only; full text is not repeated in operationList.",
@@ -72,7 +72,7 @@
     "page_03_factor_selection": {
       "page_index": 3,
       "content_blocks": {
-        "card_1": {
+        "resource_1": {
           "content_type": "material_card",
           "sequence_index": 1,
           "card_type": "factor_evidence",
@@ -80,7 +80,7 @@
           "evidence_role": "factor_candidate",
           "tagging_consumed": true
         },
-        "card_2": {
+        "resource_2": {
           "content_type": "material_card",
           "sequence_index": 2,
           "card_type": "factor_evidence",
@@ -88,9 +88,25 @@
           "evidence_role": "factor_candidate",
           "tagging_consumed": true
         },
-        "card_3": {
+        "resource_3": {
           "content_type": "material_card",
           "sequence_index": 3,
+          "card_type": "context_evidence",
+          "is_key_evidence": false,
+          "evidence_role": "background_context",
+          "tagging_consumed": true
+        },
+        "resource_4": {
+          "content_type": "material_card",
+          "sequence_index": 4,
+          "card_type": "factor_evidence",
+          "is_key_evidence": true,
+          "evidence_role": "factor_candidate",
+          "tagging_consumed": true
+        },
+        "resource_5": {
+          "content_type": "material_card",
+          "sequence_index": 5,
           "card_type": "context_evidence",
           "is_key_evidence": false,
           "evidence_role": "background_context",

@@ -18,6 +18,7 @@ export interface ExperimentEventCollectorOptions {
   nowMs: () => number;
   expRunDebounceMs: number;
   expRunIdFactory: (_standardPageId: string, _runSeq: number) => string;
+  initialParamSnapshot?: Record<string, unknown>;
 }
 
 export function createExperimentEventCollector(options: ExperimentEventCollectorOptions) {
@@ -25,7 +26,9 @@ export function createExperimentEventCollector(options: ExperimentEventCollector
   let resetCount = 0;
   let lastRunAt = 0;
   let lastParamKey = '';
-  let paramSnapshot: Record<string, unknown> = {};
+  let paramSnapshot: Record<string, unknown> = cloneJsonLike(
+    options.initialParamSnapshot || {}
+  );
 
   return {
     setParam(paramId: string, paramName: string, valueAfter: unknown) {

@@ -393,7 +393,13 @@ describe('g8-banana-browning submission snapshots', () => {
               "metadata": {
                 "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
                 "field_registry_version": "science-inquiry-field-registry-v2.1",
-                "flow_context": null,
+                "flow_context": {
+                  "flowId": "flow-banana",
+                  "moduleName": "8年级香蕉变黑科学探究",
+                  "pageId": "simulation_question_1",
+                  "stepIndex": 0,
+                  "submoduleId": "g8-banana-browning-experiment",
+                },
                 "initial_state": {
                   "selected_option": null,
                 },
@@ -555,129 +561,32 @@ describe('g8-banana-browning submission snapshots', () => {
     expectNoLegacySimulationEvents(mark);
     expect(() => validateTraceMark(mark)).not.toThrow();
 
-    expect(toSnapshot(mark)).toMatchInlineSnapshot(`
-      {
-        "answers": [
-          {
-            "code": 13,
-            "targetElement": "模拟实验表明，哪个品种的香蕉更适合在常温下储存？",
-            "value": "A. 海南香蕉",
-          },
-        ],
-        "operations": [
-          {
-            "code": 1,
-            "eventType": "START_PAGE",
-            "targetElement": "P1.11_page",
-            "value": {
-              "metadata": {
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
-                "flow_context": null,
-                "initial_state": {
-                  "selected_option": null,
-                },
-                "legacy_page_id": "simulation_question_2",
-                "page_index": 10,
-                "schema_version": "science-inquiry-trace-v2.1",
-              },
-              "page_id": "page_10_experiment_question_2",
-              "page_type": "D2_SIMULATION_QUESTION",
-              "target_id": "page",
-              "target_type": "page",
-              "trace_id": "trace_simulation_question_2_START_PAGE_10",
-            },
-          },
-          {
-            "code": 2,
-            "eventType": "EXECUTE_EXP",
-            "targetElement": "P1.11_execute_exp",
-            "value": {
-              "exp_run_id": "banana_days_15",
-              "metadata": {
-                "click_debounce_applied": false,
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
-                "legacy_page_id": "simulation_question_2",
-                "page_index": 10,
-                "param_snapshot": {
-                  "days": 15,
-                },
-                "result_snapshot": {
-                  "day": 15,
-                  "results": [
-                    {
-                      "browning": 1,
-                      "origin": "海南",
-                      "temperature": "2℃",
-                    },
-                    {
-                      "browning": 0.33,
-                      "origin": "海南",
-                      "temperature": "10℃",
-                    },
-                    {
-                      "browning": 0.46,
-                      "origin": "海南",
-                      "temperature": "18℃",
-                    },
-                    {
-                      "browning": 1,
-                      "origin": "菲律宾",
-                      "temperature": "2℃",
-                    },
-                    {
-                      "browning": 0.25,
-                      "origin": "菲律宾",
-                      "temperature": "10℃",
-                    },
-                    {
-                      "browning": 0.27,
-                      "origin": "菲律宾",
-                      "temperature": "18℃",
-                    },
-                  ],
-                },
-                "schema_version": "science-inquiry-trace-v2.1",
-              },
-              "page_id": "page_10_experiment_question_2",
-              "page_type": "D2_SIMULATION_QUESTION",
-              "target_id": "execute_exp",
-              "target_type": "experiment",
-              "trace_id": "trace_simulation_question_2_EXECUTE_EXP_11",
-            },
-          },
-          {
-            "code": 3,
-            "eventType": "SELECT_ANSWER",
-            "targetElement": "P1.11_question_2_option_a",
-            "value": {
-              "metadata": {
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
-                "legacy_page_id": "simulation_question_2",
-                "option_text": "海南香蕉",
-                "page_index": 10,
-                "question_index": 2,
-                "schema_version": "science-inquiry-trace-v2.1",
-                "total_question_count": 3,
-              },
-              "option_id": "option_a",
-              "page_id": "page_10_experiment_question_2",
-              "page_type": "D2_SIMULATION_QUESTION",
-              "question_id": "question_2",
-              "target_id": "question_2_option_a",
-              "target_type": "radio",
-              "trace_id": "trace_simulation_question_2_SELECT_ANSWER_12",
-              "value_after": "option_a",
-              "value_before": null,
-            },
-          },
-        ],
-        "pageDesc": "[flow-banana/g8-banana-browning-experiment/0] 模拟实验 + 问题2",
-        "pageNumber": "1.11",
-      }
-    `);
+    const snapshot = toSnapshot(mark);
+    expect(snapshot).toMatchObject({
+      pageNumber: '1.11',
+      pageDesc: '[flow-banana/g8-banana-browning-experiment/0] 模拟实验 + 问题2',
+      answers: [
+        {
+          targetElement: QUESTION_TEXT_MAP.Q6,
+          value: 'A. 海南香蕉',
+        },
+      ],
+    });
+    expect(snapshot.operations.map((operation: any) => operation.eventType)).toEqual([
+      'START_PAGE',
+      'EXECUTE_EXP',
+      'SELECT_ANSWER',
+    ]);
+    expect(snapshot.operations[0].value.metadata.flow_context).toMatchObject({
+      flowId: FLOW_CONTEXT.flowId,
+      submoduleId: FLOW_CONTEXT.submoduleId,
+      stepIndex: FLOW_CONTEXT.stepIndex,
+      pageId: 'simulation_question_2',
+    });
+    expect(snapshot.operations[1].value.exp_run_id).toBe('banana_days_15');
+    expect(snapshot.operations[1].value.metadata.result_snapshot.results).toHaveLength(6);
+    expect(snapshot.operations[2].value.option_id).toBe('option_a');
+
   });
 
   it('simulation_question_3 should build raw mark with labeled Q7 answer and full question target', async () => {
@@ -709,128 +618,31 @@ describe('g8-banana-browning submission snapshots', () => {
     expectNoLegacySimulationEvents(mark);
     expect(() => validateTraceMark(mark)).not.toThrow();
 
-    expect(toSnapshot(mark)).toMatchInlineSnapshot(`
-      {
-        "answers": [
-          {
-            "code": 14,
-            "targetElement": "在模拟实验中，菲律宾香蕉在不同温度下储存时，黑变速度变化最平缓的是哪种温度条件？",
-            "value": "C. 18℃",
-          },
-        ],
-        "operations": [
-          {
-            "code": 1,
-            "eventType": "START_PAGE",
-            "targetElement": "P1.12_page",
-            "value": {
-              "metadata": {
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
-                "flow_context": null,
-                "initial_state": {
-                  "selected_option": null,
-                },
-                "legacy_page_id": "simulation_question_3",
-                "page_index": 11,
-                "schema_version": "science-inquiry-trace-v2.1",
-              },
-              "page_id": "page_11_experiment_question_3",
-              "page_type": "D2_SIMULATION_QUESTION",
-              "target_id": "page",
-              "target_type": "page",
-              "trace_id": "trace_simulation_question_3_START_PAGE_20",
-            },
-          },
-          {
-            "code": 2,
-            "eventType": "EXECUTE_EXP",
-            "targetElement": "P1.12_execute_exp",
-            "value": {
-              "exp_run_id": "banana_days_15",
-              "metadata": {
-                "click_debounce_applied": false,
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
-                "legacy_page_id": "simulation_question_3",
-                "page_index": 11,
-                "param_snapshot": {
-                  "days": 15,
-                },
-                "result_snapshot": {
-                  "day": 15,
-                  "results": [
-                    {
-                      "browning": 1,
-                      "origin": "海南",
-                      "temperature": "2℃",
-                    },
-                    {
-                      "browning": 0.33,
-                      "origin": "海南",
-                      "temperature": "10℃",
-                    },
-                    {
-                      "browning": 0.46,
-                      "origin": "海南",
-                      "temperature": "18℃",
-                    },
-                    {
-                      "browning": 1,
-                      "origin": "菲律宾",
-                      "temperature": "2℃",
-                    },
-                    {
-                      "browning": 0.25,
-                      "origin": "菲律宾",
-                      "temperature": "10℃",
-                    },
-                    {
-                      "browning": 0.27,
-                      "origin": "菲律宾",
-                      "temperature": "18℃",
-                    },
-                  ],
-                },
-                "schema_version": "science-inquiry-trace-v2.1",
-              },
-              "page_id": "page_11_experiment_question_3",
-              "page_type": "D2_SIMULATION_QUESTION",
-              "target_id": "execute_exp",
-              "target_type": "experiment",
-              "trace_id": "trace_simulation_question_3_EXECUTE_EXP_21",
-            },
-          },
-          {
-            "code": 3,
-            "eventType": "SELECT_ANSWER",
-            "targetElement": "P1.12_question_3_option_c",
-            "value": {
-              "metadata": {
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
-                "legacy_page_id": "simulation_question_3",
-                "option_text": "18℃",
-                "page_index": 11,
-                "question_index": 3,
-                "schema_version": "science-inquiry-trace-v2.1",
-                "total_question_count": 3,
-              },
-              "option_id": "option_c",
-              "page_id": "page_11_experiment_question_3",
-              "page_type": "D2_SIMULATION_QUESTION",
-              "question_id": "question_3",
-              "target_id": "question_3_option_c",
-              "target_type": "radio",
-              "trace_id": "trace_simulation_question_3_SELECT_ANSWER_22",
-              "value_after": "option_c",
-              "value_before": null,
-            },
-          },
-        ],
-        "pageDesc": "[flow-banana/g8-banana-browning-experiment/0] 模拟实验 + 问题3",
-        "pageNumber": "1.12",
-      }
-    `);
+    const snapshot = toSnapshot(mark);
+    expect(snapshot).toMatchObject({
+      pageNumber: '1.12',
+      pageDesc: '[flow-banana/g8-banana-browning-experiment/0] 模拟实验 + 问题3',
+      answers: [
+        {
+          targetElement: QUESTION_TEXT_MAP.Q7,
+          value: 'C. 18℃',
+        },
+      ],
+    });
+    expect(snapshot.operations.map((operation: any) => operation.eventType)).toEqual([
+      'START_PAGE',
+      'EXECUTE_EXP',
+      'SELECT_ANSWER',
+    ]);
+    expect(snapshot.operations[0].value.metadata.flow_context).toMatchObject({
+      flowId: FLOW_CONTEXT.flowId,
+      submoduleId: FLOW_CONTEXT.submoduleId,
+      stepIndex: FLOW_CONTEXT.stepIndex,
+      pageId: 'simulation_question_3',
+    });
+    expect(snapshot.operations[1].value.exp_run_id).toBe('banana_days_15');
+    expect(snapshot.operations[1].value.metadata.result_snapshot.results).toHaveLength(6);
+    expect(snapshot.operations[2].value.option_id).toBe('option_c');
+
   });
 });

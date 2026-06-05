@@ -1,4 +1,9 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
+import {
+  TEXT_DEBOUNCE_MS,
+  TEXT_THROTTLE_CHAR_DELTA,
+  createTextEventCollector,
+} from '@shared/services/submission/trace';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
 import type { PageId } from '../mapping';
 import imgMethod1 from '@/assets/images/xjbs07.jpg';
@@ -64,7 +69,12 @@ const fieldIdByAnswerKey: Record<string, string> = {
 };
 
 const Page07BananaBrowningEvaluation: React.FC = () => {
-  const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
+  const {
+    collectAnswer,
+    answers,
+    getPagePrefix,
+    registerTraceCollectorFlush,
+  } = useG8BananaBrowningContext();
   const traceLogger = useTracePageStart({
     pageId: 'banana_browning_evaluation' as PageId,
     pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
@@ -73,16 +83,74 @@ const Page07BananaBrowningEvaluation: React.FC = () => {
       initial_state: {},
     },
   });
+  const textCollectorsRef = useRef<
+    Record<string, ReturnType<typeof createTextEventCollector>>
+  >({});
+
+  const getTextCollector = useCallback(
+    (fieldId: string) => {
+      if (!traceLogger) {
+        return null;
+      }
+      if (!textCollectorsRef.current[fieldId]) {
+        textCollectorsRef.current[fieldId] = createTextEventCollector({
+          fieldId,
+          logger: traceLogger,
+          debounceMs: TEXT_DEBOUNCE_MS,
+          throttleCharDelta: TEXT_THROTTLE_CHAR_DELTA,
+        });
+      }
+      return textCollectorsRef.current[fieldId];
+    },
+    [traceLogger]
+  );
+
+  const flushTextCollectors = useCallback(() => {
+    Object.values(textCollectorsRef.current).forEach(collector => collector.flush('submit'));
+  }, []);
+
+  useEffect(
+    () => registerTraceCollectorFlush(flushTextCollectors),
+    [flushTextCollectors, registerTraceCollectorFlush]
+  );
+
+  useEffect(
+    () => () => {
+      Object.values(textCollectorsRef.current).forEach(collector => collector.dispose());
+      textCollectorsRef.current = {};
+    },
+    [traceLogger]
+  );
 
   const handleInputChange = useCallback(
-    (answerKey: string, logLabel: string, value: string) => {
+    (answerKey: string, logLabel: string, value: string, isComposing?: boolean) => {
       collectAnswer({ targetElement: answerKey, value });
-      traceLogger?.textChange(fieldIdByAnswerKey[answerKey], String(answers[answerKey] || ''), value, {
+      getTextCollector(fieldIdByAnswerKey[answerKey])?.onChange(value, {
+        isComposing,
+        metadata: {
+          source_answer_key: answerKey,
+          field_label: logLabel,
+        },
+      });
+    },
+    [collectAnswer, getTextCollector]
+  );
+
+  const handleInputFocus = useCallback(
+    (answerKey: string) => {
+      getTextCollector(fieldIdByAnswerKey[answerKey])?.onFocus(String(answers[answerKey] || ''));
+    },
+    [answers, getTextCollector]
+  );
+
+  const handleInputBlur = useCallback(
+    (answerKey: string, logLabel: string, value: string) => {
+      getTextCollector(fieldIdByAnswerKey[answerKey])?.onBlur(value, {
         source_answer_key: answerKey,
         field_label: logLabel,
       });
     },
-    [collectAnswer, traceLogger, answers]
+    [getTextCollector]
   );
 
   return (
@@ -118,7 +186,16 @@ const Page07BananaBrowningEvaluation: React.FC = () => {
                 id={`pros-${method.id}`}
                 className={styles.textarea}
                 value={(answers[method.prosKey] as string) || ''}
-                onChange={e => handleInputChange(method.prosKey, method.prosLabel, e.target.value)}
+                onFocus={() => handleInputFocus(method.prosKey)}
+                onChange={e =>
+                  handleInputChange(
+                    method.prosKey,
+                    method.prosLabel,
+                    e.target.value,
+                    (e.nativeEvent as InputEvent).isComposing
+                  )
+                }
+                onBlur={e => handleInputBlur(method.prosKey, method.prosLabel, e.target.value)}
                 placeholder="请填写此方法的优点..."
                 aria-label={`${method.name}优点输入框`}
               />
@@ -134,7 +211,16 @@ const Page07BananaBrowningEvaluation: React.FC = () => {
                 id={`cons-${method.id}`}
                 className={styles.textarea}
                 value={(answers[method.consKey] as string) || ''}
-                onChange={e => handleInputChange(method.consKey, method.consLabel, e.target.value)}
+                onFocus={() => handleInputFocus(method.consKey)}
+                onChange={e =>
+                  handleInputChange(
+                    method.consKey,
+                    method.consLabel,
+                    e.target.value,
+                    (e.nativeEvent as InputEvent).isComposing
+                  )
+                }
+                onBlur={e => handleInputBlur(method.consKey, method.consLabel, e.target.value)}
                 placeholder="请填写此方法的缺点..."
                 aria-label={`${method.name}缺点输入框`}
               />

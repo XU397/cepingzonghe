@@ -1,4 +1,9 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
+import {
+  TEXT_DEBOUNCE_MS,
+  TEXT_THROTTLE_CHAR_DELTA,
+  createTextEventCollector,
+} from '@shared/services/submission/trace';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
 import type { PageId } from '../mapping';
 import styles from '../styles/Page06BananaBrowningDesign.module.css';
@@ -20,7 +25,12 @@ const fieldIdByIdeaKey: Record<string, string> = {
 };
 
 const Page06BananaBrowningDesign: React.FC = () => {
-  const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
+  const {
+    collectAnswer,
+    answers,
+    getPagePrefix,
+    registerTraceCollectorFlush,
+  } = useG8BananaBrowningContext();
   const traceLogger = useTracePageStart({
     pageId: 'banana_browning_design' as PageId,
     pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
@@ -29,6 +39,44 @@ const Page06BananaBrowningDesign: React.FC = () => {
       initial_state: {},
     },
   });
+  const textCollectorsRef = useRef<
+    Record<string, ReturnType<typeof createTextEventCollector>>
+  >({});
+
+  const getTextCollector = useCallback(
+    (fieldId: string) => {
+      if (!traceLogger) {
+        return null;
+      }
+      if (!textCollectorsRef.current[fieldId]) {
+        textCollectorsRef.current[fieldId] = createTextEventCollector({
+          fieldId,
+          logger: traceLogger,
+          debounceMs: TEXT_DEBOUNCE_MS,
+          throttleCharDelta: TEXT_THROTTLE_CHAR_DELTA,
+        });
+      }
+      return textCollectorsRef.current[fieldId];
+    },
+    [traceLogger]
+  );
+
+  const flushTextCollectors = useCallback(() => {
+    Object.values(textCollectorsRef.current).forEach(collector => collector.flush('submit'));
+  }, []);
+
+  useEffect(
+    () => registerTraceCollectorFlush(flushTextCollectors),
+    [flushTextCollectors, registerTraceCollectorFlush]
+  );
+
+  useEffect(
+    () => () => {
+      Object.values(textCollectorsRef.current).forEach(collector => collector.dispose());
+      textCollectorsRef.current = {};
+    },
+    [traceLogger]
+  );
 
   const getCharCountClass = (value: string): string => {
     const len = value.length;
@@ -38,14 +86,34 @@ const Page06BananaBrowningDesign: React.FC = () => {
   };
 
   const handleChange = useCallback(
-    (ideaKey: string, ideaLabel: string, value: string) => {
+    (ideaKey: string, ideaLabel: string, value: string, isComposing?: boolean) => {
       collectAnswer({ targetElement: ideaKey, value });
-      traceLogger?.textChange(fieldIdByIdeaKey[ideaKey], String(answers[ideaKey] || ''), value, {
+      getTextCollector(fieldIdByIdeaKey[ideaKey])?.onChange(value, {
+        isComposing,
+        metadata: {
+          source_answer_key: ideaKey,
+          field_label: ideaLabel,
+        },
+      });
+    },
+    [collectAnswer, getTextCollector]
+  );
+
+  const handleFocus = useCallback(
+    (ideaKey: string) => {
+      getTextCollector(fieldIdByIdeaKey[ideaKey])?.onFocus(String(answers[ideaKey] || ''));
+    },
+    [answers, getTextCollector]
+  );
+
+  const handleBlur = useCallback(
+    (ideaKey: string, ideaLabel: string, value: string) => {
+      getTextCollector(fieldIdByIdeaKey[ideaKey])?.onBlur(value, {
         source_answer_key: ideaKey,
         field_label: ideaLabel,
       });
     },
-    [collectAnswer, traceLogger, answers]
+    [getTextCollector]
   );
 
   return (
@@ -90,7 +158,16 @@ const Page06BananaBrowningDesign: React.FC = () => {
                 <textarea
                   className={styles.ideaTextarea}
                   value={currentValue}
-                  onChange={e => handleChange(idea.key, idea.label, e.target.value)}
+                  onFocus={() => handleFocus(idea.key)}
+                  onChange={e =>
+                    handleChange(
+                      idea.key,
+                      idea.label,
+                      e.target.value,
+                      (e.nativeEvent as InputEvent).isComposing
+                    )
+                  }
+                  onBlur={e => handleBlur(idea.key, idea.label, e.target.value)}
                   placeholder="请输入你的想法。"
                   maxLength={MAX_CHAR_COUNT}
                   aria-label={`${idea.label}输入框`}

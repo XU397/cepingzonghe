@@ -21,14 +21,34 @@ const RESOURCE_ITEMS: ReadonlyArray<{ readonly id: string; readonly title: strin
   { id: 'resource_5', title: '香蕉"泡药"真相' },
 ];
 
-const FACTOR_OPTIONS: ReadonlyArray<{ readonly key: string; readonly label: string }> = [
-  { key: '环境温度', label: '环境温度' },
-  { key: '环境湿度', label: '环境湿度' },
-  { key: '香蕉形状', label: '香蕉形状' },
-  { key: '香蕉品种', label: '香蕉品种' },
-  { key: '磕碰损伤', label: '磕碰损伤' },
-  { key: '香蕉甜度', label: '香蕉甜度' },
+const FACTOR_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
+  { id: 'factor_option_1', label: '环境温度' },
+  { id: 'factor_option_2', label: '环境湿度' },
+  { id: 'factor_option_3', label: '香蕉形状' },
+  { id: 'factor_option_4', label: '香蕉品种' },
+  { id: 'factor_option_5', label: '磕碰损伤' },
+  { id: 'factor_option_6', label: '香蕉甜度' },
 ];
+
+const FACTOR_OPTION_BY_LABEL = new Map(FACTOR_OPTIONS.map(option => [option.label, option]));
+const FACTOR_OPTION_BY_ID = new Map(FACTOR_OPTIONS.map(option => [option.id, option]));
+
+const parseSavedFactorIds = (value: unknown): string[] => {
+  if (typeof value !== 'string' || !value) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map(entry => entry.trim())
+    .map(entry => FACTOR_OPTION_BY_ID.get(entry)?.id || FACTOR_OPTION_BY_LABEL.get(entry)?.id)
+    .filter((entry): entry is string => Boolean(entry));
+};
+
+const labelsFromFactorIds = (factorIds: string[]): string[] =>
+  factorIds
+    .map(id => FACTOR_OPTION_BY_ID.get(id)?.label)
+    .filter((label): label is string => Boolean(label));
 
 function OverlayContentLayer1() {
   return (
@@ -183,13 +203,9 @@ const Page04BananaBrowningReading: React.FC = () => {
 
   const modalOpenedAtRef = useRef(0);
   const [openOverlayId, setOpenOverlayId] = useState<string | null>(null);
-  const [selectedFactors, setSelectedFactors] = useState<string[]>(() => {
-    const saved = answers['Q2_影响因素'];
-    if (typeof saved === 'string' && saved) {
-      return saved.split(',');
-    }
-    return [];
-  });
+  const [selectedFactorIds, setSelectedFactorIds] = useState<string[]>(() =>
+    parseSavedFactorIds(answers['Q2_影响因素'])
+  );
 
   const handleOpenOverlay = useCallback(
     (item: (typeof RESOURCE_ITEMS)[number]) => {
@@ -213,38 +229,41 @@ const Page04BananaBrowningReading: React.FC = () => {
 
   const handleFactorToggle = useCallback(
     (factor: (typeof FACTOR_OPTIONS)[number]) => {
-      const isCurrentlySelected = selectedFactors.includes(factor.key);
+      const isCurrentlySelected = selectedFactorIds.includes(factor.id);
       const willBeSelected = !isCurrentlySelected;
-      const nextSelectedFactors = willBeSelected
-        ? [...selectedFactors, factor.key]
-        : selectedFactors.filter(f => f !== factor.key);
+      const nextSelectedFactorIds = willBeSelected
+        ? [...selectedFactorIds, factor.id]
+        : selectedFactorIds.filter(id => id !== factor.id);
+      const nextSelectedLabels = labelsFromFactorIds(nextSelectedFactorIds);
 
-      setSelectedFactors(nextSelectedFactors);
+      setSelectedFactorIds(nextSelectedFactorIds);
 
       traceLogger?.emit(
         'CHECKBOX_TOGGLE',
         {
           field_id: 'factor_options',
           question_id: 'factor_options',
-          option_id: factor.key,
-          value_before: selectedFactors,
-          value_after: nextSelectedFactors,
+          option_id: factor.id,
+          value_before: selectedFactorIds,
+          value_after: nextSelectedFactorIds,
         },
         {
-          targetId: `factor_options_${factor.key}`,
+          targetId: `factor_options_${factor.id}`,
           targetType: 'checkbox',
           metadata: {
-            selected_count: nextSelectedFactors.length,
+            option_label: factor.label,
+            selected_labels: nextSelectedLabels,
+            selected_count: nextSelectedFactorIds.length,
           },
         }
       );
 
       collectAnswer({
         targetElement: 'Q2_影响因素',
-        value: nextSelectedFactors.join(','),
+        value: nextSelectedLabels.join(','),
       });
     },
-    [selectedFactors, traceLogger, collectAnswer]
+    [selectedFactorIds, traceLogger, collectAnswer]
   );
 
   return (
@@ -285,10 +304,10 @@ const Page04BananaBrowningReading: React.FC = () => {
           <div className={styles.taskSection}>
             <div className={styles.checkboxGroup}>
               {FACTOR_OPTIONS.map(factor => {
-                const isSelected = selectedFactors.includes(factor.key);
+                const isSelected = selectedFactorIds.includes(factor.id);
                 return (
                   <div
-                    key={factor.key}
+                    key={factor.id}
                     className={`${styles.checkboxOption} ${isSelected ? styles.checkboxSelected : ''}`}
                     onClick={() => handleFactorToggle(factor)}
                     role="checkbox"

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { TraceFlowContext } from '@shared/services/submission/trace';
 import type { PageId } from '../mapping';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
@@ -34,8 +34,29 @@ export function useTracePageStart({
   flowContext,
   metadata = EMPTY_TRACE_METADATA,
 }: UseTracePageStartOptions) {
-  const { setPageStartTime } = useG8BananaBrowningContext();
-  const traceLogger = useBananaTraceLogger({ pageId, pageNumber, flowContext });
+  const { setPageStartTime, flowContext: contextFlowContext } = useG8BananaBrowningContext();
+  const effectiveFlowContext = useMemo(() => {
+    const sourceFlowContext = flowContext === undefined ? contextFlowContext : flowContext;
+    if (!sourceFlowContext) {
+      return sourceFlowContext;
+    }
+    return {
+      flowId: sourceFlowContext.flowId,
+      submoduleId: sourceFlowContext.submoduleId,
+      stepIndex: sourceFlowContext.stepIndex,
+      moduleName: sourceFlowContext.moduleName ?? '8年级香蕉变黑科学探究',
+      pageId: sourceFlowContext.pageId ?? pageId,
+    };
+  }, [
+    contextFlowContext,
+    flowContext,
+    pageId,
+  ]);
+  const traceLogger = useBananaTraceLogger({
+    pageId,
+    pageNumber,
+    flowContext: effectiveFlowContext,
+  });
   const startKey = `${pageId}:${pageNumber}`;
   const emittedStartKeyRef = useRef<string | null>(null);
   const metadataRef = useRef(metadata);

@@ -2,6 +2,7 @@ import { renderHook, act, render, screen, fireEvent, waitFor } from '@testing-li
 import { describe, expect, it, vi } from 'vitest';
 import { usePageSubmission } from '../../usePageSubmission.js';
 import AssessmentPageFrame from '../../../../ui/PageFrame/AssessmentPageFrame.jsx';
+import { validateTraceMark } from '../validators/validateTraceMark.ts';
 
 vi.mock('@shared/ui/TimerDisplay/TimerContainer', async () => {
   const React = await import('react');
@@ -50,7 +51,7 @@ const getFlowContext = () => ({
 describe('usePageSubmission l2-trace lifecycle mode', () => {
   it('does not inject legacy lifecycle or flow_context operations', async () => {
     const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
-    const traceValidator = vi.fn();
+    const traceValidator = vi.fn(validateTraceMark);
 
     const { result } = renderHook(() =>
       usePageSubmission({
@@ -75,9 +76,9 @@ describe('usePageSubmission l2-trace lifecycle mode', () => {
     expect(traceValidator).toHaveBeenCalledWith(submittedMark);
   });
 
-  it('does not add legacy timeout operations or placeholder answers in l2-trace mode', async () => {
+  it('adds L2 timeout semantics without legacy timeout operations or placeholder answers', async () => {
     const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
-    const traceValidator = vi.fn();
+    const traceValidator = vi.fn(validateTraceMark);
 
     const { result } = renderHook(() =>
       usePageSubmission({
@@ -85,7 +86,7 @@ describe('usePageSubmission l2-trace lifecycle mode', () => {
         traceValidator,
         submitImpl,
         getUserContext,
-        buildMark: () => buildL2Mark({ eventType: 'L2_TIMEOUT' }),
+        buildMark: () => buildL2Mark(),
       })
     );
 
@@ -99,18 +100,26 @@ describe('usePageSubmission l2-trace lifecycle mode', () => {
 
     const submittedMark = submitImpl.mock.calls[0][0].mark;
     expect(submittedMark.operationList.map(operation => operation.eventType)).toEqual([
-      'L2_TIMEOUT',
+      'START_PAGE',
+      'TIMER_COMPLETE',
+      'SUBMIT_ATTEMPT',
+    ]);
+    expect(submittedMark.operationList[2].value.validation_status).toBe('timeout');
+    expect(submittedMark.operationList[2].value.metadata.missing_fields).toEqual([
+      'question_1_answer',
     ]);
     expect(submittedMark.answerList).toEqual([]);
     expect(traceValidator.mock.calls[0][0].operationList.map(operation => operation.eventType)).toEqual([
-      'L2_TIMEOUT',
+      'START_PAGE',
+      'TIMER_COMPLETE',
+      'SUBMIT_ATTEMPT',
     ]);
   });
 
-  it('honors mark and user context overrides on l2-trace timeout submit', async () => {
+  it('honors user context overrides while preserving l2-trace timeout semantics', async () => {
     const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
-    const traceValidator = vi.fn();
-    const overrideMark = buildL2Mark({ eventType: 'L2_TIMEOUT_OVERRIDE' });
+    const traceValidator = vi.fn(validateTraceMark);
+    const overrideMark = buildL2Mark();
     overrideMark.operationList[0].code = 1;
 
     const { result } = renderHook(() =>
@@ -138,9 +147,13 @@ describe('usePageSubmission l2-trace lifecycle mode', () => {
     expect(success).toBe(true);
     expect(submittedPayload.batchCode).toBe('OVERRIDE_BATCH');
     expect(submittedPayload.examNo).toBe('OVERRIDE_EXAM');
-    expect(submittedPayload.mark).toEqual(overrideMark);
+    expect(submittedPayload.mark.operationList.map(operation => operation.eventType)).toEqual([
+      'START_PAGE',
+      'TIMER_COMPLETE',
+      'SUBMIT_ATTEMPT',
+    ]);
     expect(submittedPayload).not.toHaveProperty('mode');
-    expect(traceValidator).toHaveBeenCalledWith(overrideMark);
+    expect(traceValidator).toHaveBeenCalledWith(submittedPayload.mark);
   });
 
   it('does not emit legacy submit telemetry to external logOperation in l2-trace mode', async () => {
@@ -292,10 +305,10 @@ describe('AssessmentPageFrame l2-trace lifecycle mode', () => {
     expect(onLifecycleEvent).not.toHaveBeenCalled();
   });
 
-  it('uses the caller L2 buildMark on timer timeout when there is no prior mark', async () => {
+  it('uses the caller L2 buildMark and appends timeout semantics on timer timeout', async () => {
     const submitImpl = vi.fn().mockResolvedValue({ success: true, code: 200 });
     const traceValidator = vi.fn();
-    const timeoutMark = buildL2Mark({ eventType: 'L2_TIMEOUT' });
+    const timeoutMark = buildL2Mark();
 
     render(
       <AssessmentPageFrame
@@ -321,9 +334,15 @@ describe('AssessmentPageFrame l2-trace lifecycle mode', () => {
 
     const submittedMark = submitImpl.mock.calls[0][0].mark;
     expect(submittedMark.operationList.map(operation => operation.eventType)).toEqual([
-      'L2_TIMEOUT',
+      'START_PAGE',
+      'TIMER_COMPLETE',
+      'SUBMIT_ATTEMPT',
     ]);
     expect(submittedMark.operationList[0].value).toEqual(operationValue);
+    expect(submittedMark.operationList[2].value.validation_status).toBe('timeout');
+    expect(submittedMark.operationList[2].value.metadata.missing_fields).toEqual([
+      'question_1_answer',
+    ]);
     expect(submittedMark.answerList).toEqual([]);
     expect(traceValidator).toHaveBeenCalledWith(submittedMark);
   });

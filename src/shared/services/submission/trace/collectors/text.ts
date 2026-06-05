@@ -21,10 +21,16 @@ export interface TextEventCollectorOptions {
   throttleCharDelta: number;
 }
 
+interface TextCollectorEventOptions {
+  isComposing?: boolean;
+  metadata?: Record<string, unknown>;
+}
+
 export function createTextEventCollector(options: TextEventCollectorOptions) {
   let focusValue = '';
   let currentValue = '';
   let lastLoggedValue = '';
+  let currentMetadata: Record<string, unknown> = {};
   let timer: ReturnType<typeof setTimeout> | null = null;
   let focused = false;
 
@@ -35,26 +41,31 @@ export function createTextEventCollector(options: TextEventCollectorOptions) {
     }
   };
 
-  const logChange = (flushReason: string) => {
+  const logChange = (flushReason: string, metadata: Record<string, unknown> = {}) => {
     if (currentValue === lastLoggedValue) {
       return;
     }
     const valueBefore = lastLoggedValue;
     options.logger.textChange(options.fieldId, valueBefore, currentValue, {
+      ...currentMetadata,
+      ...metadata,
       flush_reason: flushReason,
     });
     lastLoggedValue = currentValue;
   };
 
-  const flush = (reason: 'submit' | 'dispose') => {
+  const flush = (reason: 'submit' | 'dispose', metadata: Record<string, unknown> = {}) => {
     clearTimer();
-    logChange(reason);
+    logChange(reason, metadata);
     if (focused) {
       options.logger.textBlur(options.fieldId, focusValue, currentValue, {
+        ...currentMetadata,
+        ...metadata,
         flush_reason: reason,
       });
     }
     focused = false;
+    currentMetadata = {};
   };
 
   return {
@@ -65,10 +76,14 @@ export function createTextEventCollector(options: TextEventCollectorOptions) {
       lastLoggedValue = focusValue;
       options.logger.textFocus(options.fieldId, focusValue);
     },
-    onChange(valueAfter: string, eventOptions: { isComposing?: boolean } = {}) {
+    onChange(valueAfter: string, eventOptions: TextCollectorEventOptions = {}) {
       if (eventOptions.isComposing) {
         return;
       }
+      currentMetadata = {
+        ...currentMetadata,
+        ...(eventOptions.metadata || {}),
+      };
       currentValue = valueAfter || '';
       if (Math.abs(currentValue.length - lastLoggedValue.length) >= options.throttleCharDelta) {
         clearTimer();
@@ -81,16 +96,19 @@ export function createTextEventCollector(options: TextEventCollectorOptions) {
         logChange('debounce');
       }, options.debounceMs);
     },
-    onBlur(valueAfter: string) {
+    onBlur(valueAfter: string, metadata: Record<string, unknown> = {}) {
       currentValue = valueAfter || '';
       clearTimer();
-      logChange('blur');
+      logChange('blur', metadata);
       if (focused) {
         options.logger.textBlur(options.fieldId, focusValue, currentValue, {
+          ...currentMetadata,
+          ...metadata,
           flush_reason: 'blur',
         });
       }
       focused = false;
+      currentMetadata = {};
     },
     flush,
     dispose() {

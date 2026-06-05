@@ -328,7 +328,7 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
     pageType: 'C1_INFO_SELECTION',
     lifecycleMode: 'l2-trace',
     requiredFields: ['factor_options'],
-    contentIds: ['card_1', 'card_2', 'card_3'],
+    contentIds: ['resource_1', 'resource_2', 'resource_3', 'resource_4', 'resource_5'],
   },
   {
     legacyPageId: 'page_05_banana_browning',

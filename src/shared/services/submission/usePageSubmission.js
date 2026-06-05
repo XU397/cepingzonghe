@@ -14,6 +14,10 @@ import {
   buildTargetElementPrefix,
   buildPageDescPrefix,
 } from '@shared/utils/pageMapping.ts';
+import {
+  formatTraceTimestamp,
+  getFieldRegistryPage,
+} from '@shared/services/submission/trace';
 
 const RETRY_DELAYS = [1000, 2000, 4000];
 const debugLog = () => {};
@@ -40,6 +44,7 @@ const isSessionExpiredError = error => {
 };
 
 const ensureArray = value => (Array.isArray(value) ? value : []);
+const isPlainObject = value => Boolean(value && typeof value === 'object' && !Array.isArray(value));
 
 const parseTimeValue = value => {
   if (value instanceof Date) {
@@ -348,6 +353,141 @@ const appendTimeoutOperations = (
       value: timeoutExitReason,
       time: now,
     });
+  }
+
+  return result;
+};
+
+const createL2TraceId = eventType =>
+  `trace_${String(eventType || 'event').toLowerCase()}_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2, 10)}`;
+
+const createL2SubmitAttemptId = () =>
+  `submit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+const getL2BaseOperation = operations =>
+  operations.find(operation => {
+    const value = operation?.value;
+    return (
+      operation?.eventType === 'START_PAGE' &&
+      isPlainObject(value) &&
+      typeof value.trace_id === 'string' &&
+      typeof value.page_id === 'string' &&
+      typeof value.page_type === 'string'
+    );
+  }) ||
+  operations.find(operation => {
+    const value = operation?.value;
+    return (
+      isPlainObject(value) &&
+      typeof value.trace_id === 'string' &&
+      typeof value.page_id === 'string' &&
+      typeof value.page_type === 'string'
+    );
+  });
+
+const getRequiredFieldIdsForTracePage = pageId => {
+  const page = getFieldRegistryPage(pageId);
+  return ensureArray(page?.required_fields).filter(fieldId => typeof fieldId === 'string');
+};
+
+const hasL2TimeoutSubmitAttempt = operations =>
+  operations.some(operation => {
+    const value = operation?.value;
+    return (
+      operation?.eventType === 'SUBMIT_ATTEMPT' &&
+      isPlainObject(value) &&
+      value.validation_status === 'timeout'
+    );
+  });
+
+const createL2TimeoutOperation = ({
+  baseOperation,
+  baseValue,
+  eventType,
+  pageNumber,
+  targetId,
+  targetType,
+  patch = {},
+  metadata = {},
+}) => {
+  const prefix = pageNumber ? buildTargetElementPrefix(pageNumber) : '';
+  const baseMetadata = isPlainObject(baseValue.metadata) ? baseValue.metadata : {};
+  return {
+    targetElement: `${prefix}${targetId}`,
+    eventType,
+    value: {
+      trace_id: createL2TraceId(eventType),
+      page_id: baseValue.page_id,
+      page_type: baseValue.page_type,
+      target_id: targetId,
+      target_type: targetType,
+      ...patch,
+      metadata: {
+        ...baseMetadata,
+        ...metadata,
+      },
+    },
+    time: formatTraceTimestamp(new Date()),
+    pageId: baseOperation.pageId,
+  };
+};
+
+const appendL2TimeoutOperations = (operations, { pageNumber, timeoutOptions }) => {
+  const result = [...operations];
+  const baseOperation = getL2BaseOperation(result);
+  const baseValue = baseOperation?.value;
+  if (!baseOperation || !isPlainObject(baseValue)) {
+    return result;
+  }
+
+  const timeoutSeconds = timeoutOptions.timeoutSeconds ?? timeoutOptions.timeout ?? null;
+  const timeoutMetadata = {
+    trigger: 'timer_timeout',
+    timeout_seconds: timeoutSeconds,
+    auto_submit_reason: timeoutOptions.autoSubmitReason || 'timeout_auto_submit',
+  };
+
+  if (!result.some(operation => operation?.eventType === 'TIMER_COMPLETE')) {
+    result.push(
+      createL2TimeoutOperation({
+        baseOperation,
+        baseValue,
+        eventType: 'TIMER_COMPLETE',
+        pageNumber,
+        targetId: 'timer',
+        targetType: 'timer',
+        metadata: timeoutMetadata,
+      })
+    );
+  }
+
+  if (!hasL2TimeoutSubmitAttempt(result)) {
+    const explicitMissingFields = ensureArray(timeoutOptions.missingFields).filter(
+      fieldId => typeof fieldId === 'string'
+    );
+    const registryMissingFields = getRequiredFieldIdsForTracePage(baseValue.page_id);
+    result.push(
+      createL2TimeoutOperation({
+        baseOperation,
+        baseValue,
+        eventType: 'SUBMIT_ATTEMPT',
+        pageNumber,
+        targetId: 'timeout_submit',
+        targetType: 'button',
+        patch: {
+          submit_attempt_id: createL2SubmitAttemptId(),
+          validation_status: 'timeout',
+        },
+        metadata: {
+          ...timeoutMetadata,
+          missing_fields: explicitMissingFields.length > 0
+            ? explicitMissingFields
+            : registryMissingFields,
+        },
+      })
+    );
   }
 
   return result;
@@ -708,14 +848,19 @@ export function usePageSubmission(options = {}) {
           : resolveProvidedOperations();
 
       let composedOperations = [...mergedOperations];
-      if (mode === 'timeout' && !isL2TraceMode) {
-        composedOperations = appendTimeoutOperations(composedOperations, {
-          pageNumber: resolvedPageNumber,
-          autoSubmitReason: timeoutOptions.autoSubmitReason,
-          autoSubmitMeta: timeoutOptions.autoSubmitMeta,
-          pageExitReason: timeoutOptions.pageExitReason,
-          timeoutSeconds: timeoutOptions.timeoutSeconds ?? timeoutOptions.timeout,
-        });
+      if (mode === 'timeout') {
+        composedOperations = isL2TraceMode
+          ? appendL2TimeoutOperations(composedOperations, {
+              pageNumber: resolvedPageNumber,
+              timeoutOptions,
+            })
+          : appendTimeoutOperations(composedOperations, {
+              pageNumber: resolvedPageNumber,
+              autoSubmitReason: timeoutOptions.autoSubmitReason,
+              autoSubmitMeta: timeoutOptions.autoSubmitMeta,
+              pageExitReason: timeoutOptions.pageExitReason,
+              timeoutSeconds: timeoutOptions.timeoutSeconds ?? timeoutOptions.timeout,
+            });
       }
       markCandidate.operationList = composedOperations;
 

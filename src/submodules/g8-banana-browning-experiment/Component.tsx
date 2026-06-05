@@ -188,6 +188,32 @@ const withSequentialOperationCodes = (
     code: index + 1,
   }));
 
+const withStartPageFlowContext = (
+  operation: OperationLog,
+  tracePageConfig: TracePageConfig | undefined,
+  traceFlowContext: Record<string, unknown> | null
+): OperationLog => {
+  if (
+    !tracePageConfig ||
+    !traceFlowContext ||
+    !isCurrentPageStartPage(operation, tracePageConfig) ||
+    !isRecordValue(operation.value)
+  ) {
+    return operation;
+  }
+
+  return {
+    ...operation,
+    value: {
+      ...operation.value,
+      metadata: {
+        ...(isRecordValue(operation.value.metadata) ? operation.value.metadata : {}),
+        flow_context: traceFlowContext,
+      },
+    },
+  };
+};
+
 const buildValidationSuccess = (): PageValidationSuccess => ({ ok: true });
 
 const buildValidationFailure = (
@@ -331,7 +357,6 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
   const { flowContext, userContext } = props;
   const {
     currentPageId,
-    operations,
     navigateToPage,
     logOperation,
     clearOperations,
@@ -340,6 +365,8 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     setFlowContext,
     setValidationError,
     validationError,
+    flushTraceCollectors,
+    getOperationsSnapshot,
   } = useG8BananaBrowningContext();
 
   useEffect(() => {
@@ -409,9 +436,14 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     }
   }, [flowContext, subPageNum]);
 
-  const operationsForSubmission = useMemo(
-    () => operations.filter(operation => !operation.pageId || operation.pageId === currentPageId),
-    [currentPageId, operations]
+  const getOperationsForSubmission = useCallback(
+    () =>
+      getOperationsSnapshot()
+        .filter(operation => !operation.pageId || operation.pageId === currentPageId)
+        .map(operation =>
+          withStartPageFlowContext(operation, tracePageConfig, traceFlowContext)
+        ),
+    [currentPageId, getOperationsSnapshot, traceFlowContext, tracePageConfig]
   );
 
   const buildPageDesc = useCallback(
@@ -438,20 +470,24 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
   }, [answers, currentPageId]);
 
   const buildSubmissionMark = useCallback(
-    () => ({
-      pageNumber,
-      pageDesc: buildPageDesc(currentPageId as PageId),
-      operationList: operationsForSubmission,
-      answerList: buildAnswerList(),
-      beginTime: pageStartTime ? formatTimestamp(pageStartTime) : formatTimestamp(new Date()),
-      endTime: formatTimestamp(new Date()),
-      imgList: [],
-    }),
+    () => {
+      flushTraceCollectors();
+      return {
+        pageNumber,
+        pageDesc: buildPageDesc(currentPageId as PageId),
+        operationList: getOperationsForSubmission(),
+        answerList: buildAnswerList(),
+        beginTime: pageStartTime ? formatTimestamp(pageStartTime) : formatTimestamp(new Date()),
+        endTime: formatTimestamp(new Date()),
+        imgList: [],
+      };
+    },
     [
       buildAnswerList,
       buildPageDesc,
       currentPageId,
-      operationsForSubmission,
+      flushTraceCollectors,
+      getOperationsForSubmission,
       pageNumber,
       pageStartTime,
     ]
@@ -516,8 +552,10 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
         markOverride?: ReturnType<typeof buildSubmissionMark>;
       }) => Promise<boolean>;
     }) => {
+      flushTraceCollectors();
+      const currentOperationsForSubmission = getOperationsForSubmission();
       const validation = validatePage(currentPageId as PageId, answers, {
-        operations: operationsForSubmission,
+        operations: currentOperationsForSubmission,
       });
 
       if (!validation.ok) {
@@ -617,10 +655,11 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       clearOperations,
       currentPageId,
       frameTraceLogger,
+      flushTraceCollectors,
+      getOperationsForSubmission,
       goToNextPage,
       isL2TracePage,
       logOperation,
-      operationsForSubmission,
       pageNumber,
       setValidationError,
       traceFlowContext,

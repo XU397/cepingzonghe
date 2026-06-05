@@ -1,7 +1,7 @@
 {
   "registry_type": "field_registry",
   "registry_version": "science-inquiry-field-registry-v2.1",
-  "registry_hash": "e77cbfff1b39036334b70a1e2b25742c00738abe436d76af0b1229248f8e9ce9",
+  "registry_hash": "4064ed79e3ed131a990db195b1b3c1d723cdf34534d2103ad2e3a402870da0b9",
   "task_family": "science_inquiry_13page",
   "scope": "L1 field semantics consumed by L2-L3 tagging. Theme text is configurable; stable field_id values are not configurable by frontend agents.",
   "pages": {
@@ -60,6 +60,16 @@
         },
         "factor_option_4": {
           "option_index": 4,
+          "group_id": "factor_selection",
+          "tagging_consumed": true
+        },
+        "factor_option_5": {
+          "option_index": 5,
+          "group_id": "factor_selection",
+          "tagging_consumed": true
+        },
+        "factor_option_6": {
+          "option_index": 6,
           "group_id": "factor_selection",
           "tagging_consumed": true
         }

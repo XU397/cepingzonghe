@@ -1,4 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  EXP_RUN_DEBOUNCE_MS,
+  createExperimentEventCollector,
+} from '@shared/services/submission/trace';
 import styles from './SimulationPanel.module.css';
 
 interface SimulationPanelProps {
@@ -98,6 +102,7 @@ const BROWNING_SPOTS: BrowningSpot[] = [
 
 const OVERLAY_START = 0.85;
 const OVERLAY_MAX = 0.85;
+const SIMULATION_STANDARD_PAGE_ID = 'banana_browning_simulation';
 
 const spotRadius = (spot: BrowningSpot, browning: number): number => {
   if (browning < spot.threshold) return 0;
@@ -225,6 +230,20 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ traceLogger }) => {
   const animationFrameRef = useRef<number | null>(null);
 
   const selectedResults = useMemo(() => RESULT_TABLE[selectedDay], [selectedDay]);
+  const experimentCollector = useMemo(() => {
+    if (!traceLogger) {
+      return null;
+    }
+    return createExperimentEventCollector({
+      standardPageId: SIMULATION_STANDARD_PAGE_ID,
+      logger: traceLogger,
+      nowMs: () => Date.now(),
+      expRunDebounceMs: EXP_RUN_DEBOUNCE_MS,
+      expRunIdFactory: (_standardPageId, runSeq) =>
+        `banana_browning_exp_run_${runSeq}`,
+      initialParamSnapshot: { days: 0 },
+    });
+  }, [traceLogger]);
 
   const cancelAnimation = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -239,25 +258,20 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ traceLogger }) => {
 
   const handleDayIncrement = useCallback(() => {
     if (isAnimating || currentDayIndex >= DAYS.length - 1) return;
-    const fromDay = selectedDay;
     const nextDay = DAYS[currentDayIndex + 1];
     setSelectedDay(nextDay);
-    traceLogger?.setExpParam('exp_param_days', 'days', selectedDay, nextDay, {
-      param_snapshot: { days: nextDay },
-    });
-  }, [isAnimating, currentDayIndex, selectedDay, traceLogger]);
+    experimentCollector?.setParam('exp_param_days', 'days', nextDay);
+  }, [experimentCollector, isAnimating, currentDayIndex]);
 
   const handleDayDecrement = useCallback(() => {
     if (isAnimating || currentDayIndex <= 0) return;
     const prevDay = DAYS[currentDayIndex - 1];
     setSelectedDay(prevDay);
-    traceLogger?.setExpParam('exp_param_days', 'days', selectedDay, prevDay, {
-      param_snapshot: { days: prevDay },
-    });
-  }, [isAnimating, currentDayIndex, selectedDay, traceLogger]);
+    experimentCollector?.setParam('exp_param_days', 'days', prevDay);
+  }, [experimentCollector, isAnimating, currentDayIndex]);
 
   const animateResults = useCallback(
-    (day: (typeof DAYS)[number], targets: number[]) => {
+    (targets: number[]) => {
       cancelAnimation();
       setDisplayedResults(Array(CONDITIONS.length).fill(0));
       setIsAnimating(true);
@@ -280,36 +294,33 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ traceLogger }) => {
         setDisplayedResults(targets);
         setIsAnimating(false);
         animationFrameRef.current = null;
-        traceLogger?.executeExp(`banana_days_${day}`, {
-          param_snapshot: { days: day },
-          result_snapshot: {
-            day,
-            results: buildSimulationResults(day),
-          },
-          click_debounce_applied: false,
-        });
       };
 
       animationFrameRef.current = requestAnimationFrame(tick);
     },
-    [cancelAnimation, traceLogger]
+    [cancelAnimation]
   );
 
   const handleStart = useCallback(() => {
-    animateResults(selectedDay, selectedResults);
-  }, [animateResults, selectedDay, selectedResults]);
+    const resultSnapshot = {
+      day: selectedDay,
+      results: buildSimulationResults(selectedDay),
+    };
+    const shouldRun =
+      experimentCollector?.execute({ days: selectedDay }, resultSnapshot) ?? true;
+    if (!shouldRun) {
+      return;
+    }
+    animateResults(selectedResults);
+  }, [animateResults, experimentCollector, selectedDay, selectedResults]);
 
   const handleReset = useCallback(() => {
-    const fromDay = selectedDay;
     cancelAnimation();
     setIsAnimating(false);
     setSelectedDay(0);
     setDisplayedResults(RESULT_TABLE[0]);
-    traceLogger?.resetExp({
-      param_snapshot_before_reset: { days: fromDay },
-      reset_count: 1,
-    });
-  }, [cancelAnimation, selectedDay, traceLogger]);
+    experimentCollector?.reset();
+  }, [cancelAnimation, experimentCollector]);
 
   return (
     <section className={styles.container} aria-label="香蕉变黑模拟实验面板">

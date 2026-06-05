@@ -1206,6 +1206,132 @@ describe('banana submission-format fixtures', () => {
     unmount();
   });
 
+  it('Page04 emits registry-stable factor and modal IDs in a valid L2 success mark', async () => {
+    const { unmount } = renderExperiment('banana_browning_reading');
+
+    await screen.findByText('香蕉变黑：资料阅读');
+    fireEvent.click(screen.getByRole('button', { name: /香蕉变色之谜/ }));
+    fireEvent.click(screen.getByRole('button', { name: '关闭' }));
+    fireEvent.click(screen.getByText('环境温度'));
+    fireEvent.click(screen.getByTestId('frame-next-button'));
+
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalledTimes(1);
+      expect(lastOnNextResult).toBe(true);
+    });
+
+    const submittedMark = submitSpy.mock.calls[0][0]?.markOverride;
+    const operations = submittedMark?.operationList || [];
+    const startPage = operations.find(operation => operation.eventType === 'START_PAGE');
+    const openModal = operations.find(operation => operation.eventType === 'OPEN_MODAL');
+    const closeModal = operations.find(operation => operation.eventType === 'CLOSE_MODAL');
+    const factorToggle = operations.find(operation => operation.eventType === 'CHECKBOX_TOGGLE');
+
+    expect(() => validateTraceMark(submittedMark)).not.toThrow();
+    expect((startPage?.value as Record<string, any>).metadata.flow_context).toMatchObject({
+      flowId: RUNTIME_FLOW_CONTEXT.flowId,
+      submoduleId: RUNTIME_FLOW_CONTEXT.submoduleId,
+      stepIndex: RUNTIME_FLOW_CONTEXT.stepIndex,
+    });
+    expect(openModal?.value).toMatchObject({ content_id: 'resource_1' });
+    expect(closeModal?.value).toMatchObject({ content_id: 'resource_1' });
+    expect(factorToggle?.value).toMatchObject({
+      field_id: 'factor_options',
+      question_id: 'factor_options',
+      option_id: 'factor_option_1',
+    });
+    expect((factorToggle?.value as Record<string, any>).option_id).not.toBe('环境温度');
+    expect((factorToggle?.value as Record<string, any>).metadata.option_label).toBe('环境温度');
+
+    unmount();
+  });
+
+  it('Page06 flushes text collector focus/change/blur events into the submitted L2 mark', async () => {
+    const { unmount } = renderExperiment('banana_browning_design');
+
+    await screen.findByText('香蕉变黑：方案设计');
+    [
+      ['想法1输入框', '拍照统计黑斑面积'],
+      ['想法2输入框', '展开香蕉皮用网格统计'],
+      ['想法3输入框', '称量黑色部分重量'],
+    ].forEach(([label, value]) => {
+      const textarea = screen.getByLabelText(label);
+      fireEvent.focus(textarea);
+      fireEvent.change(textarea, { target: { value } });
+    });
+    fireEvent.click(screen.getByTestId('frame-next-button'));
+
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalledTimes(1);
+      expect(lastOnNextResult).toBe(true);
+    });
+
+    const submittedMark = submitSpy.mock.calls[0][0]?.markOverride;
+    const operations = submittedMark?.operationList || [];
+
+    expect(() => validateTraceMark(submittedMark)).not.toThrow();
+    ['input_idea_1', 'input_idea_2', 'input_idea_3'].forEach(fieldId => {
+      const fieldEvents = operations.filter(
+        operation => (operation.value as Record<string, any>).field_id === fieldId
+      );
+      expect(fieldEvents.map(operation => operation.eventType)).toEqual([
+        'TEXT_FOCUS',
+        'TEXT_CHANGE',
+        'TEXT_BLUR',
+      ]);
+    });
+
+    unmount();
+  });
+
+  it('Page07 flushes text collector focus/change/blur events into the submitted L2 mark', async () => {
+    const { unmount } = renderExperiment('banana_browning_evaluation');
+
+    await screen.findByText('香蕉变黑：方案评估');
+    [
+      ['图像法优点输入框', '图像记录较直观'],
+      ['图像法缺点输入框', '拍摄光线会影响'],
+      ['网格法优点输入框', '网格统计较方便'],
+      ['网格法缺点输入框', '展开果皮会破坏'],
+      ['称重法优点输入框', '重量数据较客观'],
+      ['称重法缺点输入框', '切割边界不稳定'],
+    ].forEach(([label, value]) => {
+      const textarea = screen.getByLabelText(label);
+      fireEvent.focus(textarea);
+      fireEvent.change(textarea, { target: { value } });
+    });
+    fireEvent.click(screen.getByTestId('frame-next-button'));
+
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalledTimes(1);
+      expect(lastOnNextResult).toBe(true);
+    });
+
+    const submittedMark = submitSpy.mock.calls[0][0]?.markOverride;
+    const operations = submittedMark?.operationList || [];
+
+    expect(() => validateTraceMark(submittedMark)).not.toThrow();
+    [
+      'method_1_advantage',
+      'method_1_disadvantage',
+      'method_2_advantage',
+      'method_2_disadvantage',
+      'method_3_advantage',
+      'method_3_disadvantage',
+    ].forEach(fieldId => {
+      const fieldEvents = operations.filter(
+        operation => (operation.value as Record<string, any>).field_id === fieldId
+      );
+      expect(fieldEvents.map(operation => operation.eventType)).toEqual([
+        'TEXT_FOCUS',
+        'TEXT_CHANGE',
+        'TEXT_BLUR',
+      ]);
+    });
+
+    unmount();
+  });
+
   it('simulation_question_1 fixture locks L2 simulation events, blocked submit metadata, and labeled answer', () => {
     const mark = marks.find(item => item.pageId === 'simulation_question_1');
 
