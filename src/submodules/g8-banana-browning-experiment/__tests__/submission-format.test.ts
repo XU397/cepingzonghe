@@ -216,6 +216,59 @@ const FLOW_PREFIX = `${FLOW_ID}/${SUBMODULE_ID}/${STEP_INDEX}`;
 const PAGE_NUMBER_REGEX = /^[1-9]\d*\.\d{2}$/;
 const LOCAL_TIMESTAMP_REGEX = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 const RESERVED_TARGETS = new Set<string>(RESERVED_TARGET_ELEMENTS);
+const L2_ALLOWED_EVENT_TYPES = new Set([
+  'START_PAGE',
+  'PAGE_HIDDEN',
+  'PAGE_VISIBLE',
+  'SUBMIT_ATTEMPT',
+  'TASK_FINISH',
+  'CONTENT_EXPOSE',
+  'CONTENT_ACTIVATE',
+  'CONTENT_VIEW',
+  'CHAT_SCROLL',
+  'CHAT_VIEWPORT_ENTER',
+  'CHAT_VIEWPORT_LEAVE',
+  'OPEN_MODAL',
+  'CLOSE_MODAL',
+  'CHART_HOVER',
+  'TEXT_FOCUS',
+  'TEXT_CHANGE',
+  'TEXT_BLUR',
+  'CHECKBOX_TOGGLE',
+  'SELECT_ANSWER',
+  'SET_EXP_PARAM',
+  'EXECUTE_EXP',
+  'RESET_EXP',
+  'ADD_ROW',
+  'DELETE_ROW',
+  'SET_PLAN_PARAM',
+  'SELECT_BEST',
+  'TIMER_COMPLETE',
+]);
+const LEGACY_EVENTS_FORBIDDEN_IN_L2 = new Set([
+  'page_enter',
+  'page_exit',
+  'next_click',
+  'auto_submit',
+  'flow_context',
+  'input_change',
+  'radio_select',
+  'checkbox_check',
+  'checkbox_uncheck',
+  'simulation_operation',
+  'simulation_run_result',
+  'click',
+  'change',
+]);
+const expectL2TraceOperations = (mark: any) => {
+  expect(mark.operationList.some((operation: any) => operation.eventType === 'START_PAGE')).toBe(true);
+  mark.operationList.forEach((operation: any) => {
+    expect(L2_ALLOWED_EVENT_TYPES.has(operation.eventType)).toBe(true);
+    expect(LEGACY_EVENTS_FORBIDDEN_IN_L2.has(operation.eventType)).toBe(false);
+    expect(typeof operation.value).toBe('object');
+    expect(operation.value).not.toBeNull();
+  });
+};
 const L2_SIMULATION_EVENTS = {
   executeExp: 'EXECUTE_EXP',
   selectAnswer: 'SELECT_ANSWER',
@@ -223,11 +276,6 @@ const L2_SIMULATION_EVENTS = {
   submitAttempt: 'SUBMIT_ATTEMPT',
   startPage: 'START_PAGE',
 } as const;
-const LEGACY_SIMULATION_EVENTS_FORBIDDEN_IN_L2 = new Set([
-  'simulation_operation',
-  'simulation_run_result',
-  'radio_select',
-]);
 const RUNTIME_FLOW_CONTEXT = {
   flowId: 'flow-1',
   submoduleId: 'g8-banana-browning-experiment',
@@ -304,11 +352,15 @@ const blockedValue = (
   ...extras,
 });
 
-type L2SimulationFixtureConfig = {
+type L2TraceFixtureConfig = {
   pageNumber: string;
   pageId: PageId;
   standardPageId: string;
   pageIndex: number;
+  pageType: string;
+};
+
+type L2SimulationFixtureConfig = L2TraceFixtureConfig & {
   questionId: string;
   questionIndex: number;
 };
@@ -319,6 +371,7 @@ const L2_SIMULATION_FIXTURES: Record<string, L2SimulationFixtureConfig> = {
     pageId: 'simulation_question_1',
     standardPageId: 'page_09_experiment_question_1',
     pageIndex: 9,
+    pageType: 'D2_SIMULATION_QUESTION',
     questionId: 'question_1',
     questionIndex: 1,
   },
@@ -327,6 +380,7 @@ const L2_SIMULATION_FIXTURES: Record<string, L2SimulationFixtureConfig> = {
     pageId: 'simulation_question_2',
     standardPageId: 'page_10_experiment_question_2',
     pageIndex: 10,
+    pageType: 'D2_SIMULATION_QUESTION',
     questionId: 'question_2',
     questionIndex: 2,
   },
@@ -335,13 +389,24 @@ const L2_SIMULATION_FIXTURES: Record<string, L2SimulationFixtureConfig> = {
     pageId: 'simulation_question_3',
     standardPageId: 'page_11_experiment_question_3',
     pageIndex: 11,
+    pageType: 'D2_SIMULATION_QUESTION',
     questionId: 'question_3',
     questionIndex: 3,
   },
 };
 
+const L2_PAGE_FIXTURES: Record<'solution_selection', L2TraceFixtureConfig> = {
+  solution_selection: {
+    pageNumber: '1.13',
+    pageId: 'solution_selection',
+    standardPageId: 'page_12_solution_selection',
+    pageIndex: 12,
+    pageType: 'E1_CHART_PLAN_DECISION',
+  },
+};
+
 const traceOperation = (
-  config: L2SimulationFixtureConfig,
+  config: L2TraceFixtureConfig,
   eventType: string,
   targetId: string,
   targetType: string,
@@ -354,7 +419,7 @@ const traceOperation = (
   value: {
     trace_id: `trace_${config.pageId}_${eventType}_${timeOffset}`,
     page_id: config.standardPageId,
-    page_type: 'D2_SIMULATION_QUESTION',
+    page_type: config.pageType,
     target_id: targetId,
     target_type: targetType,
     ...valuePatch,
@@ -371,13 +436,15 @@ const traceOperation = (
   pageId: config.pageId,
 });
 
-const startPageOp = (config: L2SimulationFixtureConfig, timeOffset: number): OperationInput =>
-  traceOperation(config, L2_SIMULATION_EVENTS.startPage, 'page', 'page', timeOffset, {}, {
-    initial_state: { selected_option: null },
-  });
+const startPageOp = (
+  config: L2TraceFixtureConfig,
+  timeOffset: number,
+  metadata: Record<string, unknown> = { initial_state: { selected_option: null } }
+): OperationInput =>
+  traceOperation(config, L2_SIMULATION_EVENTS.startPage, 'page', 'page', timeOffset, {}, metadata);
 
 const submitAttemptOp = (
-  config: L2SimulationFixtureConfig,
+  config: L2TraceFixtureConfig,
   timeOffset: number,
   validationStatus: 'blocked' | 'success',
   missingFields: string[]
@@ -458,6 +525,80 @@ const selectAnswerOp = (
       option_text: optionText,
       question_index: config.questionIndex,
       total_question_count: 3,
+    }
+  );
+
+const setPlanParamOp = (
+  config: L2TraceFixtureConfig,
+  timeOffset: number,
+  rowId: string,
+  paramId: string,
+  valueBefore: unknown,
+  valueAfter: unknown,
+  metadata: Record<string, unknown> = {}
+): OperationInput =>
+  traceOperation(
+    config,
+    'SET_PLAN_PARAM',
+    `${rowId}_${paramId}`,
+    'table',
+    timeOffset,
+    {
+      row_id: rowId,
+      param_id: paramId,
+      value_before: valueBefore,
+      value_after: valueAfter,
+    },
+    metadata
+  );
+
+const selectBestOp = (
+  config: L2TraceFixtureConfig,
+  timeOffset: number,
+  rowId: string,
+  previousBestRowId: string | null
+): OperationInput =>
+  traceOperation(
+    config,
+    'SELECT_BEST',
+    `${rowId}_best`,
+    'table',
+    timeOffset,
+    {
+      row_id: rowId,
+      value_before: previousBestRowId,
+      value_after: rowId,
+    },
+    {
+      previous_best_row_id: previousBestRowId,
+      current_best_row_id: rowId,
+    }
+  );
+
+const textChangeOp = (
+  config: L2TraceFixtureConfig,
+  timeOffset: number,
+  fieldId: string,
+  valueBefore: string,
+  valueAfter: string,
+  metadata: Record<string, unknown> = {}
+): OperationInput =>
+  traceOperation(
+    config,
+    'TEXT_CHANGE',
+    fieldId,
+    'text',
+    timeOffset,
+    {
+      field_id: fieldId,
+      value_before: valueBefore,
+      value_after: null,
+    },
+    {
+      char_count_before: valueBefore.length,
+      char_count_after: valueAfter.length,
+      char_delta: valueAfter.length - valueBefore.length,
+      ...metadata,
     }
   );
 
@@ -667,73 +808,87 @@ const marks: MarkFixture[] = [
     pageId: 'solution_selection',
     title: '方案选择',
     operations: [
-      {
-        targetElement: 'P1.13_页面进入',
-        eventType: EventTypes.PAGE_ENTER,
-        value: 'solution_selection',
-        time: isoTime(160),
-      },
-      flowContextOp('solution_selection', 161),
-      {
-        targetElement: 'P1.13_下一页按钮',
-        eventType: EventTypes.CLICK_BLOCKED,
-        value: blockedValue(
-          'required_fields_missing',
-          ['Q8_方案表格', 'Q8_最优方案', 'Q8_理由'],
-          162,
-          { message: '请完成当前页面必填项' }
-        ),
-        time: isoTime(162),
-      },
-      {
-        targetElement: 'P1.13_方案表格',
-        eventType: EventTypes.SELECT_CHANGE,
-        value: '方案B',
-        time: isoTime(163),
-      },
-      {
-        targetElement: 'P1.13_最优方案',
-        eventType: EventTypes.RADIO_SELECT,
-        value: '方案B',
-        time: isoTime(164),
-      },
-      {
-        targetElement: 'P1.13_理由输入框',
-        eventType: EventTypes.INPUT_CHANGE,
-        value: { prev: '', next: '方案B在可操作性和保鲜效果之间更平衡' },
-        time: isoTime(165),
-      },
-      {
-        targetElement: 'P1.13_下一页按钮',
-        eventType: EventTypes.NEXT_CLICK,
-        value: 'to_task_completion',
-        time: isoTime(166),
-      },
-      {
-        targetElement: 'P1.13_页面退出',
-        eventType: EventTypes.PAGE_EXIT,
-        value: 'solution_selection',
-        time: isoTime(167),
-      },
-      submitSuccessOp('1.13', 168),
+      startPageOp(L2_PAGE_FIXTURES.solution_selection, 160, {
+        initial_state: {
+          rows: ['page_12_solution_selection_row_1'],
+          best_row_id: null,
+        },
+      }),
+      submitAttemptOp(
+        L2_PAGE_FIXTURES.solution_selection,
+        162,
+        'blocked',
+        ['plan_table', 'reason_text']
+      ),
+      setPlanParamOp(
+        L2_PAGE_FIXTURES.solution_selection,
+        163,
+        'page_12_solution_selection_row_1',
+        'plan_param_1',
+        '',
+        '海南香蕉',
+        {
+          row_snapshot_after_change: {
+            id: 'page_12_solution_selection_row_1',
+            variety: '海南香蕉',
+            temperature: '',
+          },
+        }
+      ),
+      setPlanParamOp(
+        L2_PAGE_FIXTURES.solution_selection,
+        164,
+        'page_12_solution_selection_row_1',
+        'plan_param_2',
+        '',
+        '10℃',
+        {
+          row_snapshot_after_change: {
+            id: 'page_12_solution_selection_row_1',
+            variety: '海南香蕉',
+            temperature: '10℃',
+          },
+        }
+      ),
+      selectBestOp(
+        L2_PAGE_FIXTURES.solution_selection,
+        165,
+        'page_12_solution_selection_row_1',
+        null
+      ),
+      textChangeOp(
+        L2_PAGE_FIXTURES.solution_selection,
+        166,
+        'reason_text',
+        '',
+        '10℃下黑变比例较低，适合储存12天以上',
+        { source_answer_key: 'Q8_理由' }
+      ),
+      submitAttemptOp(
+        L2_PAGE_FIXTURES.solution_selection,
+        168,
+        'success',
+        []
+      ),
     ],
     answers: [
       {
         targetElement: 'P1.13_方案选择表格',
-        value: '方案B',
+        value:
+          '[{"id":"page_12_solution_selection_row_1","variety":"海南香蕉","temperature":"10℃"}]',
       },
       {
         targetElement: 'P1.13_最优方案',
-        value: '方案B',
+        value: '海南香蕉-10℃',
       },
       {
         targetElement: 'P1.13_请说明理由',
-        value: '方案B在可操作性和保鲜效果之间更平衡',
+        value: '10℃下黑变比例较低，适合储存12天以上',
       },
     ],
     beginOffset: 160,
     endOffset: 168,
-    expectedBlockedMissing: ['Q8_方案表格', 'Q8_最优方案', 'Q8_理由'],
+    expectedBlockedMissing: ['plan_table', 'reason_text'],
   }),
 ];
 
@@ -751,10 +906,7 @@ const assertPrefixedTargets = (mark: MarkFixture) => {
   }
 };
 
-const isL2SimulationQuestionFixture = (mark: MarkFixture) =>
-  mark.pageId === 'simulation_question_1' ||
-  mark.pageId === 'simulation_question_2' ||
-  mark.pageId === 'simulation_question_3';
+const isL2TraceFixture = (mark: MarkFixture) => mark.pageId !== 'intro_notice';
 
 describe('banana submission-format fixtures', () => {
   beforeEach(() => {
@@ -775,12 +927,13 @@ describe('banana submission-format fixtures', () => {
     vi.clearAllMocks();
   });
 
-  it('shared contract fixtures satisfy schema, page number, prefix, and single flow_context rules', () => {
+  it('shared contract fixtures satisfy schema, page number, prefix, and lifecycle rules', () => {
     for (const mark of marks) {
       expect(mark.pageNumber).toMatch(PAGE_NUMBER_REGEX);
       assertPrefixedTargets(mark);
-      if (isL2SimulationQuestionFixture(mark)) {
+      if (isL2TraceFixture(mark)) {
         expect(mark.operationList.filter(op => op.eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(0);
+        expectL2TraceOperations(mark);
         expect(() => validateTraceMark(mark)).not.toThrow();
       } else {
         expect(mark.operationList.filter(op => op.eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(1);
@@ -979,7 +1132,7 @@ describe('banana submission-format fixtures', () => {
 
     expect(eventTypes).toContain(L2_SIMULATION_EVENTS.executeExp);
     expect(eventTypes).toContain(L2_SIMULATION_EVENTS.submitAttempt);
-    expect(eventTypes.some(eventType => LEGACY_SIMULATION_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(
+    expect(eventTypes.some(eventType => LEGACY_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(
       false
     );
     expect(() => validateTraceMark(submittedMark)).not.toThrow();
@@ -1078,7 +1231,7 @@ describe('banana submission-format fixtures', () => {
     expect(eventTypes).toContain(L2_SIMULATION_EVENTS.setExpParam);
     expect(eventTypes).toContain(L2_SIMULATION_EVENTS.executeExp);
     expect(eventTypes).toContain(L2_SIMULATION_EVENTS.selectAnswer);
-    expect(eventTypes.some(eventType => LEGACY_SIMULATION_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(
+    expect(eventTypes.some(eventType => LEGACY_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(
       false
     );
     expect(eventTypes.filter(eventType => eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(0);
@@ -1098,30 +1251,41 @@ describe('banana submission-format fixtures', () => {
       const eventTypes = mark.operationList.map(operation => operation.eventType);
       expect(eventTypes).toContain(L2_SIMULATION_EVENTS.executeExp);
       expect(eventTypes).toContain(L2_SIMULATION_EVENTS.selectAnswer);
-      expect(eventTypes.some(eventType => LEGACY_SIMULATION_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(
+      expect(eventTypes.some(eventType => LEGACY_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(
         false
       );
     });
   });
 
-  it('solution_selection fixture locks click_blocked missing array and navigation events', () => {
+  it('solution_selection fixture locks L2 plan events, blocked submit metadata, and answers', () => {
     const mark = marks.find(item => item.pageId === 'solution_selection');
 
     expect(mark).toBeDefined();
     const blockedOperation = mark?.operationList.find(
-      operation => operation.eventType === EventTypes.CLICK_BLOCKED
+      operation =>
+        operation.eventType === L2_SIMULATION_EVENTS.submitAttempt &&
+        (operation.value as Record<string, any>).validation_status === 'blocked'
     );
 
     expect(blockedOperation).toMatchObject({
-      targetElement: 'P1.13_下一页按钮',
-      eventType: EventTypes.CLICK_BLOCKED,
+      targetElement: 'P1.13_next_button',
+      eventType: L2_SIMULATION_EVENTS.submitAttempt,
     });
     expect(blockedOperation?.value).toMatchObject({
-      reason: 'required_fields_missing',
-      missing: ['Q8_方案表格', 'Q8_最优方案', 'Q8_理由'],
-      message: '请完成当前页面必填项',
+      validation_status: 'blocked',
+      metadata: {
+        missing_fields: ['plan_table', 'reason_text'],
+      },
     });
-    expect(mark?.operationList.some(operation => operation.eventType === EventTypes.NEXT_CLICK)).toBe(true);
-    expect(mark?.operationList.some(operation => operation.eventType === EventTypes.PAGE_EXIT)).toBe(true);
+    const eventTypes = mark?.operationList.map(operation => operation.eventType) || [];
+    expect(eventTypes).toContain('SET_PLAN_PARAM');
+    expect(eventTypes).toContain('SELECT_BEST');
+    expect(eventTypes).toContain('TEXT_CHANGE');
+    expect(eventTypes.some(eventType => LEGACY_EVENTS_FORBIDDEN_IN_L2.has(eventType))).toBe(false);
+    expect(mark?.answerList.map(answer => answer.value)).toEqual([
+      '[{"id":"page_12_solution_selection_row_1","variety":"海南香蕉","temperature":"10℃"}]',
+      '海南香蕉-10℃',
+      '10℃下黑变比例较低，适合储存12天以上',
+    ]);
   });
 });
