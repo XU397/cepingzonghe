@@ -9,9 +9,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import EventTypes from '@shared/services/submission/eventTypes.js';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import styles from '../styles/Page13SolutionSelection.module.css';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 const CHART_DATA = [
   {
@@ -115,44 +116,46 @@ const DiamondDot = (props: DiamondDotProps): React.ReactElement => {
 };
 
 // ---------------------------------------------------------------------------
-// Table row shape (per task spec: id is number)
+// Table row shape
 // ---------------------------------------------------------------------------
-interface TableRow {
-  id: number;
+interface SolutionRow {
+  id: string;
   variety: string;
   temperature: string;
-  isBest: boolean;
 }
+
+const createSolutionRow = (id: string): SolutionRow => ({
+  id,
+  variety: '',
+  temperature: '',
+});
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 const Page13SolutionSelection: React.FC = () => {
-  const { logOperation, collectAnswer, setPageStartTime, getPagePrefix } =
-    useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
+  const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
 
-  const hasLoggedEnter = useRef(false);
   const nextIdRef = useRef(2);
+  const reasonFocusValueRef = useRef('');
 
-  const [rows, setRows] = useState<TableRow[]>([
-    { id: 1, variety: '', temperature: '', isBest: false },
+  const traceLogger = useTracePageStart({
+    pageId: 'solution_selection' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {
+        rows: ['page_12_solution_selection_row_1'],
+        best_row_id: null,
+      },
+    },
+  });
+
+  const [rows, setRows] = useState<SolutionRow[]>(() => [
+    createSolutionRow('page_12_solution_selection_row_1'),
   ]);
-  const [bestId, setBestId] = useState<number | null>(null);
+  const [bestId, setBestId] = useState<string | null>(null);
   const [reason, setReason] = useState('');
-
-  // ---- page enter lifecycle ----
-  useEffect(() => {
-    if (hasLoggedEnter.current) return;
-    hasLoggedEnter.current = true;
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '页面加载完成',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, setPageStartTime, targetPrefix]);
 
   // ---- persist table answers whenever rows / bestId change ----
   useEffect(() => {
@@ -169,87 +172,98 @@ const Page13SolutionSelection: React.FC = () => {
 
   // ---- handlers ----
   const handleVarietyChange = useCallback(
-    (rowId: number, variety: string) => {
-      setRows(prev => prev.map(r => (r.id === rowId ? { ...r, variety } : r)));
-      logOperation({
-        targetElement: `${targetPrefix}品种选择`,
-        eventType: EventTypes.CHANGE,
-        value: variety,
-        time: new Date().toISOString(),
+    (rowId: string, value: string) => {
+      const row = rows.find(r => r.id === rowId);
+      if (!row) {
+        return;
+      }
+
+      const previousValue = row.variety;
+      const nextRow = { ...row, variety: value };
+      setRows(prev => prev.map(r => (r.id === rowId ? nextRow : r)));
+      traceLogger?.setPlanParam(rowId, 'plan_param_1', previousValue, value, {
+        row_snapshot_after_change: nextRow,
       });
     },
-    [logOperation, targetPrefix]
+    [rows, traceLogger]
   );
 
   const handleTemperatureChange = useCallback(
-    (rowId: number, temperature: string) => {
-      setRows(prev => prev.map(r => (r.id === rowId ? { ...r, temperature } : r)));
-      logOperation({
-        targetElement: `${targetPrefix}温度选择`,
-        eventType: EventTypes.CHANGE,
-        value: temperature,
-        time: new Date().toISOString(),
+    (rowId: string, value: string) => {
+      const row = rows.find(r => r.id === rowId);
+      if (!row) {
+        return;
+      }
+
+      const previousValue = row.temperature;
+      const nextRow = { ...row, temperature: value };
+      setRows(prev => prev.map(r => (r.id === rowId ? nextRow : r)));
+      traceLogger?.setPlanParam(rowId, 'plan_param_2', previousValue, value, {
+        row_snapshot_after_change: nextRow,
       });
     },
-    [logOperation, targetPrefix]
+    [rows, traceLogger]
   );
 
   const handleStarClick = useCallback(
-    (rowId: number) => {
-      const newBestId = bestId === rowId ? null : rowId;
-      setBestId(newBestId);
-      setRows(prev => prev.map(r => ({ ...r, isBest: r.id === newBestId })));
-      logOperation({
-        targetElement: `${targetPrefix}最优方案标记`,
-        eventType: EventTypes.CLICK,
-        value: newBestId !== null ? '标记为最优' : '取消标记',
-        time: new Date().toISOString(),
-      });
+    (rowId: string) => {
+      setBestId(rowId);
+      traceLogger?.selectBest(rowId, bestId);
     },
-    [bestId, logOperation, targetPrefix]
+    [bestId, traceLogger]
   );
 
   const handleDeleteRow = useCallback(
-    (rowId: number) => {
+    (rowId: string) => {
+      const rowToDelete = rows.find(r => r.id === rowId);
+      if (!rowToDelete) {
+        return;
+      }
+
       setRows(prev => prev.filter(r => r.id !== rowId));
       if (bestId === rowId) {
         setBestId(null);
       }
-      logOperation({
-        targetElement: `${targetPrefix}删除方案`,
-        eventType: EventTypes.CLICK,
-        value: `删除方案ID=${rowId}`,
-        time: new Date().toISOString(),
+      traceLogger?.deleteRow(rowId, {
+        row_snapshot_before_delete: rowToDelete,
+        was_best_plan: bestId === rowId,
       });
     },
-    [bestId, logOperation, targetPrefix]
+    [bestId, rows, traceLogger]
   );
 
   const handleAddRow = useCallback(() => {
-    const newId = nextIdRef.current;
+    const newRow = createSolutionRow(`page_12_solution_selection_row_${nextIdRef.current}`);
     nextIdRef.current += 1;
-    setRows(prev => [...prev, { id: newId, variety: '', temperature: '', isBest: false }]);
-    logOperation({
-      targetElement: `${targetPrefix}新增方案`,
-      eventType: EventTypes.CLICK,
-      value: '新增空白方案行',
-      time: new Date().toISOString(),
+    setRows(prev => [...prev, newRow]);
+    traceLogger?.addRow(newRow.id, {
+      row_snapshot_after_add: newRow,
     });
-  }, [logOperation, targetPrefix]);
+  }, [traceLogger]);
 
   const handleReasonChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value;
       setReason(value);
       collectAnswer({ targetElement: 'Q8_理由', value });
-      logOperation({
-        targetElement: `${targetPrefix}理由输入`,
-        eventType: EventTypes.INPUT_CHANGE,
-        value,
-        time: new Date().toISOString(),
+      traceLogger?.textChange('reason_text', String(answers.Q8_理由 || ''), value, {
+        source_answer_key: 'Q8_理由',
       });
     },
-    [collectAnswer, logOperation, targetPrefix]
+    [answers.Q8_理由, collectAnswer, traceLogger]
+  );
+
+  const handleReasonFocus = useCallback(() => {
+    reasonFocusValueRef.current = reason;
+  }, [reason]);
+
+  const handleReasonBlur = useCallback(
+    () => {
+      traceLogger?.textBlur('reason_text', reasonFocusValueRef.current, reason, {
+        source_answer_key: 'Q8_理由',
+      });
+    },
+    [reason, traceLogger]
   );
 
   // ---- render ----
@@ -395,7 +409,7 @@ const Page13SolutionSelection: React.FC = () => {
                           type="button"
                           className={`${styles.starButton} ${bestId === row.id ? styles.starButtonActive : ''}`}
                           onClick={() => handleStarClick(row.id)}
-                          aria-label={bestId === row.id ? '取消最优标记' : '标记为最优方案'}
+                          aria-label={bestId === row.id ? '已标记为最优方案' : '标记为最优方案'}
                         >
                           ★
                         </button>
@@ -430,6 +444,8 @@ const Page13SolutionSelection: React.FC = () => {
               className={styles.reasonTextarea}
               value={reason}
               onChange={handleReasonChange}
+              onFocus={handleReasonFocus}
+              onBlur={handleReasonBlur}
               placeholder="请在此处输入你的回答。"
             />
           </div>
