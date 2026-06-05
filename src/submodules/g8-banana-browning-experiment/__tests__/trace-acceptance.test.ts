@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { validateTraceMark } from '@shared/services/submission/trace';
 
+const REQUIRED_CASE_IDS = [
+  'page02_question_generation_v2_1',
+  'page05_multi_idea_generation_v2_1',
+  'page08_direct_skip_v2_1_3',
+  'page09_experiment_question_v2_1',
+  'page12_solution_selection_v2_1',
+  'page13_task_finish_v2_1_3',
+];
+
 type AcceptanceCase = {
   caseId: string;
   input: {
@@ -390,7 +399,7 @@ const cases: AcceptanceCase[] = [
   {
     "caseId": "page08_direct_skip_v2_1_3",
     "input": {
-      "pageNumber": 8,
+      "pageNumber": "1.09",
       "pageDesc": "模拟实验探索页",
       "beginTime": "2026-06-03T10:08:00.000+08:00",
       "endTime": "2026-06-03T10:08:06.000+08:00",
@@ -799,7 +808,7 @@ const cases: AcceptanceCase[] = [
   {
     "caseId": "page13_task_finish_v2_1_3",
     "input": {
-      "pageNumber": 13,
+      "pageNumber": "1.14",
       "pageDesc": "任务结束页",
       "beginTime": "2026-06-03T10:13:00.000+08:00",
       "endTime": "2026-06-03T10:13:03.000+08:00",
@@ -847,9 +856,23 @@ const cases: AcceptanceCase[] = [
 ];
 
 describe('banana L2 acceptance contracts', () => {
+  it('locks the required acceptance case set', () => {
+    expect(cases.map(acceptanceCase => acceptanceCase.caseId)).toEqual(REQUIRED_CASE_IDS);
+    expect(cases).toHaveLength(6);
+  });
+
   it.each(cases.map(acceptanceCase => [acceptanceCase.caseId, acceptanceCase] as const))(
     'validates %s',
     (_caseId, acceptanceCase) => {
+      expect(acceptanceCase.input.pageNumber).toEqual(expect.any(String));
+      expect(acceptanceCase.input.pageNumber).not.toHaveLength(0);
+      expect(acceptanceCase.input.pageDesc).toEqual(expect.any(String));
+      expect(acceptanceCase.input.pageDesc).not.toHaveLength(0);
+      expect(acceptanceCase.input.beginTime).toEqual(expect.any(String));
+      expect(acceptanceCase.input.beginTime).not.toHaveLength(0);
+      expect(acceptanceCase.input.endTime).toEqual(expect.any(String));
+      expect(acceptanceCase.input.endTime).not.toHaveLength(0);
+
       const mark = {
         pageNumber: acceptanceCase.input.pageNumber,
         pageDesc: acceptanceCase.input.pageDesc,
