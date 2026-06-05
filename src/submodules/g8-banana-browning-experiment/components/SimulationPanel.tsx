@@ -1,11 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
-import type { OperationLog } from '../types';
 import styles from './SimulationPanel.module.css';
 
 interface SimulationPanelProps {
-  logOperation: (operation: Omit<OperationLog, 'code'>) => void;
-  targetPrefix: string;
+  traceLogger: {
+    setExpParam(
+      paramId: string,
+      paramName: string,
+      valueBefore: unknown,
+      valueAfter: unknown,
+      metadata?: Record<string, unknown>
+    ): unknown;
+    executeExp(expRunId: string, metadata?: Record<string, unknown>): unknown;
+    resetExp(metadata?: Record<string, unknown>): unknown;
+  } | null;
 }
 
 interface ConditionConfig {
@@ -211,7 +218,7 @@ const BananaSvg: React.FC<{ browning: number; label: string }> = ({ browning, la
   );
 };
 
-const SimulationPanel: React.FC<SimulationPanelProps> = ({ logOperation, targetPrefix }) => {
+const SimulationPanel: React.FC<SimulationPanelProps> = ({ traceLogger }) => {
   const [selectedDay, setSelectedDay] = useState<(typeof DAYS)[number]>(0);
   const [displayedResults, setDisplayedResults] = useState<number[]>(() => RESULT_TABLE[0]);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -235,26 +242,19 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ logOperation, targetP
     const fromDay = selectedDay;
     const nextDay = DAYS[currentDayIndex + 1];
     setSelectedDay(nextDay);
-    logOperation({
-      targetElement: `${targetPrefix}天数增加按钮`,
-      eventType: EventTypes.SIMULATION_OPERATION,
-      value: { action: 'increment_day', fromDay, toDay: nextDay },
-      time: new Date().toISOString(),
+    traceLogger?.setExpParam('exp_param_days', 'days', selectedDay, nextDay, {
+      param_snapshot: { days: nextDay },
     });
-  }, [isAnimating, currentDayIndex, logOperation, selectedDay, targetPrefix]);
+  }, [isAnimating, currentDayIndex, selectedDay, traceLogger]);
 
   const handleDayDecrement = useCallback(() => {
     if (isAnimating || currentDayIndex <= 0) return;
-    const fromDay = selectedDay;
     const prevDay = DAYS[currentDayIndex - 1];
     setSelectedDay(prevDay);
-    logOperation({
-      targetElement: `${targetPrefix}天数减少按钮`,
-      eventType: EventTypes.SIMULATION_OPERATION,
-      value: { action: 'decrement_day', fromDay, toDay: prevDay },
-      time: new Date().toISOString(),
+    traceLogger?.setExpParam('exp_param_days', 'days', selectedDay, prevDay, {
+      param_snapshot: { days: prevDay },
     });
-  }, [isAnimating, currentDayIndex, logOperation, selectedDay, targetPrefix]);
+  }, [isAnimating, currentDayIndex, selectedDay, traceLogger]);
 
   const animateResults = useCallback(
     (day: (typeof DAYS)[number], targets: number[]) => {
@@ -280,32 +280,24 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ logOperation, targetP
         setDisplayedResults(targets);
         setIsAnimating(false);
         animationFrameRef.current = null;
-        logOperation({
-          targetElement: `${targetPrefix}实验结果`,
-          eventType: EventTypes.SIMULATION_RUN_RESULT,
-          value: {
-            selectedDay: day,
+        traceLogger?.executeExp(`banana_days_${day}`, {
+          param_snapshot: { days: day },
+          result_snapshot: {
+            day,
             results: buildSimulationResults(day),
           },
-          time: new Date().toISOString(),
+          click_debounce_applied: false,
         });
       };
 
       animationFrameRef.current = requestAnimationFrame(tick);
     },
-    [cancelAnimation, logOperation, targetPrefix]
+    [cancelAnimation, traceLogger]
   );
 
   const handleStart = useCallback(() => {
-    logOperation({
-      targetElement: `${targetPrefix}开始实验按钮`,
-      eventType: EventTypes.SIMULATION_TIMING_STARTED,
-      value: { selectedDay, totalConditions: CONDITIONS.length },
-      time: new Date().toISOString(),
-    });
-
     animateResults(selectedDay, selectedResults);
-  }, [animateResults, logOperation, selectedDay, selectedResults, targetPrefix]);
+  }, [animateResults, selectedDay, selectedResults]);
 
   const handleReset = useCallback(() => {
     const fromDay = selectedDay;
@@ -313,13 +305,11 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ logOperation, targetP
     setIsAnimating(false);
     setSelectedDay(0);
     setDisplayedResults(RESULT_TABLE[0]);
-    logOperation({
-      targetElement: `${targetPrefix}重置按钮`,
-      eventType: EventTypes.SIMULATION_OPERATION,
-      value: { action: 'reset', fromDay, toDay: 0 },
-      time: new Date().toISOString(),
+    traceLogger?.resetExp({
+      param_snapshot_before_reset: { days: fromDay },
+      reset_count: 1,
     });
-  }, [cancelAnimation, logOperation, selectedDay, targetPrefix]);
+  }, [cancelAnimation, selectedDay, traceLogger]);
 
   return (
     <section className={styles.container} aria-label="香蕉变黑模拟实验面板">

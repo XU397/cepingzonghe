@@ -1,15 +1,16 @@
 import '@testing-library/jest-dom';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import EventTypes from '@shared/services/submission/eventTypes.js';
-import type { OperationLog } from '../../types';
 import SimulationPanel from '../SimulationPanel';
 
-type LoggedOperation = Omit<OperationLog, 'code'>;
 type FrameCallback = (timestamp: number) => void;
+type TraceEventName = 'SET_EXP_PARAM' | 'EXECUTE_EXP' | 'RESET_EXP';
 
-const getLoggedOperation = (calls: Array<[LoggedOperation]>, index: number): LoggedOperation | undefined =>
-  calls[index]?.[0];
+const LEGACY_SIMULATION_EVENTS = [
+  'simulation_operation',
+  'simulation_run_result',
+  'radio_select',
+];
 
 const EXPECTED_DAY_3_RESULTS = [
   { origin: '海南', temperature: '2℃', browning: 0.05 },
@@ -49,66 +50,99 @@ const setupRafController = () => {
   };
 };
 
+const buildTraceLogger = () => {
+  const events: Array<{ eventType: TraceEventName; args: unknown[] }> = [];
+  const traceLogger = {
+    setExpParam: vi.fn((...args: unknown[]) => {
+      events.push({ eventType: 'SET_EXP_PARAM', args });
+    }),
+    executeExp: vi.fn((...args: unknown[]) => {
+      events.push({ eventType: 'EXECUTE_EXP', args });
+    }),
+    resetExp: vi.fn((...args: unknown[]) => {
+      events.push({ eventType: 'RESET_EXP', args });
+    }),
+  };
+
+  return { traceLogger, events };
+};
+
 describe('SimulationPanel', () => {
-  const logOperation = vi.fn();
+  let traceLogger: ReturnType<typeof buildTraceLogger>['traceLogger'];
+  let events: ReturnType<typeof buildTraceLogger>['events'];
 
   beforeEach(() => {
-    logOperation.mockClear();
+    ({ traceLogger, events } = buildTraceLogger());
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('semantic operation sequence emits simulation events and result payload', () => {
+  it('semantic operation sequence emits L2 simulation events and result payload', () => {
     const raf = setupRafController();
 
-    render(<SimulationPanel logOperation={logOperation} targetPrefix="P1.10_" />);
+    render(<SimulationPanel traceLogger={traceLogger} />);
 
     fireEvent.click(screen.getByRole('button', { name: '增加天数' }));
     fireEvent.click(screen.getByRole('button', { name: '增加天数' }));
     fireEvent.click(screen.getByRole('button', { name: '减少天数' }));
     fireEvent.click(screen.getByRole('button', { name: '开始实验' }));
 
-    expect(logOperation).toHaveBeenCalledTimes(4);
-    expect(logOperation.mock.calls.map(([operation]) => operation.eventType)).toEqual([
-      EventTypes.SIMULATION_OPERATION,
-      EventTypes.SIMULATION_OPERATION,
-      EventTypes.SIMULATION_OPERATION,
-      EventTypes.SIMULATION_TIMING_STARTED,
+    expect(events.map(event => event.eventType)).toEqual([
+      'SET_EXP_PARAM',
+      'SET_EXP_PARAM',
+      'SET_EXP_PARAM',
     ]);
-    expect(logOperation.mock.calls.map(([operation]) => operation.value)).toEqual([
-      { action: 'increment_day', fromDay: 0, toDay: 3 },
-      { action: 'increment_day', fromDay: 3, toDay: 6 },
-      { action: 'decrement_day', fromDay: 6, toDay: 3 },
-      { selectedDay: 3, totalConditions: 6 },
-    ]);
+    expect(traceLogger.setExpParam).toHaveBeenNthCalledWith(1, 'exp_param_days', 'days', 0, 3, {
+      param_snapshot: { days: 3 },
+    });
+    expect(traceLogger.setExpParam).toHaveBeenNthCalledWith(2, 'exp_param_days', 'days', 3, 6, {
+      param_snapshot: { days: 6 },
+    });
+    expect(traceLogger.setExpParam).toHaveBeenNthCalledWith(3, 'exp_param_days', 'days', 6, 3, {
+      param_snapshot: { days: 3 },
+    });
 
     raf.runNextFrame(600);
-    expect(logOperation).toHaveBeenCalledTimes(4);
+    expect(events.map(event => event.eventType)).toEqual([
+      'SET_EXP_PARAM',
+      'SET_EXP_PARAM',
+      'SET_EXP_PARAM',
+    ]);
 
     raf.runNextFrame(1200);
 
-    expect(logOperation).toHaveBeenCalledTimes(5);
-    expect(logOperation.mock.calls.some(([operation]) => operation.eventType === EventTypes.CLICK)).toBe(false);
+    expect(events.map(event => event.eventType)).toEqual([
+      'SET_EXP_PARAM',
+      'SET_EXP_PARAM',
+      'SET_EXP_PARAM',
+      'EXECUTE_EXP',
+    ]);
+    expect(events.some(event => event.eventType === 'click')).toBe(false);
+    expect(events.some(event => LEGACY_SIMULATION_EVENTS.includes(event.eventType))).toBe(false);
 
-    const runResult = getLoggedOperation(logOperation.mock.calls as Array<[LoggedOperation]>, 4);
-    expect(runResult).toEqual(
-      expect.objectContaining({
-        eventType: EventTypes.SIMULATION_RUN_RESULT,
-        value: {
-          selectedDay: 3,
-          results: EXPECTED_DAY_3_RESULTS,
-        },
-      })
-    );
-    expect(((runResult?.value ?? {}) as { results?: unknown[] }).results).toHaveLength(6);
+    expect(traceLogger.executeExp).toHaveBeenCalledWith('banana_days_3', {
+      param_snapshot: { days: 3 },
+      result_snapshot: {
+        day: 3,
+        results: EXPECTED_DAY_3_RESULTS,
+      },
+      click_debounce_applied: false,
+    });
+    expect(
+      (
+        traceLogger.executeExp.mock.calls[0]?.[1] as
+          | { result_snapshot?: { results?: unknown[] } }
+          | undefined
+      )?.result_snapshot?.results
+    ).toHaveLength(6);
   });
 
-  it('reset restores day zero state and logs semantic reset payload', () => {
+  it('reset restores day zero state and logs L2 reset payload', () => {
     const raf = setupRafController();
 
-    render(<SimulationPanel logOperation={logOperation} targetPrefix="P1.11_" />);
+    render(<SimulationPanel traceLogger={traceLogger} />);
 
     fireEvent.click(screen.getByRole('button', { name: '增加天数' }));
     fireEvent.click(screen.getByRole('button', { name: '增加天数' }));
@@ -118,21 +152,34 @@ describe('SimulationPanel', () => {
 
     expect(screen.getByText('0')).toBeInTheDocument();
     expect(screen.getAllByText('0%')).toHaveLength(6);
-    expect(logOperation.mock.calls.some(([operation]) => operation.eventType === EventTypes.CLICK)).toBe(false);
+    expect(events.some(event => event.eventType === 'click')).toBe(false);
+    expect(events.some(event => LEGACY_SIMULATION_EVENTS.includes(event.eventType))).toBe(false);
 
-    const resetOperation = getLoggedOperation(
-      logOperation.mock.calls as Array<[LoggedOperation]>,
-      logOperation.mock.calls.length - 1
-    );
-    expect(resetOperation).toEqual(
-      expect.objectContaining({
-        eventType: EventTypes.SIMULATION_OPERATION,
-        value: {
-          action: 'reset',
-          fromDay: 6,
-          toDay: 0,
-        },
-      })
-    );
+    expect(events.map(event => event.eventType)).toEqual([
+      'SET_EXP_PARAM',
+      'SET_EXP_PARAM',
+      'EXECUTE_EXP',
+      'RESET_EXP',
+    ]);
+    expect(traceLogger.resetExp).toHaveBeenCalledWith({
+      param_snapshot_before_reset: { days: 6 },
+      reset_count: 1,
+    });
+  });
+
+  it('does not require a trace logger to render or interact', () => {
+    const raf = setupRafController();
+
+    render(<SimulationPanel traceLogger={null} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '增加天数' }));
+    fireEvent.click(screen.getByRole('button', { name: '开始实验' }));
+
+    raf.runNextFrame(1200);
+
+    expect(screen.getByText('3')).toBeInTheDocument();
+    EXPECTED_DAY_3_RESULTS.forEach(({ browning }) => {
+      expect(screen.getAllByText(`${Math.round(browning * 100)}%`).length).toBeGreaterThan(0);
+    });
   });
 });

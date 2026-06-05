@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import SimulationPanel from '../components/SimulationPanel';
 import styles from '../styles/Page12SimulationQuestion3.module.css';
+import { optionIdFromOptionLabel } from '../trace/fieldBindings';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 const options = [
   { label: 'A', text: '2℃' },
@@ -12,11 +14,16 @@ const options = [
 const answerKey = 'Q7_平缓温度';
 
 const Page12SimulationQuestion3: React.FC = () => {
-  const { logOperation, collectAnswer, setPageStartTime, answers, getPagePrefix } =
-    useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
+  const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
+  const traceLogger = useTracePageStart({
+    pageId: 'simulation_question_3' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: { selected_option: null },
+    },
+  });
   const [selectedOption, setSelectedOption] = useState<string>('');
-  const hasLoggedEnter = React.useRef(false);
   const savedAnswer = answers[answerKey];
 
   useEffect(() => {
@@ -28,32 +35,23 @@ const Page12SimulationQuestion3: React.FC = () => {
     setSelectedOption('');
   }, [savedAnswer]);
 
-  useEffect(() => {
-    if (hasLoggedEnter.current) {
-      return;
-    }
-    hasLoggedEnter.current = true;
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '页面加载完成',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, setPageStartTime, targetPrefix]);
-
   const handleOptionSelect = useCallback(
-    ({ label, text }: (typeof options)[number]) => {
+    ({ text }: (typeof options)[number]) => {
+      const previousOptionId = selectedOption ? optionIdFromOptionLabel(selectedOption) : null;
+      const nextOptionId = optionIdFromOptionLabel(text);
       setSelectedOption(text);
       collectAnswer({ targetElement: answerKey, value: text });
-      logOperation({
-        targetElement: `${targetPrefix}${answerKey}`,
-        eventType: EventTypes.RADIO_SELECT,
-        value: `${label}. ${text}`,
-        time: new Date().toISOString(),
+      traceLogger?.selectAnswer({
+        questionId: 'question_3',
+        optionId: nextOptionId,
+        optionText: text,
+        valueBefore: previousOptionId,
+        targetId: `question_3_${nextOptionId}`,
+        questionIndex: 3,
+        totalQuestionCount: 3,
       });
     },
-    [collectAnswer, logOperation, targetPrefix]
+    [collectAnswer, selectedOption, traceLogger]
   );
 
   return (
@@ -67,7 +65,7 @@ const Page12SimulationQuestion3: React.FC = () => {
 
       <div className={styles.contentLayout}>
         <div className={styles.simulationPanel}>
-          <SimulationPanel logOperation={logOperation} targetPrefix={targetPrefix} />
+          <SimulationPanel traceLogger={traceLogger} />
         </div>
 
         <div className={styles.questionPanel}>
