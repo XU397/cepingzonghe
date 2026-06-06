@@ -8,26 +8,27 @@ import { useTracePageStart } from '../trace/useTracePageStart';
 import xjbs01 from '@assets/images/xjbs01.jpg';
 import xjbs02 from '@assets/images/xjbs02.jpg';
 import xjbs03 from '@assets/images/xjbs03.jpg';
-import xjbs04 from '@assets/images/xjbs04.jpg';
-import xjbs05 from '@assets/images/xjbs05.jpg';
-import xjbs06 from '@assets/images/xjbs06.jpg';
 import xjbs11 from '@assets/images/xjbs11.jpg';
 
-const RESOURCE_ITEMS: ReadonlyArray<{ readonly id: string; readonly title: string }> = [
-  { id: 'resource_1', title: '香蕉变色之谜' },
-  { id: 'resource_2', title: '香蕉种植分布图' },
-  { id: 'resource_3', title: '香蕉网店评论区' },
-  { id: 'resource_4', title: '果店员工宝典' },
-  { id: 'resource_5', title: '香蕉"泡药"真相' },
+const RESOURCE_ITEMS: ReadonlyArray<{
+  readonly id: string;
+  readonly title: string;
+  readonly traceContentId?: string;
+}> = [
+  { id: 'card_1', title: '香蕉变色之谜', traceContentId: 'factor_card_1' },
+  { id: 'card_2', title: '香蕉种植分布图', traceContentId: 'factor_card_2' },
+  { id: 'card_3', title: '香蕉网店评论区' },
 ];
 
-const FACTOR_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
-  { id: 'factor_option_1', label: '环境温度' },
-  { id: 'factor_option_2', label: '环境湿度' },
-  { id: 'factor_option_3', label: '香蕉形状' },
-  { id: 'factor_option_4', label: '香蕉品种' },
-  { id: 'factor_option_5', label: '磕碰损伤' },
-  { id: 'factor_option_6', label: '香蕉甜度' },
+const FACTOR_OPTIONS: ReadonlyArray<{
+  readonly id: string;
+  readonly label: string;
+  readonly traceOptionId?: string;
+}> = [
+  { id: 'factor_option_1', label: '环境温度', traceOptionId: 'option_a' },
+  { id: 'factor_option_2', label: '环境湿度', traceOptionId: 'option_b' },
+  { id: 'factor_option_3', label: '香蕉形状', traceOptionId: 'option_c' },
+  { id: 'factor_option_4', label: '香蕉品种', traceOptionId: 'option_d' },
 ];
 
 const FACTOR_OPTION_BY_LABEL = new Map(FACTOR_OPTIONS.map(option => [option.label, option]));
@@ -49,6 +50,11 @@ const labelsFromFactorIds = (factorIds: string[]): string[] =>
   factorIds
     .map(id => FACTOR_OPTION_BY_ID.get(id)?.label)
     .filter((label): label is string => Boolean(label));
+
+const traceOptionIdsFromFactorIds = (factorIds: string[]): string[] =>
+  factorIds
+    .map(id => FACTOR_OPTION_BY_ID.get(id)?.traceOptionId)
+    .filter((traceOptionId): traceOptionId is string => Boolean(traceOptionId));
 
 function OverlayContentLayer1() {
   return (
@@ -101,89 +107,14 @@ function OverlayContentLayer3() {
   );
 }
 
-function OverlayContentLayer4() {
-  return (
-    <div className={styles.bookContainer}>
-      <div className={`${styles.bookPage} ${styles.leftPage}`}>
-        <div className={styles.pageHeader}>
-          <span className={styles.pageHeaderIcon}>🏪</span>
-          <span className={styles.pageHeaderText}>香蕉的保存</span>
-        </div>
-        <div className={styles.pageContent}>
-          <div className={styles.bookGuideSection}>
-            <span className={styles.bookGuideCheck}>✓</span>
-            <div>
-              <h4 className={styles.bookGuideSectionTitle}>保鲜膜包一包</h4>
-              <p className={styles.bookGuideSectionText}>
-                包上保鲜膜能隔绝空气，香蕉熟得慢，皮也没那么容易变黑。
-              </p>
-            </div>
-          </div>
-          <img src={xjbs04} alt="保鲜膜包裹香蕉" className={styles.bookSingleImage} />
-          <div className={styles.bookGuideSection}>
-            <span className={styles.bookGuideCheck}>✓</span>
-            <div>
-              <h4 className={styles.bookGuideSectionTitle}>皮上喷点水</h4>
-              <p className={styles.bookGuideSectionText}>
-                太干会使香蕉失水，口感变差，甜度下降。喷点水保持湿度更好。
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.bookSpine} />
-
-      <div className={`${styles.bookPage} ${styles.rightPage}`}>
-        <div className={styles.pageHeader}>
-          <span className={styles.pageHeaderText}>香蕉的保存</span>
-          <span className={styles.pageHeaderIcon}>🏪</span>
-        </div>
-        <div className={styles.pageContent}>
-          <div className={styles.bookGuideSection}>
-            <span className={styles.bookGuideCheck}>✓</span>
-            <div>
-              <h4 className={styles.bookGuideSectionTitle}>温度不宜太冷或太热</h4>
-              <p className={styles.bookGuideSectionText}>
-                太冷会冻伤，果肉变黑变硬；太热熟得快，也容易发黑。常温阴凉处最适合。
-              </p>
-            </div>
-          </div>
-          <img src={xjbs05} alt="香蕉保存方法" className={styles.bookRightPageImage} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function OverlayContentLayer5() {
-  return (
-    <div className={styles.newsContainer}>
-      <img src={xjbs06} alt="香蕉保鲜场景" className={styles.newsImage} />
-      <p className={styles.newsText}>
-        近日，网传"香蕉浸泡乳白色不明液体"的视频引发关注，有网友怀疑是甲醛。相关部门回应称，
-        该液体实为经国家批准的香蕉保鲜剂。
-      </p>
-      <p className={styles.newsText}>
-        香蕉产自热带、亚热带地区，是市场上常年供应的鲜果。因其采摘后易遭真菌侵染，变黑腐烂，
-        必须立即保鲜。该保鲜剂具有低毒、易降解，用量和残留均符合国际标准，可放心食用。
-      </p>
-    </div>
-  );
-}
-
 function renderOverlayById(overlayId: string): React.ReactNode {
   switch (overlayId) {
-    case 'resource_1':
+    case 'card_1':
       return <OverlayContentLayer1 />;
-    case 'resource_2':
+    case 'card_2':
       return <OverlayContentLayer2 />;
-    case 'resource_3':
+    case 'card_3':
       return <OverlayContentLayer3 />;
-    case 'resource_4':
-      return <OverlayContentLayer4 />;
-    case 'resource_5':
-      return <OverlayContentLayer5 />;
     default:
       return null;
   }
@@ -211,19 +142,26 @@ const Page04BananaBrowningReading: React.FC = () => {
     (item: (typeof RESOURCE_ITEMS)[number]) => {
       setOpenOverlayId(item.id);
       modalOpenedAtRef.current = Date.now();
-      traceLogger?.openModal(item.id, {
-        source: 'material_card',
-        title: item.title,
-      });
+      if (item.traceContentId) {
+        traceLogger?.openModal(item.traceContentId, {
+          source: 'material_card',
+          source_ui_id: item.id,
+          title: item.title,
+        });
+      }
     },
     [traceLogger]
   );
 
   const handleCloseOverlay = useCallback(() => {
     if (!openOverlayId) return;
-    traceLogger?.closeModal(openOverlayId, Date.now() - modalOpenedAtRef.current, {
-      source: 'material_card',
-    });
+    const openItem = RESOURCE_ITEMS.find(item => item.id === openOverlayId);
+    if (openItem?.traceContentId) {
+      traceLogger?.closeModal(openItem.traceContentId, Date.now() - modalOpenedAtRef.current, {
+        source: 'material_card',
+        source_ui_id: openOverlayId,
+      });
+    }
     setOpenOverlayId(null);
   }, [traceLogger, openOverlayId]);
 
@@ -235,28 +173,33 @@ const Page04BananaBrowningReading: React.FC = () => {
         ? [...selectedFactorIds, factor.id]
         : selectedFactorIds.filter(id => id !== factor.id);
       const nextSelectedLabels = labelsFromFactorIds(nextSelectedFactorIds);
+      const selectedTraceOptionIds = traceOptionIdsFromFactorIds(selectedFactorIds);
+      const nextSelectedTraceOptionIds = traceOptionIdsFromFactorIds(nextSelectedFactorIds);
 
       setSelectedFactorIds(nextSelectedFactorIds);
 
-      traceLogger?.emit(
-        'CHECKBOX_TOGGLE',
-        {
-          field_id: 'factor_options',
-          question_id: 'factor_options',
-          option_id: factor.id,
-          value_before: selectedFactorIds,
-          value_after: nextSelectedFactorIds,
-        },
-        {
-          targetId: `factor_options_${factor.id}`,
-          targetType: 'checkbox',
-          metadata: {
-            option_label: factor.label,
-            selected_labels: nextSelectedLabels,
-            selected_count: nextSelectedFactorIds.length,
+      if (factor.traceOptionId) {
+        traceLogger?.emit(
+          'CHECKBOX_TOGGLE',
+          {
+            field_id: 'factor_selection',
+            question_id: 'factor_selection',
+            option_id: factor.traceOptionId,
+            value_before: selectedTraceOptionIds,
+            value_after: nextSelectedTraceOptionIds,
           },
-        }
-      );
+          {
+            targetId: `factor_selection_${factor.traceOptionId}`,
+            targetType: 'checkbox',
+            metadata: {
+              option_label: factor.label,
+              source_ui_id: factor.id,
+              selected_labels: nextSelectedLabels,
+              selected_count: nextSelectedTraceOptionIds.length,
+            },
+          }
+        );
+      }
 
       collectAnswer({
         targetElement: 'Q2_影响因素',
@@ -277,7 +220,7 @@ const Page04BananaBrowningReading: React.FC = () => {
 
       <div className={styles.instructionCard}>
         <p className={styles.instructionText}>
-          为探索影响香蕉变黑的因素，小明搜集了左侧的五条资料。
+          为探索影响香蕉变黑的因素，小明搜集了左侧的三条资料。
           <strong>请点击并查看资料</strong>，
           思考香蕉变黑可能与以下哪些因素有关？单击选择你认为正确的选项，再次点击可取消选择（可多选）。
         </p>
@@ -341,7 +284,7 @@ const Page04BananaBrowningReading: React.FC = () => {
           role="dialog"
           aria-modal="true"
           aria-label={RESOURCE_ITEMS.find(r => r.id === openOverlayId)?.title ?? '资料弹层'}
-          className={`${styles.overlayBackdrop} ${openOverlayId === 'resource_2' ? styles.overlayBackdropMap : ''}`}
+           className={`${styles.overlayBackdrop} ${openOverlayId === 'card_2' ? styles.overlayBackdropMap : ''}`}
           onClick={handleCloseOverlay}
           onKeyDown={e => {
             if (e.key === 'Escape') handleCloseOverlay();
@@ -349,7 +292,7 @@ const Page04BananaBrowningReading: React.FC = () => {
         >
           <div
             role="document"
-            className={`${styles.overlayCard} ${openOverlayId === 'resource_2' ? styles.overlayCardWide : ''}`}
+             className={`${styles.overlayCard} ${openOverlayId === 'card_2' ? styles.overlayCardWide : ''}`}
             onClick={e => e.stopPropagation()}
             onKeyDown={e => e.stopPropagation()}
           >

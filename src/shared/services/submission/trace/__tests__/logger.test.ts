@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createPageTraceLogger, formatTraceTimestamp } from '../logger';
 import {
   EXP_RUN_DEBOUNCE_MS,
+  PAGE_IDLE_THRESHOLD_MS,
   TEXT_DEBOUNCE_MS,
   TEXT_THROTTLE_CHAR_DELTA,
   TRACE_EVENT_TYPES,
@@ -42,6 +43,7 @@ describe('createPageTraceLogger', () => {
 
   it('loads L2 event types from the synced contract', () => {
     expect(TRACE_EVENT_TYPES).toContain('START_PAGE');
+    expect(TRACE_EVENT_TYPES).toContain('PAGE_IDLE');
     expect(TRACE_EVENT_TYPES).toContain('TEXT_BLUR');
     expect(TRACE_EVENT_TYPES).toContain('EXECUTE_EXP');
     expect(TRACE_EVENT_TYPES).not.toContain('page_enter');
@@ -51,10 +53,12 @@ describe('createPageTraceLogger', () => {
     expect(TEXT_DEBOUNCE_MS).toBe(2000);
     expect(TEXT_THROTTLE_CHAR_DELTA).toBe(10);
     expect(EXP_RUN_DEBOUNCE_MS).toBe(1000);
+    expect(PAGE_IDLE_THRESHOLD_MS).toBe(5000);
     expect(TRACE_RULE_THRESHOLDS).toMatchObject({
       textDebounceMs: 2000,
       textThrottleCharDelta: 10,
       expRunDebounceMs: 1000,
+      pageIdleThresholdMs: 5000,
       pageHiddenAdjustEnabled: true,
     });
     expect(getRuleThreshold('deepReadMs')).toBe(8000);
@@ -95,9 +99,13 @@ describe('createPageTraceLogger', () => {
         target_id: 'page',
         target_type: 'page',
         metadata: {
-          schema_version: 'science-inquiry-trace-v2.1',
-          field_registry_version: 'science-inquiry-field-registry-v2.1',
-          content_registry_version: 'science-inquiry-content-registry-banana-v2.1',
+          schema_version: 'science-inquiry-trace-v2.2',
+          field_registry_version: 'science-inquiry-field-registry-v2.2',
+          field_registry_hash: '93f0d6b95a7ae9615bf9bc0604fd81fa52d47712c9f3eda8670875e6646bcc54',
+          content_registry_version: 'science-inquiry-content-registry-banana-v2.2',
+          content_registry_hash: '2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35',
+          rule_config_version: 'rule-config-v2.2',
+          rule_config_hash: 'c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83',
           page_index: 9,
           legacy_page_id: 'simulation_question_1',
           flow_context: baseOptions.flowContext,
@@ -108,17 +116,97 @@ describe('createPageTraceLogger', () => {
     expect(baseOptions.logOperation).toHaveBeenCalledWith(operation);
   });
 
+  it('emits PAGE_IDLE with backend v2.2 idle metadata names', () => {
+    const logger = createPageTraceLogger(baseOptions);
+    const operation = logger.pageIdle({
+      idleDurationMs: 6200,
+      idlePhase: 'initial_before_first_action',
+      pageVisible: true,
+      windowFocused: true,
+    });
+
+    expect(operation).toMatchObject({
+      targetElement: 'P1.10_page',
+      eventType: 'PAGE_IDLE',
+      value: {
+        target_id: 'page',
+        target_type: 'page',
+        metadata: {
+          idle_duration_ms: 6200,
+          idle_phase: 'initial_before_first_action',
+          page_visible: true,
+          window_focused: true,
+          threshold_ms: 5000,
+        },
+      },
+    });
+  });
+
+  it('emits CHAT_SCROLL with backend fixture metadata names', () => {
+    const logger = createPageTraceLogger({
+      ...baseOptions,
+      page: {
+        legacyPageId: 'banana_mystery',
+        standardPageId: 'page_02_question_generation',
+        pageIndex: 2,
+        pageType: 'B1_TEXT_SINGLE' as const,
+        lifecycleMode: 'l2-trace' as const,
+        requiredFields: ['question_generation_answer'],
+      },
+      pageNumber: '1.03',
+    });
+    const visibleContentIdsBefore = ['chat_bubble_02_01'];
+    const visibleContentIdsAfter = ['chat_bubble_02_01', 'chat_bubble_02_02'];
+    const operation = logger.chatScroll({
+      scrollDelta: 240,
+      scrollDirection: 'down',
+      visibleContentIdsBefore,
+      visibleContentIdsAfter,
+      phase: 'reading_chat',
+    });
+    visibleContentIdsBefore.push('mutated_before');
+    visibleContentIdsAfter.push('mutated_after');
+
+    expect(operation).toMatchObject({
+      targetElement: 'P1.03_chat_window',
+      eventType: 'CHAT_SCROLL',
+      value: {
+        target_id: 'chat_window',
+        target_type: 'content',
+        metadata: {
+          scroll_delta: 240,
+          scroll_direction: 'down',
+          visible_content_ids_before: ['chat_bubble_02_01'],
+          visible_content_ids_after: ['chat_bubble_02_01', 'chat_bubble_02_02'],
+          phase: 'reading_chat',
+        },
+      },
+    });
+  });
+
   it('keeps invariant metadata authoritative over caller metadata', () => {
     const logger = createPageTraceLogger(baseOptions);
     const operation = logger.startPage({
       schema_version: 'caller-schema',
+      field_registry_version: 'caller-field-registry',
+      field_registry_hash: 'caller-field-registry-hash',
+      content_registry_version: 'caller-content-registry',
+      content_registry_hash: 'caller-content-registry-hash',
+      rule_config_version: 'caller-rule-config',
+      rule_config_hash: 'caller-rule-config-hash',
       page_index: 999,
       legacy_page_id: 'caller-page',
       flow_context: { flowId: 'caller-flow' },
     });
 
     expect(operation.value.metadata).toMatchObject({
-      schema_version: 'science-inquiry-trace-v2.1',
+      schema_version: 'science-inquiry-trace-v2.2',
+      field_registry_version: 'science-inquiry-field-registry-v2.2',
+      field_registry_hash: '93f0d6b95a7ae9615bf9bc0604fd81fa52d47712c9f3eda8670875e6646bcc54',
+      content_registry_version: 'science-inquiry-content-registry-banana-v2.2',
+      content_registry_hash: '2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35',
+      rule_config_version: 'rule-config-v2.2',
+      rule_config_hash: 'c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83',
       page_index: 9,
       legacy_page_id: 'simulation_question_1',
       flow_context: baseOptions.flowContext,
@@ -178,12 +266,13 @@ describe('createPageTraceLogger', () => {
     });
   });
 
-  it('emits SUBMIT_ATTEMPT with attempt id, validation status, and missing fields', () => {
+  it('emits SUBMIT_ATTEMPT with attempt id, validation status, missing fields, and submit trigger', () => {
     const logger = createPageTraceLogger(baseOptions);
     const operation = logger.submitAttempt({
       validationStatus: 'blocked',
       missingFields: ['question_1_answer'],
       targetId: 'finish_button',
+      submitTrigger: 'next_button',
     });
 
     expect(operation).toMatchObject({
@@ -194,6 +283,73 @@ describe('createPageTraceLogger', () => {
         validation_status: 'blocked',
         metadata: {
           missing_fields: ['question_1_answer'],
+          submit_trigger: 'next_button',
+        },
+      },
+    });
+  });
+
+  it('emits plan-table events with the stable plan_table field id', () => {
+    const logger = createPageTraceLogger({
+      ...baseOptions,
+      page: {
+        legacyPageId: 'solution_selection',
+        standardPageId: 'page_12_solution_selection',
+        pageIndex: 12,
+        pageType: 'E1_CHART_PLAN_DECISION' as const,
+        lifecycleMode: 'l2-trace' as const,
+        requiredFields: ['plan_table', 'reason_text'],
+      },
+      pageNumber: '1.13',
+    });
+
+    expect(logger.addRow('row_1').value).toMatchObject({
+      field_id: 'plan_table',
+      row_id: 'row_1',
+    });
+    expect(logger.deleteRow('row_1').value).toMatchObject({
+      field_id: 'plan_table',
+      row_id: 'row_1',
+    });
+    expect(logger.setPlanParam('row_1', 'plan_param_1', '', '海南香蕉').value).toMatchObject({
+      field_id: 'plan_table',
+      row_id: 'row_1',
+      param_id: 'plan_param_1',
+    });
+    expect(logger.selectBest('row_1', null).value).toMatchObject({
+      field_id: 'plan_table',
+      row_id: 'row_1',
+    });
+  });
+
+  it('emits CHART_HOVER with chart and point identifiers', () => {
+    const logger = createPageTraceLogger({
+      ...baseOptions,
+      page: {
+        legacyPageId: 'solution_selection',
+        standardPageId: 'page_12_solution_selection',
+        pageIndex: 12,
+        pageType: 'E1_CHART_PLAN_DECISION' as const,
+        lifecycleMode: 'l2-trace' as const,
+        requiredFields: ['plan_table', 'reason_text'],
+      },
+      pageNumber: '1.13',
+    });
+
+    const operation = logger.chartHover('chart_evidence_1', 'day_12', {
+      hover_ms: 500,
+      data_snapshot: { day: '12' },
+    });
+
+    expect(operation).toMatchObject({
+      targetElement: 'P1.13_chart_evidence_1',
+      eventType: 'CHART_HOVER',
+      value: {
+        chart_id: 'chart_evidence_1',
+        point_id: 'day_12',
+        metadata: {
+          hover_ms: 500,
+          data_snapshot: { day: '12' },
         },
       },
     });

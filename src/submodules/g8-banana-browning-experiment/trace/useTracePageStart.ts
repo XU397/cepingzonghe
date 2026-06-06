@@ -3,6 +3,7 @@ import type { TraceFlowContext } from '@shared/services/submission/trace';
 import type { PageId } from '../mapping';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
 import { useBananaTraceLogger } from './useBananaTraceLogger';
+import { useBananaPageIdle } from './useBananaPageIdle';
 
 const EMPTY_TRACE_METADATA: Record<string, unknown> = {};
 
@@ -57,6 +58,7 @@ export function useTracePageStart({
     pageNumber,
     flowContext: effectiveFlowContext,
   });
+  const { startInitial } = useBananaPageIdle(traceLogger);
   const startKey = `${pageId}:${pageNumber}`;
   const emittedStartKeyRef = useRef<string | null>(null);
   const metadataRef = useRef(metadata);
@@ -73,9 +75,11 @@ export function useTracePageStart({
     }
 
     emittedStartKeyRef.current = startKey;
-    setPageStartTime(new Date());
+    const startedAt = new Date();
+    setPageStartTime(startedAt);
     traceLogger.startPage(metadataRef.current);
-  }, [setPageStartTime, startKey, traceLogger]);
+    startInitial(startedAt);
+  }, [setPageStartTime, startInitial, startKey, traceLogger]);
 
   return traceLogger;
 }

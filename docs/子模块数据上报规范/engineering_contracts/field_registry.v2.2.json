@@ -1,0 +1,335 @@
+{
+  "registry_type": "field_registry",
+  "registry_version": "science-inquiry-field-registry-v2.2",
+  "registry_hash": "93f0d6b95a7ae9615bf9bc0604fd81fa52d47712c9f3eda8670875e6646bcc54",
+  "task_family": "science_inquiry_13page",
+  "scope": "L1 field semantics consumed by L2-L3 tagging. Theme text is configurable; stable field_id values are not configurable by frontend agents.",
+  "pages": {
+    "page_01_intro": {
+      "page_index": 1,
+      "page_type": "A1_FLOW",
+      "required_fields": [],
+      "fields": {}
+    },
+    "page_02_question_generation": {
+      "page_index": 2,
+      "page_type": "B1_TEXT_SINGLE",
+      "required_fields": [
+        "input_question_1"
+      ],
+      "fields": {
+        "input_question_1": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "question_generation",
+          "text_product_role": "science_question",
+          "tagging_consumed": true
+        }
+      }
+    },
+    "page_03_factor_selection": {
+      "page_index": 3,
+      "page_type": "C1_INFO_SELECTION",
+      "required_fields": [
+        "factor_selection"
+      ],
+      "questions": {
+        "factor_selection": {
+          "question_index": 1,
+          "answer_field_id": "factor_selection",
+          "required": true,
+          "tagging_consumed": true
+        }
+      },
+      "fields": {
+        "factor_selection": {
+          "field_role": "checkbox_group",
+          "required": true,
+          "group_id": "factor_selection",
+          "question_id": "factor_selection",
+          "selection_mode": "multi_select",
+          "options": {
+            "option_a": {
+              "option_index": 1,
+              "option_role": "candidate_factor",
+              "tagging_consumed": true
+            },
+            "option_b": {
+              "option_index": 2,
+              "option_role": "candidate_factor",
+              "tagging_consumed": true
+            },
+            "option_c": {
+              "option_index": 3,
+              "option_role": "candidate_factor",
+              "tagging_consumed": true
+            },
+            "option_d": {
+              "option_index": 4,
+              "option_role": "candidate_factor",
+              "tagging_consumed": true
+            }
+          },
+          "tagging_consumed": true
+        }
+      }
+    },
+    "page_04_transition": {
+      "page_index": 4,
+      "page_type": "A1_FLOW",
+      "required_fields": [],
+      "fields": {}
+    },
+    "page_05_plan_generation": {
+      "page_index": 5,
+      "page_type": "B2_TEXT_MULTI_PARALLEL",
+      "required_fields": [
+        "input_idea_1",
+        "input_idea_2",
+        "input_idea_3"
+      ],
+      "fields": {
+        "input_idea_1": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "plan_ideas",
+          "field_index": 1,
+          "text_product_role": "plan_idea",
+          "tagging_consumed": true
+        },
+        "input_idea_2": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "plan_ideas",
+          "field_index": 2,
+          "text_product_role": "plan_idea",
+          "tagging_consumed": true
+        },
+        "input_idea_3": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "plan_ideas",
+          "field_index": 3,
+          "text_product_role": "plan_idea",
+          "tagging_consumed": true
+        }
+      }
+    },
+    "page_06_method_evaluation": {
+      "page_index": 6,
+      "page_type": "B3_TEXT_MATRIX_EVALUATION",
+      "required_fields": [
+        "method_1_advantage",
+        "method_1_disadvantage",
+        "method_2_advantage",
+        "method_2_disadvantage",
+        "method_3_advantage",
+        "method_3_disadvantage"
+      ],
+      "method_slots": {
+        "method_1": {
+          "slot_index": 1,
+          "display_name_by_module": {
+            "banana_browning": "图像法"
+          }
+        },
+        "method_2": {
+          "slot_index": 2,
+          "display_name_by_module": {
+            "banana_browning": "网格法"
+          }
+        },
+        "method_3": {
+          "slot_index": 3,
+          "display_name_by_module": {
+            "banana_browning": "称重法"
+          }
+        }
+      },
+      "fields": {
+        "method_1_advantage": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "method_evaluation",
+          "method_slot": "method_1",
+          "evaluation_side": "advantage",
+          "tagging_consumed": true
+        },
+        "method_1_disadvantage": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "method_evaluation",
+          "method_slot": "method_1",
+          "evaluation_side": "disadvantage",
+          "tagging_consumed": true
+        },
+        "method_2_advantage": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "method_evaluation",
+          "method_slot": "method_2",
+          "evaluation_side": "advantage",
+          "tagging_consumed": true
+        },
+        "method_2_disadvantage": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "method_evaluation",
+          "method_slot": "method_2",
+          "evaluation_side": "disadvantage",
+          "tagging_consumed": true
+        },
+        "method_3_advantage": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "method_evaluation",
+          "method_slot": "method_3",
+          "evaluation_side": "advantage",
+          "tagging_consumed": true
+        },
+        "method_3_disadvantage": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "method_evaluation",
+          "method_slot": "method_3",
+          "evaluation_side": "disadvantage",
+          "tagging_consumed": true
+        }
+      }
+    },
+    "page_07_experiment_intro": {
+      "page_index": 7,
+      "page_type": "A1_FLOW",
+      "required_fields": [],
+      "fields": {}
+    },
+    "page_08_simulation_explore": {
+      "page_index": 8,
+      "page_type": "D1_SIMULATION_ONLY",
+      "required_fields": [],
+      "fields": {}
+    },
+    "page_09_experiment_question_1": {
+      "page_index": 9,
+      "page_type": "D2_SIMULATION_QUESTION",
+      "required_fields": [
+        "question_1_answer"
+      ],
+      "questions": {
+        "question_1": {
+          "question_index": 1,
+          "answer_field_id": "question_1_answer",
+          "required": true,
+          "tagging_consumed": true
+        }
+      },
+      "fields": {
+        "question_1_answer": {
+          "field_role": "single_choice",
+          "required": true,
+          "group_id": "experiment_questions",
+          "question_id": "question_1",
+          "tagging_consumed": true
+        }
+      }
+    },
+    "page_10_experiment_question_2": {
+      "page_index": 10,
+      "page_type": "D2_SIMULATION_QUESTION",
+      "required_fields": [
+        "question_2_answer"
+      ],
+      "questions": {
+        "question_2": {
+          "question_index": 2,
+          "answer_field_id": "question_2_answer",
+          "required": true,
+          "tagging_consumed": true
+        }
+      },
+      "fields": {
+        "question_2_answer": {
+          "field_role": "single_choice",
+          "required": true,
+          "group_id": "experiment_questions",
+          "question_id": "question_2",
+          "tagging_consumed": true
+        }
+      }
+    },
+    "page_11_experiment_question_3": {
+      "page_index": 11,
+      "page_type": "D2_SIMULATION_QUESTION",
+      "required_fields": [
+        "question_3_answer"
+      ],
+      "questions": {
+        "question_3": {
+          "question_index": 3,
+          "answer_field_id": "question_3_answer",
+          "required": true,
+          "tagging_consumed": true
+        }
+      },
+      "fields": {
+        "question_3_answer": {
+          "field_role": "single_choice",
+          "required": true,
+          "group_id": "experiment_questions",
+          "question_id": "question_3",
+          "tagging_consumed": true
+        }
+      }
+    },
+    "page_12_solution_selection": {
+      "page_index": 12,
+      "page_type": "E1_CHART_PLAN_DECISION",
+      "required_fields": [
+        "plan_table",
+        "reason_text"
+      ],
+      "fields": {
+        "chart_evidence_1": {
+          "field_role": "chart",
+          "required": false,
+          "group_id": "solution_evidence",
+          "tagging_consumed": true
+        },
+        "plan_table": {
+          "field_role": "dynamic_table",
+          "required": true,
+          "group_id": "solution_plan",
+          "row_id_required": true,
+          "tagging_consumed": true
+        },
+        "reason_text": {
+          "field_role": "text_input",
+          "required": true,
+          "group_id": "solution_reason",
+          "text_product_role": "decision_reason",
+          "tagging_consumed": true
+        }
+      },
+      "param_slots": {
+        "plan_param_1": {
+          "slot_index": 1,
+          "display_name_by_module": {
+            "banana_browning": "品种"
+          }
+        },
+        "plan_param_2": {
+          "slot_index": 2,
+          "display_name_by_module": {
+            "banana_browning": "温度"
+          }
+        }
+      }
+    },
+    "page_13_finish": {
+      "page_index": 13,
+      "page_type": "A1_FLOW",
+      "required_fields": [],
+      "fields": {}
+    }
+  }
+}

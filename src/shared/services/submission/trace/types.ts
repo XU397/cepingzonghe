@@ -4,6 +4,7 @@ export type L2TraceEventType =
   | 'START_PAGE'
   | 'PAGE_HIDDEN'
   | 'PAGE_VISIBLE'
+  | 'PAGE_IDLE'
   | 'SUBMIT_ATTEMPT'
   | 'TASK_FINISH'
   | 'CONTENT_EXPOSE'
@@ -51,6 +52,28 @@ export type TraceTargetType =
   | 'table'
   | 'content'
   | 'timer';
+
+export type PageIdlePhase =
+  | 'initial_before_first_action'
+  | 'after_blocked_submit'
+  | 'between_effective_events';
+
+export interface PageIdleOptions {
+  idleDurationMs: number;
+  idlePhase: PageIdlePhase;
+  pageVisible: true;
+  windowFocused: true;
+  time?: Date;
+}
+
+export interface ChatScrollOptions {
+  scrollDelta: number;
+  scrollDirection: 'up' | 'down';
+  visibleContentIdsBefore: string[];
+  visibleContentIdsAfter: string[];
+  phase: string;
+  time?: Date;
+}
 
 export interface TracePageLike {
   legacyPageId: string;

@@ -13,6 +13,8 @@ interface MockPageContext {
   logOperation: ReturnType<typeof vi.fn>;
   setPageStartTime: ReturnType<typeof vi.fn>;
   collectAnswer: ReturnType<typeof vi.fn>;
+  registerTraceCollectorFlush: ReturnType<typeof vi.fn>;
+  registerTraceOperationObserver: ReturnType<typeof vi.fn>;
   answers: Record<string, MockAnswerValue>;
   getPagePrefix: ReturnType<typeof vi.fn>;
 }
@@ -136,6 +138,8 @@ const buildMockPageContext = (
     collectAnswer: vi.fn(({ targetElement, value }: { targetElement: string; value: string }) => {
       answers[targetElement] = value;
     }),
+    registerTraceCollectorFlush: vi.fn(() => () => undefined),
+    registerTraceOperationObserver: vi.fn(() => () => undefined),
     answers,
     getPagePrefix: vi.fn(() => targetPrefix),
   };

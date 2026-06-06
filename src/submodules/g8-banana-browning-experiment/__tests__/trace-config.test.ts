@@ -59,14 +59,11 @@ describe('g8 banana trace page config', () => {
       'instruction_text_02_01',
     ]);
     expect(getTracePageConfigByLegacyPageId('banana_browning_reading')?.requiredFields).toEqual([
-      'factor_options',
+      'factor_selection',
     ]);
     expect(getTracePageConfigByLegacyPageId('banana_browning_reading')?.contentIds).toEqual([
-      'resource_1',
-      'resource_2',
-      'resource_3',
-      'resource_4',
-      'resource_5',
+      'factor_card_1',
+      'factor_card_2',
     ]);
     expect(getTracePageConfigByLegacyPageId('banana_browning_design')?.requiredFields).toEqual([
       'input_idea_1',

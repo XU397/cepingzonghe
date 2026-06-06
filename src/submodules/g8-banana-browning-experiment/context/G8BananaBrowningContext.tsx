@@ -43,6 +43,9 @@ type G8BananaBrowningAction =
   | { type: 'SET_FLOW_CONTEXT'; payload: FlowContextData | null }
   | { type: 'SET_VALIDATION_ERROR'; payload: string };
 
+type TraceOperationBoundary = Omit<OperationLog, 'code'> & Partial<Pick<OperationLog, 'code'>>;
+type TraceOperationObserver = (_operation: TraceOperationBoundary) => void;
+
 interface G8BananaBrowningContextValue extends G8BananaBrowningContextState {
   flowContextInjected: boolean;
   logOperation: (operation: Omit<OperationLog, 'code'>) => void;
@@ -53,6 +56,7 @@ interface G8BananaBrowningContextValue extends G8BananaBrowningContextState {
   setFlowContext: (flowContext: FlowContextData | null) => void;
   setValidationError: (error: string) => void;
   registerTraceCollectorFlush: (_flush: () => void) => () => void;
+  registerTraceOperationObserver: (_observer: TraceOperationObserver) => () => void;
   flushTraceCollectors: () => void;
   getOperationsSnapshot: () => OperationLog[];
   getPagePrefix: () => string;
@@ -240,20 +244,29 @@ export const G8BananaBrowningProvider: React.FC<G8BananaBrowningProviderProps> =
   const operationsRef = useRef<OperationLog[]>([]);
   operationsRef.current = state.operationLogs;
   const traceCollectorFlushersRef = useRef(new Set<() => void>());
+  const traceOperationObserversRef = useRef(new Set<TraceOperationObserver>());
 
   const logOperation = useCallback((operation: Omit<OperationLog, 'code'>) => {
-    const code = sequenceRef.current.next();
     const pageId = operation.pageId || currentPageRef.current;
-    const previousOperations = operationsRef.current;
     const normalizedTime =
       isL2TraceOperation(operation) && operation.time
         ? operation.time
         : formatTimestamp(operation.time ? new Date(operation.time) : new Date());
-    const operationWithCode: OperationLog = {
+    const operationBoundary: TraceOperationBoundary = {
       ...operation,
-      code,
       pageId,
       time: normalizedTime,
+    };
+
+    if (operationBoundary.eventType !== 'PAGE_IDLE') {
+      traceOperationObserversRef.current.forEach(observer => observer(operationBoundary));
+    }
+
+    const code = sequenceRef.current.next();
+    const previousOperations = operationsRef.current;
+    const operationWithCode: OperationLog = {
+      ...operationBoundary,
+      code,
     };
     const nextOperations = [...previousOperations, operationWithCode];
     operationsRef.current = nextOperations;
@@ -359,6 +372,13 @@ export const G8BananaBrowningProvider: React.FC<G8BananaBrowningProviderProps> =
     };
   }, []);
 
+  const registerTraceOperationObserver = useCallback((observer: TraceOperationObserver) => {
+    traceOperationObserversRef.current.add(observer);
+    return () => {
+      traceOperationObserversRef.current.delete(observer);
+    };
+  }, []);
+
   const flushTraceCollectors = useCallback(() => {
     traceCollectorFlushersRef.current.forEach(flush => flush());
   }, []);
@@ -401,6 +421,7 @@ export const G8BananaBrowningProvider: React.FC<G8BananaBrowningProviderProps> =
       setFlowContext,
       setValidationError,
       registerTraceCollectorFlush,
+      registerTraceOperationObserver,
       flushTraceCollectors,
       getOperationsSnapshot,
       flowContextInjected,
@@ -419,6 +440,7 @@ export const G8BananaBrowningProvider: React.FC<G8BananaBrowningProviderProps> =
       setFlowContext,
       setValidationError,
       registerTraceCollectorFlush,
+      registerTraceOperationObserver,
       flushTraceCollectors,
       getOperationsSnapshot,
       flowContextInjected,

@@ -1,9 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  TEXT_DEBOUNCE_MS,
+  TEXT_THROTTLE_CHAR_DELTA,
+  createTextEventCollector,
+} from '@shared/services/submission/trace';
 import momAvatar from '@assets/images/mamaT.png';
 import xiaomingAvatar from '@assets/images/xiaomingT.png';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
 import type { PageId } from '../mapping';
 import styles from '../styles/Page03BananaMystery.module.css';
+import { buildPage02StartMetadata } from '../trace/pageStartMetadata';
 import { useTracePageStart } from '../trace/useTracePageStart';
 
 interface DialogueMessage {
@@ -32,6 +38,12 @@ const MAX_LENGTH = 200;
 interface DialoguePhoneProps {
   messages: DialogueMessage[];
   onMessageClick: (msg: DialogueMessage, idx: number, roleName: string) => void;
+  onUserScroll: (_payload: {
+    scrollDelta: number;
+    scrollDirection: 'up' | 'down';
+    visibleContentIdsBefore: string[];
+    visibleContentIdsAfter: string[];
+  }) => void;
 }
 
 const CHARACTER_MAP: Record<string, { name: string; avatar: string; side: 'left' | 'right' }> = {
@@ -39,9 +51,22 @@ const CHARACTER_MAP: Record<string, { name: string; avatar: string; side: 'left'
   xiaoming: { name: '小明', avatar: xiaomingAvatar, side: 'right' },
 };
 
+const REGISTERED_CHAT_CONTENT_IDS = new Set(
+  Array.from({ length: 5 }, (_, index) => `chat_bubble_02_${String(index + 1).padStart(2, '0')}`)
+);
+const USER_SCROLL_INTENT_MS = 1000;
+const PROGRAMMATIC_SCROLL_SETTLE_MS = 250;
+const USER_SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ']);
+
+const getRegisteredChatContentId = (index: number) => {
+  const contentId = `chat_bubble_02_${String(index + 1).padStart(2, '0')}`;
+  return REGISTERED_CHAT_CONTENT_IDS.has(contentId) ? contentId : undefined;
+};
+
 const DialoguePhone: React.FC<DialoguePhoneProps> = ({
   messages,
   onMessageClick,
+  onUserScroll,
 }) => {
   const [displayed, setDisplayed] = useState<DialogueMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -49,15 +74,152 @@ const DialoguePhone: React.FC<DialoguePhoneProps> = ({
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const currentIdxRef = useRef(0);
   const isPlayingRef = useRef(false);
+  const lastScrollTopRef = useRef(0);
+  const visibleIdsBeforeRef = useRef<string[]>([]);
+  const suppressProgrammaticScrollRef = useRef(false);
+  const programmaticScrollTargetRef = useRef<number | null>(null);
+  const programmaticScrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userScrollIntentRef = useRef(false);
+  const userScrollIntentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const scrollToBottom = useCallback(() => {
-    if (chatBodyRef.current) {
-      chatBodyRef.current.scrollTo({
-        top: chatBodyRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+  const getVisibleContentIds = useCallback(() => {
+    const container = chatBodyRef.current;
+    if (!container) {
+      return [];
+    }
+
+    const containerRect = container.getBoundingClientRect();
+    return Array.from(container.querySelectorAll<HTMLElement>('[data-content-id]'))
+      .filter(element => {
+        const elementRect = element.getBoundingClientRect();
+        return (
+          elementRect.bottom > containerRect.top &&
+          elementRect.top < containerRect.bottom &&
+          elementRect.right > containerRect.left &&
+          elementRect.left < containerRect.right
+        );
+      })
+      .map(element => element.dataset.contentId)
+      .filter(
+        (contentId): contentId is string =>
+          Boolean(contentId) && REGISTERED_CHAT_CONTENT_IDS.has(contentId as string)
+      );
+  }, []);
+
+  const syncScrollSnapshot = useCallback(() => {
+    visibleIdsBeforeRef.current = getVisibleContentIds();
+    lastScrollTopRef.current = chatBodyRef.current?.scrollTop || 0;
+  }, [getVisibleContentIds]);
+
+  const clearProgrammaticScrollTimer = useCallback(() => {
+    if (programmaticScrollTimerRef.current !== null) {
+      clearTimeout(programmaticScrollTimerRef.current);
+      programmaticScrollTimerRef.current = null;
     }
   }, []);
+
+  const clearUserScrollIntentTimer = useCallback(() => {
+    if (userScrollIntentTimerRef.current !== null) {
+      clearTimeout(userScrollIntentTimerRef.current);
+      userScrollIntentTimerRef.current = null;
+    }
+  }, []);
+
+  const endProgrammaticScroll = useCallback(() => {
+    clearProgrammaticScrollTimer();
+    suppressProgrammaticScrollRef.current = false;
+    programmaticScrollTargetRef.current = null;
+    syncScrollSnapshot();
+  }, [clearProgrammaticScrollTimer, syncScrollSnapshot]);
+
+  const scrollToBottom = useCallback(() => {
+    const chatBody = chatBodyRef.current;
+    if (!chatBody) {
+      return;
+    }
+
+    clearProgrammaticScrollTimer();
+    suppressProgrammaticScrollRef.current = true;
+    programmaticScrollTargetRef.current = chatBody.scrollHeight;
+    if (typeof chatBody.scrollTo === 'function') {
+      chatBody.scrollTo({
+        top: chatBody.scrollHeight,
+        behavior: 'smooth',
+      });
+    } else {
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+    programmaticScrollTimerRef.current = setTimeout(
+      endProgrammaticScroll,
+      PROGRAMMATIC_SCROLL_SETTLE_MS
+    );
+  }, [clearProgrammaticScrollTimer, endProgrammaticScroll]);
+
+  const markUserScrollIntent = useCallback(() => {
+    userScrollIntentRef.current = true;
+    clearUserScrollIntentTimer();
+    userScrollIntentTimerRef.current = setTimeout(() => {
+      userScrollIntentRef.current = false;
+      userScrollIntentTimerRef.current = null;
+    }, USER_SCROLL_INTENT_MS);
+  }, [clearUserScrollIntentTimer]);
+
+  const handleScroll = useCallback(() => {
+    const chatBody = chatBodyRef.current;
+    if (!chatBody) {
+      return;
+    }
+
+    const nextScrollTop = chatBody.scrollTop;
+    const scrollDelta = nextScrollTop - lastScrollTopRef.current;
+    const visibleContentIdsBefore =
+      visibleIdsBeforeRef.current.length > 0
+        ? visibleIdsBeforeRef.current
+        : getVisibleContentIds();
+    const visibleContentIdsAfter = getVisibleContentIds();
+    const programmaticTarget = programmaticScrollTargetRef.current;
+
+    if (scrollDelta === 0 || suppressProgrammaticScrollRef.current || !userScrollIntentRef.current) {
+      visibleIdsBeforeRef.current = visibleContentIdsAfter;
+      lastScrollTopRef.current = nextScrollTop;
+      if (
+        suppressProgrammaticScrollRef.current &&
+        programmaticTarget !== null &&
+        Math.abs(nextScrollTop - programmaticTarget) <= 1
+      ) {
+        endProgrammaticScroll();
+      }
+      return;
+    }
+
+    onUserScroll({
+      scrollDelta,
+      scrollDirection: scrollDelta < 0 ? 'up' : 'down',
+      visibleContentIdsBefore,
+      visibleContentIdsAfter,
+    });
+    visibleIdsBeforeRef.current = visibleContentIdsAfter;
+    lastScrollTopRef.current = nextScrollTop;
+  }, [endProgrammaticScroll, getVisibleContentIds, onUserScroll]);
+
+  const handleScrollKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (USER_SCROLL_KEYS.has(event.key)) {
+        markUserScrollIntent();
+      }
+    },
+    [markUserScrollIntent]
+  );
+
+  useEffect(syncScrollSnapshot, [displayed, isCompleted, isTyping, syncScrollSnapshot]);
+
+  useEffect(
+    () => () => {
+      clearProgrammaticScrollTimer();
+      clearUserScrollIntentTimer();
+    },
+    [clearProgrammaticScrollTimer, clearUserScrollIntentTimer]
+  );
 
   const showNext = useCallback(() => {
     if (currentIdxRef.current >= messages.length) {
@@ -135,17 +297,29 @@ const DialoguePhone: React.FC<DialoguePhoneProps> = ({
         </button>
       </div>
 
-      <div className={styles.chatBody} ref={chatBodyRef}>
+      <div
+        className={styles.chatBody}
+        ref={chatBodyRef}
+        onWheel={markUserScrollIntent}
+        onTouchMove={markUserScrollIntent}
+        onPointerDown={markUserScrollIntent}
+        onKeyDown={handleScrollKeyDown}
+        onScroll={handleScroll}
+        data-testid="page02-chat-body"
+        tabIndex={0}
+      >
         {displayed.map((msg, idx) => {
           const char = CHARACTER_MAP[msg.role] || CHARACTER_MAP.xiaoming;
           const isRight = char.side === 'right';
           const bubbleClass = msg.role === 'mom' ? styles.bubbleMom : styles.bubbleXiaoming;
           const arrowClass = msg.role === 'mom' ? styles.arrowMom : styles.arrowXiaoming;
+          const contentId = getRegisteredChatContentId(idx);
 
           return (
             <div
               key={idx}
               className={`${styles.msgRow} ${isRight ? styles.msgRowRight : ''} ${styles.msgEnter} ${styles.msgClickable}`}
+              data-content-id={contentId}
               onClick={() => onMessageClick(msg, idx, char.name)}
               role="button"
               tabIndex={0}
@@ -250,15 +424,14 @@ const Page03BananaMystery: React.FC = () => {
     getPagePrefix,
     validationError,
     setValidationError,
+    registerTraceCollectorFlush,
   } = useG8BananaBrowningContext();
 
   const traceLogger = useTracePageStart({
     pageId: 'banana_mystery' as PageId,
     pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
     flowContext: undefined,
-    metadata: {
-      initial_state: {},
-    },
+    metadata: buildPage02StartMetadata(),
   });
 
   const [inputValue, setInputValue] = useState(() => {
@@ -266,14 +439,49 @@ const Page03BananaMystery: React.FC = () => {
     return typeof saved === 'string' ? saved : '';
   });
 
-  const inputStateRef = useRef({ focused: false });
+  const textCollectorRef = useRef<ReturnType<typeof createTextEventCollector> | null>(null);
+  const hasInputFocusRef = useRef(false);
+
+  const getTextCollector = useCallback(() => {
+    if (!traceLogger) {
+      return null;
+    }
+    if (!textCollectorRef.current) {
+      textCollectorRef.current = createTextEventCollector({
+        fieldId: 'input_question_1',
+        logger: traceLogger,
+        debounceMs: TEXT_DEBOUNCE_MS,
+        throttleCharDelta: TEXT_THROTTLE_CHAR_DELTA,
+      });
+    }
+    return textCollectorRef.current;
+  }, [traceLogger]);
+
+  const flushTextCollector = useCallback(() => {
+    textCollectorRef.current?.flush('submit');
+  }, []);
+
+  useEffect(
+    () => registerTraceCollectorFlush(flushTextCollector),
+    [flushTextCollector, registerTraceCollectorFlush]
+  );
+
+  useEffect(
+    () => () => {
+      textCollectorRef.current?.dispose();
+      textCollectorRef.current = null;
+    },
+    [traceLogger]
+  );
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const nextValue = e.target.value;
 
-      traceLogger?.textChange('input_question_1', inputValue, nextValue, {
-        source_answer_key: 'Q1_科学问题',
+      getTextCollector()?.onChange(nextValue, {
+        metadata: {
+          source_answer_key: 'Q1_科学问题',
+        },
       });
 
       setInputValue(nextValue);
@@ -283,22 +491,35 @@ const Page03BananaMystery: React.FC = () => {
         setValidationError('');
       }
     },
-    [traceLogger, inputValue, collectAnswer, validationError, setValidationError]
+    [getTextCollector, collectAnswer, validationError, setValidationError]
   );
 
   const handleInputFocus = useCallback(() => {
-    if (!inputStateRef.current.focused) {
-      traceLogger?.textFocus('input_question_1', inputValue);
-      inputStateRef.current.focused = true;
-    }
-  }, [traceLogger, inputValue]);
+    hasInputFocusRef.current = true;
+    getTextCollector()?.onFocus(inputValue);
+  }, [getTextCollector, inputValue]);
 
   const handleInputBlur = useCallback(() => {
-    traceLogger?.textBlur('input_question_1', inputValue, inputValue, {
+    hasInputFocusRef.current = false;
+    getTextCollector()?.onBlur(inputValue, {
       source_answer_key: 'Q1_科学问题',
     });
-    inputStateRef.current.focused = false;
-  }, [traceLogger, inputValue]);
+  }, [getTextCollector, inputValue]);
+
+  const handleUserScroll = useCallback(
+    (payload: {
+      scrollDelta: number;
+      scrollDirection: 'up' | 'down';
+      visibleContentIdsBefore: string[];
+      visibleContentIdsAfter: string[];
+    }) => {
+      traceLogger?.chatScroll({
+        ...payload,
+        phase: hasInputFocusRef.current ? 'during_input' : 'before_input',
+      });
+    },
+    [traceLogger]
+  );
 
   const handleMessageClick = useCallback(
     (_message: { text: string }, index: number, speakerName: string) => {
@@ -322,6 +543,7 @@ const Page03BananaMystery: React.FC = () => {
           <DialoguePhone
             messages={dialogueMessages}
             onMessageClick={handleMessageClick}
+            onUserScroll={handleUserScroll}
           />
         </div>
 

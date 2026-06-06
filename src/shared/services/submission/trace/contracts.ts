@@ -1,7 +1,7 @@
-import eventSchema from './contracts/event_schema.v2.1.json';
-import fieldRegistry from './contracts/field_registry.v2.1.json';
-import contentRegistry from './contracts/content_registry.banana.v2.1.json';
-import ruleConfig from './contracts/rule_config.v2.1.json';
+import eventSchema from './contracts/event_schema.v2.2.json';
+import fieldRegistry from './contracts/field_registry.v2.2.json';
+import contentRegistry from './contracts/content_registry.banana.v2.2.json';
+import ruleConfig from './contracts/rule_config.v2.2.json';
 import type { L2PageType, L2TraceEventType } from './types';
 
 type JsonRecord = Record<string, unknown>;
@@ -69,7 +69,7 @@ const targetTypeProperty = asJsonRecord(eventValueProperties.target_type, 'event
 const fieldRegistryPages = asJsonRecord(fieldRegistryRecord.pages, 'field registry pages');
 const contentRegistryPages = asJsonRecord(contentRegistryRecord.pages, 'content registry pages');
 
-export const TRACE_SCHEMA_VERSION = 'science-inquiry-trace-v2.1';
+export const TRACE_SCHEMA_VERSION = 'science-inquiry-trace-v2.2';
 export const TRACE_EVENT_SCHEMA_ID = requiredString(eventSchemaRecord.$id, 'event schema $id');
 export const FIELD_REGISTRY_VERSION = requiredString(
   fieldRegistryRecord.registry_version,
@@ -115,6 +115,8 @@ const requireNumericRuleThreshold = (name: string): number => {
 export const TEXT_DEBOUNCE_MS = requireNumericRuleThreshold('textDebounceMs');
 export const TEXT_THROTTLE_CHAR_DELTA = requireNumericRuleThreshold('textThrottleCharDelta');
 export const EXP_RUN_DEBOUNCE_MS = requireNumericRuleThreshold('expRunDebounceMs');
+export const CHART_HOVER_MIN_MS = requireNumericRuleThreshold('chartHoverMinMs');
+export const PAGE_IDLE_THRESHOLD_MS = requireNumericRuleThreshold('pageIdleThresholdMs');
 
 export const getFieldRegistryPage = (standardPageId: string): JsonRecord | undefined =>
   maybeJsonRecord(fieldRegistryPages[standardPageId]);

@@ -424,6 +424,19 @@ const hasPositiveCharCountAfter = value =>
   typeof value.metadata.char_count_after === 'number' &&
   value.metadata.char_count_after > 0;
 
+const FIELD_VALUE_COMPLETION_EVENTS = new Set([
+  'TEXT_CHANGE',
+  'TEXT_BLUR',
+  'CHECKBOX_TOGGLE',
+  'SET_EXP_PARAM',
+  'SET_PLAN_PARAM',
+  'SELECT_BEST',
+]);
+
+const TARGET_VALUE_COMPLETION_EVENTS = new Set(['TEXT_CHANGE', 'TEXT_BLUR']);
+
+const PARAM_VALUE_COMPLETION_EVENTS = new Set(['SET_EXP_PARAM', 'SET_PLAN_PARAM']);
+
 const deriveCompletedFieldIdsFromAnswers = (answers, requiredFieldIds) => {
   const completed = new Set();
   const required = new Set(requiredFieldIds);
@@ -468,24 +481,26 @@ const deriveCompletedFieldIdsFromOperations = (operations, pageId, requiredField
       return;
     }
 
-    if (typeof value.field_id === 'string') {
+    const eventType = operation?.eventType;
+
+    if (FIELD_VALUE_COMPLETION_EVENTS.has(eventType) && typeof value.field_id === 'string') {
       const isComplete =
         isNonEmptyTraceValue(value.value_after) ||
         hasPositiveCharCountAfter(value);
       setCompletion(value.field_id, isComplete);
     }
 
-    if (operation?.eventType === 'SELECT_ANSWER' && typeof value.question_id === 'string') {
+    if (eventType === 'SELECT_ANSWER' && typeof value.question_id === 'string') {
       const fieldId = questionAnswerFieldById[value.question_id];
       if (fieldId) {
         setCompletion(fieldId, isNonEmptyTraceValue(value.option_id));
       }
     }
 
-    if (typeof value.target_id === 'string') {
+    if (TARGET_VALUE_COMPLETION_EVENTS.has(eventType) && typeof value.target_id === 'string') {
       setCompletion(value.target_id, isNonEmptyTraceValue(value.value_after));
     }
-    if (typeof value.param_id === 'string') {
+    if (PARAM_VALUE_COMPLETION_EVENTS.has(eventType) && typeof value.param_id === 'string') {
       setCompletion(value.param_id, isNonEmptyTraceValue(value.value_after));
     }
   });
@@ -604,6 +619,7 @@ const appendL2TimeoutOperations = (operations, { pageNumber, timeoutOptions, ans
         metadata: {
           ...timeoutMetadata,
           missing_fields: missingFields,
+          submit_trigger: 'timeout',
         },
       })
     );

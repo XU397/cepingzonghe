@@ -218,6 +218,7 @@ const LOCAL_TIMESTAMP_REGEX = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 const RESERVED_TARGETS = new Set<string>(RESERVED_TARGET_ELEMENTS);
 const L2_ALLOWED_EVENT_TYPES = new Set([
   'START_PAGE',
+  'PAGE_IDLE',
   'PAGE_HIDDEN',
   'PAGE_VISIBLE',
   'SUBMIT_ATTEMPT',
@@ -459,7 +460,7 @@ const submitAttemptOp = (
       submit_attempt_id: `submit_${config.pageId}_${validationStatus}_${timeOffset}`,
       validation_status: validationStatus,
     },
-    { missing_fields: missingFields }
+    { missing_fields: missingFields, submit_trigger: 'next_button' }
   );
 
 const setExpParamOp = (
@@ -544,6 +545,7 @@ const setPlanParamOp = (
     'table',
     timeOffset,
     {
+      field_id: 'plan_table',
       row_id: rowId,
       param_id: paramId,
       value_before: valueBefore,
@@ -565,6 +567,7 @@ const selectBestOp = (
     'table',
     timeOffset,
     {
+      field_id: 'plan_table',
       row_id: rowId,
       value_before: previousBestRowId,
       value_after: rowId,
@@ -1047,6 +1050,7 @@ describe('banana submission-format fixtures', () => {
 
     expect(value.validation_status).toBe('blocked');
     expect(value.metadata?.missing_fields).toEqual(['question_1_answer']);
+    expect(value.metadata?.submit_trigger).toBe('next_button');
     expect(value.metadata?.missing_fields).not.toContain(L2_SIMULATION_EVENTS.executeExp);
     expect(value.metadata?.missing_fields).not.toContain('Q5_海南香蕉变黑时间');
     expect(defaultSubmitSpy).not.toHaveBeenCalled();
@@ -1077,6 +1081,7 @@ describe('banana submission-format fixtures', () => {
 
     expect(value.validation_status).toBe('blocked');
     expect(value.metadata?.missing_fields).toEqual(['reason_text']);
+    expect(value.metadata?.submit_trigger).toBe('next_button');
     expect(value.metadata?.missing_fields).not.toContain('plan_table');
     expect(defaultSubmitSpy).not.toHaveBeenCalled();
     expect(submitSpy).not.toHaveBeenCalled();
@@ -1106,6 +1111,7 @@ describe('banana submission-format fixtures', () => {
 
     expect(value.validation_status).toBe('blocked');
     expect(value.metadata?.missing_fields).toEqual([]);
+    expect(value.metadata?.submit_trigger).toBe('next_button');
     expect(value.metadata?.missing_fields).not.toContain('question_1_answer');
     expect(value.metadata?.missing_fields).not.toContain(L2_SIMULATION_EVENTS.executeExp);
     expect(defaultSubmitSpy).not.toHaveBeenCalled();
@@ -1196,6 +1202,7 @@ describe('banana submission-format fixtures', () => {
         validation_status: 'success',
         metadata: {
           missing_fields: [],
+          submit_trigger: 'next_button',
         },
       },
     });
@@ -1206,13 +1213,13 @@ describe('banana submission-format fixtures', () => {
     unmount();
   });
 
-  it('Page04 emits registry-stable factor and modal IDs in a valid L2 success mark', async () => {
+  it('Page04 emits registry-stable factor and modal IDs for any visible factor option', async () => {
     const { unmount } = renderExperiment('banana_browning_reading');
 
     await screen.findByRole('heading', { name: '香蕉变黑：资料阅读' }, { timeout: 5000 });
     fireEvent.click(screen.getByRole('button', { name: /香蕉变色之谜/ }));
     fireEvent.click(screen.getByRole('button', { name: '关闭' }));
-    fireEvent.click(screen.getByText('环境温度'));
+    fireEvent.click(screen.getByText('环境湿度'));
     fireEvent.click(screen.getByTestId('frame-next-button'));
 
     await waitFor(() => {
@@ -1233,15 +1240,15 @@ describe('banana submission-format fixtures', () => {
       submoduleId: RUNTIME_FLOW_CONTEXT.submoduleId,
       stepIndex: RUNTIME_FLOW_CONTEXT.stepIndex,
     });
-    expect(openModal?.value).toMatchObject({ content_id: 'resource_1' });
-    expect(closeModal?.value).toMatchObject({ content_id: 'resource_1' });
+    expect(openModal?.value).toMatchObject({ content_id: 'factor_card_1' });
+    expect(closeModal?.value).toMatchObject({ content_id: 'factor_card_1' });
     expect(factorToggle?.value).toMatchObject({
-      field_id: 'factor_options',
-      question_id: 'factor_options',
-      option_id: 'factor_option_1',
+      field_id: 'factor_selection',
+      question_id: 'factor_selection',
+      option_id: 'option_b',
     });
-    expect((factorToggle?.value as Record<string, any>).option_id).not.toBe('环境温度');
-    expect((factorToggle?.value as Record<string, any>).metadata.option_label).toBe('环境温度');
+    expect((factorToggle?.value as Record<string, any>).option_id).not.toBe('环境湿度');
+    expect((factorToggle?.value as Record<string, any>).metadata.option_label).toBe('环境湿度');
 
     unmount();
   });
@@ -1350,6 +1357,7 @@ describe('banana submission-format fixtures', () => {
       validation_status: 'blocked',
       metadata: {
         missing_fields: ['question_1_answer'],
+        submit_trigger: 'next_button',
       },
     });
 
@@ -1401,6 +1409,7 @@ describe('banana submission-format fixtures', () => {
       validation_status: 'blocked',
       metadata: {
         missing_fields: ['plan_table', 'reason_text'],
+        submit_trigger: 'next_button',
       },
     });
     const eventTypes = mark?.operationList.map(operation => operation.eventType) || [];

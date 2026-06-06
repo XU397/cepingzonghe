@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  CHART_HOVER_MIN_MS,
+  TEXT_DEBOUNCE_MS,
+  TEXT_THROTTLE_CHAR_DELTA,
+  createTextEventCollector,
+} from '@shared/services/submission/trace';
+import {
   LineChart,
   Line,
   XAxis,
@@ -124,6 +130,16 @@ interface SolutionRow {
   temperature: string;
 }
 
+interface ChartHoverSnapshot {
+  pointId: string;
+  dataSnapshot: {
+    day: string;
+    series_id: unknown;
+    black_ratio: unknown;
+    values: Record<string, unknown>;
+  };
+}
+
 const createSolutionRow = (id: string): SolutionRow => ({
   id,
   variety: '',
@@ -131,18 +147,25 @@ const createSolutionRow = (id: string): SolutionRow => ({
 });
 
 const INITIAL_SOLUTION_ROW_ID = 'page_12_solution_selection_row_1';
+const CHART_EVIDENCE_ID = 'chart_evidence_1';
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 const Page13SolutionSelection: React.FC = () => {
-  const { collectAnswer, getPagePrefix } = useG8BananaBrowningContext();
+  const { collectAnswer, getPagePrefix, registerTraceCollectorFlush } =
+    useG8BananaBrowningContext();
 
   const nextIdRef = useRef(2);
   const rowsRef = useRef<SolutionRow[]>([createSolutionRow(INITIAL_SOLUTION_ROW_ID)]);
   const bestIdRef = useRef<string | null>(null);
   const reasonValueRef = useRef('');
-  const reasonFocusValueRef = useRef('');
+  const reasonCollectorRef = useRef<ReturnType<typeof createTextEventCollector> | null>(null);
+  const chartHoverStartedAtRef = useRef(0);
+  const lastChartHoverLoggedAtRef = useRef(0);
+  const chartHoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const chartHoverSnapshotRef = useRef<ChartHoverSnapshot | null>(null);
+  const loggedChartHoverPointRef = useRef<string | null>(null);
 
   const traceLogger = useTracePageStart({
     pageId: 'solution_selection' as PageId,
@@ -159,6 +182,47 @@ const Page13SolutionSelection: React.FC = () => {
   const [rows, setRowsState] = useState<SolutionRow[]>(() => rowsRef.current);
   const [bestId, setBestIdState] = useState<string | null>(null);
   const [reason, setReason] = useState('');
+
+  const clearChartHoverTimer = useCallback(() => {
+    if (chartHoverTimerRef.current) {
+      clearTimeout(chartHoverTimerRef.current);
+      chartHoverTimerRef.current = null;
+    }
+  }, []);
+
+  const getReasonCollector = useCallback(() => {
+    if (!traceLogger) {
+      return null;
+    }
+    if (!reasonCollectorRef.current) {
+      reasonCollectorRef.current = createTextEventCollector({
+        fieldId: 'reason_text',
+        logger: traceLogger,
+        debounceMs: TEXT_DEBOUNCE_MS,
+        throttleCharDelta: TEXT_THROTTLE_CHAR_DELTA,
+      });
+    }
+    return reasonCollectorRef.current;
+  }, [traceLogger]);
+
+  const flushReasonCollector = useCallback(() => {
+    reasonCollectorRef.current?.flush('submit');
+  }, []);
+
+  useEffect(
+    () => registerTraceCollectorFlush(flushReasonCollector),
+    [flushReasonCollector, registerTraceCollectorFlush]
+  );
+
+  useEffect(
+    () => () => {
+      reasonCollectorRef.current?.dispose();
+      reasonCollectorRef.current = null;
+      clearChartHoverTimer();
+      chartHoverSnapshotRef.current = null;
+    },
+    [clearChartHoverTimer, traceLogger]
+  );
 
   const updateRows = useCallback((nextRows: SolutionRow[]) => {
     rowsRef.current = nextRows;
@@ -263,29 +327,144 @@ const Page13SolutionSelection: React.FC = () => {
   const handleReasonChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value;
-      const previousValue = reasonValueRef.current;
       reasonValueRef.current = value;
       setReason(value);
       collectAnswer({ targetElement: 'Q8_理由', value });
-      traceLogger?.textChange('reason_text', previousValue, value, {
-        source_answer_key: 'Q8_理由',
+      getReasonCollector()?.onChange(value, {
+        metadata: {
+          source_answer_key: 'Q8_理由',
+        },
       });
     },
-    [collectAnswer, traceLogger]
+    [collectAnswer, getReasonCollector]
   );
 
   const handleReasonFocus = useCallback(() => {
-    reasonFocusValueRef.current = reasonValueRef.current;
-  }, []);
+    getReasonCollector()?.onFocus(reasonValueRef.current);
+  }, [getReasonCollector]);
 
   const handleReasonBlur = useCallback(
     () => {
-      traceLogger?.textBlur('reason_text', reasonFocusValueRef.current, reasonValueRef.current, {
+      getReasonCollector()?.onBlur(reasonValueRef.current, {
         source_answer_key: 'Q8_理由',
+      });
+    },
+    [getReasonCollector]
+  );
+
+  const buildChartHoverSnapshot = useCallback((state: unknown): ChartHoverSnapshot | null => {
+    if (!state || typeof state !== 'object') {
+      return null;
+    }
+
+    const activePayload = (state as { activePayload?: unknown[] }).activePayload;
+    const firstPayload = activePayload?.[0];
+    if (!firstPayload || typeof firstPayload !== 'object') {
+      return null;
+    }
+
+    const payloadRecord = firstPayload as Record<string, unknown>;
+    const dataPoint =
+      payloadRecord.payload && typeof payloadRecord.payload === 'object'
+        ? (payloadRecord.payload as Record<string, unknown>)
+        : {};
+    const day = String(dataPoint.day ?? (state as { activeLabel?: unknown }).activeLabel ?? '');
+    if (!day) {
+      return null;
+    }
+
+    return {
+      pointId: `day_${day}`,
+      dataSnapshot: {
+        day,
+        series_id: payloadRecord.dataKey,
+        black_ratio: payloadRecord.value,
+        values: dataPoint,
+      },
+    };
+  }, []);
+
+  const emitChartHoverSnapshot = useCallback(
+    (snapshot: ChartHoverSnapshot, hoverMs: number, loggedAt: number) => {
+      if (!traceLogger || loggedChartHoverPointRef.current === snapshot.pointId) {
+        return;
+      }
+      if (
+        lastChartHoverLoggedAtRef.current &&
+        loggedAt - lastChartHoverLoggedAtRef.current < CHART_HOVER_MIN_MS
+      ) {
+        return;
+      }
+
+      lastChartHoverLoggedAtRef.current = loggedAt;
+      loggedChartHoverPointRef.current = snapshot.pointId;
+      traceLogger.chartHover(CHART_EVIDENCE_ID, snapshot.pointId, {
+        hover_ms: hoverMs,
+        data_snapshot: snapshot.dataSnapshot,
       });
     },
     [traceLogger]
   );
+
+  const scheduleChartHoverThreshold = useCallback(() => {
+    clearChartHoverTimer();
+    chartHoverTimerRef.current = setTimeout(() => {
+      chartHoverTimerRef.current = null;
+      const snapshot = chartHoverSnapshotRef.current;
+      const startedAt = chartHoverStartedAtRef.current;
+      if (!snapshot || startedAt === 0) {
+        return;
+      }
+      const now = Date.now();
+      const hoverMs = now - startedAt;
+      if (hoverMs >= CHART_HOVER_MIN_MS) {
+        emitChartHoverSnapshot(snapshot, hoverMs, now);
+      }
+    }, CHART_HOVER_MIN_MS);
+  }, [clearChartHoverTimer, emitChartHoverSnapshot]);
+
+  const handleChartHover = useCallback(
+    (state: unknown) => {
+      const snapshot = buildChartHoverSnapshot(state);
+      const now = Date.now();
+      const currentPointId = chartHoverSnapshotRef.current?.pointId;
+      if (!snapshot) {
+        return;
+      }
+
+      chartHoverSnapshotRef.current = snapshot;
+      if (chartHoverStartedAtRef.current === 0 || currentPointId !== snapshot.pointId) {
+        chartHoverStartedAtRef.current = now;
+        loggedChartHoverPointRef.current = null;
+        scheduleChartHoverThreshold();
+        return;
+      }
+
+      const hoverMs = now - chartHoverStartedAtRef.current;
+      if (hoverMs < CHART_HOVER_MIN_MS) {
+        return;
+      }
+
+      emitChartHoverSnapshot(snapshot, hoverMs, now);
+    },
+    [buildChartHoverSnapshot, emitChartHoverSnapshot, scheduleChartHoverThreshold]
+  );
+
+  const handleChartLeave = useCallback(() => {
+    const snapshot = chartHoverSnapshotRef.current;
+    const startedAt = chartHoverStartedAtRef.current;
+    const now = Date.now();
+    if (snapshot && startedAt > 0) {
+      const hoverMs = now - startedAt;
+      if (hoverMs >= CHART_HOVER_MIN_MS) {
+        emitChartHoverSnapshot(snapshot, hoverMs, now);
+      }
+    }
+    clearChartHoverTimer();
+    chartHoverStartedAtRef.current = 0;
+    chartHoverSnapshotRef.current = null;
+    loggedChartHoverPointRef.current = null;
+  }, [clearChartHoverTimer, emitChartHoverSnapshot]);
 
   // ---- render ----
   return (
@@ -313,7 +492,13 @@ const Page13SolutionSelection: React.FC = () => {
           <h3 className={styles.chartTitle}>香蕉储存温度、时长与黑变比例关系图</h3>
           <div className={styles.chartWrapper}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={CHART_DATA} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+              <LineChart
+                data={CHART_DATA}
+                margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
+                onMouseMove={handleChartHover}
+                onTouchMove={handleChartHover}
+                onMouseLeave={handleChartLeave}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis
                   dataKey="day"

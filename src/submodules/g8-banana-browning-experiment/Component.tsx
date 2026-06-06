@@ -150,7 +150,7 @@ const mapBlockedMissingFieldsForL2 = (
     ...(tracePageConfig?.fieldIds || []),
   ]);
   const fallbackFieldByMissingKey: Record<string, string> = {
-    Q2_影响因素: 'factor_options',
+    Q2_影响因素: 'factor_selection',
     Q8_方案表格: 'plan_table',
     Q8_最优方案: 'plan_table',
   };
@@ -570,6 +570,7 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
               validation.missing || []
             ),
             targetId: 'next_button',
+            submitTrigger: 'next_button',
           });
         } else {
           logOperation({
@@ -613,6 +614,7 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
             targetType: 'button',
             metadata: {
               missing_fields: [],
+              submit_trigger: 'next_button',
             },
             emit: false,
           }

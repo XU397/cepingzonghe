@@ -4,10 +4,15 @@ import {
   CONTENT_REGISTRY_VERSION,
   FIELD_REGISTRY_HASH,
   FIELD_REGISTRY_VERSION,
+  PAGE_IDLE_THRESHOLD_MS,
+  RULE_CONFIG_HASH,
+  RULE_CONFIG_VERSION,
   TRACE_SCHEMA_VERSION,
 } from './contracts';
 import type {
+  ChatScrollOptions,
   L2TraceEventType,
+  PageIdleOptions,
   TraceEventValue,
   TraceFlowContext,
   TraceIdFactory,
@@ -47,6 +52,7 @@ export interface SubmitAttemptOptions {
   validationStatus: 'success' | 'blocked' | 'auto' | 'timeout';
   missingFields?: string[];
   targetId?: string;
+  submitTrigger?: string;
 }
 
 export const DEFAULT_TRACE_TIMEZONE_OFFSET_MINUTES = 8 * 60;
@@ -111,6 +117,8 @@ export function createPageTraceLogger(options: TraceLoggerOptions) {
       field_registry_hash: FIELD_REGISTRY_HASH,
       content_registry_version: CONTENT_REGISTRY_VERSION,
       content_registry_hash: CONTENT_REGISTRY_HASH,
+      rule_config_version: RULE_CONFIG_VERSION,
+      rule_config_hash: RULE_CONFIG_HASH,
       page_index: options.page.pageIndex,
       legacy_page_id: options.page.legacyPageId,
     },
@@ -217,6 +225,42 @@ export function createPageTraceLogger(options: TraceLoggerOptions) {
         }
       );
     },
+    pageIdle(options: PageIdleOptions) {
+      return emit(
+        'PAGE_IDLE',
+        {},
+        {
+          targetId: 'page',
+          targetType: 'page',
+          time: options.time,
+          metadata: {
+            idle_duration_ms: options.idleDurationMs,
+            idle_phase: options.idlePhase,
+            page_visible: options.pageVisible,
+            window_focused: options.windowFocused,
+            threshold_ms: PAGE_IDLE_THRESHOLD_MS,
+          },
+        }
+      );
+    },
+    chatScroll(options: ChatScrollOptions) {
+      return emit(
+        'CHAT_SCROLL',
+        {},
+        {
+          targetId: 'chat_window',
+          targetType: 'content',
+          time: options.time,
+          metadata: {
+            scroll_delta: options.scrollDelta,
+            scroll_direction: options.scrollDirection,
+            visible_content_ids_before: [...options.visibleContentIdsBefore],
+            visible_content_ids_after: [...options.visibleContentIdsAfter],
+            phase: options.phase,
+          },
+        }
+      );
+    },
     contentActivate(contentId: string, targetType: TraceTargetType = 'content', metadata = {}) {
       return emit('CONTENT_ACTIVATE', { content_id: contentId }, { targetId: contentId, targetType, metadata });
     },
@@ -269,15 +313,24 @@ export function createPageTraceLogger(options: TraceLoggerOptions) {
       return emit('RESET_EXP', {}, { targetId: 'reset_exp', targetType: 'experiment', metadata });
     },
     addRow(rowId: string, metadata = {}) {
-      return emit('ADD_ROW', { row_id: rowId }, { targetId: rowId, targetType: 'table', metadata });
+      return emit(
+        'ADD_ROW',
+        { field_id: 'plan_table', row_id: rowId },
+        { targetId: rowId, targetType: 'table', metadata }
+      );
     },
     deleteRow(rowId: string, metadata = {}) {
-      return emit('DELETE_ROW', { row_id: rowId }, { targetId: rowId, targetType: 'table', metadata });
+      return emit(
+        'DELETE_ROW',
+        { field_id: 'plan_table', row_id: rowId },
+        { targetId: rowId, targetType: 'table', metadata }
+      );
     },
     setPlanParam(rowId: string, paramId: string, valueBefore: unknown, valueAfter: unknown, metadata = {}) {
       return emit(
         'SET_PLAN_PARAM',
         {
+          field_id: 'plan_table',
           row_id: rowId,
           param_id: paramId,
           value_before: valueBefore,
@@ -294,6 +347,7 @@ export function createPageTraceLogger(options: TraceLoggerOptions) {
       return emit(
         'SELECT_BEST',
         {
+          field_id: 'plan_table',
           row_id: rowId,
           value_before: previousBestRowId,
           value_after: rowId,
@@ -308,7 +362,28 @@ export function createPageTraceLogger(options: TraceLoggerOptions) {
         }
       );
     },
+    chartHover(chartId: string, pointId: string, metadata = {}) {
+      return emit(
+        'CHART_HOVER',
+        {
+          chart_id: chartId,
+          point_id: pointId,
+        },
+        {
+          targetId: chartId,
+          targetType: 'chart',
+          metadata,
+        }
+      );
+    },
     submitAttempt(options: SubmitAttemptOptions) {
+      const submitTrigger =
+        options.submitTrigger ||
+        (options.validationStatus === 'timeout'
+          ? 'timeout'
+          : options.validationStatus === 'auto'
+            ? 'auto'
+            : options.targetId || 'next_button');
       return emit(
         'SUBMIT_ATTEMPT',
         {
@@ -320,6 +395,7 @@ export function createPageTraceLogger(options: TraceLoggerOptions) {
           targetType: 'button',
           metadata: {
             missing_fields: options.missingFields || [],
+            submit_trigger: submitTrigger,
           },
         }
       );

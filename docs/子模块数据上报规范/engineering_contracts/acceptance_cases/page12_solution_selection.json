@@ -1,0 +1,201 @@
+{
+  "case_id": "page12_solution_selection_v2_2",
+  "purpose": "Validate chart inspection, dynamic plan table operations, best-plan selection, and reason-writing behavior on Page12. Open-text argumentation quality is not a current L3 label.",
+  "input": {
+    "pageNumber": "1.13",
+    "pageDesc": "选择最佳方案并说明理由",
+    "beginTime": "2026-06-03T10:20:00.000+08:00",
+    "endTime": "2026-06-03T10:21:05.000+08:00",
+    "answerList": [],
+    "imgList": [],
+    "operationList": [
+      {
+        "code": 1,
+        "targetElement": "P1.13_page",
+        "eventType": "START_PAGE",
+        "time": "2026-06-03T10:20:00.000+08:00",
+        "value": {
+          "trace_id": "p12-e001",
+          "page_id": "page_12_solution_selection",
+          "page_type": "E1_CHART_PLAN_DECISION",
+          "target_id": "page",
+          "target_type": "page",
+          "metadata": {
+            "schema_version": "science-inquiry-trace-v2.2",
+            "field_registry_version": "science-inquiry-field-registry-v2.2",
+            "field_registry_hash": "93f0d6b95a7ae9615bf9bc0604fd81fa52d47712c9f3eda8670875e6646bcc54",
+            "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+            "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+            "rule_config_version": "rule-config-v2.2",
+            "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83"
+          }
+        }
+      },
+      {
+        "code": 2,
+        "targetElement": "P1.13_chart_evidence_1",
+        "eventType": "CHART_HOVER",
+        "time": "2026-06-03T10:20:08.000+08:00",
+        "value": {
+          "trace_id": "p12-e002",
+          "page_id": "page_12_solution_selection",
+          "page_type": "E1_CHART_PLAN_DECISION",
+          "target_id": "chart_evidence_1",
+          "target_type": "chart",
+          "chart_id": "chart_evidence_1",
+          "point_id": "day_12",
+          "metadata": {
+            "hover_ms": 1200,
+            "data_snapshot": {
+              "day": "12",
+              "series_id": "10℃-海南香蕉",
+              "black_ratio": 0.23
+            }
+          }
+        }
+      },
+      {
+        "code": 3,
+        "targetElement": "P1.13_plan_table",
+        "eventType": "ADD_ROW",
+        "time": "2026-06-03T10:20:14.000+08:00",
+        "value": {
+          "trace_id": "p12-e003",
+          "page_id": "page_12_solution_selection",
+          "page_type": "E1_CHART_PLAN_DECISION",
+          "target_id": "plan_table",
+          "target_type": "table",
+          "field_id": "plan_table",
+          "row_id": "row_1",
+          "metadata": {
+            "row_index": 1
+          }
+        }
+      },
+      {
+        "code": 4,
+        "targetElement": "P1.13_plan_table_row_1_temperature",
+        "eventType": "SET_PLAN_PARAM",
+        "time": "2026-06-03T10:20:18.000+08:00",
+        "value": {
+          "trace_id": "p12-e004",
+          "page_id": "page_12_solution_selection",
+          "page_type": "E1_CHART_PLAN_DECISION",
+          "target_id": "plan_table_row_1_temperature",
+          "target_type": "table",
+          "field_id": "plan_table",
+          "row_id": "row_1",
+          "param_id": "plan_param_2",
+          "param_name": "temperature",
+          "value_before": null,
+          "value_after": 13,
+          "metadata": {
+            "row_snapshot": {
+              "plan_param_1": "banana_variety_a",
+              "plan_param_2": 13
+            }
+          }
+        }
+      },
+      {
+        "code": 5,
+        "targetElement": "P1.13_plan_table_row_1_best",
+        "eventType": "SELECT_BEST",
+        "time": "2026-06-03T10:20:24.000+08:00",
+        "value": {
+          "trace_id": "p12-e005",
+          "page_id": "page_12_solution_selection",
+          "page_type": "E1_CHART_PLAN_DECISION",
+          "target_id": "plan_table_row_1_best",
+          "target_type": "table",
+          "field_id": "plan_table",
+          "row_id": "row_1",
+          "metadata": {
+            "previous_best_row_id": null,
+            "current_best_row_id": "row_1"
+          }
+        }
+      },
+      {
+        "code": 6,
+        "targetElement": "P1.13_reason_text",
+        "eventType": "TEXT_FOCUS",
+        "time": "2026-06-03T10:20:32.000+08:00",
+        "value": {
+          "trace_id": "p12-e006",
+          "page_id": "page_12_solution_selection",
+          "page_type": "E1_CHART_PLAN_DECISION",
+          "target_id": "reason_text",
+          "target_type": "text",
+          "field_id": "reason_text",
+          "metadata": {
+            "focus_order": 1
+          }
+        }
+      },
+      {
+        "code": 7,
+        "targetElement": "P1.13_reason_text",
+        "eventType": "TEXT_BLUR",
+        "time": "2026-06-03T10:20:50.000+08:00",
+        "value": {
+          "trace_id": "p12-e007",
+          "page_id": "page_12_solution_selection",
+          "page_type": "E1_CHART_PLAN_DECISION",
+          "target_id": "reason_text",
+          "target_type": "text",
+          "field_id": "reason_text",
+          "value_after": "我选择 row_1，因为图表中 13 度时香蕉变黑比例较低，和其他方案相比更能延缓变黑。",
+          "metadata": {
+            "char_count_after": 43,
+            "mentions_data": true,
+            "mentions_comparison": true,
+            "mentions_causality": true
+          }
+        }
+      },
+      {
+        "code": 8,
+        "targetElement": "P1.13_next_button",
+        "eventType": "SUBMIT_ATTEMPT",
+        "time": "2026-06-03T10:21:03.000+08:00",
+        "value": {
+          "trace_id": "p12-e008",
+          "page_id": "page_12_solution_selection",
+          "page_type": "E1_CHART_PLAN_DECISION",
+          "target_id": "next_button",
+          "target_type": "button",
+          "submit_attempt_id": "p12-submit-1",
+          "validation_status": "success",
+          "metadata": {
+            "missing_fields": [],
+            "submit_trigger": "next_button"
+          }
+        }
+      }
+    ]
+  },
+  "expected": {
+    "labels": [
+      "CHART_INSPECT",
+      "DESIGN_PLAN",
+      "EVALUATE_PLAN",
+      "WRITE_REASON"
+    ],
+    "forbidden_labels": [
+      "ARGUMENTATION",
+      "FIELD_COMPLETENESS",
+      "START_PAGE",
+      "SUBMIT_PAGE",
+      "TASK_FINISH"
+    ],
+    "dataQualityWarnings": [],
+    "l4Required": false,
+    "pageMetadata": {
+      "lifecycle": {
+        "startPage": true,
+        "submitSuccess": true
+      }
+    }
+  }
+}
