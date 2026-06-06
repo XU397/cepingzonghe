@@ -8,6 +8,9 @@ import { useTracePageStart } from '../trace/useTracePageStart';
 import xjbs01 from '@assets/images/xjbs01.jpg';
 import xjbs02 from '@assets/images/xjbs02.jpg';
 import xjbs03 from '@assets/images/xjbs03.jpg';
+import xjbs04 from '@assets/images/xjbs04.jpg';
+import xjbs05 from '@assets/images/xjbs05.jpg';
+import xjbs06 from '@assets/images/xjbs06.jpg';
 import xjbs11 from '@assets/images/xjbs11.jpg';
 
 const RESOURCE_ITEMS: ReadonlyArray<{
@@ -17,7 +20,9 @@ const RESOURCE_ITEMS: ReadonlyArray<{
 }> = [
   { id: 'card_1', title: '香蕉变色之谜', traceContentId: 'factor_card_1' },
   { id: 'card_2', title: '香蕉种植分布图', traceContentId: 'factor_card_2' },
-  { id: 'card_3', title: '香蕉网店评论区' },
+  { id: 'card_3', title: '香蕉网店评论区', traceContentId: 'factor_card_3' },
+  { id: 'card_4', title: '果店员工宝典', traceContentId: 'factor_card_4' },
+  { id: 'card_5', title: '香蕉"泡药"真相', traceContentId: 'factor_card_5' },
 ];
 
 const FACTOR_OPTIONS: ReadonlyArray<{
@@ -107,6 +112,65 @@ function OverlayContentLayer3() {
   );
 }
 
+function OverlayContentLayer4() {
+  return (
+    <div className={styles.guideContainer}>
+      <img src={xjbs04} alt="保鲜膜包裹香蕉" className={styles.guideImage} />
+      <div className={styles.guideSection}>
+        <span className={styles.guideSectionIcon} aria-hidden="true">
+          1
+        </span>
+        <div className={styles.guideSectionContent}>
+          <h4 className={styles.guideSectionTitle}>保鲜膜包一包</h4>
+          <p className={styles.guideSectionText}>
+            包上保鲜膜能隔绝空气，香蕉熟得慢，皮也没那么容易变黑。
+          </p>
+        </div>
+      </div>
+      <div className={styles.guideSection}>
+        <span className={styles.guideSectionIcon} aria-hidden="true">
+          2
+        </span>
+        <div className={styles.guideSectionContent}>
+          <h4 className={styles.guideSectionTitle}>皮上喷点水</h4>
+          <p className={styles.guideSectionText}>
+            太干会使香蕉失水，口感变差，甜度下降。喷点水保持湿度更好。
+          </p>
+        </div>
+      </div>
+      <div className={styles.guideSection}>
+        <span className={styles.guideSectionIcon} aria-hidden="true">
+          3
+        </span>
+        <div className={styles.guideSectionContent}>
+          <h4 className={styles.guideSectionTitle}>温度别太冷也别太热</h4>
+          <p className={styles.guideSectionText}>
+            太冷会冻伤，果肉变黑变硬；太热熟得快，也容易发黑。常温阴凉处最适合。
+          </p>
+        </div>
+      </div>
+      <img src={xjbs05} alt="香蕉保存示意" className={styles.guideImage} />
+    </div>
+  );
+}
+
+function OverlayContentLayer5() {
+  return (
+    <div className={styles.newsContainer}>
+      <img src={xjbs06} alt="香蕉保鲜场景" className={styles.newsImage} />
+      <p className={styles.newsText}>
+        近日，网传"香蕉浸泡乳白色不明液体"的视频引发关注，有网友怀疑是甲醛。
+        相关部门回应称，该液体实为经国家批准的香蕉保鲜剂。
+      </p>
+      <p className={styles.newsText}>
+        香蕉产自热带、亚热带地区，是市场上常年供应的鲜果。因其采摘后易遭真菌侵染，
+        变黑腐烂，必须立即保鲜。该保鲜剂具有低毒、易降解，用量和残留均符合国际标准，
+        可放心食用。
+      </p>
+    </div>
+  );
+}
+
 function renderOverlayById(overlayId: string): React.ReactNode {
   switch (overlayId) {
     case 'card_1':
@@ -115,6 +179,10 @@ function renderOverlayById(overlayId: string): React.ReactNode {
       return <OverlayContentLayer2 />;
     case 'card_3':
       return <OverlayContentLayer3 />;
+    case 'card_4':
+      return <OverlayContentLayer4 />;
+    case 'card_5':
+      return <OverlayContentLayer5 />;
     default:
       return null;
   }
@@ -220,7 +288,7 @@ const Page04BananaBrowningReading: React.FC = () => {
 
       <div className={styles.instructionCard}>
         <p className={styles.instructionText}>
-          为探索影响香蕉变黑的因素，小明搜集了左侧的三条资料。
+          为探索影响香蕉变黑的因素，小明搜集了左侧的五条资料。
           <strong>请点击并查看资料</strong>，
           思考香蕉变黑可能与以下哪些因素有关？单击选择你认为正确的选项，再次点击可取消选择（可多选）。
         </p>

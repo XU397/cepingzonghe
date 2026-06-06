@@ -25,7 +25,7 @@
             "field_registry_version": "science-inquiry-field-registry-v2.2",
             "field_registry_hash": "93f0d6b95a7ae9615bf9bc0604fd81fa52d47712c9f3eda8670875e6646bcc54",
             "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
-            "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+            "content_registry_hash": "7a8074f0f856be60949015eabae64e5ebf43bca9413b587476c8fb2231cc1fd7",
             "rule_config_version": "rule-config-v2.2",
             "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
             "initial_visible_content_ids": [

@@ -64,11 +64,22 @@ describe('g8 banana trace page config', () => {
     expect(getTracePageConfigByLegacyPageId('banana_browning_reading')?.contentIds).toEqual([
       'factor_card_1',
       'factor_card_2',
+      'factor_card_3',
+      'factor_card_4',
+      'factor_card_5',
     ]);
     expect(getTracePageConfigByLegacyPageId('banana_browning_design')?.requiredFields).toEqual([
       'input_idea_1',
       'input_idea_2',
       'input_idea_3',
+    ]);
+    expect(getTracePageConfigByLegacyPageId('banana_browning_design')?.contentIds).toEqual([
+      'plan_generation_instruction',
+    ]);
+    expect(getTracePageConfigByLegacyPageId('banana_browning_evaluation')?.contentIds).toEqual([
+      'method_material_1',
+      'method_material_2',
+      'method_material_3',
     ]);
     expect(getTracePageConfigByLegacyPageId('simulation_question_1')?.questions).toEqual({
       Q5: {
@@ -122,6 +133,10 @@ describe('g8 banana trace page config', () => {
       'chart_evidence_1',
       'plan_table',
       'reason_text',
+    ]);
+    expect(getTracePageConfigByLegacyPageId('solution_selection')?.contentIds).toEqual([
+      'chart_note_12_01',
+      'solution_selection_instruction',
     ]);
   });
 });

@@ -18,6 +18,7 @@ import {
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
 import type { PageId } from '../mapping';
 import styles from '../styles/Page13SolutionSelection.module.css';
+import { useContentActivationTrace } from '../trace/useContentActivationTrace';
 import { useTracePageStart } from '../trace/useTracePageStart';
 
 const CHART_DATA = [
@@ -178,6 +179,7 @@ const Page13SolutionSelection: React.FC = () => {
       },
     },
   });
+  const getContentActivationHandlers = useContentActivationTrace(traceLogger);
 
   const [rows, setRowsState] = useState<SolutionRow[]>(() => rowsRef.current);
   const [bestId, setBestIdState] = useState<string | null>(null);
@@ -476,7 +478,17 @@ const Page13SolutionSelection: React.FC = () => {
         </div>
       </div>
 
-      <p className={styles.instruction}>
+      <p
+        className={styles.instruction}
+        data-content-id="solution_selection_instruction"
+        {...getContentActivationHandlers('solution_selection_instruction', {
+          sourceUiId: 'page12_instruction_text',
+          metadata: {
+            phase: 'before_plan_selection',
+            content_type: 'instruction_text',
+          },
+        })}
+      >
         根据实验结果，小明绘制了香蕉储存温度、时长与黑变比例的关系图（见左下角图）。
         查阅资料得知，为保持口感，香蕉黑变比例不宜超过
         <span className={styles.instructionHighlight}>30%</span>

@@ -158,4 +158,30 @@ describe('trace runtime contracts', () => {
     expect(fieldRegistry.pages.page_13_finish).toBeDefined();
     expect(fieldRegistry.pages.page_13_task_finish).toBeUndefined();
   });
+
+  it('registers all enhanced banana content activation IDs in v2.2 content registry', () => {
+    const contentRegistry = JSON.parse(
+      readContract('src/shared/services/submission/trace/contracts', 'content_registry.banana.v2.2.json')
+    ) as JsonRecord;
+
+    expect(Object.keys(contentRegistry.pages.page_03_factor_selection.content_blocks)).toEqual([
+      'factor_card_1',
+      'factor_card_2',
+      'factor_card_3',
+      'factor_card_4',
+      'factor_card_5',
+    ]);
+    expect(Object.keys(contentRegistry.pages.page_05_plan_generation.content_blocks)).toEqual([
+      'plan_generation_instruction',
+    ]);
+    expect(Object.keys(contentRegistry.pages.page_06_method_evaluation.content_blocks)).toEqual([
+      'method_material_1',
+      'method_material_2',
+      'method_material_3',
+    ]);
+    expect(Object.keys(contentRegistry.pages.page_12_solution_selection.content_blocks)).toEqual([
+      'chart_note_12_01',
+      'solution_selection_instruction',
+    ]);
+  });
 });

@@ -8,8 +8,12 @@ import {
 } from '../context/G8BananaBrowningContext';
 import page12SolutionSelection from '../../../../docs/子模块数据上报规范/engineering_contracts/acceptance_cases/page12_solution_selection.json';
 import Page03BananaMystery from '../pages/Page03BananaMystery';
+import Page04BananaBrowningReading from '../pages/Page04BananaBrowningReading';
+import Page06BananaBrowningDesign from '../pages/Page06BananaBrowningDesign';
+import Page07BananaBrowningEvaluation from '../pages/Page07BananaBrowningEvaluation';
 import Page13SolutionSelection from '../pages/Page13SolutionSelection';
 import type { PageId } from '../mapping';
+import { BANANA_CONTENT_ACTIVATE_HOVER_MIN_MS } from '../trace/useContentActivationTrace';
 
 const { traceLogger } = vi.hoisted(() => ({
   traceLogger: {
@@ -154,6 +158,15 @@ vi.mock('recharts', async () => {
   };
 });
 
+vi.mock('../components/BananaDistributionMap', async () => {
+  const ReactModule = await import('react');
+
+  return {
+    default: () =>
+      ReactModule.createElement('div', { 'data-testid': 'banana-distribution-map' }),
+  };
+});
+
 const FLOW_CONTEXT = {
   flowId: 'flow-1',
   submoduleId: 'g8-banana-browning-experiment',
@@ -236,6 +249,19 @@ const setVisibleChatRects = (chatBody: HTMLElement) => {
       element.getBoundingClientRect = vi.fn(() => makeRect(index * 80, index * 80 + 60));
     }
   );
+};
+
+const getContentBlock = (contentId: string): HTMLElement => {
+  const block = document.querySelector<HTMLElement>(`[data-content-id="${contentId}"]`);
+  expect(block).toBeTruthy();
+  return block as HTMLElement;
+};
+
+const hoverForMs = (element: HTMLElement, dwellMs: number, startedAtMs = 1000) => {
+  vi.setSystemTime(new Date(startedAtMs));
+  fireEvent.mouseEnter(element);
+  vi.setSystemTime(new Date(startedAtMs + dwellMs));
+  fireEvent.mouseLeave(element);
 };
 
 describe('banana page trace event boundaries', () => {
@@ -457,6 +483,98 @@ describe('banana page trace event boundaries', () => {
     }
   });
 
+  it('Page04 renders five material cards and traces every modal open/close', () => {
+    vi.useFakeTimers();
+    renderPage('banana_browning_reading', <Page04BananaBrowningReading />);
+
+    const cards = [
+      ['香蕉变色之谜', 'factor_card_1'],
+      ['香蕉种植分布图', 'factor_card_2'],
+      ['香蕉网店评论区', 'factor_card_3'],
+      ['果店员工宝典', 'factor_card_4'],
+      ['香蕉"泡药"真相', 'factor_card_5'],
+    ] as const;
+
+    cards.forEach(([title, contentId], index) => {
+      const openedAt = 10_000 + index * 2_000;
+      vi.setSystemTime(new Date(openedAt));
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(title) }));
+
+      expect(traceLogger.openModal).toHaveBeenLastCalledWith(
+        contentId,
+        expect.objectContaining({
+          source: 'material_card',
+          title,
+        })
+      );
+
+      vi.setSystemTime(new Date(openedAt + 1200));
+      fireEvent.click(screen.getByRole('button', { name: '关闭' }));
+
+      expect(traceLogger.closeModal).toHaveBeenLastCalledWith(
+        contentId,
+        1200,
+        expect.objectContaining({
+          source: 'material_card',
+        })
+      );
+    });
+
+    expect(screen.getAllByRole('button', { name: /香蕉|果店/ })).toHaveLength(5);
+    expect(traceLogger.openModal).toHaveBeenCalledTimes(5);
+    expect(traceLogger.closeModal).toHaveBeenCalledTimes(5);
+  });
+
+  it('Page06 records Page05 instruction activation only after meaningful hover dwell', () => {
+    vi.useFakeTimers();
+    renderPage('banana_browning_design', <Page06BananaBrowningDesign />);
+
+    const instruction = getContentBlock('plan_generation_instruction');
+
+    hoverForMs(instruction, BANANA_CONTENT_ACTIVATE_HOVER_MIN_MS - 1);
+    expect(traceLogger.contentActivate).not.toHaveBeenCalled();
+
+    hoverForMs(instruction, BANANA_CONTENT_ACTIVATE_HOVER_MIN_MS, 2000);
+
+    expect(traceLogger.contentActivate).toHaveBeenCalledWith(
+      'plan_generation_instruction',
+      'content',
+      expect.objectContaining({
+        activation_type: 'hover',
+        dwell_ms: BANANA_CONTENT_ACTIVATE_HOVER_MIN_MS,
+        phase: 'before_idea_input',
+        source_ui_id: 'page05_instruction_card',
+      })
+    );
+  });
+
+  it('Page07 records each Page06 method material block as distinct content activation', () => {
+    vi.useFakeTimers();
+    renderPage('banana_browning_evaluation', <Page07BananaBrowningEvaluation />);
+
+    hoverForMs(getContentBlock('method_material_1'), BANANA_CONTENT_ACTIVATE_HOVER_MIN_MS);
+    hoverForMs(getContentBlock('method_material_2'), BANANA_CONTENT_ACTIVATE_HOVER_MIN_MS, 3000);
+
+    expect(traceLogger.contentActivate).toHaveBeenCalledWith(
+      'method_material_1',
+      'content',
+      expect.objectContaining({
+        method_id: 'method_image',
+        method_index: 1,
+        activation_type: 'hover',
+      })
+    );
+    expect(traceLogger.contentActivate).toHaveBeenCalledWith(
+      'method_material_2',
+      'content',
+      expect.objectContaining({
+        method_id: 'method_grid',
+        method_index: 2,
+        activation_type: 'hover',
+      })
+    );
+  });
+
   it('Page13 flushes reason text focus/change/blur boundaries before submit', () => {
     renderPage('solution_selection', <Page13SolutionSelection />);
 
@@ -564,6 +682,27 @@ describe('banana page trace event boundaries', () => {
         data_snapshot: expect.objectContaining(
           page12FixtureChartHover?.value.metadata.data_snapshot
         ),
+      })
+    );
+  });
+
+  it('Page13 records top instruction activation after Page02-style hover dwell', () => {
+    vi.useFakeTimers();
+    renderPage('solution_selection', <Page13SolutionSelection />);
+
+    hoverForMs(
+      getContentBlock('solution_selection_instruction'),
+      BANANA_CONTENT_ACTIVATE_HOVER_MIN_MS
+    );
+
+    expect(traceLogger.contentActivate).toHaveBeenCalledWith(
+      'solution_selection_instruction',
+      'content',
+      expect.objectContaining({
+        activation_type: 'hover',
+        dwell_ms: BANANA_CONTENT_ACTIVATE_HOVER_MIN_MS,
+        phase: 'before_plan_selection',
+        source_ui_id: 'page12_instruction_text',
       })
     );
   });

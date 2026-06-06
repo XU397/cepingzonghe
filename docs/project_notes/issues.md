@@ -31,3 +31,8 @@
   - Kept Page13 on submodule-local `page_13_finish`, removed the `page_13_task_finish` compatibility alias, and updated the v2.2 field registry/hash plus acceptance fixture wording to avoid batch-level completion semantics.
   - Restarted `PAGE_IDLE` candidates after visibility/focus regain while preserving idle phase and excluding hidden/blurred time.
   - Mapped all visible Page04 factor options to registered v2.2 `option_a..option_d` IDs while leaving the approved transition-page content reduction intact.
+- 2026-06-06: Enhanced banana content activation trace coverage through OpenSpec change `enhance-banana-content-activation-trace`.
+  - Restored Page03 material reading to five trace-registered cards and records every material modal open/close with dwell time.
+  - Added Page02-style low-noise content activation for Page05 guidance text, Page06 method material blocks, and Page12 top decision guidance.
+  - Updated v2.2 banana content registry/hash, docs mirrors, acceptance fixture hash literals, and focused contract/page trace tests.
+  - Verified with OpenSpec strict validation, focused trace tests, submission checks, and `npm run build`.

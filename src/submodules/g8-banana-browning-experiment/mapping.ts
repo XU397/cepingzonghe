@@ -328,7 +328,13 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
     pageType: 'C1_INFO_SELECTION',
     lifecycleMode: 'l2-trace',
     requiredFields: ['factor_selection'],
-    contentIds: ['factor_card_1', 'factor_card_2'],
+    contentIds: [
+      'factor_card_1',
+      'factor_card_2',
+      'factor_card_3',
+      'factor_card_4',
+      'factor_card_5',
+    ],
   },
   {
     legacyPageId: 'page_05_banana_browning',
@@ -345,6 +351,7 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
     pageType: 'B2_TEXT_MULTI_PARALLEL',
     lifecycleMode: 'l2-trace',
     requiredFields: ['input_idea_1', 'input_idea_2', 'input_idea_3'],
+    contentIds: ['plan_generation_instruction'],
   },
   {
     legacyPageId: 'banana_browning_evaluation',
@@ -360,6 +367,7 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
       'method_3_advantage',
       'method_3_disadvantage',
     ],
+    contentIds: ['method_material_1', 'method_material_2', 'method_material_3'],
   },
   {
     legacyPageId: 'page_08_banana_browning',
@@ -455,7 +463,7 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
     lifecycleMode: 'l2-trace',
     requiredFields: ['plan_table', 'reason_text'],
     fieldIds: ['chart_evidence_1', 'plan_table', 'reason_text'],
-    contentIds: ['chart_note_12_01'],
+    contentIds: ['chart_note_12_01', 'solution_selection_instruction'],
   },
   {
     legacyPageId: 'task_completion',

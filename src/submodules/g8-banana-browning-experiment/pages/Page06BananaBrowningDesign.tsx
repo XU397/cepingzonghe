@@ -7,6 +7,7 @@ import {
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
 import type { PageId } from '../mapping';
 import styles from '../styles/Page06BananaBrowningDesign.module.css';
+import { useContentActivationTrace } from '../trace/useContentActivationTrace';
 import { useTracePageStart } from '../trace/useTracePageStart';
 
 const MAX_CHAR_COUNT = 300;
@@ -39,6 +40,7 @@ const Page06BananaBrowningDesign: React.FC = () => {
       initial_state: {},
     },
   });
+  const getContentActivationHandlers = useContentActivationTrace(traceLogger);
   const textCollectorsRef = useRef<
     Record<string, ReturnType<typeof createTextEventCollector>>
   >({});
@@ -125,7 +127,17 @@ const Page06BananaBrowningDesign: React.FC = () => {
         </div>
       </header>
 
-      <div className={styles.instructionCard}>
+      <div
+        className={styles.instructionCard}
+        data-content-id="plan_generation_instruction"
+        {...getContentActivationHandlers('plan_generation_instruction', {
+          sourceUiId: 'page05_instruction_card',
+          metadata: {
+            phase: 'before_idea_input',
+            content_type: 'instruction_text',
+          },
+        })}
+      >
         <p className={styles.instructionText}>
           为验证小明的猜想，首先需要确定如何判断香蕉变黑的程度。通过查阅资料，小明发现可以用香蕉表皮黑变区域面积占总果皮表面积的百分比（简称"
           <strong>黑变比例</strong>

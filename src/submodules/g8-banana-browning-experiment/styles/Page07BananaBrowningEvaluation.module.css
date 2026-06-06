@@ -120,6 +120,12 @@
   overflow: hidden;
 }
 
+.methodMaterial {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
 .card:nth-child(1) {
   animation-delay: 0.15s;
 }

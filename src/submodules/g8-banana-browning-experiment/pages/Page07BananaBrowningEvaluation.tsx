@@ -10,6 +10,7 @@ import imgMethod1 from '@/assets/images/xjbs07.jpg';
 import imgMethod2 from '@/assets/images/xjbs08.jpg';
 import imgMethod3 from '@/assets/images/xjbs09.jpg';
 import styles from '../styles/Page07BananaBrowningEvaluation.module.css';
+import { useContentActivationTrace } from '../trace/useContentActivationTrace';
 import { useTracePageStart } from '../trace/useTracePageStart';
 
 interface MethodConfig {
@@ -21,6 +22,7 @@ interface MethodConfig {
   consKey: string;
   prosLabel: string;
   consLabel: string;
+  traceContentId: string;
 }
 
 const METHODS: MethodConfig[] = [
@@ -34,6 +36,7 @@ const METHODS: MethodConfig[] = [
     consKey: 'Q4b_图像法缺点',
     prosLabel: '图像法优点',
     consLabel: '图像法缺点',
+    traceContentId: 'method_material_1',
   },
   {
     id: 'method_grid',
@@ -45,6 +48,7 @@ const METHODS: MethodConfig[] = [
     consKey: 'Q4d_网格法缺点',
     prosLabel: '网格法优点',
     consLabel: '网格法缺点',
+    traceContentId: 'method_material_2',
   },
   {
     id: 'method_weigh',
@@ -56,6 +60,7 @@ const METHODS: MethodConfig[] = [
     consKey: 'Q4f_称重法缺点',
     prosLabel: '称重法优点',
     consLabel: '称重法缺点',
+    traceContentId: 'method_material_3',
   },
 ];
 
@@ -83,6 +88,7 @@ const Page07BananaBrowningEvaluation: React.FC = () => {
       initial_state: {},
     },
   });
+  const getContentActivationHandlers = useContentActivationTrace(traceLogger);
   const textCollectorsRef = useRef<
     Record<string, ReturnType<typeof createTextEventCollector>>
   >({});
@@ -167,13 +173,28 @@ const Page07BananaBrowningEvaluation: React.FC = () => {
       <section className={styles.cardsContainer}>
         {METHODS.map((method, index) => (
           <article key={method.id} className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardNumber}>{index + 1}</div>
-              <span className={styles.cardName}>{method.name}</span>
-            </div>
-            <p className={styles.cardDescription}>{method.description}</p>
-            <div className={styles.imagePlaceholder}>
-              <img src={method.imageSrc} alt={method.name} />
+            <div
+              className={styles.methodMaterial}
+              data-content-id={method.traceContentId}
+              {...getContentActivationHandlers(method.traceContentId, {
+                sourceUiId: method.id,
+                metadata: {
+                  phase: 'method_review',
+                  content_type: 'method_material',
+                  method_index: index + 1,
+                  method_id: method.id,
+                  method_name: method.name,
+                },
+              })}
+            >
+              <div className={styles.cardHeader}>
+                <div className={styles.cardNumber}>{index + 1}</div>
+                <span className={styles.cardName}>{method.name}</span>
+              </div>
+              <p className={styles.cardDescription}>{method.description}</p>
+              <div className={styles.imagePlaceholder}>
+                <img src={method.imageSrc} alt={method.name} />
+              </div>
             </div>
             <div className={styles.inputGroup}>
               <label
