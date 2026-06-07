@@ -85,7 +85,7 @@ standard_verification:
   golden_reference_commit: 327e164f62d1e1fda76b34ac585e78ecf03f65af
   initial_design_doc_commit: a79c60388131f0f3d68d290ad9fd01fa451d25b4
   approved_design_doc_commit: ce60fd3
-  cp_branch_completion_commit: pending:apply-not-committed
+  cp_branch_completion_commit: 36b870086428750c3f5b5d383b3ed69bc2300dc0
   backend_commit: optional
 worktree_status:
   source_worktree: 'D:\myproject\cp-banana-trace-standardization'
@@ -93,13 +93,11 @@ worktree_status:
   branch: 2026-06-04-banana-trace-standardization
   golden_reference_commit: 327e164f62d1e1fda76b34ac585e78ecf03f65af
   design_doc_commit: ce60fd3
-  branch_completion_commit: pending:apply-not-committed
-  mainline_merge_status: pending:not-merged-to-main-worktree
-  mainline_merge_commit: pending:not-merged-to-D-myproject-cp
+  branch_completion_commit: 36b870086428750c3f5b5d383b3ed69bc2300dc0
+  mainline_merge_status: merged
+  mainline_merge_commit: 7f52bb6
 known_dependency_gates:
   - canonical_commit remains pending until the KB standard package is committed.
-  - branch_completion_commit remains pending until this cp apply work is committed.
-  - mainline_merge_commit remains pending until this branch is merged to D:\myproject\cp.
 ---
 
 # Standard Sync Manifest
@@ -116,12 +114,13 @@ This manifest is the cp-local machine-readable declaration for the standard subm
 - `mirrors[]` records auditable metadata for cp summaries that mirror KB content.
 - `standard_verification` and `worktree_status` keep golden, design, branch completion, and mainline merge commits separate.
 
-## Pending Fields
+## Resolved Fields
 
-The `pending:*` values are intentional dependency gates:
+The following dependency gates have been resolved:
 
-- KB canonical files currently exist, but the KB standard package is uncommitted in the KB repository.
-- Branch completion commit is recorded in the cross-repo repo-result after the cp commit exists; this manifest keeps branch completion fields pending to avoid a self-referential Git commit hash.
-- This branch has not merged to `D:\myproject\cp`, so mainline merge fields cannot be final.
+- Branch completion commit: `36b870086428750c3f5b5d383b3ed69bc2300dc0` (cp branch final commit).
+- Mainline merge: commit `7f52bb6`, merged to `D:\myproject\cp` main.
 
-Do not treat these pending values as final completion markers during closeout.
+## Remaining Pending Fields
+
+- KB canonical mirror commits remain `pending:kb-standard-package-uncommitted` in mirrors[] until the KB standard package is committed in the KB repository.
