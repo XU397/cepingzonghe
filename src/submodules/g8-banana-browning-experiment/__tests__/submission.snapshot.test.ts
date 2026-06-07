@@ -2,6 +2,15 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import EventTypes from '@shared/services/submission/eventTypes.js';
+import {
+  CONTENT_REGISTRY_HASH,
+  CONTENT_REGISTRY_VERSION,
+  FIELD_REGISTRY_HASH,
+  FIELD_REGISTRY_VERSION,
+  RULE_CONFIG_HASH,
+  RULE_CONFIG_VERSION,
+  TRACE_SCHEMA_VERSION,
+} from '@shared/services/submission/trace';
 import { encodeCompositePageNum } from '@shared/utils/pageMapping';
 import { validateTraceMark } from '../trace/useBananaTraceLogger';
 import G8BananaBrowningExperiment from '../Component';
@@ -23,6 +32,15 @@ const FLOW_CONTEXT = {
   flowId: 'flow-banana',
   submoduleId: 'g8-banana-browning-experiment',
   stepIndex: 0,
+};
+const CANONICAL_TRACE_METADATA = {
+  schema_version: TRACE_SCHEMA_VERSION,
+  field_registry_version: FIELD_REGISTRY_VERSION,
+  field_registry_hash: FIELD_REGISTRY_HASH,
+  content_registry_version: CONTENT_REGISTRY_VERSION,
+  content_registry_hash: CONTENT_REGISTRY_HASH,
+  rule_config_version: RULE_CONFIG_VERSION,
+  rule_config_hash: RULE_CONFIG_HASH,
 };
 const USER_CONTEXT: SubmoduleProps['userContext'] = {
   user: {
@@ -215,9 +233,7 @@ const logL2Operation = (
       target_type: targetType,
       ...valuePatch,
       metadata: {
-        schema_version: 'science-inquiry-trace-v2.1',
-        field_registry_version: 'science-inquiry-field-registry-v2.1',
-        content_registry_version: 'science-inquiry-content-registry-banana-v2.1',
+        ...CANONICAL_TRACE_METADATA,
         page_index: config.pageIndex,
         legacy_page_id: config.pageId,
         ...metadata,
@@ -391,8 +407,10 @@ describe('g8-banana-browning submission snapshots', () => {
             "targetElement": "P1.10_page",
             "value": {
               "metadata": {
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
+                "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+                "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+                "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+                "field_registry_version": "science-inquiry-field-registry-v2.2",
                 "flow_context": {
                   "flowId": "flow-banana",
                   "moduleName": "8年级香蕉变黑科学探究",
@@ -405,7 +423,9 @@ describe('g8-banana-browning submission snapshots', () => {
                 },
                 "legacy_page_id": "simulation_question_1",
                 "page_index": 9,
-                "schema_version": "science-inquiry-trace-v2.1",
+                "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+                "rule_config_version": "rule-config-v2.2",
+                "schema_version": "science-inquiry-trace-v2.2",
               },
               "page_id": "page_09_experiment_question_1",
               "page_type": "D2_SIMULATION_QUESTION",
@@ -420,14 +440,18 @@ describe('g8-banana-browning submission snapshots', () => {
             "targetElement": "P1.10_exp_param_days",
             "value": {
               "metadata": {
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
+                "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+                "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+                "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+                "field_registry_version": "science-inquiry-field-registry-v2.2",
                 "legacy_page_id": "simulation_question_1",
                 "page_index": 9,
                 "param_snapshot": {
                   "days": 6,
                 },
-                "schema_version": "science-inquiry-trace-v2.1",
+                "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+                "rule_config_version": "rule-config-v2.2",
+                "schema_version": "science-inquiry-trace-v2.2",
               },
               "page_id": "page_09_experiment_question_1",
               "page_type": "D2_SIMULATION_QUESTION",
@@ -448,8 +472,10 @@ describe('g8-banana-browning submission snapshots', () => {
               "exp_run_id": "banana_days_6",
               "metadata": {
                 "click_debounce_applied": false,
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
+                "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+                "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+                "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+                "field_registry_version": "science-inquiry-field-registry-v2.2",
                 "legacy_page_id": "simulation_question_1",
                 "page_index": 9,
                 "param_snapshot": {
@@ -490,7 +516,9 @@ describe('g8-banana-browning submission snapshots', () => {
                     },
                   ],
                 },
-                "schema_version": "science-inquiry-trace-v2.1",
+                "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+                "rule_config_version": "rule-config-v2.2",
+                "schema_version": "science-inquiry-trace-v2.2",
               },
               "page_id": "page_09_experiment_question_1",
               "page_type": "D2_SIMULATION_QUESTION",
@@ -505,13 +533,17 @@ describe('g8-banana-browning submission snapshots', () => {
             "targetElement": "P1.10_question_1_option_b",
             "value": {
               "metadata": {
-                "content_registry_version": "science-inquiry-content-registry-banana-v2.1",
-                "field_registry_version": "science-inquiry-field-registry-v2.1",
+                "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+                "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+                "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+                "field_registry_version": "science-inquiry-field-registry-v2.2",
                 "legacy_page_id": "simulation_question_1",
                 "option_text": "6天",
                 "page_index": 9,
                 "question_index": 1,
-                "schema_version": "science-inquiry-trace-v2.1",
+                "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+                "rule_config_version": "rule-config-v2.2",
+                "schema_version": "science-inquiry-trace-v2.2",
                 "total_question_count": 3,
               },
               "option_id": "option_b",

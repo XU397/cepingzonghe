@@ -467,7 +467,7 @@ export const TRACE_PAGE_CONFIGS: TracePageConfig[] = [
   },
   {
     legacyPageId: 'task_completion',
-    standardPageId: 'page_13_finish',
+    standardPageId: 'page_13_task_finish',
     pageIndex: 13,
     pageType: 'A1_FLOW',
     lifecycleMode: 'l2-trace',

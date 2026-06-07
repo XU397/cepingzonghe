@@ -174,10 +174,12 @@ const FLOW_CONTEXT = {
 };
 
 let readOperationsSnapshot: (() => Array<{ code: number; eventType: string }>) | null = null;
+let readAnswersSnapshot: (() => Record<string, string | number | boolean | null>) | null = null;
 
 const TraceProbe = () => {
-  const { flushTraceCollectors, getOperationsSnapshot } = useG8BananaBrowningContext();
+  const { answers, flushTraceCollectors, getOperationsSnapshot } = useG8BananaBrowningContext();
   readOperationsSnapshot = getOperationsSnapshot;
+  readAnswersSnapshot = () => ({ ...answers });
 
   return (
     <button type="button" data-testid="flush-trace-collectors" onClick={flushTraceCollectors}>
@@ -267,11 +269,13 @@ const hoverForMs = (element: HTMLElement, dwellMs: number, startedAtMs = 1000) =
 describe('banana page trace event boundaries', () => {
   beforeEach(() => {
     readOperationsSnapshot = null;
+    readAnswersSnapshot = null;
     Object.values(traceLogger).forEach(mock => mock.mockClear());
   });
 
   afterEach(() => {
     readOperationsSnapshot = null;
+    readAnswersSnapshot = null;
     vi.clearAllTimers();
     vi.useRealTimers();
   });
@@ -604,6 +608,22 @@ describe('banana page trace event boundaries', () => {
     );
   });
 
+  it('Page13 writes the selected best plan answer synchronously on star click', () => {
+    renderPage('solution_selection', <Page13SolutionSelection />);
+
+    const varietySelect = screen.getByLabelText('品种选择');
+    const temperatureSelect = screen.getByLabelText('温度选择');
+    fireEvent.change(varietySelect, { target: { value: '海南香蕉' } });
+    fireEvent.change(temperatureSelect, { target: { value: '10℃' } });
+    fireEvent.click(screen.getByRole('button', { name: '标记为最优方案' }));
+
+    expect(readAnswersSnapshot?.()['Q8_最优方案']).toBe('海南香蕉-10℃');
+    expect(traceLogger.selectBest).toHaveBeenCalledWith(
+      'page_12_solution_selection_row_1',
+      null
+    );
+  });
+
   it('Page13 emits chart hover evidence only after the configured dwell threshold', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(1000));
@@ -625,13 +645,13 @@ describe('banana page trace event boundaries', () => {
 
     expect(traceLogger.chartHover).toHaveBeenCalledWith(
       page12FixtureChartHover?.value.chart_id,
-      page12FixtureChartHover?.value.point_id,
+      'day_12',
       expect.objectContaining({
         hover_ms: CHART_HOVER_MIN_MS,
         data_snapshot: expect.objectContaining({
           day: '12',
-          series_id: page12FixtureChartHover?.value.metadata.data_snapshot.series_id,
-          black_ratio: page12FixtureChartHover?.value.metadata.data_snapshot.black_ratio,
+          series_id: '10℃-海南香蕉',
+          black_ratio: 0.23,
         }),
       })
     );
@@ -652,11 +672,13 @@ describe('banana page trace event boundaries', () => {
     expect(traceLogger.chartHover).toHaveBeenCalledTimes(1);
     expect(traceLogger.chartHover).toHaveBeenCalledWith(
       page12FixtureChartHover?.value.chart_id,
-      page12FixtureChartHover?.value.point_id,
+      'day_12',
       expect.objectContaining({
-        data_snapshot: expect.objectContaining(
-          page12FixtureChartHover?.value.metadata.data_snapshot
-        ),
+        data_snapshot: expect.objectContaining({
+          day: '12',
+          series_id: '10℃-海南香蕉',
+          black_ratio: 0.23,
+        }),
       })
     );
   });
@@ -676,12 +698,14 @@ describe('banana page trace event boundaries', () => {
 
     expect(traceLogger.chartHover).toHaveBeenCalledWith(
       page12FixtureChartHover?.value.chart_id,
-      page12FixtureChartHover?.value.point_id,
+      'day_12',
       expect.objectContaining({
         hover_ms: CHART_HOVER_MIN_MS,
-        data_snapshot: expect.objectContaining(
-          page12FixtureChartHover?.value.metadata.data_snapshot
-        ),
+        data_snapshot: expect.objectContaining({
+          day: '12',
+          series_id: '10℃-海南香蕉',
+          black_ratio: 0.23,
+        }),
       })
     );
   });

@@ -1,7 +1,7 @@
 {
   "registry_type": "content_registry",
   "registry_version": "science-inquiry-content-registry-banana-v2.2",
-  "registry_hash": "7a8074f0f856be60949015eabae64e5ebf43bca9413b587476c8fb2231cc1fd7",
+  "registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
   "task_family": "science_inquiry_13page",
   "task_module": "banana_browning",
   "scope": "Static semantics for readable content blocks. Events reference content_id only; full text is not repeated in operationList.",

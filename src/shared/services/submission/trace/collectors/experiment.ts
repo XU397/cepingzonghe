@@ -73,5 +73,10 @@ export function createExperimentEventCollector(options: ExperimentEventCollector
         reset_count: resetCount,
       });
     },
+    dispose() {
+      paramSnapshot = cloneJsonLike(initialParamSnapshot);
+      lastRunAt = 0;
+      lastParamKey = '';
+    },
   };
 }

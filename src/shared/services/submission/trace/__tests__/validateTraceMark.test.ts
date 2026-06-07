@@ -1,7 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { CHART_HOVER_MIN_MS, PAGE_IDLE_THRESHOLD_MS } from '../contracts';
+import {
+  CHART_HOVER_MIN_MS,
+  CONTENT_REGISTRY_HASH,
+  CONTENT_REGISTRY_VERSION,
+  FIELD_REGISTRY_HASH,
+  FIELD_REGISTRY_VERSION,
+  PAGE_IDLE_THRESHOLD_MS,
+  RULE_CONFIG_HASH,
+  RULE_CONFIG_VERSION,
+  TRACE_SCHEMA_VERSION,
+} from '../contracts';
 import { createPageTraceLogger } from '../logger';
 import { validateTraceMark } from '../validators/validateTraceMark';
+
+const CANONICAL_METADATA = {
+  schema_version: TRACE_SCHEMA_VERSION,
+  field_registry_version: FIELD_REGISTRY_VERSION,
+  field_registry_hash: FIELD_REGISTRY_HASH,
+  content_registry_version: CONTENT_REGISTRY_VERSION,
+  content_registry_hash: CONTENT_REGISTRY_HASH,
+  rule_config_version: RULE_CONFIG_VERSION,
+  rule_config_hash: RULE_CONFIG_HASH,
+};
 
 const validMark = {
   pageNumber: '1.10',
@@ -23,11 +43,7 @@ const validMark = {
         page_type: 'D2_SIMULATION_QUESTION',
         target_id: 'page',
         target_type: 'page',
-        metadata: {
-          schema_version: 'science-inquiry-trace-v2.1',
-          field_registry_version: 'science-inquiry-field-registry-v2.1',
-          content_registry_version: 'science-inquiry-content-registry-banana-v2.1',
-        },
+        metadata: CANONICAL_METADATA,
       },
     },
     {
@@ -80,11 +96,7 @@ const page02StartPage = {
     page_type: 'B1_TEXT_SINGLE',
     target_id: 'page',
     target_type: 'page',
-    metadata: {
-      schema_version: 'science-inquiry-trace-v2.2',
-      field_registry_version: 'science-inquiry-field-registry-v2.2',
-      content_registry_version: 'science-inquiry-content-registry-banana-v2.2',
-    },
+    metadata: CANONICAL_METADATA,
   },
 };
 
@@ -163,7 +175,7 @@ const markWithOperationCodes = (operations: any[]) => ({
   operationList: operations,
 });
 
-const createPage13FinishMark = (pageId = 'page_13_finish') => ({
+const createPage13FinishMark = (pageId = 'page_13_task_finish') => ({
   ...cloneValidMark(),
   pageNumber: '1.14',
   pageDesc: '任务完成',
@@ -181,16 +193,12 @@ const createPage13FinishMark = (pageId = 'page_13_finish') => ({
         page_type: 'A1_FLOW',
         target_id: 'page',
         target_type: 'page',
-        metadata: {
-          schema_version: 'science-inquiry-trace-v2.1',
-          field_registry_version: 'science-inquiry-field-registry-v2.1',
-          content_registry_version: 'science-inquiry-content-registry-banana-v2.1',
-        },
+        metadata: CANONICAL_METADATA,
       },
     },
     {
       code: 2,
-      targetElement: 'P1.14_finish',
+      targetElement: 'P1.14_task_finish',
       eventType: 'TASK_FINISH',
       time: '2026-06-03T10:13:03.000+08:00',
       pageId: 'task_completion',
@@ -198,7 +206,7 @@ const createPage13FinishMark = (pageId = 'page_13_finish') => ({
         trace_id: 'p13-e002',
         page_id: pageId,
         page_type: 'A1_FLOW',
-        target_id: 'finish',
+        target_id: 'task_finish',
         target_type: 'button',
         metadata: {
           finish_trigger: 'auto_or_click',
@@ -211,6 +219,25 @@ const createPage13FinishMark = (pageId = 'page_13_finish') => ({
 describe('validateTraceMark', () => {
   it('accepts a valid L2 trace mark', () => {
     expect(() => validateTraceMark(validMark)).not.toThrow();
+  });
+
+  it('rejects stale START_PAGE metadata literals', () => {
+    const mark = cloneValidMark();
+    mark.operationList[0].value.metadata = {
+      ...CANONICAL_METADATA,
+      field_registry_hash: 'stale-field-registry-hash',
+    };
+
+    expect(() => validateTraceMark(mark)).toThrow(/metadata\.field_registry_hash/);
+  });
+
+  it('rejects stale optional metadata literals on non-start events', () => {
+    const mark = cloneValidMark();
+    mark.operationList[1].value.metadata = {
+      schema_version: 'science-inquiry-trace-v2.1',
+    };
+
+    expect(() => validateTraceMark(mark)).toThrow(/metadata\.schema_version/);
   });
 
   it('accepts strictly increasing operation codes with gaps', () => {
@@ -252,11 +279,11 @@ describe('validateTraceMark', () => {
     expect(() => validateTraceMark(mark)).toThrow(/positive integer/);
   });
 
-  it('accepts page_13_finish as the registered banana submodule finish page', () => {
+  it('accepts page_13_task_finish as the registered banana submodule finish page', () => {
     expect(() => validateTraceMark(createPage13FinishMark())).not.toThrow();
   });
 
-  it('accepts page_13_finish for final-page submit attempts without a compatibility alias', () => {
+  it('accepts page_13_task_finish for final-page submit attempts without a compatibility alias', () => {
     const mark = createPage13FinishMark();
     mark.operationList[1] = {
       ...mark.operationList[1],
@@ -273,14 +300,14 @@ describe('validateTraceMark', () => {
     expect(() => validateTraceMark(mark)).not.toThrow();
   });
 
-  it('rejects page_13_task_finish because the registry uses submodule-local page_13_finish', () => {
-    expect(() => validateTraceMark(createPage13FinishMark('page_13_task_finish'))).toThrow(
+  it('rejects the old page_13_finish id because v2.2 uses backend-canonical page_13_task_finish', () => {
+    expect(() => validateTraceMark(createPage13FinishMark('page_13_finish'))).toThrow(
       /page_id.*registry/i
     );
   });
 
   it('rejects unknown Page13-like page IDs instead of aliasing them', () => {
-    expect(() => validateTraceMark(createPage13FinishMark('page_13_finish_typo'))).toThrow(
+    expect(() => validateTraceMark(createPage13FinishMark('page_13_task_finish_typo'))).toThrow(
       /page_id.*registry/i
     );
   });
@@ -440,7 +467,7 @@ describe('validateTraceMark', () => {
         target_id: 'question_source_modal',
         target_type: 'modal',
       }),
-      /content_id/,
+      /target_id.*Content Registry/,
     ],
     [
       'CLOSE_MODAL',
@@ -451,7 +478,7 @@ describe('validateTraceMark', () => {
         target_type: 'modal',
         metadata: { dwell_ms: 100 },
       }),
-      /content_id/,
+      /target_id.*Content Registry/,
     ],
     [
       'CONTENT_ACTIVATE',

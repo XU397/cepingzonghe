@@ -57,5 +57,8 @@ export function createDynamicTableEventCollector(options: DynamicTableCollectorO
     selectBest(rowId: string, previousBestRowId: string | null) {
       options.logger.selectBest(rowId, previousBestRowId);
     },
+    dispose() {
+      rows.clear();
+    },
   };
 }

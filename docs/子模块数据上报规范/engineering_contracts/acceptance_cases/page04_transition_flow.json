@@ -1,23 +1,23 @@
 {
-  "case_id": "page08_direct_skip_v2_2",
-  "purpose": "Validate Page08 direct skip lifecycle metadata and NO_EXP_DIRECT_NEXT strategy flag.",
+  "case_id": "page04_transition_flow_v2_2",
+  "purpose": "Validate flow-only Page04 transition lifecycle metadata without L3 behavior labels.",
   "input": {
-    "pageNumber": "1.09",
-    "pageDesc": "Simulation explore",
-    "beginTime": "2026-06-03T10:08:00.000+08:00",
-    "endTime": "2026-06-03T10:08:06.000+08:00",
+    "pageNumber": "1.05",
+    "pageDesc": "Transition",
+    "beginTime": "2026-06-03T10:04:00.000+08:00",
+    "endTime": "2026-06-03T10:04:05.000+08:00",
     "answerList": [],
     "imgList": [],
     "operationList": [
       {
         "code": 1,
-        "targetElement": "P1.09_page",
+        "targetElement": "P1.05_page",
         "eventType": "START_PAGE",
-        "time": "2026-06-03T10:08:00.000+08:00",
+        "time": "2026-06-03T10:04:00.000+08:00",
         "value": {
-          "trace_id": "p08-e001",
-          "page_id": "page_08_simulation_explore",
-          "page_type": "D1_SIMULATION_ONLY",
+          "trace_id": "p04-e001",
+          "page_id": "page_04_transition",
+          "page_type": "A1_FLOW",
           "target_id": "page",
           "target_type": "page",
           "metadata": {
@@ -33,16 +33,16 @@
       },
       {
         "code": 2,
-        "targetElement": "P1.09_submit",
+        "targetElement": "P1.05_submit",
         "eventType": "SUBMIT_ATTEMPT",
-        "time": "2026-06-03T10:08:06.000+08:00",
+        "time": "2026-06-03T10:04:05.000+08:00",
         "value": {
-          "trace_id": "p08-e002",
-          "page_id": "page_08_simulation_explore",
-          "page_type": "D1_SIMULATION_ONLY",
+          "trace_id": "p04-e002",
+          "page_id": "page_04_transition",
+          "page_type": "A1_FLOW",
           "target_id": "submit",
           "target_type": "button",
-          "submit_attempt_id": "p08-submit-1",
+          "submit_attempt_id": "p04-submit-1",
           "validation_status": "success",
           "metadata": {
             "missing_fields": [],
@@ -60,10 +60,6 @@
       "TASK_FINISH",
       "ARGUMENTATION",
       "FIELD_COMPLETENESS",
-      "SET_EXP_PARAM",
-      "EXECUTE_EXP",
-      "SELECT_ANSWER",
-      "REVISE_ANSWER",
       "PAGE_IDLE"
     ],
     "pageMetadata": {
@@ -74,9 +70,6 @@
       }
     },
     "dataQualityWarnings": [],
-    "l4Required": false,
-    "strategyFlags": [
-      "NO_EXP_DIRECT_NEXT"
-    ]
+    "l4Required": false
   }
 }

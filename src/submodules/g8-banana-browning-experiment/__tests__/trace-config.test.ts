@@ -42,7 +42,7 @@ describe('g8 banana trace page config', () => {
       'page_10_experiment_question_2',
       'page_11_experiment_question_3',
       'page_12_solution_selection',
-      'page_13_finish',
+      'page_13_task_finish',
     ]);
   });
 

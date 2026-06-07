@@ -61,6 +61,24 @@ describe('trace runtime contracts', () => {
     expect(runtimeContract).toBe(docsContract);
   });
 
+  it('keeps v2.2 contract hashes aligned with backend-canonical acceptance fixtures', () => {
+    const fieldRegistry = JSON.parse(
+      readContract('src/shared/services/submission/trace/contracts', 'field_registry.v2.2.json')
+    ) as JsonRecord;
+    const contentRegistry = JSON.parse(
+      readContract('src/shared/services/submission/trace/contracts', 'content_registry.banana.v2.2.json')
+    ) as JsonRecord;
+    const ruleConfig = JSON.parse(
+      readContract('src/shared/services/submission/trace/contracts', 'rule_config.v2.2.json')
+    ) as JsonRecord;
+    const startPageMetadata =
+      readDocsFixture('page02_question_generation.json').input.operationList[0].value.metadata;
+
+    expect(fieldRegistry.registry_hash).toBe(startPageMetadata.field_registry_hash);
+    expect(contentRegistry.registry_hash).toBe(startPageMetadata.content_registry_hash);
+    expect(ruleConfig.ruleConfigHash).toBe(startPageMetadata.rule_config_hash);
+  });
+
   it.each(['ADD_ROW', 'DELETE_ROW', 'SET_PLAN_PARAM', 'SELECT_BEST'])(
     'requires table event %s to carry row_id without the legacy field_id schema requirement',
     eventType => {
@@ -155,8 +173,8 @@ describe('trace runtime contracts', () => {
       fieldRegistry.pages.page_03_factor_selection.fields.factor_selection.options;
 
     expect(Object.keys(factorOptions)).toEqual(['option_a', 'option_b', 'option_c', 'option_d']);
-    expect(fieldRegistry.pages.page_13_finish).toBeDefined();
-    expect(fieldRegistry.pages.page_13_task_finish).toBeUndefined();
+    expect(fieldRegistry.pages.page_13_task_finish).toBeDefined();
+    expect(fieldRegistry.pages.page_13_finish).toBeUndefined();
   });
 
   it('registers all enhanced banana content activation IDs in v2.2 content registry', () => {

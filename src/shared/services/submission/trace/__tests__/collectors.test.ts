@@ -194,6 +194,38 @@ describe('trace collectors', () => {
     });
   });
 
+  it('resets experiment snapshots and debounce state on dispose', () => {
+    let currentTime = 1000;
+    const logger = {
+      setExpParam: vi.fn(),
+      executeExp: vi.fn(),
+      resetExp: vi.fn(),
+    };
+    const collector = createExperimentEventCollector({
+      standardPageId: 'page_09_experiment_question_1',
+      logger,
+      nowMs: () => currentTime,
+      expRunDebounceMs: 1500,
+      expRunIdFactory: (_pageId, seq) => `run-${seq}`,
+      initialParamSnapshot: { days: 1 },
+    });
+
+    collector.setParam('param_days', 'days', 2);
+    expect(collector.execute({ days: 2 }, { black_ratio: 0.5 })).toBe(true);
+
+    currentTime = 1100;
+    collector.dispose();
+    logger.setExpParam.mockClear();
+
+    collector.setParam('param_days', 'days', 2);
+    expect(collector.execute({ days: 2 }, { black_ratio: 0.6 })).toBe(true);
+
+    expect(logger.setExpParam).toHaveBeenCalledWith('param_days', 'days', 1, 2, {
+      param_snapshot: { days: 2 },
+    });
+    expect(logger.executeExp).toHaveBeenCalledTimes(2);
+  });
+
   it('keeps stable row IDs for dynamic table operations', () => {
     const logger = {
       addRow: vi.fn(),
@@ -258,6 +290,29 @@ describe('trace collectors', () => {
     collector.setPlanParam(rowId, 'plan_param_1', 'caller stale value', '新方案');
 
     expect(logger.setPlanParam).toHaveBeenCalledWith(rowId, 'plan_param_1', '旧方案', '新方案', {
+      row_snapshot_after_change: { plan_param_1: '新方案' },
+    });
+  });
+
+  it('clears dynamic table row snapshots on dispose', () => {
+    const logger = {
+      addRow: vi.fn(),
+      deleteRow: vi.fn(),
+      setPlanParam: vi.fn(),
+      selectBest: vi.fn(),
+    };
+    const collector = createDynamicTableEventCollector({
+      standardPageId: 'page_12_solution_selection',
+      logger,
+      rowIdFactory: (pageId, seq) => `${pageId}_row_${seq}`,
+    });
+
+    const rowId = collector.addRow({ plan_param_1: '旧方案' });
+    collector.dispose();
+    collector.dispose();
+    collector.setPlanParam(rowId, 'plan_param_1', 'caller fallback', '新方案');
+
+    expect(logger.setPlanParam).toHaveBeenCalledWith(rowId, 'plan_param_1', 'caller fallback', '新方案', {
       row_snapshot_after_change: { plan_param_1: '新方案' },
     });
   });

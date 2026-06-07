@@ -2,6 +2,15 @@ import { renderHook, act, render, screen, fireEvent, waitFor } from '@testing-li
 import { describe, expect, it, vi } from 'vitest';
 import { usePageSubmission } from '../../usePageSubmission.js';
 import AssessmentPageFrame from '../../../../ui/PageFrame/AssessmentPageFrame.jsx';
+import {
+  CONTENT_REGISTRY_HASH,
+  CONTENT_REGISTRY_VERSION,
+  FIELD_REGISTRY_HASH,
+  FIELD_REGISTRY_VERSION,
+  RULE_CONFIG_HASH,
+  RULE_CONFIG_VERSION,
+  TRACE_SCHEMA_VERSION,
+} from '../contracts.ts';
 import { validateTraceMark } from '../validators/validateTraceMark.ts';
 
 vi.mock('@shared/ui/TimerDisplay/TimerContainer', async () => {
@@ -12,13 +21,23 @@ vi.mock('@shared/ui/TimerDisplay/TimerContainer', async () => {
   };
 });
 
+const CANONICAL_TRACE_METADATA = {
+  schema_version: TRACE_SCHEMA_VERSION,
+  field_registry_version: FIELD_REGISTRY_VERSION,
+  field_registry_hash: FIELD_REGISTRY_HASH,
+  content_registry_version: CONTENT_REGISTRY_VERSION,
+  content_registry_hash: CONTENT_REGISTRY_HASH,
+  rule_config_version: RULE_CONFIG_VERSION,
+  rule_config_hash: RULE_CONFIG_HASH,
+};
+
 const operationValue = {
   trace_id: 'trace-1',
   page_id: 'page_09_experiment_question_1',
   page_type: 'D2_SIMULATION_QUESTION',
   target_id: 'page',
   target_type: 'page',
-  metadata: {},
+  metadata: CANONICAL_TRACE_METADATA,
 };
 
 const buildL2Mark = ({ eventType = 'START_PAGE', value = operationValue } = {}) => ({
@@ -45,7 +64,7 @@ const planGenerationValue = {
   page_type: 'B2_TEXT_MULTI_PARALLEL',
   target_id: 'page',
   target_type: 'page',
-  metadata: {},
+  metadata: CANONICAL_TRACE_METADATA,
 };
 
 const buildPlanGenerationTimeoutMark = () => ({

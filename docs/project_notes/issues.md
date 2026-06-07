@@ -28,7 +28,7 @@
   - Restricted timeout required-field inference to answer-bearing event types so content activation cannot satisfy required fields by sharing a `target_id`.
   - Confirmed Page03 `factor_selection` registry alignment and Page04's third UI card remains non-trace UI while v2.2 content registry tracks only `factor_card_1/2`.
 - 2026-06-06: Addressed banana v2.2 code-review follow-up findings.
-  - Kept Page13 on submodule-local `page_13_finish`, removed the `page_13_task_finish` compatibility alias, and updated the v2.2 field registry/hash plus acceptance fixture wording to avoid batch-level completion semantics.
+  - Initially kept Page13 on submodule-local `page_13_finish`; this was superseded on 2026-06-07 after backend canonical fixtures confirmed `page_13_task_finish`.
   - Restarted `PAGE_IDLE` candidates after visibility/focus regain while preserving idle phase and excluding hidden/blurred time.
   - Mapped all visible Page04 factor options to registered v2.2 `option_a..option_d` IDs while leaving the approved transition-page content reduction intact.
 - 2026-06-06: Enhanced banana content activation trace coverage through OpenSpec change `enhance-banana-content-activation-trace`.
@@ -36,3 +36,12 @@
   - Added Page02-style low-noise content activation for Page05 guidance text, Page06 method material blocks, and Page12 top decision guidance.
   - Updated v2.2 banana content registry/hash, docs mirrors, acceptance fixture hash literals, and focused contract/page trace tests.
   - Verified with OpenSpec strict validation, focused trace tests, submission checks, and `npm run build`.
+- 2026-06-07: Addressed banana trace standardization review hardening findings without opening a new OpenSpec change.
+  - Rejected the reported v2.1 production bundle P0 after verifying v2.1 contracts are not imported by runtime and no v2.1 markers appear in `dist/`.
+  - Added dispose cleanup for experiment/dynamic table trace collectors, removed unsafe validator `any` usage, and replaced the banana trace logger double cast with an adapter.
+  - Fixed Page13 solution-selection best-plan answer synchronization on star click and added Page03/Page06 v2.2 acceptance fixtures plus old-doc version status notes.
+  - Verified focused collector/validator/acceptance/page-event tests before broader submission and build checks.
+- 2026-06-07: Aligned banana v2.2 frontend contracts with backend-canonical trace fixtures.
+  - Updated v2.2 registry hashes to backend fixture literals and switched final page id to `page_13_task_finish`.
+  - Mirrored all 14 backend acceptance cases into frontend engineering contracts and expanded acceptance coverage to the full canonical set.
+  - Hardened `validateTraceMark` so `START_PAGE.metadata` must carry current v2.2 schema/registry/rule literals.

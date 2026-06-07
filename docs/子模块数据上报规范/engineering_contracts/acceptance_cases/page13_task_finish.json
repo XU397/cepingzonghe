@@ -1,11 +1,11 @@
 {
-  "case_id": "page13_banana_submodule_finish_v2_2",
-  "purpose": "Validate Page13 banana submodule finish: lifecycle is metadata only, not a batch-level completion label, and no L3/HMM labels are produced.",
+  "case_id": "page13_task_finish_v2_2",
+  "purpose": "Validate Page13 task finish lifecycle metadata without L3 behavior labels.",
   "input": {
-    "pageNumber": 13,
-    "pageDesc": "任务结束页",
+    "pageNumber": "1.14",
+    "pageDesc": "Task finish",
     "beginTime": "2026-06-03T10:13:00.000+08:00",
-    "endTime": "2026-06-03T10:13:03.000+08:00",
+    "endTime": "2026-06-03T10:13:04.000+08:00",
     "answerList": [],
     "imgList": [],
     "operationList": [
@@ -16,16 +16,16 @@
         "time": "2026-06-03T10:13:00.000+08:00",
         "value": {
           "trace_id": "p13-e001",
-          "page_id": "page_13_finish",
+          "page_id": "page_13_task_finish",
           "page_type": "A1_FLOW",
           "target_id": "page",
           "target_type": "page",
           "metadata": {
-            "schema_version": "science-inquiry-trace-v2.2",
             "field_registry_version": "science-inquiry-field-registry-v2.2",
-            "field_registry_hash": "93f0d6b95a7ae9615bf9bc0604fd81fa52d47712c9f3eda8670875e6646bcc54",
+            "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
             "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
-            "content_registry_hash": "7a8074f0f856be60949015eabae64e5ebf43bca9413b587476c8fb2231cc1fd7",
+            "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+            "schema_version": "science-inquiry-trace-v2.2",
             "rule_config_version": "rule-config-v2.2",
             "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83"
           }
@@ -33,17 +33,17 @@
       },
       {
         "code": 2,
-        "targetElement": "P1.14_finish",
+        "targetElement": "P1.14_task_finish",
         "eventType": "TASK_FINISH",
-        "time": "2026-06-03T10:13:03.000+08:00",
+        "time": "2026-06-03T10:13:04.000+08:00",
         "value": {
           "trace_id": "p13-e002",
-          "page_id": "page_13_finish",
+          "page_id": "page_13_task_finish",
           "page_type": "A1_FLOW",
-          "target_id": "finish",
+          "target_id": "task_finish",
           "target_type": "button",
           "metadata": {
-            "finish_trigger": "auto_or_click"
+            "finish_reason": "normal"
           }
         }
       }
@@ -56,11 +56,13 @@
       "SUBMIT_PAGE",
       "TASK_FINISH",
       "ARGUMENTATION",
-      "FIELD_COMPLETENESS"
+      "FIELD_COMPLETENESS",
+      "PAGE_IDLE"
     ],
     "pageMetadata": {
       "lifecycle": {
         "startPage": true,
+        "submitSuccess": false,
         "taskFinish": true
       }
     },

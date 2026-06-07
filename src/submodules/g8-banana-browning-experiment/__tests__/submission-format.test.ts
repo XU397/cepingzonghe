@@ -3,6 +3,15 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import EventTypes from '@shared/services/submission/eventTypes.js';
 import {
+  CONTENT_REGISTRY_HASH,
+  CONTENT_REGISTRY_VERSION,
+  FIELD_REGISTRY_HASH,
+  FIELD_REGISTRY_VERSION,
+  RULE_CONFIG_HASH,
+  RULE_CONFIG_VERSION,
+  TRACE_SCHEMA_VERSION,
+} from '@shared/services/submission/trace';
+import {
   RESERVED_TARGET_ELEMENTS,
   validateMarkObject,
   type Answer,
@@ -24,6 +33,16 @@ const submitSpy = vi.fn(async (options?: { markOverride?: MarkObject }) => {
   }
 });
 let lastOnNextResult: boolean | undefined;
+
+const CANONICAL_TRACE_METADATA = {
+  schema_version: TRACE_SCHEMA_VERSION,
+  field_registry_version: FIELD_REGISTRY_VERSION,
+  field_registry_hash: FIELD_REGISTRY_HASH,
+  content_registry_version: CONTENT_REGISTRY_VERSION,
+  content_registry_hash: CONTENT_REGISTRY_HASH,
+  rule_config_version: RULE_CONFIG_VERSION,
+  rule_config_hash: RULE_CONFIG_HASH,
+};
 
 vi.mock('@shared/ui/PageFrame', async () => {
   const ReactModule = await import('react');
@@ -425,9 +444,7 @@ const traceOperation = (
     target_type: targetType,
     ...valuePatch,
     metadata: {
-      schema_version: 'science-inquiry-trace-v2.1',
-      field_registry_version: 'science-inquiry-field-registry-v2.1',
-      content_registry_version: 'science-inquiry-content-registry-banana-v2.1',
+      ...CANONICAL_TRACE_METADATA,
       page_index: config.pageIndex,
       legacy_page_id: config.pageId,
       ...metadata,

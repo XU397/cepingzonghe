@@ -292,9 +292,17 @@ const Page13SolutionSelection: React.FC = () => {
       }
 
       updateBestId(rowId);
+      const bestRow = rowsRef.current.find(r => r.id === rowId);
+      collectAnswer({
+        targetElement: 'Q8_最优方案',
+        value:
+          bestRow && bestRow.variety && bestRow.temperature
+            ? `${bestRow.variety}-${bestRow.temperature}`
+            : '',
+      });
       traceLogger?.selectBest(rowId, previousBestId);
     },
-    [traceLogger, updateBestId]
+    [collectAnswer, traceLogger, updateBestId]
   );
 
   const handleDeleteRow = useCallback(
