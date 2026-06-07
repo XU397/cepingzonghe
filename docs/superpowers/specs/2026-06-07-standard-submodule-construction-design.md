@@ -2,7 +2,7 @@
 
 Date: 2026-06-07
 Repository: `D:\myproject\cp-banana-trace-standardization`
-Status: approved design; implementation requires a new KB requirement/change-id before editing KB long-term standards or cp handbook files.
+Status: design candidate after user approval and review updates; implementation still requires explicit final approval and a new KB requirement/change-id before editing KB long-term standards or cp handbook files.
 
 ## Source Inputs
 
@@ -11,7 +11,8 @@ Status: approved design; implementation requires a new KB requirement/change-id 
 - Confirmed deliverable depth: documentation, templates, and synchronization guardrails.
 - Confirmed documentation ownership: KB is the canonical standard; cp contains the frontend implementation handbook.
 - Current frontend worktree: `D:\myproject\cp-banana-trace-standardization`, later to be merged back into `D:\myproject\cp`.
-- Banana reference branch commit: `327e164f62d1e1fda76b34ac585e78ecf03f65af`.
+- Golden banana implementation snapshot: `327e164f62d1e1fda76b34ac585e78ecf03f65af`.
+- Initial design document commit: `a79c60388131f0f3d68d290ad9fd01fa451d25b4`; any later review-fix commit must be recorded separately from the golden implementation snapshot and from the future mainline merge commit.
 - Recent cross-repo closeout: `2026-06-06-banana-trace-page-idle-compliance` archived as complete in the KB.
 
 ## Problem
@@ -74,7 +75,7 @@ Research documents define behavior semantics and tagging expectations. They info
 
 ### KB Canonical Standard
 
-Create the canonical standard package under the KB long-term standards area:
+Create or update the canonical standard package only under an approved KB requirement/change-id. Write long-term `标准/` files only when that requirement explicitly authorizes the long-term standard update:
 
 ```text
 D:\myproject\assessment-platform-kb\标准\子模块构建标准\
@@ -175,7 +176,7 @@ active_or_passive
 related_l0_id
 expected_l2_events
 required_for_completion
-required_for_tagging
+required_for_backend_tagging_input
 notes
 ```
 
@@ -184,6 +185,7 @@ Rules:
 - Every L1 behavior must state expected L2 evidence.
 - Active behaviors must not be inferred from default visibility alone.
 - Evidence gaps can be warnings or quality diagnostics instead of contract failures.
+- `required_for_backend_tagging_input` only means the behavior is expected evidence for backend tagging; it never means cp generates tags.
 
 ### L2: Engineering Facts
 
@@ -215,7 +217,7 @@ Key event expectations for v1.0:
 - `TEXT_FOCUS`: record focus-start value and character counts.
 - `TEXT_CHANGE`: preserve natural debounce/throttle cadence; do not fabricate events to appease backend quality warnings.
 - `TEXT_BLUR`: preserve correct before/after semantics.
-- `PAGE_IDLE`: emit only for visible and focused idle intervals meeting threshold; do not include it in L3 labels, sequence, or HMM by default.
+- `PAGE_IDLE`: emit only for visible and focused idle intervals meeting threshold. The frontend must never emit or derive L3 labels, sequence observations, HMM inputs, or ability labels; backend owns any downstream L2-to-L3 use.
 - `SUBMIT_ATTEMPT`: include `submit_trigger`, validation status, and missing fields.
 
 ## MarkObject Submission Standard
@@ -293,7 +295,7 @@ Examples:
 
 ## Manifest Requirements
 
-Both KB and cp must maintain a manifest. The first version can be Markdown with YAML frontmatter or a structured YAML section.
+Both KB and cp must maintain a manifest. Use Markdown files with YAML frontmatter as the single machine-readable source in v1.0; prose below the frontmatter can explain the fields, but scripts must read only the frontmatter.
 
 Required fields:
 
@@ -310,23 +312,48 @@ frontend_handbook:
   worktree_path: D:\myproject\cp-banana-trace-standardization
   target_main_repo: D:\myproject\cp
 sync_policy:
-  canonical_only: []
-  mirrored_with_version: []
-  implementation_local: []
+  canonical_only:
+    - l0_l1_l2_concepts
+    - cross_repo_responsibilities
+    - standard_version_lifecycle
+  mirrored_with_version:
+    - event_minimum_requirements
+    - science_inquiry_page_types
+    - acceptance_review_checklist
+  implementation_local:
+    - cp_code_paths
+    - cp_test_commands
+    - cp_template_layout
+mirrors:
+  - section_id: event_minimum_requirements
+    canonical_path: 标准/子模块构建标准/standard-submodule-v1.0.md
+    canonical_anchor: key-event-expectations-for-v10
+    canonical_commit: pending
+    canonical_content_hash: pending
+    local_path: docs/standard-submodule/frontend-implementation-handbook.md
+    local_anchor: event-minimum-requirements
+    local_content_hash: pending
+    mirror_policy: summary-with-version
+    last_verified_at: pending
+    verified_by_change_id: pending
 last_verified:
   kb_change_id: pending
-  cp_commit: pending
+  golden_reference_commit: 327e164f62d1e1fda76b34ac585e78ecf03f65af
+  initial_design_doc_commit: a79c60388131f0f3d68d290ad9fd01fa451d25b4
+  cp_branch_completion_commit: pending
   backend_commit: optional
 worktree_status:
   source_worktree: D:\myproject\cp-banana-trace-standardization
   target_repo: D:\myproject\cp
   branch: 2026-06-04-banana-trace-standardization
-  current_reference_commit: 327e164f62d1e1fda76b34ac585e78ecf03f65af
+  golden_reference_commit: 327e164f62d1e1fda76b34ac585e78ecf03f65af
+  design_doc_commit: pending
+  branch_completion_commit: pending
   mainline_merge_status: pending
-  mainline_commit: pending
+  mainline_merge_commit: pending
 ```
 
-After merge to mainline, update `mainline_merge_status` and `mainline_commit` through a follow-up KB requirement or closeout update.
+After merge to mainline, update `mainline_merge_status` and `mainline_merge_commit` through a follow-up KB requirement or closeout update. Do not reuse the golden reference commit as the design document, branch completion, or mainline merge commit.
 
 ## Base Documentation Updates
 
@@ -385,7 +412,7 @@ L0 fields:
 | field_id | field_type | required | answer_key | notes |
 
 L1 behaviors:
-| behavior_id | trigger | active/passive | related_l0_id | expected_l2 | required_for_tagging |
+| behavior_id | trigger | active/passive | related_l0_id | expected_l2 | required_for_backend_tagging_input |
 ```
 
 ### L2 Event Matrix
@@ -415,7 +442,8 @@ profile_version:
 page_id:
 required_events:
 expected_backend_validation:
-expected_l3_boundary:
+l2_to_l3_scope: backend_only
+expected_backend_diagnostics:
 fixtures:
 ```
 
@@ -454,6 +482,8 @@ Add a future `check:standard-sync` command that verifies:
 - cp manifest references existing KB standard version.
 - cp docs contain required frontmatter.
 - mirrored sections declare source and standard version.
+- every `mirrors[]` item has canonical/local path, anchor, content hash, mirror policy, last verified time, and verifying change-id.
+- the checker recomputes local mirrored-section hashes and fails when they no longer match manifest values.
 - trace contract version/hash declarations match manifest values where applicable.
 
 ### Phase 3: CI Guardrails
