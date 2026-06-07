@@ -26,7 +26,10 @@
       "Bash(curl:*)",
       "Bash(bash)",
       "Bash(sudo apt-get:*)",
-      "Bash(sudo apt-get install:*)"
+      "Bash(sudo apt-get install:*)",
+      "mcp__plugin_context-mode_context-mode__ctx_execute_file",
+      "mcp__plugin_context-mode_context-mode__ctx_search",
+      "mcp__plugin_context-mode_context-mode__ctx_fetch_and_index"
     ],
     "deny": [],
     "ask": []

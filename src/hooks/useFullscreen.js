@@ -33,7 +33,6 @@ const useFullscreen = () => {
         await element.msRequestFullscreen();
       }
 
-      console.log('[Fullscreen] 已进入全屏模式');
       return true;
     } catch (error) {
       console.error('[Fullscreen] 进入全屏失败:', error);
@@ -54,7 +53,6 @@ const useFullscreen = () => {
         await document.msExitFullscreen();
       }
 
-      console.log('[Fullscreen] 已退出全屏模式');
       return true;
     } catch (error) {
       console.error('[Fullscreen] 退出全屏失败:', error);
@@ -76,8 +74,6 @@ const useFullscreen = () => {
     const handleFullscreenChange = () => {
       const isNowFullscreen = checkFullscreen();
       setIsFullscreen(isNowFullscreen);
-
-      console.log('[Fullscreen] 全屏状态变化:', isNowFullscreen ? '全屏' : '退出全屏');
     };
 
     // 添加多种浏览器兼容的事件监听

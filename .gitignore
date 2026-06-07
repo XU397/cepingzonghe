@@ -59,6 +59,9 @@ test-screenshots/
 dist.rar
 browser-state-*.json
 
+# 知识图谱工具输出
+graphify-out/
+
 # 临时文档
 *REPORT.md
 *SUMMARY.md

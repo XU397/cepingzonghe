@@ -550,25 +550,46 @@ import { useTimer } from '@hooks/useTimer';
 | Building new submodules | `docs/submodule-page-build-process.md`, `docs/submission-spec.md` |
 | Planning or ambiguous requirements | Use `/opsx:explore` or `/opsx:propose` |
 
----
+<!-- gitnexus:start -->
+# GitNexus — Code Intelligence
 
-## graphify — 项目知识图谱（代码探索的第一步）
+This project is indexed by GitNexus as **cepingzonghe** (15770 symbols, 22296 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
-项目维护持久化知识图谱 `graphify-out/`，存储所有代码和文档的依赖关系与拓扑结构。
+> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
-**替代规则：探索代码时先 graphify，再 Grep/Glob/Read**
+## Always Do
 
-收到实施任务后，不要立即用 Grep/Glob/Read 漫游代码库。先用 graphify 获得全局地图，再用精确工具补充细节。graphify 替代的是**探索性** Grep/Glob（试图理解结构），不替代**精确性** Grep/Glob（找特定文本、替换字符串、匹配文件模式）。
+- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
+- **MUST run `gitnexus_detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows.
+- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
+- When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
+- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
 
-**使用方式：**
+## Never Do
 
-- `GRAPH_REPORT.md` 只看 Summary（前 ~15 行），按需搜索 `## God Nodes` / `## Surprising Connections`
-- 图谱路径：`graphify-out/graph.json`
+- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
+- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
+- NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
+- NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
 
-**分派 subagent 时的 graphify 注入：**
+## Resources
 
-Subagent 是全新上下文，仅靠 CLAUDE.md 隐式规则不足以保证遵循。分派 general-purpose subagent 时必须在 prompt 中显式注入：
+| Resource | Use for |
+|----------|---------|
+| `gitnexus://repo/cepingzonghe/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/cepingzonghe/clusters` | All functional areas |
+| `gitnexus://repo/cepingzonghe/processes` | All execution flows |
+| `gitnexus://repo/cepingzonghe/process/{name}` | Step-by-step execution trace |
 
-> "开始前先用 graphify explain/query 了解 [任务核心组件] 的依赖拓扑，确认改动涉及的上下游模块。图谱路径：graphify-out/graph.json"
+## CLI
 
-注意：Explore 类 subagent（只读工具）无法执行 graphify 命令，不适用此规则。
+| Task | Read this skill file |
+|------|---------------------|
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+
+<!-- gitnexus:end -->

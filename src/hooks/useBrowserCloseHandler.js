@@ -41,33 +41,12 @@ export const useBrowserCloseHandler = (clearFunction) => {
 
       // 记录会话结束时间到localStorage，用于计算倒计时恢复
       localStorage.setItem('lastSessionEndTime', beforeUnloadTimeRef.current.toString());
-      
+
+      // 移除可能存在的清除标志（原在 unload 中处理）
+      localStorage.removeItem('shouldClearOnNextSession');
+
       // 不再设置清除缓存的标志，保持状态持久化
       console.log('[BrowserCloseHandler] 页面关闭/刷新，保持用户状态和倒计时');
-    };
-
-    /**
-     * 处理页面卸载事件
-     * 保持会话状态持久化
-     */
-    const handleUnload = () => {
-      const now = Date.now();
-      const timeDiff = now - beforeUnloadTimeRef.current;
-      
-      console.log('[BrowserCloseHandler] unload触发，保持状态持久化:', {
-        isRefresh: isRefreshRef.current,
-        timeDiff,
-        beforeUnloadTime: beforeUnloadTimeRef.current
-      });
-
-      // 更新最后会话结束时间，用于计算倒计时恢复
-      localStorage.setItem('lastSessionEndTime', now.toString());
-      
-      // 不再根据是否刷新来清除数据，始终保持状态
-      console.log('[BrowserCloseHandler] 保持用户状态和倒计时数据，下次打开时继续');
-      
-      // 移除任何可能存在的清除标志
-      localStorage.removeItem('shouldClearOnNextSession');
     };
 
     /**
@@ -94,7 +73,6 @@ export const useBrowserCloseHandler = (clearFunction) => {
 
     // 添加事件监听器
     window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('unload', handleUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // 新会话检测逻辑（现在用于状态恢复而非清除）
@@ -135,7 +113,6 @@ export const useBrowserCloseHandler = (clearFunction) => {
     // 清理函数
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('unload', handleUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [clearFunction]);
