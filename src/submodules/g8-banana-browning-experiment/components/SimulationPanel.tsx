@@ -1,11 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
-import type { OperationLog } from '../types';
+import {
+  EXP_RUN_DEBOUNCE_MS,
+  createExperimentEventCollector,
+} from '@shared/services/submission/trace';
 import styles from './SimulationPanel.module.css';
 
 interface SimulationPanelProps {
-  logOperation: (operation: Omit<OperationLog, 'code'>) => void;
-  targetPrefix: string;
+  traceLogger: {
+    setExpParam(
+      paramId: string,
+      paramName: string,
+      valueBefore: unknown,
+      valueAfter: unknown,
+      metadata?: Record<string, unknown>
+    ): unknown;
+    executeExp(expRunId: string, metadata?: Record<string, unknown>): unknown;
+    resetExp(metadata?: Record<string, unknown>): unknown;
+  } | null;
 }
 
 interface ConditionConfig {
@@ -91,6 +102,7 @@ const BROWNING_SPOTS: BrowningSpot[] = [
 
 const OVERLAY_START = 0.85;
 const OVERLAY_MAX = 0.85;
+const SIMULATION_STANDARD_PAGE_ID = 'banana_browning_simulation';
 
 const spotRadius = (spot: BrowningSpot, browning: number): number => {
   if (browning < spot.threshold) return 0;
@@ -211,13 +223,27 @@ const BananaSvg: React.FC<{ browning: number; label: string }> = ({ browning, la
   );
 };
 
-const SimulationPanel: React.FC<SimulationPanelProps> = ({ logOperation, targetPrefix }) => {
+const SimulationPanel: React.FC<SimulationPanelProps> = ({ traceLogger }) => {
   const [selectedDay, setSelectedDay] = useState<(typeof DAYS)[number]>(0);
   const [displayedResults, setDisplayedResults] = useState<number[]>(() => RESULT_TABLE[0]);
   const [isAnimating, setIsAnimating] = useState(false);
   const animationFrameRef = useRef<number | null>(null);
 
   const selectedResults = useMemo(() => RESULT_TABLE[selectedDay], [selectedDay]);
+  const experimentCollector = useMemo(() => {
+    if (!traceLogger) {
+      return null;
+    }
+    return createExperimentEventCollector({
+      standardPageId: SIMULATION_STANDARD_PAGE_ID,
+      logger: traceLogger,
+      nowMs: () => Date.now(),
+      expRunDebounceMs: EXP_RUN_DEBOUNCE_MS,
+      expRunIdFactory: (_standardPageId, runSeq) =>
+        `banana_browning_exp_run_${runSeq}`,
+      initialParamSnapshot: { days: 0 },
+    });
+  }, [traceLogger]);
 
   const cancelAnimation = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -232,32 +258,20 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ logOperation, targetP
 
   const handleDayIncrement = useCallback(() => {
     if (isAnimating || currentDayIndex >= DAYS.length - 1) return;
-    const fromDay = selectedDay;
     const nextDay = DAYS[currentDayIndex + 1];
     setSelectedDay(nextDay);
-    logOperation({
-      targetElement: `${targetPrefix}天数增加按钮`,
-      eventType: EventTypes.SIMULATION_OPERATION,
-      value: { action: 'increment_day', fromDay, toDay: nextDay },
-      time: new Date().toISOString(),
-    });
-  }, [isAnimating, currentDayIndex, logOperation, selectedDay, targetPrefix]);
+    experimentCollector?.setParam('exp_param_days', 'days', nextDay);
+  }, [experimentCollector, isAnimating, currentDayIndex]);
 
   const handleDayDecrement = useCallback(() => {
     if (isAnimating || currentDayIndex <= 0) return;
-    const fromDay = selectedDay;
     const prevDay = DAYS[currentDayIndex - 1];
     setSelectedDay(prevDay);
-    logOperation({
-      targetElement: `${targetPrefix}天数减少按钮`,
-      eventType: EventTypes.SIMULATION_OPERATION,
-      value: { action: 'decrement_day', fromDay, toDay: prevDay },
-      time: new Date().toISOString(),
-    });
-  }, [isAnimating, currentDayIndex, logOperation, selectedDay, targetPrefix]);
+    experimentCollector?.setParam('exp_param_days', 'days', prevDay);
+  }, [experimentCollector, isAnimating, currentDayIndex]);
 
   const animateResults = useCallback(
-    (day: (typeof DAYS)[number], targets: number[]) => {
+    (targets: number[]) => {
       cancelAnimation();
       setDisplayedResults(Array(CONDITIONS.length).fill(0));
       setIsAnimating(true);
@@ -280,46 +294,33 @@ const SimulationPanel: React.FC<SimulationPanelProps> = ({ logOperation, targetP
         setDisplayedResults(targets);
         setIsAnimating(false);
         animationFrameRef.current = null;
-        logOperation({
-          targetElement: `${targetPrefix}实验结果`,
-          eventType: EventTypes.SIMULATION_RUN_RESULT,
-          value: {
-            selectedDay: day,
-            results: buildSimulationResults(day),
-          },
-          time: new Date().toISOString(),
-        });
       };
 
       animationFrameRef.current = requestAnimationFrame(tick);
     },
-    [cancelAnimation, logOperation, targetPrefix]
+    [cancelAnimation]
   );
 
   const handleStart = useCallback(() => {
-    logOperation({
-      targetElement: `${targetPrefix}开始实验按钮`,
-      eventType: EventTypes.SIMULATION_TIMING_STARTED,
-      value: { selectedDay, totalConditions: CONDITIONS.length },
-      time: new Date().toISOString(),
-    });
-
-    animateResults(selectedDay, selectedResults);
-  }, [animateResults, logOperation, selectedDay, selectedResults, targetPrefix]);
+    const resultSnapshot = {
+      day: selectedDay,
+      results: buildSimulationResults(selectedDay),
+    };
+    const shouldRun =
+      experimentCollector?.execute({ days: selectedDay }, resultSnapshot) ?? true;
+    if (!shouldRun) {
+      return;
+    }
+    animateResults(selectedResults);
+  }, [animateResults, experimentCollector, selectedDay, selectedResults]);
 
   const handleReset = useCallback(() => {
-    const fromDay = selectedDay;
     cancelAnimation();
     setIsAnimating(false);
     setSelectedDay(0);
     setDisplayedResults(RESULT_TABLE[0]);
-    logOperation({
-      targetElement: `${targetPrefix}重置按钮`,
-      eventType: EventTypes.SIMULATION_OPERATION,
-      value: { action: 'reset', fromDay, toDay: 0 },
-      time: new Date().toISOString(),
-    });
-  }, [cancelAnimation, logOperation, selectedDay, targetPrefix]);
+    experimentCollector?.reset();
+  }, [cancelAnimation, experimentCollector]);
 
   return (
     <section className={styles.container} aria-label="香蕉变黑模拟实验面板">

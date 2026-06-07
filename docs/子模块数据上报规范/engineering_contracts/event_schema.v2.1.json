@@ -1,0 +1,366 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "science-inquiry-event-schema-v2.1",
+  "title": "Science Inquiry Trace Event v2.1",
+  "description": "Schema for one operationList item in the L0/L1/L2 frontend reporting contract. L3 labels and L4 features must not be reported by the frontend.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "code",
+    "targetElement",
+    "eventType",
+    "time",
+    "value"
+  ],
+  "properties": {
+    "code": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Page-local monotonically increasing event sequence. Backend maps it to event_seq."
+    },
+    "targetElement": {
+      "type": "string",
+      "minLength": 1
+    },
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "START_PAGE",
+        "PAGE_HIDDEN",
+        "PAGE_VISIBLE",
+        "PAGE_IDLE",
+        "SUBMIT_ATTEMPT",
+        "TASK_FINISH",
+        "CONTENT_EXPOSE",
+        "CONTENT_ACTIVATE",
+        "CONTENT_VIEW",
+        "CHAT_SCROLL",
+        "CHAT_VIEWPORT_ENTER",
+        "CHAT_VIEWPORT_LEAVE",
+        "OPEN_MODAL",
+        "CLOSE_MODAL",
+        "CHART_HOVER",
+        "TEXT_FOCUS",
+        "TEXT_CHANGE",
+        "TEXT_BLUR",
+        "CHECKBOX_TOGGLE",
+        "SELECT_ANSWER",
+        "SET_EXP_PARAM",
+        "EXECUTE_EXP",
+        "RESET_EXP",
+        "ADD_ROW",
+        "DELETE_ROW",
+        "SET_PLAN_PARAM",
+        "SELECT_BEST",
+        "TIMER_COMPLETE"
+      ]
+    },
+    "time": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}(Z|[+-]\\d{2}:\\d{2})$",
+      "description": "Millisecond ISO 8601 timestamp with timezone, e.g. 2026-06-03T10:30:10.123+08:00."
+    },
+    "value": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "trace_id",
+        "page_id",
+        "page_type",
+        "target_type",
+        "metadata"
+      ],
+      "properties": {
+        "trace_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page_type": {
+          "type": "string",
+          "enum": [
+            "A1_FLOW",
+            "B1_TEXT_SINGLE",
+            "B2_TEXT_MULTI_PARALLEL",
+            "B3_TEXT_MATRIX_EVALUATION",
+            "C1_INFO_SELECTION",
+            "D1_SIMULATION_ONLY",
+            "D2_SIMULATION_QUESTION",
+            "E1_CHART_PLAN_DECISION"
+          ]
+        },
+        "target_id": {
+          "type": "string"
+        },
+        "target_type": {
+          "type": "string",
+          "enum": [
+            "page",
+            "button",
+            "text",
+            "checkbox",
+            "radio",
+            "modal",
+            "experiment",
+            "chart",
+            "table",
+            "content",
+            "timer"
+          ]
+        },
+        "field_id": {
+          "type": "string"
+        },
+        "content_id": {
+          "type": "string"
+        },
+        "question_id": {
+          "type": "string"
+        },
+        "option_id": {
+          "type": "string"
+        },
+        "row_id": {
+          "type": "string"
+        },
+        "param_id": {
+          "type": "string"
+        },
+        "param_name": {
+          "type": "string"
+        },
+        "chart_id": {
+          "type": "string"
+        },
+        "point_id": {
+          "type": "string"
+        },
+        "exp_run_id": {
+          "type": "string"
+        },
+        "submit_attempt_id": {
+          "type": "string"
+        },
+        "value_before": {},
+        "value_after": {},
+        "validation_status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "blocked",
+            "auto",
+            "timeout",
+            "none"
+          ]
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "enum": [
+              "TEXT_FOCUS",
+              "TEXT_CHANGE",
+              "TEXT_BLUR"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "required": [
+              "field_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "PAGE_IDLE"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "properties": {
+              "metadata": {
+                "required": [
+                  "idle_duration_ms",
+                  "idle_phase",
+                  "page_visible",
+                  "window_focused"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "enum": [
+              "CONTENT_EXPOSE",
+              "CONTENT_ACTIVATE",
+              "CONTENT_VIEW"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "required": [
+              "content_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "enum": [
+              "CHECKBOX_TOGGLE",
+              "SELECT_ANSWER"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "required": [
+              "question_id",
+              "option_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "enum": [
+              "ADD_ROW",
+              "DELETE_ROW",
+              "SET_PLAN_PARAM",
+              "SELECT_BEST"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "required": [
+              "field_id",
+              "row_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "CHART_HOVER"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "required": [
+              "chart_id",
+              "point_id",
+              "metadata"
+            ],
+            "properties": {
+              "metadata": {
+                "required": [
+                  "hover_ms",
+                  "data_snapshot"
+                ],
+                "properties": {
+                  "hover_ms": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "data_snapshot": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "EXECUTE_EXP"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "required": [
+              "exp_run_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "eventType": {
+            "const": "SUBMIT_ATTEMPT"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "required": [
+              "submit_attempt_id",
+              "validation_status",
+              "metadata"
+            ],
+            "properties": {
+              "metadata": {
+                "required": [
+                  "submit_trigger"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

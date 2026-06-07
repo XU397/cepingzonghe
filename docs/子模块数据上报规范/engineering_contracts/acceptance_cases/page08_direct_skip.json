@@ -1,0 +1,82 @@
+{
+  "case_id": "page08_direct_skip_v2_2",
+  "purpose": "Validate Page08 direct skip lifecycle metadata and NO_EXP_DIRECT_NEXT strategy flag.",
+  "input": {
+    "pageNumber": "1.09",
+    "pageDesc": "Simulation explore",
+    "beginTime": "2026-06-03T10:08:00.000+08:00",
+    "endTime": "2026-06-03T10:08:06.000+08:00",
+    "answerList": [],
+    "imgList": [],
+    "operationList": [
+      {
+        "code": 1,
+        "targetElement": "P1.09_page",
+        "eventType": "START_PAGE",
+        "time": "2026-06-03T10:08:00.000+08:00",
+        "value": {
+          "trace_id": "p08-e001",
+          "page_id": "page_08_simulation_explore",
+          "page_type": "D1_SIMULATION_ONLY",
+          "target_id": "page",
+          "target_type": "page",
+          "metadata": {
+            "field_registry_version": "science-inquiry-field-registry-v2.2",
+            "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+            "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+            "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+            "schema_version": "science-inquiry-trace-v2.2",
+            "rule_config_version": "rule-config-v2.2",
+            "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83"
+          }
+        }
+      },
+      {
+        "code": 2,
+        "targetElement": "P1.09_submit",
+        "eventType": "SUBMIT_ATTEMPT",
+        "time": "2026-06-03T10:08:06.000+08:00",
+        "value": {
+          "trace_id": "p08-e002",
+          "page_id": "page_08_simulation_explore",
+          "page_type": "D1_SIMULATION_ONLY",
+          "target_id": "submit",
+          "target_type": "button",
+          "submit_attempt_id": "p08-submit-1",
+          "validation_status": "success",
+          "metadata": {
+            "missing_fields": [],
+            "submit_trigger": "next_button"
+          }
+        }
+      }
+    ]
+  },
+  "expected": {
+    "labels": [],
+    "forbidden_labels": [
+      "START_PAGE",
+      "SUBMIT_PAGE",
+      "TASK_FINISH",
+      "ARGUMENTATION",
+      "FIELD_COMPLETENESS",
+      "SET_EXP_PARAM",
+      "EXECUTE_EXP",
+      "SELECT_ANSWER",
+      "REVISE_ANSWER",
+      "PAGE_IDLE"
+    ],
+    "pageMetadata": {
+      "lifecycle": {
+        "startPage": true,
+        "submitSuccess": true,
+        "taskFinish": false
+      }
+    },
+    "dataQualityWarnings": [],
+    "l4Required": false,
+    "strategyFlags": [
+      "NO_EXP_DIRECT_NEXT"
+    ]
+  }
+}

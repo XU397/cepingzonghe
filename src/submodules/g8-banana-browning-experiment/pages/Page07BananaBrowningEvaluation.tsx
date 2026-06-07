@@ -1,10 +1,17 @@
-import React, { useEffect, useCallback } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import React, { useCallback, useEffect, useRef } from 'react';
+import {
+  TEXT_DEBOUNCE_MS,
+  TEXT_THROTTLE_CHAR_DELTA,
+  createTextEventCollector,
+} from '@shared/services/submission/trace';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import imgMethod1 from '@/assets/images/xjbs07.jpg';
 import imgMethod2 from '@/assets/images/xjbs08.jpg';
 import imgMethod3 from '@/assets/images/xjbs09.jpg';
 import styles from '../styles/Page07BananaBrowningEvaluation.module.css';
+import { useContentActivationTrace } from '../trace/useContentActivationTrace';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 interface MethodConfig {
   id: string;
@@ -15,6 +22,7 @@ interface MethodConfig {
   consKey: string;
   prosLabel: string;
   consLabel: string;
+  traceContentId: string;
 }
 
 const METHODS: MethodConfig[] = [
@@ -28,6 +36,7 @@ const METHODS: MethodConfig[] = [
     consKey: 'Q4b_图像法缺点',
     prosLabel: '图像法优点',
     consLabel: '图像法缺点',
+    traceContentId: 'method_material_1',
   },
   {
     id: 'method_grid',
@@ -39,6 +48,7 @@ const METHODS: MethodConfig[] = [
     consKey: 'Q4d_网格法缺点',
     prosLabel: '网格法优点',
     consLabel: '网格法缺点',
+    traceContentId: 'method_material_2',
   },
   {
     id: 'method_weigh',
@@ -50,35 +60,103 @@ const METHODS: MethodConfig[] = [
     consKey: 'Q4f_称重法缺点',
     prosLabel: '称重法优点',
     consLabel: '称重法缺点',
+    traceContentId: 'method_material_3',
   },
 ];
 
-const Page07BananaBrowningEvaluation: React.FC = () => {
-  const { logOperation, collectAnswer, setPageStartTime, answers, getPagePrefix } =
-    useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
+const fieldIdByAnswerKey: Record<string, string> = {
+  Q4a_图像法优点: 'method_1_advantage',
+  Q4b_图像法缺点: 'method_1_disadvantage',
+  Q4c_网格法优点: 'method_2_advantage',
+  Q4d_网格法缺点: 'method_2_disadvantage',
+  Q4e_称重法优点: 'method_3_advantage',
+  Q4f_称重法缺点: 'method_3_disadvantage',
+};
 
-  useEffect(() => {
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '页面加载完成',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, setPageStartTime, targetPrefix]);
+const Page07BananaBrowningEvaluation: React.FC = () => {
+  const {
+    collectAnswer,
+    answers,
+    getPagePrefix,
+    registerTraceCollectorFlush,
+  } = useG8BananaBrowningContext();
+  const traceLogger = useTracePageStart({
+    pageId: 'banana_browning_evaluation' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {},
+    },
+  });
+  const getContentActivationHandlers = useContentActivationTrace(traceLogger);
+  const textCollectorsRef = useRef<
+    Record<string, ReturnType<typeof createTextEventCollector>>
+  >({});
+
+  const getTextCollector = useCallback(
+    (fieldId: string) => {
+      if (!traceLogger) {
+        return null;
+      }
+      if (!textCollectorsRef.current[fieldId]) {
+        textCollectorsRef.current[fieldId] = createTextEventCollector({
+          fieldId,
+          logger: traceLogger,
+          debounceMs: TEXT_DEBOUNCE_MS,
+          throttleCharDelta: TEXT_THROTTLE_CHAR_DELTA,
+        });
+      }
+      return textCollectorsRef.current[fieldId];
+    },
+    [traceLogger]
+  );
+
+  const flushTextCollectors = useCallback(() => {
+    Object.values(textCollectorsRef.current).forEach(collector => collector.flush('submit'));
+  }, []);
+
+  useEffect(
+    () => registerTraceCollectorFlush(flushTextCollectors),
+    [flushTextCollectors, registerTraceCollectorFlush]
+  );
+
+  useEffect(
+    () => () => {
+      Object.values(textCollectorsRef.current).forEach(collector => collector.dispose());
+      textCollectorsRef.current = {};
+    },
+    [traceLogger]
+  );
 
   const handleInputChange = useCallback(
-    (answerKey: string, logLabel: string, value: string) => {
+    (answerKey: string, logLabel: string, value: string, isComposing?: boolean) => {
       collectAnswer({ targetElement: answerKey, value });
-      logOperation({
-        targetElement: `${targetPrefix}${logLabel}输入`,
-        eventType: EventTypes.INPUT_CHANGE,
-        value,
-        time: new Date().toISOString(),
+      getTextCollector(fieldIdByAnswerKey[answerKey])?.onChange(value, {
+        isComposing,
+        metadata: {
+          source_answer_key: answerKey,
+          field_label: logLabel,
+        },
       });
     },
-    [collectAnswer, logOperation, targetPrefix]
+    [collectAnswer, getTextCollector]
+  );
+
+  const handleInputFocus = useCallback(
+    (answerKey: string) => {
+      getTextCollector(fieldIdByAnswerKey[answerKey])?.onFocus(String(answers[answerKey] || ''));
+    },
+    [answers, getTextCollector]
+  );
+
+  const handleInputBlur = useCallback(
+    (answerKey: string, logLabel: string, value: string) => {
+      getTextCollector(fieldIdByAnswerKey[answerKey])?.onBlur(value, {
+        source_answer_key: answerKey,
+        field_label: logLabel,
+      });
+    },
+    [getTextCollector]
   );
 
   return (
@@ -95,13 +173,28 @@ const Page07BananaBrowningEvaluation: React.FC = () => {
       <section className={styles.cardsContainer}>
         {METHODS.map((method, index) => (
           <article key={method.id} className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardNumber}>{index + 1}</div>
-              <span className={styles.cardName}>{method.name}</span>
-            </div>
-            <p className={styles.cardDescription}>{method.description}</p>
-            <div className={styles.imagePlaceholder}>
-              <img src={method.imageSrc} alt={method.name} />
+            <div
+              className={styles.methodMaterial}
+              data-content-id={method.traceContentId}
+              {...getContentActivationHandlers(method.traceContentId, {
+                sourceUiId: method.id,
+                metadata: {
+                  phase: 'method_review',
+                  content_type: 'method_material',
+                  method_index: index + 1,
+                  method_id: method.id,
+                  method_name: method.name,
+                },
+              })}
+            >
+              <div className={styles.cardHeader}>
+                <div className={styles.cardNumber}>{index + 1}</div>
+                <span className={styles.cardName}>{method.name}</span>
+              </div>
+              <p className={styles.cardDescription}>{method.description}</p>
+              <div className={styles.imagePlaceholder}>
+                <img src={method.imageSrc} alt={method.name} />
+              </div>
             </div>
             <div className={styles.inputGroup}>
               <label
@@ -114,7 +207,16 @@ const Page07BananaBrowningEvaluation: React.FC = () => {
                 id={`pros-${method.id}`}
                 className={styles.textarea}
                 value={(answers[method.prosKey] as string) || ''}
-                onChange={e => handleInputChange(method.prosKey, method.prosLabel, e.target.value)}
+                onFocus={() => handleInputFocus(method.prosKey)}
+                onChange={e =>
+                  handleInputChange(
+                    method.prosKey,
+                    method.prosLabel,
+                    e.target.value,
+                    (e.nativeEvent as InputEvent).isComposing
+                  )
+                }
+                onBlur={e => handleInputBlur(method.prosKey, method.prosLabel, e.target.value)}
                 placeholder="请填写此方法的优点..."
                 aria-label={`${method.name}优点输入框`}
               />
@@ -130,7 +232,16 @@ const Page07BananaBrowningEvaluation: React.FC = () => {
                 id={`cons-${method.id}`}
                 className={styles.textarea}
                 value={(answers[method.consKey] as string) || ''}
-                onChange={e => handleInputChange(method.consKey, method.consLabel, e.target.value)}
+                onFocus={() => handleInputFocus(method.consKey)}
+                onChange={e =>
+                  handleInputChange(
+                    method.consKey,
+                    method.consLabel,
+                    e.target.value,
+                    (e.nativeEvent as InputEvent).isComposing
+                  )
+                }
+                onBlur={e => handleInputBlur(method.consKey, method.consLabel, e.target.value)}
                 placeholder="请填写此方法的缺点..."
                 aria-label={`${method.name}缺点输入框`}
               />

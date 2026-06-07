@@ -221,7 +221,11 @@ export function AssessmentPageFrame({
     onError: submissionOnError,
     answers: submissionAnswers,
     operations: submissionOperations,
+    lifecycleMode: submissionLifecycleMode,
+    traceValidator: submissionTraceValidator,
   } = submission || {};
+  const isL2TraceMode = submissionLifecycleMode === 'l2-trace';
+  const shouldAutoRecordLifecycle = autoRecordLifecycle && !isL2TraceMode;
 
   const fallbackGetUserContext = useMemo(() => {
     if (!appContext) {
@@ -284,7 +288,7 @@ export function AssessmentPageFrame({
   const mergeLifecycleOperations = useCallback(
     (operations = []) => {
       const base = cloneEntries(operations);
-      if (!autoRecordLifecycle) {
+      if (!shouldAutoRecordLifecycle) {
         return base;
       }
       const lifecycleOps = Object.values(lifecycleEventsRef.current);
@@ -330,7 +334,7 @@ export function AssessmentPageFrame({
 
       return merged;
     },
-    [autoRecordLifecycle],
+    [shouldAutoRecordLifecycle],
   );
 
   /**
@@ -349,6 +353,9 @@ export function AssessmentPageFrame({
 
   const appendNextClickEvent = useCallback(
     (operations = []) => {
+      if (isL2TraceMode) {
+        return operations;
+      }
       if (operations.some((operation) => operation?.eventType === EventTypes.NEXT_CLICK)) {
         return operations;
       }
@@ -356,12 +363,12 @@ export function AssessmentPageFrame({
       logOperationWithPage(nextClickOperation);
       return [...operations, nextClickOperation];
     },
-    [buildNextClickOperation, logOperationWithPage],
+    [buildNextClickOperation, isL2TraceMode, logOperationWithPage],
   );
 
   const upsertLifecycleEvent = useCallback(
     (eventType, overrides = {}) => {
-      if (!autoRecordLifecycle) return;
+      if (!shouldAutoRecordLifecycle) return;
 
       // 如果 PAGE_ENTER 已存在，则保留首次进入时间
       if (eventType === EventTypes.PAGE_ENTER && lifecycleEventsRef.current[eventType]) {
@@ -373,22 +380,22 @@ export function AssessmentPageFrame({
       logOperationWithPage(operation);
       onLifecycleEvent?.(operation);
     },
-    [autoRecordLifecycle, effectivePageMeta, logOperationWithPage, onLifecycleEvent],
+    [effectivePageMeta, logOperationWithPage, onLifecycleEvent, shouldAutoRecordLifecycle],
   );
 
   const markPageExit = useCallback(
     (reason = 'navigate_next') => {
-      if (exitMarkedRef.current || !autoRecordLifecycle) return;
+      if (exitMarkedRef.current || !shouldAutoRecordLifecycle) return;
       exitMarkedRef.current = true;
       upsertLifecycleEvent(EventTypes.PAGE_EXIT, {
         value: reason,
       });
     },
-    [autoRecordLifecycle, upsertLifecycleEvent],
+    [shouldAutoRecordLifecycle, upsertLifecycleEvent],
   );
 
   useEffect(() => {
-    if (!autoRecordLifecycle) {
+    if (!shouldAutoRecordLifecycle) {
       return undefined;
     }
     upsertLifecycleEvent(EventTypes.PAGE_ENTER, {
@@ -396,10 +403,10 @@ export function AssessmentPageFrame({
     });
     return undefined; // page_exit 只在 handleDefaultNext 中记录
   }, [
-    autoRecordLifecycle,
     effectivePageMeta.pageId,
     markPageExit,
     pageId,
+    shouldAutoRecordLifecycle,
     upsertLifecycleEvent,
   ]);
 
@@ -504,9 +511,18 @@ export function AssessmentPageFrame({
     () => {
       const value = sanitizeOperationsInput(submissionOperations);
       const withLifecycle = mergeLifecycleOperations(value);
+      if (isL2TraceMode) {
+        return withLifecycle;
+      }
       return appendNextClickEvent(withLifecycle);
     },
-    [appendNextClickEvent, mergeLifecycleOperations, sanitizeOperationsInput, submissionOperations],
+    [
+      appendNextClickEvent,
+      isL2TraceMode,
+      mergeLifecycleOperations,
+      sanitizeOperationsInput,
+      submissionOperations,
+    ],
   );
 
   const composeMarkOverride = useCallback(
@@ -515,7 +531,7 @@ export function AssessmentPageFrame({
         sanitizeOperationsInput(operationsInput),
       );
       const { injectNextClick = false } = options;
-      const operationList = injectNextClick
+      const operationList = injectNextClick && !isL2TraceMode
         ? appendNextClickEvent(normalizedOperations)
         : normalizedOperations;
 
@@ -531,12 +547,21 @@ export function AssessmentPageFrame({
         beginTime,
       };
     },
-    [appendNextClickEvent, effectivePageMeta.pageDesc, effectivePageMeta.pageId, mergeLifecycleOperations, sanitizeAnswersInput, sanitizeOperationsInput],
+    [
+      appendNextClickEvent,
+      effectivePageMeta.pageDesc,
+      effectivePageMeta.pageId,
+      isL2TraceMode,
+      mergeLifecycleOperations,
+      sanitizeAnswersInput,
+      sanitizeOperationsInput,
+    ],
   );
 
   const attachNextClickToMark = useCallback(
     (mark) => {
       if (!mark) return null;
+      if (isL2TraceMode) return mark;
       const operationList = appendNextClickEvent(asArray(mark.operationList));
       if (operationList === mark.operationList) {
         return mark;
@@ -546,7 +571,7 @@ export function AssessmentPageFrame({
         operationList,
       };
     },
-    [appendNextClickEvent],
+    [appendNextClickEvent, isL2TraceMode],
   );
 
   const ensureNextClickMark = useCallback(
@@ -564,8 +589,13 @@ export function AssessmentPageFrame({
   );
 
   const resolveTimeoutMark = useCallback(
-    () => lastSubmissionMarkRef.current || composeMarkOverride(),
-    [composeMarkOverride],
+    () => {
+      if (lastSubmissionMarkRef.current) {
+        return lastSubmissionMarkRef.current;
+      }
+      return isL2TraceMode ? null : composeMarkOverride();
+    },
+    [composeMarkOverride, isL2TraceMode],
   );
 
   const forwardSubmissionError = useCallback(
@@ -640,6 +670,8 @@ export function AssessmentPageFrame({
     answers: resolveSubmissionAnswers,
     operations: resolveSubmissionOperations,
     logOperation: logOperationWithPage,
+    lifecycleMode: submissionLifecycleMode,
+    traceValidator: submissionTraceValidator,
   });
 
   /**
@@ -723,7 +755,14 @@ export function AssessmentPageFrame({
 
   const runSubmitWithMark = useCallback(
     (options = {}) => {
-      const { markOverride, onSuccess, onError, mode = 'default', timeoutOptions } = options;
+      const {
+        markOverride,
+        onSuccess,
+        onError,
+        mode = 'default',
+        timeoutOptions,
+        ...directTimeoutOptions
+      } = options;
       primePerSubmitCallbacks({ onSuccess, onError });
       const isDefaultMode = mode !== 'timeout';
       const normalizedMarkOverride =
@@ -735,9 +774,15 @@ export function AssessmentPageFrame({
       } else if (markOverride) {
         lastSubmissionMarkRef.current = markOverride;
       }
-      const submitFn = mode === 'timeout' ? submitOnTimeout : submit;
-      return submitFn({
-        markOverride: isDefaultMode ? normalizedMarkOverride : markOverride,
+      if (!isDefaultMode) {
+        return submitOnTimeout({
+          ...(timeoutOptions || {}),
+          ...directTimeoutOptions,
+          ...(markOverride ? { markOverride } : {}),
+        });
+      }
+      return submit({
+        markOverride: normalizedMarkOverride,
         timeoutOptions,
       });
     },
@@ -759,7 +804,11 @@ export function AssessmentPageFrame({
   }, [resolvedTimerType, timerWarningThreshold]);
 
   const handleTimerTimeout = useCallback(async () => {
-    await runSubmitWithMark({ markOverride: resolveTimeoutMark(), mode: 'timeout' });
+    const timeoutMark = resolveTimeoutMark();
+    await runSubmitWithMark({
+      ...(timeoutMark ? { markOverride: timeoutMark } : {}),
+      mode: 'timeout',
+    });
     if (typeof timerOnTimeout === 'function') {
       await timerOnTimeout();
     }
@@ -988,6 +1037,8 @@ AssessmentPageFrame.propTypes = {
     onError: PropTypes.func,
     answers: PropTypes.oneOfType([PropTypes.array, PropTypes.func, PropTypes.object]),
     operations: PropTypes.oneOfType([PropTypes.array, PropTypes.func]),
+    lifecycleMode: PropTypes.oneOf(['legacy', 'l2-trace']),
+    traceValidator: PropTypes.func,
   }),
   pageMeta: PropTypes.shape({
     pageId: PropTypes.string,

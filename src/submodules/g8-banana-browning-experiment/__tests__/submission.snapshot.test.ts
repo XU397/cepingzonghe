@@ -2,7 +2,17 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import EventTypes from '@shared/services/submission/eventTypes.js';
+import {
+  CONTENT_REGISTRY_HASH,
+  CONTENT_REGISTRY_VERSION,
+  FIELD_REGISTRY_HASH,
+  FIELD_REGISTRY_VERSION,
+  RULE_CONFIG_HASH,
+  RULE_CONFIG_VERSION,
+  TRACE_SCHEMA_VERSION,
+} from '@shared/services/submission/trace';
 import { encodeCompositePageNum } from '@shared/utils/pageMapping';
+import { validateTraceMark } from '../trace/useBananaTraceLogger';
 import G8BananaBrowningExperiment from '../Component';
 import {
   QUESTION_TEXT_MAP,
@@ -22,6 +32,15 @@ const FLOW_CONTEXT = {
   flowId: 'flow-banana',
   submoduleId: 'g8-banana-browning-experiment',
   stepIndex: 0,
+};
+const CANONICAL_TRACE_METADATA = {
+  schema_version: TRACE_SCHEMA_VERSION,
+  field_registry_version: FIELD_REGISTRY_VERSION,
+  field_registry_hash: FIELD_REGISTRY_HASH,
+  content_registry_version: CONTENT_REGISTRY_VERSION,
+  content_registry_hash: CONTENT_REGISTRY_HASH,
+  rule_config_version: RULE_CONFIG_VERSION,
+  rule_config_hash: RULE_CONFIG_HASH,
 };
 const USER_CONTEXT: SubmoduleProps['userContext'] = {
   user: {
@@ -43,6 +62,42 @@ const USER_CONTEXT: SubmoduleProps['userContext'] = {
 
 const isoAt = (seconds: number) => new Date(BASE_TIME.getTime() + seconds * 1000).toISOString();
 const pageSetups: Partial<Record<PageId, PageSetup>> = {};
+const L2_SIMULATION_EVENTS = {
+  executeExp: 'EXECUTE_EXP',
+  selectAnswer: 'SELECT_ANSWER',
+  setExpParam: 'SET_EXP_PARAM',
+  startPage: 'START_PAGE',
+} as const;
+const LEGACY_SIMULATION_EVENT_TYPES = new Set([
+  'simulation_operation',
+  'simulation_run_result',
+  'radio_select',
+]);
+const L2_SIMULATION_PAGE_CONFIG = {
+  simulation_question_1: {
+    standardPageId: 'page_09_experiment_question_1',
+    pageIndex: 9,
+    questionId: 'question_1',
+    questionIndex: 1,
+  },
+  simulation_question_2: {
+    standardPageId: 'page_10_experiment_question_2',
+    pageIndex: 10,
+    questionId: 'question_2',
+    questionIndex: 2,
+  },
+  simulation_question_3: {
+    standardPageId: 'page_11_experiment_question_3',
+    pageIndex: 11,
+    questionId: 'question_3',
+    questionIndex: 3,
+  },
+} as const;
+
+type L2SimulationPageId = keyof typeof L2_SIMULATION_PAGE_CONFIG;
+type L2SimulationConfig = (typeof L2_SIMULATION_PAGE_CONFIG)[L2SimulationPageId] & {
+  pageId: L2SimulationPageId;
+};
 
 let latestSubmission: {
   buildMark?: () => any;
@@ -152,6 +207,125 @@ const toSnapshot = (mark: any) => ({
   })),
 });
 
+const getL2SimulationConfig = (pageId: L2SimulationPageId): L2SimulationConfig => ({
+  pageId,
+  ...L2_SIMULATION_PAGE_CONFIG[pageId],
+});
+
+const logL2Operation = (
+  ctx: PageSetupContext,
+  config: L2SimulationConfig,
+  eventType: string,
+  targetId: string,
+  targetType: string,
+  seconds: number,
+  valuePatch: Record<string, unknown> = {},
+  metadata: Record<string, unknown> = {}
+) => {
+  ctx.logOperation({
+    targetElement: `${ctx.targetPrefix}${targetId}`,
+    eventType,
+    value: {
+      trace_id: `trace_${config.pageId}_${eventType}_${seconds}`,
+      page_id: config.standardPageId,
+      page_type: 'D2_SIMULATION_QUESTION',
+      target_id: targetId,
+      target_type: targetType,
+      ...valuePatch,
+      metadata: {
+        ...CANONICAL_TRACE_METADATA,
+        page_index: config.pageIndex,
+        legacy_page_id: config.pageId,
+        ...metadata,
+      },
+    },
+    time: isoAt(seconds),
+  });
+};
+
+const logStartPage = (ctx: PageSetupContext, config: L2SimulationConfig, seconds: number) =>
+  logL2Operation(ctx, config, L2_SIMULATION_EVENTS.startPage, 'page', 'page', seconds, {}, {
+    initial_state: { selected_option: null },
+    flow_context: null,
+  });
+
+const logSetExpParam = (
+  ctx: PageSetupContext,
+  config: L2SimulationConfig,
+  seconds: number,
+  valueBefore: number,
+  valueAfter: number
+) =>
+  logL2Operation(
+    ctx,
+    config,
+    L2_SIMULATION_EVENTS.setExpParam,
+    'exp_param_days',
+    'experiment',
+    seconds,
+    {
+      param_id: 'exp_param_days',
+      param_name: 'days',
+      value_before: valueBefore,
+      value_after: valueAfter,
+    },
+    { param_snapshot: { days: valueAfter } }
+  );
+
+const logExecuteExp = (
+  ctx: PageSetupContext,
+  config: L2SimulationConfig,
+  seconds: number,
+  day: number,
+  results: Array<Record<string, unknown>>
+) =>
+  logL2Operation(
+    ctx,
+    config,
+    L2_SIMULATION_EVENTS.executeExp,
+    'execute_exp',
+    'experiment',
+    seconds,
+    { exp_run_id: `banana_days_${day}` },
+    {
+      param_snapshot: { days: day },
+      result_snapshot: { day, results },
+      click_debounce_applied: false,
+    }
+  );
+
+const logSelectAnswer = (
+  ctx: PageSetupContext,
+  config: L2SimulationConfig,
+  seconds: number,
+  optionId: string,
+  optionText: string
+) =>
+  logL2Operation(
+    ctx,
+    config,
+    L2_SIMULATION_EVENTS.selectAnswer,
+    `${config.questionId}_${optionId}`,
+    'radio',
+    seconds,
+    {
+      question_id: config.questionId,
+      option_id: optionId,
+      value_before: null,
+      value_after: optionId,
+    },
+    {
+      option_text: optionText,
+      question_index: config.questionIndex,
+      total_question_count: 3,
+    }
+  );
+
+const expectNoLegacySimulationEvents = (mark: any) => {
+  const eventTypes = mark.operationList.map((operation: any) => operation.eventType);
+  expect(eventTypes.some((eventType: string) => LEGACY_SIMULATION_EVENT_TYPES.has(eventType))).toBe(false);
+};
+
 const renderAndBuildMark = async (pageId: PageId, setup: PageSetup) => {
   pageSetups[pageId] = setup;
 
@@ -171,7 +345,7 @@ const renderAndBuildMark = async (pageId: PageId, setup: PageSetup) => {
     mark = latestSubmission.buildMark?.();
     expect(mark?.answerList.length).toBeGreaterThan(0);
     expect(
-      mark?.operationList.filter((operation: any) => operation.eventType === EventTypes.FLOW_CONTEXT)
+      mark?.operationList.filter((operation: any) => operation.eventType === L2_SIMULATION_EVENTS.startPage)
         .length
     ).toBe(1);
   });
@@ -189,52 +363,23 @@ describe('g8-banana-browning submission snapshots', () => {
 
   it('simulation_question_1 should build raw mark with labeled Q5 answer and full question target', async () => {
     const mark = await renderAndBuildMark('simulation_question_1', (ctx) => {
-      const prefix = ctx.targetPrefix;
+      const config = getL2SimulationConfig('simulation_question_1');
       ctx.setPageStartTime(new Date(BASE_TIME));
-      ctx.logOperation({
-        targetElement: `${prefix}页面进入`,
-        eventType: EventTypes.PAGE_ENTER,
-        value: ctx.currentPageId,
-        time: isoAt(0),
-      });
-      ctx.logOperation({
-        targetElement: `${prefix}天数增加按钮`,
-        eventType: EventTypes.SIMULATION_OPERATION,
-        value: { action: 'increment_day', fromDay: 3, toDay: 6 },
-        time: isoAt(1),
-      });
-      ctx.logOperation({
-        targetElement: `${prefix}开始实验按钮`,
-        eventType: EventTypes.SIMULATION_TIMING_STARTED,
-        value: { selectedDay: 6, totalConditions: 6 },
-        time: isoAt(2),
-      });
-      ctx.logOperation({
-        targetElement: `${prefix}实验结果`,
-        eventType: EventTypes.SIMULATION_RUN_RESULT,
-        value: {
-          selectedDay: 6,
-          results: [
-            { origin: '海南', temperature: '2℃', browning: 0.35 },
-            { origin: '海南', temperature: '10℃', browning: 0.04 },
-            { origin: '海南', temperature: '18℃', browning: 0.06 },
-            { origin: '菲律宾', temperature: '2℃', browning: 0.65 },
-            { origin: '菲律宾', temperature: '10℃', browning: 0.03 },
-            { origin: '菲律宾', temperature: '18℃', browning: 0.05 },
-          ],
-        },
-        time: isoAt(3),
-      });
+      logStartPage(ctx, config, 0);
+      logSetExpParam(ctx, config, 1, 3, 6);
+      logExecuteExp(ctx, config, 3, 6, [
+        { origin: '海南', temperature: '2℃', browning: 0.35 },
+        { origin: '海南', temperature: '10℃', browning: 0.04 },
+        { origin: '海南', temperature: '18℃', browning: 0.06 },
+        { origin: '菲律宾', temperature: '2℃', browning: 0.65 },
+        { origin: '菲律宾', temperature: '10℃', browning: 0.03 },
+        { origin: '菲律宾', temperature: '18℃', browning: 0.05 },
+      ]);
       ctx.collectAnswer({
         targetElement: 'Q5_海南香蕉变黑时间',
         value: '6天',
       });
-      ctx.logOperation({
-        targetElement: `${prefix}问题1选项`,
-        eventType: EventTypes.RADIO_SELECT,
-        value: 'B. 6天',
-        time: isoAt(4),
-      });
+      logSelectAnswer(ctx, config, 4, 'option_b', '6天');
     });
 
     expect(mark.pageNumber).toBe(
@@ -242,9 +387,9 @@ describe('g8-banana-browning submission snapshots', () => {
     );
     expect(mark.answerList[0].targetElement).toBe(QUESTION_TEXT_MAP.Q5);
     expect(mark.answerList[0].value).toBe('B. 6天');
-    expect(
-      mark.operationList.filter((operation: any) => operation.eventType === EventTypes.FLOW_CONTEXT)
-    ).toHaveLength(1);
+    expect(mark.operationList.filter((operation: any) => operation.eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(0);
+    expectNoLegacySimulationEvents(mark);
+    expect(() => validateTraceMark(mark)).not.toThrow();
 
     expect(toSnapshot(mark)).toMatchInlineSnapshot(`
       {
@@ -258,80 +403,159 @@ describe('g8-banana-browning submission snapshots', () => {
         "operations": [
           {
             "code": 1,
-            "eventType": "page_enter",
-            "targetElement": "P1.10_页面进入",
-            "value": "simulation_question_1",
+            "eventType": "START_PAGE",
+            "targetElement": "P1.10_page",
+            "value": {
+              "metadata": {
+                "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+                "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+                "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+                "field_registry_version": "science-inquiry-field-registry-v2.2",
+                "flow_context": {
+                  "flowId": "flow-banana",
+                  "moduleName": "8年级香蕉变黑科学探究",
+                  "pageId": "simulation_question_1",
+                  "stepIndex": 0,
+                  "submoduleId": "g8-banana-browning-experiment",
+                },
+                "initial_state": {
+                  "selected_option": null,
+                },
+                "legacy_page_id": "simulation_question_1",
+                "page_index": 9,
+                "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+                "rule_config_version": "rule-config-v2.2",
+                "schema_version": "science-inquiry-trace-v2.2",
+              },
+              "page_id": "page_09_experiment_question_1",
+              "page_type": "D2_SIMULATION_QUESTION",
+              "target_id": "page",
+              "target_type": "page",
+              "trace_id": "trace_simulation_question_1_START_PAGE_0",
+            },
           },
           {
             "code": 2,
-            "eventType": "flow_context",
-            "targetElement": "flow_context",
-            "value": "{\"flowId\":\"flow-banana\",\"submoduleId\":\"g8-banana-browning-experiment\",\"stepIndex\":0,\"moduleName\":\"8年级香蕉变黑科学探究\",\"pageId\":\"simulation_question_1\"}",
+            "eventType": "SET_EXP_PARAM",
+            "targetElement": "P1.10_exp_param_days",
+            "value": {
+              "metadata": {
+                "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+                "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+                "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+                "field_registry_version": "science-inquiry-field-registry-v2.2",
+                "legacy_page_id": "simulation_question_1",
+                "page_index": 9,
+                "param_snapshot": {
+                  "days": 6,
+                },
+                "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+                "rule_config_version": "rule-config-v2.2",
+                "schema_version": "science-inquiry-trace-v2.2",
+              },
+              "page_id": "page_09_experiment_question_1",
+              "page_type": "D2_SIMULATION_QUESTION",
+              "param_id": "exp_param_days",
+              "param_name": "days",
+              "target_id": "exp_param_days",
+              "target_type": "experiment",
+              "trace_id": "trace_simulation_question_1_SET_EXP_PARAM_1",
+              "value_after": 6,
+              "value_before": 3,
+            },
           },
           {
             "code": 3,
-            "eventType": "simulation_operation",
-            "targetElement": "P1.10_天数增加按钮",
+            "eventType": "EXECUTE_EXP",
+            "targetElement": "P1.10_execute_exp",
             "value": {
-              "action": "increment_day",
-              "fromDay": 3,
-              "toDay": 6,
+              "exp_run_id": "banana_days_6",
+              "metadata": {
+                "click_debounce_applied": false,
+                "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+                "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+                "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+                "field_registry_version": "science-inquiry-field-registry-v2.2",
+                "legacy_page_id": "simulation_question_1",
+                "page_index": 9,
+                "param_snapshot": {
+                  "days": 6,
+                },
+                "result_snapshot": {
+                  "day": 6,
+                  "results": [
+                    {
+                      "browning": 0.35,
+                      "origin": "海南",
+                      "temperature": "2℃",
+                    },
+                    {
+                      "browning": 0.04,
+                      "origin": "海南",
+                      "temperature": "10℃",
+                    },
+                    {
+                      "browning": 0.06,
+                      "origin": "海南",
+                      "temperature": "18℃",
+                    },
+                    {
+                      "browning": 0.65,
+                      "origin": "菲律宾",
+                      "temperature": "2℃",
+                    },
+                    {
+                      "browning": 0.03,
+                      "origin": "菲律宾",
+                      "temperature": "10℃",
+                    },
+                    {
+                      "browning": 0.05,
+                      "origin": "菲律宾",
+                      "temperature": "18℃",
+                    },
+                  ],
+                },
+                "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+                "rule_config_version": "rule-config-v2.2",
+                "schema_version": "science-inquiry-trace-v2.2",
+              },
+              "page_id": "page_09_experiment_question_1",
+              "page_type": "D2_SIMULATION_QUESTION",
+              "target_id": "execute_exp",
+              "target_type": "experiment",
+              "trace_id": "trace_simulation_question_1_EXECUTE_EXP_3",
             },
           },
           {
             "code": 4,
-            "eventType": "simulation_timing_started",
-            "targetElement": "P1.10_开始实验按钮",
+            "eventType": "SELECT_ANSWER",
+            "targetElement": "P1.10_question_1_option_b",
             "value": {
-              "selectedDay": 6,
-              "totalConditions": 6,
+              "metadata": {
+                "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+                "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+                "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+                "field_registry_version": "science-inquiry-field-registry-v2.2",
+                "legacy_page_id": "simulation_question_1",
+                "option_text": "6天",
+                "page_index": 9,
+                "question_index": 1,
+                "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+                "rule_config_version": "rule-config-v2.2",
+                "schema_version": "science-inquiry-trace-v2.2",
+                "total_question_count": 3,
+              },
+              "option_id": "option_b",
+              "page_id": "page_09_experiment_question_1",
+              "page_type": "D2_SIMULATION_QUESTION",
+              "question_id": "question_1",
+              "target_id": "question_1_option_b",
+              "target_type": "radio",
+              "trace_id": "trace_simulation_question_1_SELECT_ANSWER_4",
+              "value_after": "option_b",
+              "value_before": null,
             },
-          },
-          {
-            "code": 5,
-            "eventType": "simulation_run_result",
-            "targetElement": "P1.10_实验结果",
-            "value": {
-              "results": [
-                {
-                  "browning": 0.35,
-                  "origin": "海南",
-                  "temperature": "2℃",
-                },
-                {
-                  "browning": 0.04,
-                  "origin": "海南",
-                  "temperature": "10℃",
-                },
-                {
-                  "browning": 0.06,
-                  "origin": "海南",
-                  "temperature": "18℃",
-                },
-                {
-                  "browning": 0.65,
-                  "origin": "菲律宾",
-                  "temperature": "2℃",
-                },
-                {
-                  "browning": 0.03,
-                  "origin": "菲律宾",
-                  "temperature": "10℃",
-                },
-                {
-                  "browning": 0.05,
-                  "origin": "菲律宾",
-                  "temperature": "18℃",
-                },
-              ],
-              "selectedDay": 6,
-            },
-          },
-          {
-            "code": 6,
-            "eventType": "radio_select",
-            "targetElement": "P1.10_问题1选项",
-            "value": "B. 6天",
           },
         ],
         "pageDesc": "[flow-banana/g8-banana-browning-experiment/0] 模拟实验 + 问题1",
@@ -342,40 +566,22 @@ describe('g8-banana-browning submission snapshots', () => {
 
   it('simulation_question_2 should build raw mark with labeled Q6 answer and full question target', async () => {
     const mark = await renderAndBuildMark('simulation_question_2', (ctx) => {
-      const prefix = ctx.targetPrefix;
+      const config = getL2SimulationConfig('simulation_question_2');
       ctx.setPageStartTime(new Date(BASE_TIME));
-      ctx.logOperation({
-        targetElement: `${prefix}页面进入`,
-        eventType: EventTypes.PAGE_ENTER,
-        value: ctx.currentPageId,
-        time: isoAt(10),
-      });
-      ctx.logOperation({
-        targetElement: `${prefix}实验结果`,
-        eventType: EventTypes.SIMULATION_RUN_RESULT,
-        value: {
-          selectedDay: 15,
-          results: [
-            { origin: '海南', temperature: '2℃', browning: 1 },
-            { origin: '海南', temperature: '10℃', browning: 0.33 },
-            { origin: '海南', temperature: '18℃', browning: 0.46 },
-            { origin: '菲律宾', temperature: '2℃', browning: 1 },
-            { origin: '菲律宾', temperature: '10℃', browning: 0.25 },
-            { origin: '菲律宾', temperature: '18℃', browning: 0.27 },
-          ],
-        },
-        time: isoAt(11),
-      });
+      logStartPage(ctx, config, 10);
+      logExecuteExp(ctx, config, 11, 15, [
+        { origin: '海南', temperature: '2℃', browning: 1 },
+        { origin: '海南', temperature: '10℃', browning: 0.33 },
+        { origin: '海南', temperature: '18℃', browning: 0.46 },
+        { origin: '菲律宾', temperature: '2℃', browning: 1 },
+        { origin: '菲律宾', temperature: '10℃', browning: 0.25 },
+        { origin: '菲律宾', temperature: '18℃', browning: 0.27 },
+      ]);
       ctx.collectAnswer({
         targetElement: 'Q6_常温储存品种',
         value: '海南香蕉',
       });
-      ctx.logOperation({
-        targetElement: `${prefix}问题2选项`,
-        eventType: EventTypes.RADIO_SELECT,
-        value: 'A. 海南香蕉',
-        time: isoAt(12),
-      });
+      logSelectAnswer(ctx, config, 12, 'option_a', '海南香蕉');
     });
 
     expect(mark.pageNumber).toBe(
@@ -383,121 +589,56 @@ describe('g8-banana-browning submission snapshots', () => {
     );
     expect(mark.answerList[0].targetElement).toBe(QUESTION_TEXT_MAP.Q6);
     expect(mark.answerList[0].value).toBe('A. 海南香蕉');
-    expect(
-      mark.operationList.filter((operation: any) => operation.eventType === EventTypes.FLOW_CONTEXT)
-    ).toHaveLength(1);
+    expect(mark.operationList.filter((operation: any) => operation.eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(0);
+    expectNoLegacySimulationEvents(mark);
+    expect(() => validateTraceMark(mark)).not.toThrow();
 
-    expect(toSnapshot(mark)).toMatchInlineSnapshot(`
-      {
-        "answers": [
-          {
-            "code": 13,
-            "targetElement": "模拟实验表明，哪个品种的香蕉更适合在常温下储存？",
-            "value": "A. 海南香蕉",
-          },
-        ],
-        "operations": [
-          {
-            "code": 1,
-            "eventType": "page_enter",
-            "targetElement": "P1.11_页面进入",
-            "value": "simulation_question_2",
-          },
-          {
-            "code": 2,
-            "eventType": "flow_context",
-            "targetElement": "flow_context",
-            "value": "{\"flowId\":\"flow-banana\",\"submoduleId\":\"g8-banana-browning-experiment\",\"stepIndex\":0,\"moduleName\":\"8年级香蕉变黑科学探究\",\"pageId\":\"simulation_question_2\"}",
-          },
-          {
-            "code": 3,
-            "eventType": "simulation_run_result",
-            "targetElement": "P1.11_实验结果",
-            "value": {
-              "results": [
-                {
-                  "browning": 1,
-                  "origin": "海南",
-                  "temperature": "2℃",
-                },
-                {
-                  "browning": 0.33,
-                  "origin": "海南",
-                  "temperature": "10℃",
-                },
-                {
-                  "browning": 0.46,
-                  "origin": "海南",
-                  "temperature": "18℃",
-                },
-                {
-                  "browning": 1,
-                  "origin": "菲律宾",
-                  "temperature": "2℃",
-                },
-                {
-                  "browning": 0.25,
-                  "origin": "菲律宾",
-                  "temperature": "10℃",
-                },
-                {
-                  "browning": 0.27,
-                  "origin": "菲律宾",
-                  "temperature": "18℃",
-                },
-              ],
-              "selectedDay": 15,
-            },
-          },
-          {
-            "code": 4,
-            "eventType": "radio_select",
-            "targetElement": "P1.11_问题2选项",
-            "value": "A. 海南香蕉",
-          },
-        ],
-        "pageDesc": "[flow-banana/g8-banana-browning-experiment/0] 模拟实验 + 问题2",
-        "pageNumber": "1.11",
-      }
-    `);
+    const snapshot = toSnapshot(mark);
+    expect(snapshot).toMatchObject({
+      pageNumber: '1.11',
+      pageDesc: '[flow-banana/g8-banana-browning-experiment/0] 模拟实验 + 问题2',
+      answers: [
+        {
+          targetElement: QUESTION_TEXT_MAP.Q6,
+          value: 'A. 海南香蕉',
+        },
+      ],
+    });
+    expect(snapshot.operations.map((operation: any) => operation.eventType)).toEqual([
+      'START_PAGE',
+      'EXECUTE_EXP',
+      'SELECT_ANSWER',
+    ]);
+    expect(snapshot.operations[0].value.metadata.flow_context).toMatchObject({
+      flowId: FLOW_CONTEXT.flowId,
+      submoduleId: FLOW_CONTEXT.submoduleId,
+      stepIndex: FLOW_CONTEXT.stepIndex,
+      pageId: 'simulation_question_2',
+    });
+    expect(snapshot.operations[1].value.exp_run_id).toBe('banana_days_15');
+    expect(snapshot.operations[1].value.metadata.result_snapshot.results).toHaveLength(6);
+    expect(snapshot.operations[2].value.option_id).toBe('option_a');
+
   });
 
   it('simulation_question_3 should build raw mark with labeled Q7 answer and full question target', async () => {
     const mark = await renderAndBuildMark('simulation_question_3', (ctx) => {
-      const prefix = ctx.targetPrefix;
+      const config = getL2SimulationConfig('simulation_question_3');
       ctx.setPageStartTime(new Date(BASE_TIME));
-      ctx.logOperation({
-        targetElement: `${prefix}页面进入`,
-        eventType: EventTypes.PAGE_ENTER,
-        value: ctx.currentPageId,
-        time: isoAt(20),
-      });
-      ctx.logOperation({
-        targetElement: `${prefix}实验结果`,
-        eventType: EventTypes.SIMULATION_RUN_RESULT,
-        value: {
-          selectedDay: 15,
-          results: [
-            { origin: '海南', temperature: '2℃', browning: 1 },
-            { origin: '海南', temperature: '10℃', browning: 0.33 },
-            { origin: '海南', temperature: '18℃', browning: 0.46 },
-            { origin: '菲律宾', temperature: '2℃', browning: 1 },
-            { origin: '菲律宾', temperature: '10℃', browning: 0.25 },
-            { origin: '菲律宾', temperature: '18℃', browning: 0.27 },
-          ],
-        },
-        time: isoAt(21),
-      });
+      logStartPage(ctx, config, 20);
+      logExecuteExp(ctx, config, 21, 15, [
+        { origin: '海南', temperature: '2℃', browning: 1 },
+        { origin: '海南', temperature: '10℃', browning: 0.33 },
+        { origin: '海南', temperature: '18℃', browning: 0.46 },
+        { origin: '菲律宾', temperature: '2℃', browning: 1 },
+        { origin: '菲律宾', temperature: '10℃', browning: 0.25 },
+        { origin: '菲律宾', temperature: '18℃', browning: 0.27 },
+      ]);
       ctx.collectAnswer({
         targetElement: 'Q7_平缓温度',
         value: '18℃',
       });
-      ctx.logOperation({
-        targetElement: `${prefix}问题3选项`,
-        eventType: EventTypes.RADIO_SELECT,
-        value: 'C. 18℃',
-        time: isoAt(22),
-      });
+      logSelectAnswer(ctx, config, 22, 'option_c', '18℃');
     });
 
     expect(mark.pageNumber).toBe(
@@ -505,82 +646,35 @@ describe('g8-banana-browning submission snapshots', () => {
     );
     expect(mark.answerList[0].targetElement).toBe(QUESTION_TEXT_MAP.Q7);
     expect(mark.answerList[0].value).toBe('C. 18℃');
-    expect(
-      mark.operationList.filter((operation: any) => operation.eventType === EventTypes.FLOW_CONTEXT)
-    ).toHaveLength(1);
+    expect(mark.operationList.filter((operation: any) => operation.eventType === EventTypes.FLOW_CONTEXT)).toHaveLength(0);
+    expectNoLegacySimulationEvents(mark);
+    expect(() => validateTraceMark(mark)).not.toThrow();
 
-    expect(toSnapshot(mark)).toMatchInlineSnapshot(`
-      {
-        "answers": [
-          {
-            "code": 14,
-            "targetElement": "在模拟实验中，菲律宾香蕉在不同温度下储存时，黑变速度变化最平缓的是哪种温度条件？",
-            "value": "C. 18℃",
-          },
-        ],
-        "operations": [
-          {
-            "code": 1,
-            "eventType": "page_enter",
-            "targetElement": "P1.12_页面进入",
-            "value": "simulation_question_3",
-          },
-          {
-            "code": 2,
-            "eventType": "flow_context",
-            "targetElement": "flow_context",
-            "value": "{\"flowId\":\"flow-banana\",\"submoduleId\":\"g8-banana-browning-experiment\",\"stepIndex\":0,\"moduleName\":\"8年级香蕉变黑科学探究\",\"pageId\":\"simulation_question_3\"}",
-          },
-          {
-            "code": 3,
-            "eventType": "simulation_run_result",
-            "targetElement": "P1.12_实验结果",
-            "value": {
-              "results": [
-                {
-                  "browning": 1,
-                  "origin": "海南",
-                  "temperature": "2℃",
-                },
-                {
-                  "browning": 0.33,
-                  "origin": "海南",
-                  "temperature": "10℃",
-                },
-                {
-                  "browning": 0.46,
-                  "origin": "海南",
-                  "temperature": "18℃",
-                },
-                {
-                  "browning": 1,
-                  "origin": "菲律宾",
-                  "temperature": "2℃",
-                },
-                {
-                  "browning": 0.25,
-                  "origin": "菲律宾",
-                  "temperature": "10℃",
-                },
-                {
-                  "browning": 0.27,
-                  "origin": "菲律宾",
-                  "temperature": "18℃",
-                },
-              ],
-              "selectedDay": 15,
-            },
-          },
-          {
-            "code": 4,
-            "eventType": "radio_select",
-            "targetElement": "P1.12_问题3选项",
-            "value": "C. 18℃",
-          },
-        ],
-        "pageDesc": "[flow-banana/g8-banana-browning-experiment/0] 模拟实验 + 问题3",
-        "pageNumber": "1.12",
-      }
-    `);
+    const snapshot = toSnapshot(mark);
+    expect(snapshot).toMatchObject({
+      pageNumber: '1.12',
+      pageDesc: '[flow-banana/g8-banana-browning-experiment/0] 模拟实验 + 问题3',
+      answers: [
+        {
+          targetElement: QUESTION_TEXT_MAP.Q7,
+          value: 'C. 18℃',
+        },
+      ],
+    });
+    expect(snapshot.operations.map((operation: any) => operation.eventType)).toEqual([
+      'START_PAGE',
+      'EXECUTE_EXP',
+      'SELECT_ANSWER',
+    ]);
+    expect(snapshot.operations[0].value.metadata.flow_context).toMatchObject({
+      flowId: FLOW_CONTEXT.flowId,
+      submoduleId: FLOW_CONTEXT.submoduleId,
+      stepIndex: FLOW_CONTEXT.stepIndex,
+      pageId: 'simulation_question_3',
+    });
+    expect(snapshot.operations[1].value.exp_run_id).toBe('banana_days_15');
+    expect(snapshot.operations[1].value.metadata.result_snapshot.results).toHaveLength(6);
+    expect(snapshot.operations[2].value.option_id).toBe('option_c');
+
   });
 });

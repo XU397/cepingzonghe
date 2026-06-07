@@ -1,0 +1,194 @@
+{
+  "case_id": "page02_page_idle_v2_2",
+  "purpose": "Validate compliant PAGE_IDLE as safe page context that never enters L3 labels or sequence_json.",
+  "input": {
+    "pageNumber": "1.03",
+    "pageDesc": "香蕉的奥秘",
+    "beginTime": "2026-06-03T10:00:00.000+08:00",
+    "endTime": "2026-06-03T10:00:30.000+08:00",
+    "answerList": [],
+    "imgList": [],
+    "operationList": [
+      {
+        "code": 1,
+        "targetElement": "P1.03_page",
+        "eventType": "START_PAGE",
+        "time": "2026-06-03T10:00:00.000+08:00",
+        "value": {
+          "trace_id": "p02-e001",
+          "page_id": "page_02_question_generation",
+          "page_type": "B1_TEXT_SINGLE",
+          "target_id": "page",
+          "target_type": "page",
+          "metadata": {
+            "schema_version": "science-inquiry-trace-v2.2",
+            "field_registry_version": "science-inquiry-field-registry-v2.2",
+            "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+            "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+            "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+            "rule_config_version": "rule-config-v2.2",
+            "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+            "initial_visible_content_ids": [
+              "instruction_text_02_01",
+              "chat_bubble_02_01"
+            ],
+            "main_instruction_visible": true,
+            "viewport_state": {
+              "width": 1280,
+              "height": 720,
+              "scroll_y": 0
+            }
+          }
+        }
+      },
+      {
+        "code": 2,
+        "targetElement": "P1.03_page",
+        "eventType": "PAGE_IDLE",
+        "time": "2026-06-03T10:00:06.200+08:00",
+        "value": {
+          "trace_id": "p02-idle-001",
+          "page_id": "page_02_question_generation",
+          "page_type": "B1_TEXT_SINGLE",
+          "target_id": "page",
+          "target_type": "page",
+          "metadata": {
+            "idle_duration_ms": 6200,
+            "idle_phase": "initial_before_first_action",
+            "page_visible": true,
+            "window_focused": true,
+            "threshold_ms": 5000
+          }
+        }
+      },
+      {
+        "code": 4,
+        "targetElement": "P1.03_chat_bubble_02_04",
+        "eventType": "CONTENT_ACTIVATE",
+        "time": "2026-06-03T10:00:08.000+08:00",
+        "value": {
+          "trace_id": "p02-e003",
+          "page_id": "page_02_question_generation",
+          "page_type": "B1_TEXT_SINGLE",
+          "target_id": "chat_bubble_02_04",
+          "target_type": "content",
+          "content_id": "chat_bubble_02_04",
+          "metadata": {
+            "content_type": "chat_bubble",
+            "activation_type": "hover",
+            "dwell_ms": 1200,
+            "phase": "before_input"
+          }
+        }
+      },
+      {
+        "code": 5,
+        "targetElement": "P1.03_input_question_1",
+        "eventType": "TEXT_FOCUS",
+        "time": "2026-06-03T10:00:12.000+08:00",
+        "value": {
+          "trace_id": "p02-e004",
+          "page_id": "page_02_question_generation",
+          "page_type": "B1_TEXT_SINGLE",
+          "target_id": "input_question_1",
+          "target_type": "text",
+          "field_id": "input_question_1",
+          "metadata": {
+            "focus_order": 1
+          }
+        }
+      },
+      {
+        "code": 6,
+        "targetElement": "P1.03_input_question_1",
+        "eventType": "TEXT_CHANGE",
+        "time": "2026-06-03T10:00:18.200+08:00",
+        "value": {
+          "trace_id": "p02-e005",
+          "page_id": "page_02_question_generation",
+          "page_type": "B1_TEXT_SINGLE",
+          "target_id": "input_question_1",
+          "target_type": "text",
+          "field_id": "input_question_1",
+          "metadata": {
+            "char_count_before": 0,
+            "char_delta": 12,
+            "char_count_after": 12,
+            "trigger_reason": "debounce"
+          }
+        }
+      },
+      {
+        "code": 7,
+        "targetElement": "P1.03_input_question_1",
+        "eventType": "TEXT_BLUR",
+        "time": "2026-06-03T10:00:25.000+08:00",
+        "value": {
+          "trace_id": "p02-e006",
+          "page_id": "page_02_question_generation",
+          "page_type": "B1_TEXT_SINGLE",
+          "target_id": "input_question_1",
+          "target_type": "text",
+          "field_id": "input_question_1",
+          "value_after": "香蕉皮为什么会很快变黑？",
+          "metadata": {
+            "char_count_after": 13
+          }
+        }
+      },
+      {
+        "code": 8,
+        "targetElement": "P1.03_next_button",
+        "eventType": "SUBMIT_ATTEMPT",
+        "time": "2026-06-03T10:00:29.000+08:00",
+        "value": {
+          "trace_id": "p02-e007",
+          "page_id": "page_02_question_generation",
+          "page_type": "B1_TEXT_SINGLE",
+          "target_id": "next_button",
+          "target_type": "button",
+          "submit_attempt_id": "p02-submit-1",
+          "validation_status": "success",
+          "metadata": {
+            "missing_fields": [],
+            "submit_trigger": "next_button"
+          }
+        }
+      }
+    ]
+  },
+  "expected": {
+    "labels": [
+      "READ_CHAT",
+      "GENERATE_THINK",
+      "GENERATE_FLUID"
+    ],
+    "forbidden_labels": [
+      "START_PAGE",
+      "SUBMIT_PAGE",
+      "TASK_FINISH",
+      "ARGUMENTATION",
+      "FIELD_COMPLETENESS",
+      "DEEP_READ",
+      "PAGE_IDLE"
+    ],
+    "dataQualityWarnings": [
+      {
+        "code": "TEXT_CHANGE_RAW_TEXT_PRESENT",
+        "severity": "WARN"
+      }
+    ],
+    "l4Required": false,
+    "pageMetadata": {
+      "lifecycle": {
+        "startPage": true,
+        "submitSuccess": true,
+        "taskFinish": false
+      },
+      "idle": {
+        "idleCount": 1,
+        "totalIdleDurationMs": 6200
+      }
+    }
+  }
+}

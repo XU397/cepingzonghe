@@ -1,0 +1,47 @@
+- 2026-06-04: Standardized `g8-banana-browning-experiment` standard task pages to L2 trace events.
+  - Added shared trace logger, collectors, validator, banana `TRACE_PAGE_CONFIGS`, and L2 submission mode.
+  - `intro_notice` remains legacy/minimal by design; standard pages emit only L2 event names with object `value`.
+  - Verified with `npm run lint:submission`, `npm run test:submission-format`, `npm run test:submission`, banana trace tests, and `npm run build`.
+- 2026-06-06: Addressed banana L2 trace review findings.
+  - Synced runtime trace contracts with authoritative engineering contracts and added runtime/docs sync coverage.
+  - Added `plan_table` bindings, `submit_trigger`, Page03/Page13 text collector flushing, and Page13 chart hover traces.
+  - Verified with targeted trace/banana tests, `npm run lint:submission`, `npm run test:submission-format`, `npm run test:submission`, `npm run build`, and `npx gitnexus detect-changes --repo cp-banana-trace-standardization`.
+- 2026-06-06: Addressed banana L2 trace second-review findings.
+  - Fixed Page04 config expectations, event schema requirements, Page08 submit trigger fixture drift, Page13 chart hover dwell enforcement, and chart registry validation.
+  - Added acceptance/runtime semantic coverage plus contract schema guard coverage; updated the implementation plan note for optional `chart_evidence_1`.
+  - Verified with targeted trace tests, `npm run lint:submission`, `npm run test:submission-format`, `npm run test:submission`, `npm run build`, and `npx gitnexus detect-changes --repo cp-banana-trace-standardization`.
+- 2026-06-06: Addressed banana L2 trace third-review blockers.
+  - Aligned Page12 acceptance `CHART_HOVER.point_id` with real Page13 `day_${day}` output and tied the page-event test to the authoritative fixture.
+  - Required CHART_HOVER `hover_ms` and `data_snapshot` in synced runtime/docs event schemas and runtime validation.
+  - Staged newly added authoritative docs/fixtures and trace guard tests so they are included in the next commit/PR.
+- 2026-06-06: Addressed banana L2 chart evidence follow-up findings.
+  - Page13 chart hover now schedules threshold logging on first hover and flushes qualified hover evidence on leave.
+  - Page12 acceptance chart fixture now matches real Page13 day-12 `10℃-海南香蕉` black-ratio output.
+  - Added page-event assertions for fixture-aligned chart `series_id` and `black_ratio`.
+- 2026-06-06: Implemented Task 7 backend fixture drift acceptance coverage.
+  - Added v2.2 Page02 `PAGE_IDLE` acceptance coverage, backend-canonical Page02 field-name assertions, and text collector cadence tests.
+  - Updated trace validation to tolerate backend fixture operation-code gaps and the narrow legacy Page13 finish page id alias, with direct regression tests.
+  - Aligned Page04 runtime trace IDs with v2.2 registry IDs for factor cards and factor selection.
+  - Verified the required acceptance/validator, submission-format, and text/page-event Vitest groups.
+- 2026-06-06: Addressed consolidated banana v2.2 frontend implementation review findings.
+  - Marked v2.2 as the current banana runtime contract in engineering docs, kept v2.1 as a historical compatibility patch mirror with PAGE_IDLE backport, and added v2.1+v2.2 docs/runtime contract sync coverage.
+  - Restricted timeout required-field inference to answer-bearing event types so content activation cannot satisfy required fields by sharing a `target_id`.
+  - Confirmed Page03 `factor_selection` registry alignment and Page04's third UI card remains non-trace UI while v2.2 content registry tracks only `factor_card_1/2`.
+- 2026-06-06: Addressed banana v2.2 code-review follow-up findings.
+  - Initially kept Page13 on submodule-local `page_13_finish`; this was superseded on 2026-06-07 after backend canonical fixtures confirmed `page_13_task_finish`.
+  - Restarted `PAGE_IDLE` candidates after visibility/focus regain while preserving idle phase and excluding hidden/blurred time.
+  - Mapped all visible Page04 factor options to registered v2.2 `option_a..option_d` IDs while leaving the approved transition-page content reduction intact.
+- 2026-06-06: Enhanced banana content activation trace coverage through OpenSpec change `enhance-banana-content-activation-trace`.
+  - Restored Page03 material reading to five trace-registered cards and records every material modal open/close with dwell time.
+  - Added Page02-style low-noise content activation for Page05 guidance text, Page06 method material blocks, and Page12 top decision guidance.
+  - Updated v2.2 banana content registry/hash, docs mirrors, acceptance fixture hash literals, and focused contract/page trace tests.
+  - Verified with OpenSpec strict validation, focused trace tests, submission checks, and `npm run build`.
+- 2026-06-07: Addressed banana trace standardization review hardening findings without opening a new OpenSpec change.
+  - Rejected the reported v2.1 production bundle P0 after verifying v2.1 contracts are not imported by runtime and no v2.1 markers appear in `dist/`.
+  - Added dispose cleanup for experiment/dynamic table trace collectors, removed unsafe validator `any` usage, and replaced the banana trace logger double cast with an adapter.
+  - Fixed Page13 solution-selection best-plan answer synchronization on star click and added Page03/Page06 v2.2 acceptance fixtures plus old-doc version status notes.
+  - Verified focused collector/validator/acceptance/page-event tests before broader submission and build checks.
+- 2026-06-07: Aligned banana v2.2 frontend contracts with backend-canonical trace fixtures.
+  - Updated v2.2 registry hashes to backend fixture literals and switched final page id to `page_13_task_finish`.
+  - Mirrored all 14 backend acceptance cases into frontend engineering contracts and expanded acceptance coverage to the full canonical set.
+  - Hardened `validateTraceMark` so `START_PAGE.metadata` must carry current v2.2 schema/registry/rule literals.

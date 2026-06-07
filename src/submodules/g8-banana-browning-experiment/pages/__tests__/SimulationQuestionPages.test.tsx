@@ -1,25 +1,37 @@
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentType } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import Page09BananaBrowningSimulationMain from '../Page09BananaBrowningSimulationMain';
 import Page10SimulationQuestion1 from '../Page10SimulationQuestion1';
 import Page11SimulationQuestion2 from '../Page11SimulationQuestion2';
 import Page12SimulationQuestion3 from '../Page12SimulationQuestion3';
-import G8BananaBrowningExperiment from '../../Component';
-import type { PageId } from '../../mapping';
-import type { SubmoduleProps } from '../../types';
 
-const defaultSubmitSpy = vi.fn(async () => true);
-let lastOnNextResult: boolean | undefined;
 type MockAnswerValue = string | number | boolean | null;
 
 interface MockPageContext {
   logOperation: ReturnType<typeof vi.fn>;
   setPageStartTime: ReturnType<typeof vi.fn>;
   collectAnswer: ReturnType<typeof vi.fn>;
+  registerTraceCollectorFlush: ReturnType<typeof vi.fn>;
+  registerTraceOperationObserver: ReturnType<typeof vi.fn>;
   answers: Record<string, MockAnswerValue>;
   getPagePrefix: ReturnType<typeof vi.fn>;
+}
+
+interface TraceOperationValue {
+  exp_run_id?: string;
+  question_id?: string;
+  option_id?: string;
+  value_before?: unknown;
+  value_after?: unknown;
+  metadata?: Record<string, unknown>;
+}
+
+interface TraceOperation {
+  eventType: string;
+  targetElement: string;
+  value: TraceOperationValue;
 }
 
 let mockPageContext: MockPageContext | null = null;
@@ -35,49 +47,24 @@ vi.mock('../../context/G8BananaBrowningContext', async () => {
   };
 });
 
-vi.mock('@shared/ui/PageFrame', async () => {
-  const ReactModule = await import('react');
-  const { useG8BananaBrowningContext } = await import('../../context/G8BananaBrowningContext');
-
-  const AssessmentPageFrame = ({ children, footerSlot, onNext }: any) => {
-    const { currentPageId, operations } = useG8BananaBrowningContext();
-
-    return ReactModule.createElement(
-      'div',
-      {},
-      ReactModule.createElement(
-        'pre',
-        { 'data-testid': 'frame-state' },
-        JSON.stringify({ currentPageId, operations })
-      ),
-      children,
-      footerSlot,
-      ReactModule.createElement(
-        'button',
-        {
-          'data-testid': 'frame-next-button',
-          onClick: async () => {
-            lastOnNextResult = await onNext({ defaultSubmit: defaultSubmitSpy });
-          },
-        },
-        '下一步'
-      )
-    );
-  };
-
-  return { AssessmentPageFrame };
-});
-
 vi.mock('../../components/SimulationPanel', () => ({
-  default: ({ logOperation, targetPrefix }: { logOperation: Function; targetPrefix: string }) => (
+  default: ({
+    traceLogger,
+  }: {
+    traceLogger: {
+      executeExp(expRunId: string, metadata?: Record<string, unknown>): unknown;
+    } | null;
+  }) => (
     <button
       data-testid="simulation-run-result"
       onClick={() =>
-        logOperation({
-          targetElement: `${targetPrefix}模拟结果`,
-          eventType: EventTypes.SIMULATION_RUN_RESULT,
-          value: { status: 'done' },
-          time: new Date().toISOString(),
+        traceLogger?.executeExp('banana_days_3', {
+          param_snapshot: { days: 3 },
+          result_snapshot: {
+            day: 3,
+            results: [{ origin: '海南', temperature: '2℃', browning: 0.05 }],
+          },
+          click_debounce_applied: false,
         })
       }
     >
@@ -86,83 +73,58 @@ vi.mock('../../components/SimulationPanel', () => ({
   ),
 }));
 
+const LEGACY_EVENT_TYPES = new Set([
+  'simulation_operation',
+  'simulation_run_result',
+  'radio_select',
+  'click',
+]);
+
 const cases: Array<{
-  pageId: PageId;
   answerLabel: string;
-  labeledValue: string;
+  optionId: string;
+  savedAnswer: string;
+  savedAnswerOptionId: string;
   questionKey: string;
+  questionId: string;
+  questionIndex: number;
   PageComponent: ComponentType;
   targetPrefix: string;
 }> = [
   {
-    pageId: 'simulation_question_1',
     answerLabel: '6天',
-    labeledValue: 'B. 6天',
+    optionId: 'option_b',
+    savedAnswer: '3天',
+    savedAnswerOptionId: 'option_a',
     questionKey: 'Q5_海南香蕉变黑时间',
+    questionId: 'question_1',
+    questionIndex: 1,
     PageComponent: Page10SimulationQuestion1,
     targetPrefix: 'P1.10_',
   },
   {
-    pageId: 'simulation_question_2',
     answerLabel: '海南香蕉',
-    labeledValue: 'A. 海南香蕉',
+    optionId: 'option_a',
+    savedAnswer: '菲律宾香蕉',
+    savedAnswerOptionId: 'option_b',
     questionKey: 'Q6_常温储存品种',
+    questionId: 'question_2',
+    questionIndex: 2,
     PageComponent: Page11SimulationQuestion2,
     targetPrefix: 'P1.11_',
   },
   {
-    pageId: 'simulation_question_3',
     answerLabel: '18℃',
-    labeledValue: 'C. 18℃',
+    optionId: 'option_c',
+    savedAnswer: '2℃',
+    savedAnswerOptionId: 'option_a',
     questionKey: 'Q7_平缓温度',
+    questionId: 'question_3',
+    questionIndex: 3,
     PageComponent: Page12SimulationQuestion3,
     targetPrefix: 'P1.12_',
   },
 ];
-
-const mockUserContext: SubmoduleProps['userContext'] = {
-  user: {
-    studentName: '测试学生',
-    examNo: 'E001',
-    batchCode: 'B001',
-  },
-  session: {
-    pageNum: '1',
-    moduleUrl: '/flow/test',
-    isAuthenticated: true,
-  },
-  helpers: {
-    logOperation: vi.fn(),
-    collectAnswer: vi.fn(),
-    navigateToPage: vi.fn(),
-  },
-};
-
-const renderExperiment = (initialPageId: PageId) =>
-  render(
-    <G8BananaBrowningExperiment
-      initialPageId={initialPageId}
-      userContext={mockUserContext}
-      flowContext={{
-        flowId: 'flow-1',
-        submoduleId: 'g8-banana-browning-experiment',
-        stepIndex: 0,
-      }}
-    />
-  );
-
-const readFrameState = () =>
-  JSON.parse(screen.getByTestId('frame-state').textContent || '{"currentPageId":"","operations":[]}') as {
-    currentPageId: string;
-    operations: Array<{
-      eventType: string;
-      targetElement: string;
-      value: string | { missing?: string[] };
-    }>; 
-  };
-
-const getMissingFromOperationValue = (value: string | { missing?: string[] }): string[] | undefined =>
-  typeof value === 'string' ? undefined : value.missing;
 
 const buildMockPageContext = (
   answerOverrides: Record<string, MockAnswerValue> = {},
@@ -176,18 +138,24 @@ const buildMockPageContext = (
     collectAnswer: vi.fn(({ targetElement, value }: { targetElement: string; value: string }) => {
       answers[targetElement] = value;
     }),
+    registerTraceCollectorFlush: vi.fn(() => () => undefined),
+    registerTraceOperationObserver: vi.fn(() => () => undefined),
     answers,
     getPagePrefix: vi.fn(() => targetPrefix),
   };
 };
 
-const readMockOperations = () =>
+const readMockOperations = (): TraceOperation[] =>
   (mockPageContext?.logOperation.mock.calls ?? []).map(([operation]) => operation);
+
+const expectNoLegacyEvents = (operations: TraceOperation[]) => {
+  operations.forEach(operation => {
+    expect(LEGACY_EVENT_TYPES.has(operation.eventType)).toBe(false);
+  });
+};
 
 describe('Simulation question pages', () => {
   beforeEach(() => {
-    defaultSubmitSpy.mockClear();
-    lastOnNextResult = undefined;
     mockPageContext = null;
   });
 
@@ -196,80 +164,81 @@ describe('Simulation question pages', () => {
     vi.clearAllMocks();
   });
 
+  it('simulation main page starts with L2 START_PAGE and passes EXECUTE_EXP logger', () => {
+    mockPageContext = buildMockPageContext({}, 'P1.9_');
+
+    render(<Page09BananaBrowningSimulationMain />);
+    fireEvent.click(screen.getByTestId('simulation-run-result'));
+
+    const operations = readMockOperations();
+
+    expect(operations[0]).toEqual(
+      expect.objectContaining({
+        targetElement: 'P1.9_page',
+        eventType: 'START_PAGE',
+        value: expect.objectContaining({
+          metadata: expect.objectContaining({
+            initial_state: { days: 0 },
+          }),
+        }),
+      })
+    );
+    expect(operations.some(operation => operation.eventType === 'EXECUTE_EXP')).toBe(true);
+    expectNoLegacyEvents(operations);
+  });
+
+  it.each(cases)('starts $questionId with L2 START_PAGE metadata', ({ PageComponent, targetPrefix }) => {
+    mockPageContext = buildMockPageContext({}, targetPrefix);
+
+    render(<PageComponent />);
+
+    expect(mockPageContext.setPageStartTime).toHaveBeenCalledTimes(1);
+    expect(readMockOperations()[0]).toEqual(
+      expect.objectContaining({
+        targetElement: `${targetPrefix}page`,
+        eventType: 'START_PAGE',
+        value: expect.objectContaining({
+          metadata: expect.objectContaining({
+            initial_state: { selected_option: null },
+          }),
+        }),
+      })
+    );
+    expectNoLegacyEvents(readMockOperations());
+  });
+
+  it.each(cases)('simulation panel emits EXECUTE_EXP for $questionId', ({ PageComponent, targetPrefix }) => {
+    mockPageContext = buildMockPageContext({}, targetPrefix);
+
+    render(<PageComponent />);
+    fireEvent.click(screen.getByTestId('simulation-run-result'));
+
+    const operations = readMockOperations();
+    const executeOperations = operations.filter(operation => operation.eventType === 'EXECUTE_EXP');
+
+    expect(executeOperations).toHaveLength(1);
+    expect(executeOperations[0]).toEqual(
+      expect.objectContaining({
+        targetElement: `${targetPrefix}execute_exp`,
+        value: expect.objectContaining({
+          exp_run_id: 'banana_days_3',
+          metadata: expect.objectContaining({
+            param_snapshot: { days: 3 },
+            result_snapshot: {
+              day: 3,
+              results: [{ origin: '海南', temperature: '2℃', browning: 0.05 }],
+            },
+            click_debounce_applied: false,
+          }),
+        }),
+      })
+    );
+    expectNoLegacyEvents(operations);
+  });
+
   it.each(cases)(
-    'requires simulation result and answer before submit for $pageId',
-    async ({ pageId, questionKey }) => {
-      renderExperiment(pageId);
-
-      await screen.findByTestId('frame-next-button');
-      fireEvent.click(screen.getByTestId('frame-next-button'));
-
-      await waitFor(() => {
-        const blockedOperations = readFrameState().operations.filter(
-          operation => operation.eventType === EventTypes.CLICK_BLOCKED
-        );
-
-        expect(blockedOperations).toHaveLength(1);
-        expect(getMissingFromOperationValue(blockedOperations[0].value)).toEqual([
-          'simulation_run_result',
-          questionKey,
-        ]);
-      });
-
-      expect(defaultSubmitSpy).not.toHaveBeenCalled();
-      expect(lastOnNextResult).toBe(false);
-    }
-  );
-
-  it.each(cases)(
-    'still blocks when answer is selected before simulation runs for $pageId',
-    async ({ pageId, answerLabel }) => {
-      renderExperiment(pageId);
-
-      await screen.findByTestId('frame-next-button');
-      fireEvent.click(screen.getByLabelText(answerLabel));
-      fireEvent.click(screen.getByTestId('frame-next-button'));
-
-      await waitFor(() => {
-        const blockedOperations = readFrameState().operations.filter(
-          operation => operation.eventType === EventTypes.CLICK_BLOCKED
-        );
-
-        expect(blockedOperations).toHaveLength(1);
-        expect(getMissingFromOperationValue(blockedOperations[0].value)).toEqual([
-          'simulation_run_result',
-        ]);
-      });
-
-      expect(defaultSubmitSpy).not.toHaveBeenCalled();
-      expect(lastOnNextResult).toBe(false);
-    }
-  );
-
-  it.each(cases)(
-    'passes after simulation result and answer for $pageId',
-    async ({ pageId, answerLabel }) => {
-      renderExperiment(pageId);
-
-      await screen.findByTestId('frame-next-button');
-      fireEvent.click(screen.getByTestId('simulation-run-result'));
-      fireEvent.click(screen.getByLabelText(answerLabel));
-      fireEvent.click(screen.getByTestId('frame-next-button'));
-
-      await waitFor(() => {
-        expect(defaultSubmitSpy).toHaveBeenCalled();
-        expect(lastOnNextResult).toBe(true);
-      });
-
-      expect(
-        readFrameState().operations.some(operation => operation.eventType === EventTypes.CLICK_BLOCKED)
-      ).toBe(false);
-    }
-  );
-
-  it.each(cases)(
-    'radio_select logs labeled value and removes legacy click for $pageId',
-    ({ PageComponent, answerLabel, labeledValue, questionKey, targetPrefix }) => {
+    'SELECT_ANSWER logs option id and metadata for $questionId',
+    ({ PageComponent, answerLabel, optionId, questionKey, questionId, questionIndex, targetPrefix }) => {
       mockPageContext = buildMockPageContext({}, targetPrefix);
 
       render(<PageComponent />);
@@ -281,46 +250,82 @@ describe('Simulation question pages', () => {
       });
 
       const operations = readMockOperations();
-      const selectionOperations = operations.filter(
-        operation => operation.targetElement === `${targetPrefix}${questionKey}`
-      );
+      const selectionOperations = operations.filter(operation => operation.eventType === 'SELECT_ANSWER');
 
       expect(selectionOperations).toHaveLength(1);
       expect(selectionOperations[0]).toEqual(
         expect.objectContaining({
-          targetElement: `${targetPrefix}${questionKey}`,
-          eventType: EventTypes.RADIO_SELECT,
-          value: labeledValue,
+          targetElement: `${targetPrefix}${questionId}_${optionId}`,
+          value: expect.objectContaining({
+            question_id: questionId,
+            option_id: optionId,
+            value_before: null,
+            value_after: optionId,
+            metadata: expect.objectContaining({
+              option_text: answerLabel,
+              question_index: questionIndex,
+              total_question_count: 3,
+            }),
+          }),
         })
       );
-      expect(operations.some(operation => operation.eventType === EventTypes.CLICK)).toBe(false);
+      expectNoLegacyEvents(operations);
     }
   );
 
   it.each(cases)(
-    'rehydrates selected option from raw saved answer for $pageId',
+    'SELECT_ANSWER uses rehydrated saved answer as value_before for $questionId',
+    ({
+      PageComponent,
+      answerLabel,
+      optionId,
+      savedAnswer,
+      savedAnswerOptionId,
+      questionKey,
+      questionId,
+      targetPrefix,
+    }) => {
+      mockPageContext = buildMockPageContext({ [questionKey]: savedAnswer }, targetPrefix);
+
+      render(<PageComponent />);
+      fireEvent.click(screen.getByLabelText(answerLabel));
+
+      const selectionOperation = readMockOperations().find(
+        operation => operation.eventType === 'SELECT_ANSWER'
+      );
+
+      expect(selectionOperation).toEqual(
+        expect.objectContaining({
+          targetElement: `${targetPrefix}${questionId}_${optionId}`,
+          value: expect.objectContaining({
+            value_before: savedAnswerOptionId,
+            value_after: optionId,
+          }),
+        })
+      );
+      expectNoLegacyEvents(readMockOperations());
+    }
+  );
+
+  it.each(cases)(
+    'rehydrates selected option from raw saved answer for $questionId',
     ({ PageComponent, answerLabel, questionKey, targetPrefix }) => {
       mockPageContext = buildMockPageContext({}, targetPrefix);
       const { rerender, unmount } = render(<PageComponent />);
 
-      const option = screen.getByLabelText(answerLabel);
-      expect(option).not.toBeChecked();
+      expect(screen.getByLabelText(answerLabel)).not.toBeChecked();
 
       mockPageContext.answers[questionKey] = answerLabel;
       rerender(<PageComponent />);
       expect(screen.getByLabelText(answerLabel)).toBeChecked();
-      expect(readMockOperations().some(operation => operation.eventType === EventTypes.CLICK)).toBe(
-        false
-      );
+      expectNoLegacyEvents(readMockOperations());
 
       unmount();
       mockPageContext = buildMockPageContext({ [questionKey]: answerLabel }, targetPrefix);
       render(<PageComponent />);
 
       expect(screen.getByLabelText(answerLabel)).toBeChecked();
-      expect(readMockOperations().some(operation => operation.eventType === EventTypes.CLICK)).toBe(
-        false
-      );
+      expectNoLegacyEvents(readMockOperations());
     }
   );
 });

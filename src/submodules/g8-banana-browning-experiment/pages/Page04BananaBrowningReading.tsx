@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import React, { useState, useCallback, useRef } from 'react';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import styles from '../styles/Page04BananaBrowningReading.module.css';
 import BananaDistributionMap from '../components/BananaDistributionMap';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 import xjbs01 from '@assets/images/xjbs01.jpg';
 import xjbs02 from '@assets/images/xjbs02.jpg';
@@ -12,22 +13,53 @@ import xjbs05 from '@assets/images/xjbs05.jpg';
 import xjbs06 from '@assets/images/xjbs06.jpg';
 import xjbs11 from '@assets/images/xjbs11.jpg';
 
-const RESOURCE_ITEMS: ReadonlyArray<{ readonly id: string; readonly title: string }> = [
-  { id: 'resource_1', title: '香蕉变色之谜' },
-  { id: 'resource_2', title: '香蕉种植分布图' },
-  { id: 'resource_3', title: '香蕉网店评论区' },
-  { id: 'resource_4', title: '果店员工宝典' },
-  { id: 'resource_5', title: '香蕉"泡药"真相' },
+const RESOURCE_ITEMS: ReadonlyArray<{
+  readonly id: string;
+  readonly title: string;
+  readonly traceContentId?: string;
+}> = [
+  { id: 'card_1', title: '香蕉变色之谜', traceContentId: 'factor_card_1' },
+  { id: 'card_2', title: '香蕉种植分布图', traceContentId: 'factor_card_2' },
+  { id: 'card_3', title: '香蕉网店评论区', traceContentId: 'factor_card_3' },
+  { id: 'card_4', title: '果店员工宝典', traceContentId: 'factor_card_4' },
+  { id: 'card_5', title: '香蕉"泡药"真相', traceContentId: 'factor_card_5' },
 ];
 
-const FACTOR_OPTIONS: ReadonlyArray<{ readonly key: string; readonly label: string }> = [
-  { key: '环境温度', label: '环境温度' },
-  { key: '环境湿度', label: '环境湿度' },
-  { key: '香蕉形状', label: '香蕉形状' },
-  { key: '香蕉品种', label: '香蕉品种' },
-  { key: '磕碰损伤', label: '磕碰损伤' },
-  { key: '香蕉甜度', label: '香蕉甜度' },
+const FACTOR_OPTIONS: ReadonlyArray<{
+  readonly id: string;
+  readonly label: string;
+  readonly traceOptionId?: string;
+}> = [
+  { id: 'factor_option_1', label: '环境温度', traceOptionId: 'option_a' },
+  { id: 'factor_option_2', label: '环境湿度', traceOptionId: 'option_b' },
+  { id: 'factor_option_3', label: '香蕉形状', traceOptionId: 'option_c' },
+  { id: 'factor_option_4', label: '香蕉品种', traceOptionId: 'option_d' },
 ];
+
+const FACTOR_OPTION_BY_LABEL = new Map(FACTOR_OPTIONS.map(option => [option.label, option]));
+const FACTOR_OPTION_BY_ID = new Map(FACTOR_OPTIONS.map(option => [option.id, option]));
+
+const parseSavedFactorIds = (value: unknown): string[] => {
+  if (typeof value !== 'string' || !value) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map(entry => entry.trim())
+    .map(entry => FACTOR_OPTION_BY_ID.get(entry)?.id || FACTOR_OPTION_BY_LABEL.get(entry)?.id)
+    .filter((entry): entry is string => Boolean(entry));
+};
+
+const labelsFromFactorIds = (factorIds: string[]): string[] =>
+  factorIds
+    .map(id => FACTOR_OPTION_BY_ID.get(id)?.label)
+    .filter((label): label is string => Boolean(label));
+
+const traceOptionIdsFromFactorIds = (factorIds: string[]): string[] =>
+  factorIds
+    .map(id => FACTOR_OPTION_BY_ID.get(id)?.traceOptionId)
+    .filter((traceOptionId): traceOptionId is string => Boolean(traceOptionId));
 
 function OverlayContentLayer1() {
   return (
@@ -82,55 +114,42 @@ function OverlayContentLayer3() {
 
 function OverlayContentLayer4() {
   return (
-    <div className={styles.bookContainer}>
-      <div className={`${styles.bookPage} ${styles.leftPage}`}>
-        <div className={styles.pageHeader}>
-          <span className={styles.pageHeaderIcon}>🏪</span>
-          <span className={styles.pageHeaderText}>香蕉的保存</span>
-        </div>
-        <div className={styles.pageContent}>
-          <div className={styles.bookGuideSection}>
-            <span className={styles.bookGuideCheck}>✓</span>
-            <div>
-              <h4 className={styles.bookGuideSectionTitle}>保鲜膜包一包</h4>
-              <p className={styles.bookGuideSectionText}>
-                包上保鲜膜能隔绝空气，香蕉熟得慢，皮也没那么容易变黑。
-              </p>
-            </div>
-          </div>
-          <img src={xjbs04} alt="保鲜膜包裹香蕉" className={styles.bookSingleImage} />
-          <div className={styles.bookGuideSection}>
-            <span className={styles.bookGuideCheck}>✓</span>
-            <div>
-              <h4 className={styles.bookGuideSectionTitle}>皮上喷点水</h4>
-              <p className={styles.bookGuideSectionText}>
-                太干会使香蕉失水，口感变差，甜度下降。喷点水保持湿度更好。
-              </p>
-            </div>
-          </div>
+    <div className={styles.guideContainer}>
+      <img src={xjbs04} alt="保鲜膜包裹香蕉" className={styles.guideImage} />
+      <div className={styles.guideSection}>
+        <span className={styles.guideSectionIcon} aria-hidden="true">
+          1
+        </span>
+        <div className={styles.guideSectionContent}>
+          <h4 className={styles.guideSectionTitle}>保鲜膜包一包</h4>
+          <p className={styles.guideSectionText}>
+            包上保鲜膜能隔绝空气，香蕉熟得慢，皮也没那么容易变黑。
+          </p>
         </div>
       </div>
-
-      <div className={styles.bookSpine} />
-
-      <div className={`${styles.bookPage} ${styles.rightPage}`}>
-        <div className={styles.pageHeader}>
-          <span className={styles.pageHeaderText}>香蕉的保存</span>
-          <span className={styles.pageHeaderIcon}>🏪</span>
-        </div>
-        <div className={styles.pageContent}>
-          <div className={styles.bookGuideSection}>
-            <span className={styles.bookGuideCheck}>✓</span>
-            <div>
-              <h4 className={styles.bookGuideSectionTitle}>温度不宜太冷或太热</h4>
-              <p className={styles.bookGuideSectionText}>
-                太冷会冻伤，果肉变黑变硬；太热熟得快，也容易发黑。常温阴凉处最适合。
-              </p>
-            </div>
-          </div>
-          <img src={xjbs05} alt="香蕉保存方法" className={styles.bookRightPageImage} />
+      <div className={styles.guideSection}>
+        <span className={styles.guideSectionIcon} aria-hidden="true">
+          2
+        </span>
+        <div className={styles.guideSectionContent}>
+          <h4 className={styles.guideSectionTitle}>皮上喷点水</h4>
+          <p className={styles.guideSectionText}>
+            太干会使香蕉失水，口感变差，甜度下降。喷点水保持湿度更好。
+          </p>
         </div>
       </div>
+      <div className={styles.guideSection}>
+        <span className={styles.guideSectionIcon} aria-hidden="true">
+          3
+        </span>
+        <div className={styles.guideSectionContent}>
+          <h4 className={styles.guideSectionTitle}>温度别太冷也别太热</h4>
+          <p className={styles.guideSectionText}>
+            太冷会冻伤，果肉变黑变硬；太热熟得快，也容易发黑。常温阴凉处最适合。
+          </p>
+        </div>
+      </div>
+      <img src={xjbs05} alt="香蕉保存示意" className={styles.guideImage} />
     </div>
   );
 }
@@ -140,12 +159,13 @@ function OverlayContentLayer5() {
     <div className={styles.newsContainer}>
       <img src={xjbs06} alt="香蕉保鲜场景" className={styles.newsImage} />
       <p className={styles.newsText}>
-        近日，网传"香蕉浸泡乳白色不明液体"的视频引发关注，有网友怀疑是甲醛。相关部门回应称，
-        该液体实为经国家批准的香蕉保鲜剂。
+        近日，网传"香蕉浸泡乳白色不明液体"的视频引发关注，有网友怀疑是甲醛。
+        相关部门回应称，该液体实为经国家批准的香蕉保鲜剂。
       </p>
       <p className={styles.newsText}>
-        香蕉产自热带、亚热带地区，是市场上常年供应的鲜果。因其采摘后易遭真菌侵染，变黑腐烂，
-        必须立即保鲜。该保鲜剂具有低毒、易降解，用量和残留均符合国际标准，可放心食用。
+        香蕉产自热带、亚热带地区，是市场上常年供应的鲜果。因其采摘后易遭真菌侵染，
+        变黑腐烂，必须立即保鲜。该保鲜剂具有低毒、易降解，用量和残留均符合国际标准，
+        可放心食用。
       </p>
     </div>
   );
@@ -153,15 +173,15 @@ function OverlayContentLayer5() {
 
 function renderOverlayById(overlayId: string): React.ReactNode {
   switch (overlayId) {
-    case 'resource_1':
+    case 'card_1':
       return <OverlayContentLayer1 />;
-    case 'resource_2':
+    case 'card_2':
       return <OverlayContentLayer2 />;
-    case 'resource_3':
+    case 'card_3':
       return <OverlayContentLayer3 />;
-    case 'resource_4':
+    case 'card_4':
       return <OverlayContentLayer4 />;
-    case 'resource_5':
+    case 'card_5':
       return <OverlayContentLayer5 />;
     default:
       return null;
@@ -169,81 +189,92 @@ function renderOverlayById(overlayId: string): React.ReactNode {
 }
 
 const Page04BananaBrowningReading: React.FC = () => {
-  const { logOperation, collectAnswer, setPageStartTime, answers, getPagePrefix } =
-    useG8BananaBrowningContext();
+  const { collectAnswer, answers, getPagePrefix } = useG8BananaBrowningContext();
 
-  const targetPrefix = getPagePrefix();
-  const pageLoadedRef = useRef(false);
-  const [openOverlayId, setOpenOverlayId] = useState<string | null>(null);
-  const [selectedFactors, setSelectedFactors] = useState<string[]>(() => {
-    const saved = answers['Q2_影响因素'];
-    if (typeof saved === 'string' && saved) {
-      return saved.split(',');
-    }
-    return [];
+  const traceLogger = useTracePageStart({
+    pageId: 'banana_browning_reading' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {},
+    },
   });
 
-  useEffect(() => {
-    if (!pageLoadedRef.current) {
-      pageLoadedRef.current = true;
-      setPageStartTime(new Date());
-      logOperation({
-        targetElement: `${targetPrefix}页面进入`,
-        eventType: EventTypes.PAGE_ENTER,
-        value: '页面加载完成',
-        time: new Date().toISOString(),
-      });
-    }
-  }, [logOperation, setPageStartTime, targetPrefix]);
+  const modalOpenedAtRef = useRef(0);
+  const [openOverlayId, setOpenOverlayId] = useState<string | null>(null);
+  const [selectedFactorIds, setSelectedFactorIds] = useState<string[]>(() =>
+    parseSavedFactorIds(answers['Q2_影响因素'])
+  );
 
   const handleOpenOverlay = useCallback(
-    (id: string, title: string) => {
-      setOpenOverlayId(id);
-      logOperation({
-        targetElement: `${targetPrefix}资料按钮_${title}`,
-        eventType: EventTypes.MODAL_OPEN,
-        value: title,
-        time: new Date().toISOString(),
-      });
+    (item: (typeof RESOURCE_ITEMS)[number]) => {
+      setOpenOverlayId(item.id);
+      modalOpenedAtRef.current = Date.now();
+      if (item.traceContentId) {
+        traceLogger?.openModal(item.traceContentId, {
+          source: 'material_card',
+          source_ui_id: item.id,
+          title: item.title,
+        });
+      }
     },
-    [logOperation, targetPrefix]
+    [traceLogger]
   );
 
   const handleCloseOverlay = useCallback(() => {
     if (!openOverlayId) return;
-    const item = RESOURCE_ITEMS.find(r => r.id === openOverlayId);
-    logOperation({
-      targetElement: `${targetPrefix}弹层关闭_${item?.title ?? openOverlayId}`,
-      eventType: EventTypes.MODAL_CLOSE,
-      value: item?.title ?? openOverlayId,
-      time: new Date().toISOString(),
-    });
+    const openItem = RESOURCE_ITEMS.find(item => item.id === openOverlayId);
+    if (openItem?.traceContentId) {
+      traceLogger?.closeModal(openItem.traceContentId, Date.now() - modalOpenedAtRef.current, {
+        source: 'material_card',
+        source_ui_id: openOverlayId,
+      });
+    }
     setOpenOverlayId(null);
-  }, [logOperation, targetPrefix, openOverlayId]);
+  }, [traceLogger, openOverlayId]);
 
   const handleFactorToggle = useCallback(
-    (factorKey: string) => {
-      const isCurrentlySelected = selectedFactors.includes(factorKey);
+    (factor: (typeof FACTOR_OPTIONS)[number]) => {
+      const isCurrentlySelected = selectedFactorIds.includes(factor.id);
       const willBeSelected = !isCurrentlySelected;
-      const next = willBeSelected
-        ? [...selectedFactors, factorKey]
-        : selectedFactors.filter(f => f !== factorKey);
+      const nextSelectedFactorIds = willBeSelected
+        ? [...selectedFactorIds, factor.id]
+        : selectedFactorIds.filter(id => id !== factor.id);
+      const nextSelectedLabels = labelsFromFactorIds(nextSelectedFactorIds);
+      const selectedTraceOptionIds = traceOptionIdsFromFactorIds(selectedFactorIds);
+      const nextSelectedTraceOptionIds = traceOptionIdsFromFactorIds(nextSelectedFactorIds);
 
-      setSelectedFactors(next);
+      setSelectedFactorIds(nextSelectedFactorIds);
 
-      logOperation({
-        targetElement: `${targetPrefix}因素_${factorKey}`,
-        eventType: willBeSelected ? EventTypes.CHECKBOX_CHECK : EventTypes.CHECKBOX_UNCHECK,
-        value: willBeSelected ? '选中' : '取消选中',
-        time: new Date().toISOString(),
-      });
+      if (factor.traceOptionId) {
+        traceLogger?.emit(
+          'CHECKBOX_TOGGLE',
+          {
+            field_id: 'factor_selection',
+            question_id: 'factor_selection',
+            option_id: factor.traceOptionId,
+            value_before: selectedTraceOptionIds,
+            value_after: nextSelectedTraceOptionIds,
+          },
+          {
+            targetId: `factor_selection_${factor.traceOptionId}`,
+            targetType: 'checkbox',
+            metadata: {
+              option_label: factor.label,
+              source_ui_id: factor.id,
+              selected_labels: nextSelectedLabels,
+              selected_count: nextSelectedTraceOptionIds.length,
+            },
+          }
+        );
+      }
 
       collectAnswer({
         targetElement: 'Q2_影响因素',
-        value: next.join(','),
+        value: nextSelectedLabels.join(','),
       });
     },
-    [selectedFactors, logOperation, collectAnswer, targetPrefix]
+    [selectedFactorIds, traceLogger, collectAnswer]
   );
 
   return (
@@ -271,7 +302,7 @@ const Page04BananaBrowningReading: React.FC = () => {
                 key={item.id}
                 type="button"
                 className={styles.infoButton}
-                onClick={() => handleOpenOverlay(item.id, item.title)}
+                onClick={() => handleOpenOverlay(item)}
               >
                 <span className={styles.buttonIcon}>{idx + 1}</span>
                 <span className={styles.buttonText}>{item.title}</span>
@@ -284,19 +315,19 @@ const Page04BananaBrowningReading: React.FC = () => {
           <div className={styles.taskSection}>
             <div className={styles.checkboxGroup}>
               {FACTOR_OPTIONS.map(factor => {
-                const isSelected = selectedFactors.includes(factor.key);
+                const isSelected = selectedFactorIds.includes(factor.id);
                 return (
                   <div
-                    key={factor.key}
+                    key={factor.id}
                     className={`${styles.checkboxOption} ${isSelected ? styles.checkboxSelected : ''}`}
-                    onClick={() => handleFactorToggle(factor.key)}
+                    onClick={() => handleFactorToggle(factor)}
                     role="checkbox"
                     aria-checked={isSelected}
                     tabIndex={0}
                     onKeyDown={e => {
                       if (e.key === ' ' || e.key === 'Enter') {
                         e.preventDefault();
-                        handleFactorToggle(factor.key);
+                        handleFactorToggle(factor);
                       }
                     }}
                   >
@@ -321,7 +352,7 @@ const Page04BananaBrowningReading: React.FC = () => {
           role="dialog"
           aria-modal="true"
           aria-label={RESOURCE_ITEMS.find(r => r.id === openOverlayId)?.title ?? '资料弹层'}
-          className={`${styles.overlayBackdrop} ${openOverlayId === 'resource_2' ? styles.overlayBackdropMap : ''}`}
+           className={`${styles.overlayBackdrop} ${openOverlayId === 'card_2' ? styles.overlayBackdropMap : ''}`}
           onClick={handleCloseOverlay}
           onKeyDown={e => {
             if (e.key === 'Escape') handleCloseOverlay();
@@ -329,7 +360,7 @@ const Page04BananaBrowningReading: React.FC = () => {
         >
           <div
             role="document"
-            className={`${styles.overlayCard} ${openOverlayId === 'resource_2' ? styles.overlayCardWide : ''}`}
+             className={`${styles.overlayCard} ${openOverlayId === 'card_2' ? styles.overlayCardWide : ''}`}
             onClick={e => e.stopPropagation()}
             onKeyDown={e => e.stopPropagation()}
           >

@@ -1,0 +1,122 @@
+{
+  "contract_type": "trace_tagging_rule_config",
+  "schema_version": "v2.2",
+  "ruleConfigVersion": "rule-config-v2.2",
+  "ruleConfigHash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83",
+  "timeUnit": "ms",
+  "thresholdDeclaration": "initial_engineering_thresholds",
+  "notes": [
+    "These thresholds are initial engineering defaults, not scientific constants or ability-level claims.",
+    "Changing thresholds requires a ruleConfigVersion bump and must be recorded in detail_json.ruleConfigVersion.",
+    "Hash calculation uses canonical JSON and excludes self-referential hash fields such as *_hash and *Hash.",
+    "v2.2 adds PAGE_IDLE; compliant idle requires page_visible=true and window_focused=true."
+  ],
+  "thresholds": {
+    "textDebounceMs": {
+      "type": "integer",
+      "value": 2000,
+      "min": 0,
+      "description": "Frontend TEXT_CHANGE debounce reference."
+    },
+    "textThrottleCharDelta": {
+      "type": "integer",
+      "value": 10,
+      "min": 0,
+      "description": "Minimum character delta for throttled text-change analysis."
+    },
+    "thinkGapMs": {
+      "type": "integer",
+      "value": 5000,
+      "min": 0,
+      "description": "Long pause threshold for GENERATE_THINK."
+    },
+    "fluidMinPositiveDelta": {
+      "type": "integer",
+      "value": 10,
+      "min": 0,
+      "description": "Minimum positive character delta for GENERATE_FLUID."
+    },
+    "fluidMinDurationMs": {
+      "type": "integer",
+      "value": 5000,
+      "min": 0,
+      "description": "Minimum duration for a fluent text-generation segment."
+    },
+    "textBlurMinChar": {
+      "type": "integer",
+      "value": 1,
+      "min": 0,
+      "description": "Minimum character count for effective TEXT_BLUR evidence."
+    },
+    "editDistanceThreshold": {
+      "type": "integer",
+      "value": 1,
+      "min": 0,
+      "description": "Minimum edit distance for revision evidence."
+    },
+    "focusDebounceMs": {
+      "type": "integer",
+      "value": 300,
+      "min": 0,
+      "description": "Focus bounce suppression threshold."
+    },
+    "rapidRepeatClickMs": {
+      "type": "integer",
+      "value": 300,
+      "min": 0,
+      "description": "Rapid duplicate click suppression threshold."
+    },
+    "engineeringRepeatWindowMs": {
+      "type": "integer",
+      "value": 50,
+      "min": 0,
+      "description": "Exact duplicate engineering event suppression window."
+    },
+    "modalMisclickMaxMs": {
+      "type": "integer",
+      "value": 300,
+      "min": 0,
+      "description": "Material-card modal misclick threshold."
+    },
+    "minMeaningfulDwellMs": {
+      "type": "integer",
+      "value": 800,
+      "min": 0,
+      "description": "Minimum dwell time for meaningful material viewing."
+    },
+    "deepReadMs": {
+      "type": "integer",
+      "value": 8000,
+      "min": 0,
+      "description": "Initial threshold for DEEP_READ."
+    },
+    "chartHoverMinMs": {
+      "type": "integer",
+      "value": 500,
+      "min": 0,
+      "description": "Minimum chart hover duration for CHART_INSPECT."
+    },
+    "expRunDebounceMs": {
+      "type": "integer",
+      "value": 1000,
+      "min": 0,
+      "description": "Duplicate experiment-run suppression threshold for identical parameters."
+    },
+    "pageHiddenAdjustEnabled": {
+      "type": "boolean",
+      "value": true,
+      "description": "Whether hidden-page duration can be excluded from effective duration."
+    },
+    "usePriorExp": {
+      "type": "boolean",
+      "value": true,
+      "description": "Whether Page09-Page11 can read prior Page08 experiment context."
+    },
+    "pageIdleThresholdMs": {
+      "type": "integer",
+      "value": 5000,
+      "min": 0,
+      "description": "Minimum visible-and-focused no-effective-interaction duration for compliant PAGE_IDLE."
+    }
+  }
+}

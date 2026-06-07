@@ -479,6 +479,37 @@ npm run test:submission        # 完整提交测试套件
 
 ---
 
+## STANDARD SUBMODULE SYNC PROTOCOL
+
+Use this protocol before changing Flow submodule construction standards, L0/L1 page modeling, L2 trace reporting, MarkObject submission behavior, trace contracts, registries, acceptance fixtures, or submodule pages with L2 trace effects.
+
+### Canonical Sources
+
+- Canonical KB package: `D:\myproject\assessment-platform-kb\标准\子模块构建标准`
+- cp implementation handbook: `docs/standard-submodule/`
+- cp sync manifest: `docs/standard-submodule/standard-sync-manifest.md`
+- Current cross-repo change-id: `2026-06-07-standard-submodule-construction-v1`
+
+The KB package is the canonical standard source. cp docs are frontend implementation handbooks and must not become an independent standard definition.
+
+### Trigger Conditions
+
+Read the KB standard and cp manifest first when a task touches any of these areas:
+
+- Flow submodule construction patterns or `src/submodules/*` architecture.
+- L0/L1 page modeling, field IDs, content IDs, page IDs, or mapping semantics.
+- L2 trace event reporting, trace contracts, trace registries, validators, or logger behavior.
+- MarkObject submission shape, `operationList`, `answerList`, `flow_context`, page lifecycle operations, or submission fixtures.
+- `docs/standard-submodule/**`, `docs/子模块数据上报规范/**`, trace acceptance fixtures, or submodule tests with trace effects.
+
+### Change Rules
+
+- If a change affects standard semantics, do not update cp docs alone; create or use a KB requirement/change-id and keep KB canonical.
+- If a change only affects cp implementation details, update cp handbook/templates without changing the standard version unless the KB standard itself changes.
+- When editing mirrored summaries in cp docs, update `standard-sync-manifest.md` with canonical/local paths, anchors, content hashes, mirror policy, verification time, and verified change-id.
+- If KB standard text and cp handbook text conflict, use KB as canonical and record a follow-up to repair cp docs.
+- Keep golden reference, branch completion, and mainline merge commits separate; this worktree is `D:\myproject\cp-banana-trace-standardization` and must later merge to `D:\myproject\cp`.
+
 ## NOTES
 
 - Existing codebase includes both modernized and legacy segments; prefer incremental changes over broad refactors.

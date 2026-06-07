@@ -8,17 +8,24 @@ import {
 } from '@shared/services/submission/submoduleAdapter';
 import { encodeCompositePageNum } from '@shared/utils/pageMapping';
 import type { OperationLog, SubmoduleProps } from './types';
+import { validateTraceMark, useBananaTraceLogger } from './trace/useBananaTraceLogger';
+import {
+  BANANA_QUESTION_BY_ANSWER_KEY,
+  BANANA_TEXT_FIELD_BY_ANSWER_KEY,
+} from './trace/fieldBindings';
 import {
   G8BananaBrowningProvider,
   useG8BananaBrowningContext,
 } from './context/G8BananaBrowningContext';
 import {
+  getTracePageConfigByLegacyPageId,
   getSubPageNumByPageId,
   getPageConfig,
   PAGE_CONFIGS,
   PAGE_DESC_MAP,
   SUBMODULE_MAPPING_CONFIG,
   type PageId,
+  type TracePageConfig,
 } from './mapping';
 
 const Page01Notice = lazy(() => import('./pages/Page01Notice'));
@@ -90,7 +97,122 @@ type PageValidationFailure = {
 type PageValidationResult = PageValidationSuccess | PageValidationFailure;
 
 const VALIDATION_REASON = 'required_fields_missing';
+const SIMULATION_EXECUTE_EVENT = 'EXECUTE_EXP';
 const INTRO_COUNTDOWN_REASON = 'countdown_not_finished';
+
+type OperationWithOptionalCode = Omit<OperationLog, 'code'> & { code?: number };
+
+const createSubmitAttemptId = () =>
+  `submit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+const isRecordValue = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value && typeof value === 'object' && !Array.isArray(value));
+
+const isCurrentPageL2TraceOperation = (
+  operation: OperationWithOptionalCode,
+  tracePageConfig: TracePageConfig
+) => {
+  const value = operation.value;
+  return Boolean(
+    isRecordValue(value) &&
+      typeof value.trace_id === 'string' &&
+      value.page_id === tracePageConfig.standardPageId
+  );
+};
+
+const isCurrentPageStartPage = (
+  operation: OperationWithOptionalCode,
+  tracePageConfig: TracePageConfig
+) =>
+  operation.eventType === 'START_PAGE' &&
+  isCurrentPageL2TraceOperation(operation, tracePageConfig);
+
+const isL2SuccessSubmitAttempt = (
+  operation: OperationWithOptionalCode,
+  tracePageConfig: TracePageConfig
+) => {
+  const value = operation.value;
+  return Boolean(
+    operation.eventType === 'SUBMIT_ATTEMPT' &&
+      isCurrentPageL2TraceOperation(operation, tracePageConfig) &&
+      isRecordValue(value) &&
+      value.validation_status === 'success' &&
+      value.target_id === 'next_button'
+  );
+};
+
+const mapBlockedMissingFieldsForL2 = (
+  tracePageConfig: TracePageConfig | undefined,
+  missingFields: string[]
+) => {
+  const allowedFields = new Set([
+    ...(tracePageConfig?.requiredFields || []),
+    ...(tracePageConfig?.fieldIds || []),
+  ]);
+  const fallbackFieldByMissingKey: Record<string, string> = {
+    Q2_影响因素: 'factor_selection',
+    Q8_方案表格: 'plan_table',
+    Q8_最优方案: 'plan_table',
+  };
+  const mappedFields: string[] = [];
+
+  for (const missingField of missingFields) {
+    const questionBinding =
+      BANANA_QUESTION_BY_ANSWER_KEY[
+        missingField as keyof typeof BANANA_QUESTION_BY_ANSWER_KEY
+      ];
+    const fieldId =
+      BANANA_TEXT_FIELD_BY_ANSWER_KEY[missingField] ||
+      questionBinding?.fieldId ||
+      fallbackFieldByMissingKey[missingField];
+
+    if (!fieldId) {
+      continue;
+    }
+    if (allowedFields.size > 0 && !allowedFields.has(fieldId)) {
+      continue;
+    }
+    if (!mappedFields.includes(fieldId)) {
+      mappedFields.push(fieldId);
+    }
+  }
+
+  return mappedFields;
+};
+
+const withSequentialOperationCodes = (
+  operations: OperationWithOptionalCode[]
+): OperationLog[] =>
+  operations.map((operation, index) => ({
+    ...operation,
+    code: index + 1,
+  }));
+
+const withStartPageFlowContext = (
+  operation: OperationLog,
+  tracePageConfig: TracePageConfig | undefined,
+  traceFlowContext: Record<string, unknown> | null
+): OperationLog => {
+  if (
+    !tracePageConfig ||
+    !traceFlowContext ||
+    !isCurrentPageStartPage(operation, tracePageConfig) ||
+    !isRecordValue(operation.value)
+  ) {
+    return operation;
+  }
+
+  return {
+    ...operation,
+    value: {
+      ...operation.value,
+      metadata: {
+        ...(isRecordValue(operation.value.metadata) ? operation.value.metadata : {}),
+        flow_context: traceFlowContext,
+      },
+    },
+  };
+};
 
 const buildValidationSuccess = (): PageValidationSuccess => ({ ok: true });
 
@@ -114,8 +236,8 @@ const validatePage = (
   const hasTextAnswer = (value: unknown) => String(value || '').trim().length > 0;
   const hasSelectionAnswer = (value: unknown) =>
     value !== undefined && value !== null && value !== '';
-  const hasSimulationRunResult = operations.some(
-    operation => operation.eventType === EventTypes.SIMULATION_RUN_RESULT
+  const hasSimulationExecute = operations.some(
+    operation => operation.eventType === SIMULATION_EXECUTE_EVENT
   );
   const buildMissingResult = (
     missing: string[],
@@ -184,10 +306,10 @@ const validatePage = (
     case 'simulation_question_1': {
       return buildMissingResult(
         collectMissingKeys(
-          [EventTypes.SIMULATION_RUN_RESULT, 'Q5_海南香蕉变黑时间'],
+          [SIMULATION_EXECUTE_EVENT, 'Q5_海南香蕉变黑时间'],
           key =>
-            key === EventTypes.SIMULATION_RUN_RESULT
-              ? hasSimulationRunResult
+            key === SIMULATION_EXECUTE_EVENT
+              ? hasSimulationExecute
               : hasSelectionAnswer(answers[key])
         ),
         '请完成当前页面必填项'
@@ -196,10 +318,10 @@ const validatePage = (
     case 'simulation_question_2': {
       return buildMissingResult(
         collectMissingKeys(
-          [EventTypes.SIMULATION_RUN_RESULT, 'Q6_常温储存品种'],
+          [SIMULATION_EXECUTE_EVENT, 'Q6_常温储存品种'],
           key =>
-            key === EventTypes.SIMULATION_RUN_RESULT
-              ? hasSimulationRunResult
+            key === SIMULATION_EXECUTE_EVENT
+              ? hasSimulationExecute
               : hasSelectionAnswer(answers[key])
         ),
         '请完成当前页面必填项'
@@ -208,10 +330,10 @@ const validatePage = (
     case 'simulation_question_3': {
       return buildMissingResult(
         collectMissingKeys(
-          [EventTypes.SIMULATION_RUN_RESULT, 'Q7_平缓温度'],
+          [SIMULATION_EXECUTE_EVENT, 'Q7_平缓温度'],
           key =>
-            key === EventTypes.SIMULATION_RUN_RESULT
-              ? hasSimulationRunResult
+            key === SIMULATION_EXECUTE_EVENT
+              ? hasSimulationExecute
               : hasSelectionAnswer(answers[key])
         ),
         '请完成当前页面必填项'
@@ -235,7 +357,6 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
   const { flowContext, userContext } = props;
   const {
     currentPageId,
-    operations,
     navigateToPage,
     logOperation,
     clearOperations,
@@ -244,6 +365,8 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     setFlowContext,
     setValidationError,
     validationError,
+    flushTraceCollectors,
+    getOperationsSnapshot,
   } = useG8BananaBrowningContext();
 
   useEffect(() => {
@@ -257,6 +380,8 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
   }, [flowContext, setFlowContext]);
 
   const pageConfig = getPageConfig(currentPageId as PageId);
+  const tracePageConfig = getTracePageConfigByLegacyPageId(currentPageId);
+  const isL2TracePage = Boolean(tracePageConfig);
   const navigationMode = pageConfig?.navigationMode ?? 'experiment';
   const currentStep = pageConfig?.stepIndex ?? 0;
   const totalSteps = PAGE_CONFIGS.filter(config => config.stepIndex > 0).length;
@@ -266,6 +391,29 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
       ? flowContext.stepIndex
       : (pageConfig?.stepIndex ?? 0);
   const pageNumber = formatPageNumber(submissionStepIndex, subPageNum);
+  const traceFlowContext = useMemo(
+    () =>
+      flowContext
+        ? {
+            flowId: flowContext.flowId,
+            submoduleId: flowContext.submoduleId,
+            stepIndex: flowContext.stepIndex,
+            moduleName: '8年级香蕉变黑科学探究',
+            pageId: currentPageId,
+          }
+        : null,
+    [
+      currentPageId,
+      flowContext?.flowId,
+      flowContext?.stepIndex,
+      flowContext?.submoduleId,
+    ]
+  );
+  const frameTraceLogger = useBananaTraceLogger({
+    pageId: currentPageId as PageId,
+    pageNumber,
+    flowContext: traceFlowContext,
+  });
   const pageDesc = pageConfig?.pageDesc ?? currentPageId;
   const showTimer = navigationMode !== 'hidden';
 
@@ -288,9 +436,14 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     }
   }, [flowContext, subPageNum]);
 
-  const operationsForSubmission = useMemo(
-    () => operations.filter(operation => !operation.pageId || operation.pageId === currentPageId),
-    [currentPageId, operations]
+  const getOperationsForSubmission = useCallback(
+    () =>
+      getOperationsSnapshot()
+        .filter(operation => !operation.pageId || operation.pageId === currentPageId)
+        .map(operation =>
+          withStartPageFlowContext(operation, tracePageConfig, traceFlowContext)
+        ),
+    [currentPageId, getOperationsSnapshot, traceFlowContext, tracePageConfig]
   );
 
   const buildPageDesc = useCallback(
@@ -316,6 +469,30 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
     );
   }, [answers, currentPageId]);
 
+  const buildSubmissionMark = useCallback(
+    () => {
+      flushTraceCollectors();
+      return {
+        pageNumber,
+        pageDesc: buildPageDesc(currentPageId as PageId),
+        operationList: getOperationsForSubmission(),
+        answerList: buildAnswerList(),
+        beginTime: pageStartTime ? formatTimestamp(pageStartTime) : formatTimestamp(new Date()),
+        endTime: formatTimestamp(new Date()),
+        imgList: [],
+      };
+    },
+    [
+      buildAnswerList,
+      buildPageDesc,
+      currentPageId,
+      flushTraceCollectors,
+      getOperationsForSubmission,
+      pageNumber,
+      pageStartTime,
+    ]
+  );
+
   const submissionConfig = useMemo(() => {
     const getUserContext = () => ({
       batchCode: (userContext as any)?.batchCode || (userContext as any)?.user?.batchCode || '',
@@ -332,32 +509,21 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
         })
       : undefined;
 
-    const buildMark = () => ({
-      pageNumber,
-      pageDesc: buildPageDesc(currentPageId as PageId),
-      operationList: operationsForSubmission,
-      answerList: buildAnswerList(),
-      beginTime: pageStartTime ? formatTimestamp(pageStartTime) : formatTimestamp(new Date()),
-      endTime: formatTimestamp(new Date()),
-      imgList: [],
-    });
-
     return {
       getUserContext,
       getFlowContext,
-      buildMark,
+      buildMark: buildSubmissionMark,
+      lifecycleMode: isL2TracePage ? 'l2-trace' : 'legacy',
+      traceValidator: isL2TracePage ? validateTraceMark : undefined,
       allowProceedOnFailureInDev: Boolean(import.meta.env?.DEV),
       logOperation,
     };
   }, [
-    buildAnswerList,
-    buildPageDesc,
+    buildSubmissionMark,
     currentPageId,
     flowContext,
+    isL2TracePage,
     logOperation,
-    operationsForSubmission,
-    pageNumber,
-    pageStartTime,
     userContext,
   ]);
 
@@ -377,50 +543,129 @@ function G8BananaBrowningFrame(props: Omit<SubmoduleProps, 'initialPageId'>) {
   }, [currentPageId, flowContext, navigateToPage]);
 
   const handleFrameNext = useCallback(
-    async ({ defaultSubmit }: { defaultSubmit?: () => Promise<boolean> }) => {
+    async ({
+      defaultSubmit,
+      submit,
+    }: {
+      defaultSubmit?: () => Promise<boolean>;
+      submit?: (options?: {
+        markOverride?: ReturnType<typeof buildSubmissionMark>;
+      }) => Promise<boolean>;
+    }) => {
+      flushTraceCollectors();
+      const currentOperationsForSubmission = getOperationsForSubmission();
       const validation = validatePage(currentPageId as PageId, answers, {
-        operations: operationsForSubmission,
+        operations: currentOperationsForSubmission,
       });
 
       if (!validation.ok) {
         const message = validation.message || '请完成当前页面必填项';
         const timestamp = formatTimestamp(new Date());
         setValidationError(message);
-        logOperation({
-          targetElement: `P${pageNumber}_下一页按钮`,
-          eventType: EventTypes.CLICK_BLOCKED,
-          value: {
-            reason: validation.reason,
-            missing: validation.missing,
-            timestamp,
-            message,
-          },
-          time: timestamp,
-          pageId: currentPageId,
-        });
+        if (isL2TracePage) {
+          frameTraceLogger?.submitAttempt({
+            validationStatus: 'blocked',
+            missingFields: mapBlockedMissingFieldsForL2(
+              tracePageConfig,
+              validation.missing || []
+            ),
+            targetId: 'next_button',
+            submitTrigger: 'next_button',
+          });
+        } else {
+          logOperation({
+            targetElement: `P${pageNumber}_下一页按钮`,
+            eventType: EventTypes.CLICK_BLOCKED,
+            value: {
+              reason: validation.reason,
+              missing: validation.missing,
+              timestamp,
+              message,
+            },
+            time: timestamp,
+            pageId: currentPageId,
+          });
+        }
         return false;
       }
 
       setValidationError('');
-      if (typeof defaultSubmit === 'function') {
+      if (isL2TracePage && tracePageConfig && frameTraceLogger && typeof submit === 'function') {
+        const startPageOperation = frameTraceLogger.emit(
+          'START_PAGE',
+          {},
+          {
+            targetId: 'page',
+            targetType: 'page',
+            metadata: {
+              flow_context: traceFlowContext,
+            },
+            emit: false,
+          }
+        );
+        const submitAttemptOperation = frameTraceLogger.emit(
+          'SUBMIT_ATTEMPT',
+          {
+            submit_attempt_id: createSubmitAttemptId(),
+            validation_status: 'success',
+          },
+          {
+            targetId: 'next_button',
+            targetType: 'button',
+            metadata: {
+              missing_fields: [],
+              submit_trigger: 'next_button',
+            },
+            emit: false,
+          }
+        );
+        const baseMark = buildSubmissionMark();
+        const l2Operations = baseMark.operationList
+          .filter(operation => isCurrentPageL2TraceOperation(operation, tracePageConfig))
+          .filter(operation => !isL2SuccessSubmitAttempt(operation, tracePageConfig));
+        const hasStartPage = l2Operations.some(operation =>
+          isCurrentPageStartPage(operation, tracePageConfig)
+        );
+        const operationList = withSequentialOperationCodes([
+          ...(!hasStartPage ? [startPageOperation] : []),
+          ...l2Operations,
+          submitAttemptOperation,
+        ]);
+        const ok = await submit({
+          markOverride: {
+            ...baseMark,
+            operationList,
+          },
+        });
+        if (!ok) {
+          return false;
+        }
+      } else if (typeof defaultSubmit === 'function') {
         const ok = await defaultSubmit();
         if (!ok) {
           return false;
         }
       }
+
       clearOperations();
       goToNextPage();
       return true;
     },
     [
       answers,
+      buildSubmissionMark,
       clearOperations,
       currentPageId,
+      frameTraceLogger,
+      flushTraceCollectors,
+      getOperationsForSubmission,
       goToNextPage,
+      isL2TracePage,
       logOperation,
-      operationsForSubmission,
       pageNumber,
       setValidationError,
+      traceFlowContext,
+      tracePageConfig,
     ]
   );
 

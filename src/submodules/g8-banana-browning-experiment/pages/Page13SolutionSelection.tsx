@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  CHART_HOVER_MIN_MS,
+  TEXT_DEBOUNCE_MS,
+  TEXT_THROTTLE_CHAR_DELTA,
+  createTextEventCollector,
+} from '@shared/services/submission/trace';
+import {
   LineChart,
   Line,
   XAxis,
@@ -9,9 +15,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import EventTypes from '@shared/services/submission/eventTypes.js';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import styles from '../styles/Page13SolutionSelection.module.css';
+import { useContentActivationTrace } from '../trace/useContentActivationTrace';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 const CHART_DATA = [
   {
@@ -115,44 +123,118 @@ const DiamondDot = (props: DiamondDotProps): React.ReactElement => {
 };
 
 // ---------------------------------------------------------------------------
-// Table row shape (per task spec: id is number)
+// Table row shape
 // ---------------------------------------------------------------------------
-interface TableRow {
-  id: number;
+interface SolutionRow {
+  id: string;
   variety: string;
   temperature: string;
-  isBest: boolean;
 }
+
+interface ChartHoverSnapshot {
+  pointId: string;
+  dataSnapshot: {
+    day: string;
+    series_id: unknown;
+    black_ratio: unknown;
+    values: Record<string, unknown>;
+  };
+}
+
+const createSolutionRow = (id: string): SolutionRow => ({
+  id,
+  variety: '',
+  temperature: '',
+});
+
+const INITIAL_SOLUTION_ROW_ID = 'page_12_solution_selection_row_1';
+const CHART_EVIDENCE_ID = 'chart_evidence_1';
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 const Page13SolutionSelection: React.FC = () => {
-  const { logOperation, collectAnswer, setPageStartTime, getPagePrefix } =
+  const { collectAnswer, getPagePrefix, registerTraceCollectorFlush } =
     useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
 
-  const hasLoggedEnter = useRef(false);
   const nextIdRef = useRef(2);
+  const rowsRef = useRef<SolutionRow[]>([createSolutionRow(INITIAL_SOLUTION_ROW_ID)]);
+  const bestIdRef = useRef<string | null>(null);
+  const reasonValueRef = useRef('');
+  const reasonCollectorRef = useRef<ReturnType<typeof createTextEventCollector> | null>(null);
+  const chartHoverStartedAtRef = useRef(0);
+  const lastChartHoverLoggedAtRef = useRef(0);
+  const chartHoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const chartHoverSnapshotRef = useRef<ChartHoverSnapshot | null>(null);
+  const loggedChartHoverPointRef = useRef<string | null>(null);
 
-  const [rows, setRows] = useState<TableRow[]>([
-    { id: 1, variety: '', temperature: '', isBest: false },
-  ]);
-  const [bestId, setBestId] = useState<number | null>(null);
+  const traceLogger = useTracePageStart({
+    pageId: 'solution_selection' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {
+        rows: [INITIAL_SOLUTION_ROW_ID],
+        best_row_id: null,
+      },
+    },
+  });
+  const getContentActivationHandlers = useContentActivationTrace(traceLogger);
+
+  const [rows, setRowsState] = useState<SolutionRow[]>(() => rowsRef.current);
+  const [bestId, setBestIdState] = useState<string | null>(null);
   const [reason, setReason] = useState('');
 
-  // ---- page enter lifecycle ----
-  useEffect(() => {
-    if (hasLoggedEnter.current) return;
-    hasLoggedEnter.current = true;
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '页面加载完成',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, setPageStartTime, targetPrefix]);
+  const clearChartHoverTimer = useCallback(() => {
+    if (chartHoverTimerRef.current) {
+      clearTimeout(chartHoverTimerRef.current);
+      chartHoverTimerRef.current = null;
+    }
+  }, []);
+
+  const getReasonCollector = useCallback(() => {
+    if (!traceLogger) {
+      return null;
+    }
+    if (!reasonCollectorRef.current) {
+      reasonCollectorRef.current = createTextEventCollector({
+        fieldId: 'reason_text',
+        logger: traceLogger,
+        debounceMs: TEXT_DEBOUNCE_MS,
+        throttleCharDelta: TEXT_THROTTLE_CHAR_DELTA,
+      });
+    }
+    return reasonCollectorRef.current;
+  }, [traceLogger]);
+
+  const flushReasonCollector = useCallback(() => {
+    reasonCollectorRef.current?.flush('submit');
+  }, []);
+
+  useEffect(
+    () => registerTraceCollectorFlush(flushReasonCollector),
+    [flushReasonCollector, registerTraceCollectorFlush]
+  );
+
+  useEffect(
+    () => () => {
+      reasonCollectorRef.current?.dispose();
+      reasonCollectorRef.current = null;
+      clearChartHoverTimer();
+      chartHoverSnapshotRef.current = null;
+    },
+    [clearChartHoverTimer, traceLogger]
+  );
+
+  const updateRows = useCallback((nextRows: SolutionRow[]) => {
+    rowsRef.current = nextRows;
+    setRowsState(nextRows);
+  }, []);
+
+  const updateBestId = useCallback((nextBestId: string | null) => {
+    bestIdRef.current = nextBestId;
+    setBestIdState(nextBestId);
+  }, []);
 
   // ---- persist table answers whenever rows / bestId change ----
   useEffect(() => {
@@ -169,88 +251,230 @@ const Page13SolutionSelection: React.FC = () => {
 
   // ---- handlers ----
   const handleVarietyChange = useCallback(
-    (rowId: number, variety: string) => {
-      setRows(prev => prev.map(r => (r.id === rowId ? { ...r, variety } : r)));
-      logOperation({
-        targetElement: `${targetPrefix}品种选择`,
-        eventType: EventTypes.CHANGE,
-        value: variety,
-        time: new Date().toISOString(),
+    (rowId: string, value: string) => {
+      const row = rowsRef.current.find(r => r.id === rowId);
+      if (!row) {
+        return;
+      }
+
+      const previousValue = row.variety;
+      const nextRow = { ...row, variety: value };
+      updateRows(rowsRef.current.map(r => (r.id === rowId ? nextRow : r)));
+      traceLogger?.setPlanParam(rowId, 'plan_param_1', previousValue, value, {
+        row_snapshot_after_change: nextRow,
       });
     },
-    [logOperation, targetPrefix]
+    [traceLogger, updateRows]
   );
 
   const handleTemperatureChange = useCallback(
-    (rowId: number, temperature: string) => {
-      setRows(prev => prev.map(r => (r.id === rowId ? { ...r, temperature } : r)));
-      logOperation({
-        targetElement: `${targetPrefix}温度选择`,
-        eventType: EventTypes.CHANGE,
-        value: temperature,
-        time: new Date().toISOString(),
+    (rowId: string, value: string) => {
+      const row = rowsRef.current.find(r => r.id === rowId);
+      if (!row) {
+        return;
+      }
+
+      const previousValue = row.temperature;
+      const nextRow = { ...row, temperature: value };
+      updateRows(rowsRef.current.map(r => (r.id === rowId ? nextRow : r)));
+      traceLogger?.setPlanParam(rowId, 'plan_param_2', previousValue, value, {
+        row_snapshot_after_change: nextRow,
       });
     },
-    [logOperation, targetPrefix]
+    [traceLogger, updateRows]
   );
 
   const handleStarClick = useCallback(
-    (rowId: number) => {
-      const newBestId = bestId === rowId ? null : rowId;
-      setBestId(newBestId);
-      setRows(prev => prev.map(r => ({ ...r, isBest: r.id === newBestId })));
-      logOperation({
-        targetElement: `${targetPrefix}最优方案标记`,
-        eventType: EventTypes.CLICK,
-        value: newBestId !== null ? '标记为最优' : '取消标记',
-        time: new Date().toISOString(),
+    (rowId: string) => {
+      const previousBestId = bestIdRef.current;
+      if (previousBestId === rowId) {
+        return;
+      }
+
+      updateBestId(rowId);
+      const bestRow = rowsRef.current.find(r => r.id === rowId);
+      collectAnswer({
+        targetElement: 'Q8_最优方案',
+        value:
+          bestRow && bestRow.variety && bestRow.temperature
+            ? `${bestRow.variety}-${bestRow.temperature}`
+            : '',
       });
+      traceLogger?.selectBest(rowId, previousBestId);
     },
-    [bestId, logOperation, targetPrefix]
+    [collectAnswer, traceLogger, updateBestId]
   );
 
   const handleDeleteRow = useCallback(
-    (rowId: number) => {
-      setRows(prev => prev.filter(r => r.id !== rowId));
-      if (bestId === rowId) {
-        setBestId(null);
+    (rowId: string) => {
+      const rowToDelete = rowsRef.current.find(r => r.id === rowId);
+      if (!rowToDelete) {
+        return;
       }
-      logOperation({
-        targetElement: `${targetPrefix}删除方案`,
-        eventType: EventTypes.CLICK,
-        value: `删除方案ID=${rowId}`,
-        time: new Date().toISOString(),
+
+      const wasBestPlan = bestIdRef.current === rowId;
+      updateRows(rowsRef.current.filter(r => r.id !== rowId));
+      if (wasBestPlan) {
+        updateBestId(null);
+      }
+      traceLogger?.deleteRow(rowId, {
+        row_snapshot_before_delete: rowToDelete,
+        was_best_plan: wasBestPlan,
       });
     },
-    [bestId, logOperation, targetPrefix]
+    [traceLogger, updateBestId, updateRows]
   );
 
   const handleAddRow = useCallback(() => {
-    const newId = nextIdRef.current;
+    const newRow = createSolutionRow(`page_12_solution_selection_row_${nextIdRef.current}`);
     nextIdRef.current += 1;
-    setRows(prev => [...prev, { id: newId, variety: '', temperature: '', isBest: false }]);
-    logOperation({
-      targetElement: `${targetPrefix}新增方案`,
-      eventType: EventTypes.CLICK,
-      value: '新增空白方案行',
-      time: new Date().toISOString(),
+    updateRows([...rowsRef.current, newRow]);
+    traceLogger?.addRow(newRow.id, {
+      row_snapshot_after_add: newRow,
     });
-  }, [logOperation, targetPrefix]);
+  }, [traceLogger, updateRows]);
 
   const handleReasonChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value;
+      reasonValueRef.current = value;
       setReason(value);
       collectAnswer({ targetElement: 'Q8_理由', value });
-      logOperation({
-        targetElement: `${targetPrefix}理由输入`,
-        eventType: EventTypes.INPUT_CHANGE,
-        value,
-        time: new Date().toISOString(),
+      getReasonCollector()?.onChange(value, {
+        metadata: {
+          source_answer_key: 'Q8_理由',
+        },
       });
     },
-    [collectAnswer, logOperation, targetPrefix]
+    [collectAnswer, getReasonCollector]
   );
+
+  const handleReasonFocus = useCallback(() => {
+    getReasonCollector()?.onFocus(reasonValueRef.current);
+  }, [getReasonCollector]);
+
+  const handleReasonBlur = useCallback(
+    () => {
+      getReasonCollector()?.onBlur(reasonValueRef.current, {
+        source_answer_key: 'Q8_理由',
+      });
+    },
+    [getReasonCollector]
+  );
+
+  const buildChartHoverSnapshot = useCallback((state: unknown): ChartHoverSnapshot | null => {
+    if (!state || typeof state !== 'object') {
+      return null;
+    }
+
+    const activePayload = (state as { activePayload?: unknown[] }).activePayload;
+    const firstPayload = activePayload?.[0];
+    if (!firstPayload || typeof firstPayload !== 'object') {
+      return null;
+    }
+
+    const payloadRecord = firstPayload as Record<string, unknown>;
+    const dataPoint =
+      payloadRecord.payload && typeof payloadRecord.payload === 'object'
+        ? (payloadRecord.payload as Record<string, unknown>)
+        : {};
+    const day = String(dataPoint.day ?? (state as { activeLabel?: unknown }).activeLabel ?? '');
+    if (!day) {
+      return null;
+    }
+
+    return {
+      pointId: `day_${day}`,
+      dataSnapshot: {
+        day,
+        series_id: payloadRecord.dataKey,
+        black_ratio: payloadRecord.value,
+        values: dataPoint,
+      },
+    };
+  }, []);
+
+  const emitChartHoverSnapshot = useCallback(
+    (snapshot: ChartHoverSnapshot, hoverMs: number, loggedAt: number) => {
+      if (!traceLogger || loggedChartHoverPointRef.current === snapshot.pointId) {
+        return;
+      }
+      if (
+        lastChartHoverLoggedAtRef.current &&
+        loggedAt - lastChartHoverLoggedAtRef.current < CHART_HOVER_MIN_MS
+      ) {
+        return;
+      }
+
+      lastChartHoverLoggedAtRef.current = loggedAt;
+      loggedChartHoverPointRef.current = snapshot.pointId;
+      traceLogger.chartHover(CHART_EVIDENCE_ID, snapshot.pointId, {
+        hover_ms: hoverMs,
+        data_snapshot: snapshot.dataSnapshot,
+      });
+    },
+    [traceLogger]
+  );
+
+  const scheduleChartHoverThreshold = useCallback(() => {
+    clearChartHoverTimer();
+    chartHoverTimerRef.current = setTimeout(() => {
+      chartHoverTimerRef.current = null;
+      const snapshot = chartHoverSnapshotRef.current;
+      const startedAt = chartHoverStartedAtRef.current;
+      if (!snapshot || startedAt === 0) {
+        return;
+      }
+      const now = Date.now();
+      const hoverMs = now - startedAt;
+      if (hoverMs >= CHART_HOVER_MIN_MS) {
+        emitChartHoverSnapshot(snapshot, hoverMs, now);
+      }
+    }, CHART_HOVER_MIN_MS);
+  }, [clearChartHoverTimer, emitChartHoverSnapshot]);
+
+  const handleChartHover = useCallback(
+    (state: unknown) => {
+      const snapshot = buildChartHoverSnapshot(state);
+      const now = Date.now();
+      const currentPointId = chartHoverSnapshotRef.current?.pointId;
+      if (!snapshot) {
+        return;
+      }
+
+      chartHoverSnapshotRef.current = snapshot;
+      if (chartHoverStartedAtRef.current === 0 || currentPointId !== snapshot.pointId) {
+        chartHoverStartedAtRef.current = now;
+        loggedChartHoverPointRef.current = null;
+        scheduleChartHoverThreshold();
+        return;
+      }
+
+      const hoverMs = now - chartHoverStartedAtRef.current;
+      if (hoverMs < CHART_HOVER_MIN_MS) {
+        return;
+      }
+
+      emitChartHoverSnapshot(snapshot, hoverMs, now);
+    },
+    [buildChartHoverSnapshot, emitChartHoverSnapshot, scheduleChartHoverThreshold]
+  );
+
+  const handleChartLeave = useCallback(() => {
+    const snapshot = chartHoverSnapshotRef.current;
+    const startedAt = chartHoverStartedAtRef.current;
+    const now = Date.now();
+    if (snapshot && startedAt > 0) {
+      const hoverMs = now - startedAt;
+      if (hoverMs >= CHART_HOVER_MIN_MS) {
+        emitChartHoverSnapshot(snapshot, hoverMs, now);
+      }
+    }
+    clearChartHoverTimer();
+    chartHoverStartedAtRef.current = 0;
+    chartHoverSnapshotRef.current = null;
+    loggedChartHoverPointRef.current = null;
+  }, [clearChartHoverTimer, emitChartHoverSnapshot]);
 
   // ---- render ----
   return (
@@ -262,7 +486,17 @@ const Page13SolutionSelection: React.FC = () => {
         </div>
       </div>
 
-      <p className={styles.instruction}>
+      <p
+        className={styles.instruction}
+        data-content-id="solution_selection_instruction"
+        {...getContentActivationHandlers('solution_selection_instruction', {
+          sourceUiId: 'page12_instruction_text',
+          metadata: {
+            phase: 'before_plan_selection',
+            content_type: 'instruction_text',
+          },
+        })}
+      >
         根据实验结果，小明绘制了香蕉储存温度、时长与黑变比例的关系图（见左下角图）。
         查阅资料得知，为保持口感，香蕉黑变比例不宜超过
         <span className={styles.instructionHighlight}>30%</span>
@@ -278,7 +512,13 @@ const Page13SolutionSelection: React.FC = () => {
           <h3 className={styles.chartTitle}>香蕉储存温度、时长与黑变比例关系图</h3>
           <div className={styles.chartWrapper}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={CHART_DATA} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
+              <LineChart
+                data={CHART_DATA}
+                margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
+                onMouseMove={handleChartHover}
+                onTouchMove={handleChartHover}
+                onMouseLeave={handleChartLeave}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis
                   dataKey="day"
@@ -395,7 +635,7 @@ const Page13SolutionSelection: React.FC = () => {
                           type="button"
                           className={`${styles.starButton} ${bestId === row.id ? styles.starButtonActive : ''}`}
                           onClick={() => handleStarClick(row.id)}
-                          aria-label={bestId === row.id ? '取消最优标记' : '标记为最优方案'}
+                          aria-label={bestId === row.id ? '已标记为最优方案' : '标记为最优方案'}
                         >
                           ★
                         </button>
@@ -430,6 +670,8 @@ const Page13SolutionSelection: React.FC = () => {
               className={styles.reasonTextarea}
               value={reason}
               onChange={handleReasonChange}
+              onFocus={handleReasonFocus}
+              onBlur={handleReasonBlur}
               placeholder="请在此处输入你的回答。"
             />
           </div>

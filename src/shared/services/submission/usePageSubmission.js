@@ -14,10 +14,16 @@ import {
   buildTargetElementPrefix,
   buildPageDescPrefix,
 } from '@shared/utils/pageMapping.ts';
+import {
+  formatTraceTimestamp,
+  getFieldRegistryPage,
+} from '@shared/services/submission/trace';
 
 const RETRY_DELAYS = [1000, 2000, 4000];
 const debugLog = () => {};
 const DEFAULT_TIMEOUT_PLACEHOLDER = '超时未回答';
+const DEFAULT_LIFECYCLE_MODE = 'legacy';
+const L2_TRACE_LIFECYCLE_MODE = 'l2-trace';
 const SUBMISSION_CHANNEL = 'usePageSubmission';
 const SYSTEM_EVENT_TARGET = 'page_submission';
 const COMPOSITE_TARGET_PREFIX_REGEX = /^P[1-9]\d*\.\d{2}_.+/;
@@ -38,6 +44,7 @@ const isSessionExpiredError = error => {
 };
 
 const ensureArray = value => (Array.isArray(value) ? value : []);
+const isPlainObject = value => Boolean(value && typeof value === 'object' && !Array.isArray(value));
 
 const parseTimeValue = value => {
   if (value instanceof Date) {
@@ -351,6 +358,276 @@ const appendTimeoutOperations = (
   return result;
 };
 
+const createL2TraceId = eventType =>
+  `trace_${String(eventType || 'event').toLowerCase()}_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2, 10)}`;
+
+const createL2SubmitAttemptId = () =>
+  `submit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+const getL2BaseOperation = operations =>
+  operations.find(operation => {
+    const value = operation?.value;
+    return (
+      operation?.eventType === 'START_PAGE' &&
+      isPlainObject(value) &&
+      typeof value.trace_id === 'string' &&
+      typeof value.page_id === 'string' &&
+      typeof value.page_type === 'string'
+    );
+  }) ||
+  operations.find(operation => {
+    const value = operation?.value;
+    return (
+      isPlainObject(value) &&
+      typeof value.trace_id === 'string' &&
+      typeof value.page_id === 'string' &&
+      typeof value.page_type === 'string'
+    );
+  });
+
+const getRequiredFieldIdsForTracePage = pageId => {
+  const page = getFieldRegistryPage(pageId);
+  return ensureArray(page?.required_fields).filter(fieldId => typeof fieldId === 'string');
+};
+
+const hasOwnProperty = (object, key) =>
+  Boolean(object && Object.prototype.hasOwnProperty.call(object, key));
+
+const getQuestionAnswerFieldIdsForTracePage = pageId => {
+  const page = getFieldRegistryPage(pageId);
+  const questions = isPlainObject(page?.questions) ? page.questions : {};
+  return Object.entries(questions).reduce((mapping, [questionId, question]) => {
+    const answerFieldId = isPlainObject(question) ? question.answer_field_id : null;
+    if (typeof answerFieldId === 'string' && answerFieldId) {
+      mapping[questionId] = answerFieldId;
+    }
+    return mapping;
+  }, {});
+};
+
+const stripTargetElementPrefix = targetElement =>
+  String(targetElement || '').replace(/^P[1-9]\d*\.\d{2}_/, '').replace(/^P\d+(?:\.\d+)?_/, '');
+
+const isNonEmptyTraceValue = value => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'object') return Object.keys(value).length > 0;
+  return true;
+};
+
+const hasPositiveCharCountAfter = value =>
+  isPlainObject(value?.metadata) &&
+  typeof value.metadata.char_count_after === 'number' &&
+  value.metadata.char_count_after > 0;
+
+const FIELD_VALUE_COMPLETION_EVENTS = new Set([
+  'TEXT_CHANGE',
+  'TEXT_BLUR',
+  'CHECKBOX_TOGGLE',
+  'SET_EXP_PARAM',
+  'SET_PLAN_PARAM',
+  'SELECT_BEST',
+]);
+
+const TARGET_VALUE_COMPLETION_EVENTS = new Set(['TEXT_CHANGE', 'TEXT_BLUR']);
+
+const PARAM_VALUE_COMPLETION_EVENTS = new Set(['SET_EXP_PARAM', 'SET_PLAN_PARAM']);
+
+const deriveCompletedFieldIdsFromAnswers = (answers, requiredFieldIds) => {
+  const completed = new Set();
+  const required = new Set(requiredFieldIds);
+
+  ensureArray(answers).forEach(answer => {
+    if (!isNonEmptyTraceValue(answer?.value)) {
+      return;
+    }
+    const target = stripTargetElementPrefix(answer?.targetElement);
+    requiredFieldIds.forEach(fieldId => {
+      if (target === fieldId || target.endsWith(`_${fieldId}`)) {
+        completed.add(fieldId);
+      }
+    });
+  });
+
+  return [...completed].filter(fieldId => required.has(fieldId));
+};
+
+const deriveCompletedFieldIdsFromOperations = (operations, pageId, requiredFieldIds) => {
+  const completed = new Set();
+  const required = new Set(requiredFieldIds);
+  const questionAnswerFieldById = getQuestionAnswerFieldIdsForTracePage(pageId);
+
+  const setCompletion = (fieldId, isComplete) => {
+    if (!required.has(fieldId)) {
+      return;
+    }
+    if (isComplete) {
+      completed.add(fieldId);
+    } else {
+      completed.delete(fieldId);
+    }
+  };
+
+  ensureArray(operations).forEach(operation => {
+    const value = operation?.value;
+    if (!isPlainObject(value)) {
+      return;
+    }
+    if (typeof value.page_id === 'string' && value.page_id !== pageId) {
+      return;
+    }
+
+    const eventType = operation?.eventType;
+
+    if (FIELD_VALUE_COMPLETION_EVENTS.has(eventType) && typeof value.field_id === 'string') {
+      const isComplete =
+        isNonEmptyTraceValue(value.value_after) ||
+        hasPositiveCharCountAfter(value);
+      setCompletion(value.field_id, isComplete);
+    }
+
+    if (eventType === 'SELECT_ANSWER' && typeof value.question_id === 'string') {
+      const fieldId = questionAnswerFieldById[value.question_id];
+      if (fieldId) {
+        setCompletion(fieldId, isNonEmptyTraceValue(value.option_id));
+      }
+    }
+
+    if (TARGET_VALUE_COMPLETION_EVENTS.has(eventType) && typeof value.target_id === 'string') {
+      setCompletion(value.target_id, isNonEmptyTraceValue(value.value_after));
+    }
+    if (PARAM_VALUE_COMPLETION_EVENTS.has(eventType) && typeof value.param_id === 'string') {
+      setCompletion(value.param_id, isNonEmptyTraceValue(value.value_after));
+    }
+  });
+
+  return [...completed];
+};
+
+const deriveL2TimeoutMissingFields = ({ operations, pageId, timeoutOptions, answerList }) => {
+  if (hasOwnProperty(timeoutOptions, 'missingFields')) {
+    return ensureArray(timeoutOptions.missingFields).filter(fieldId => typeof fieldId === 'string');
+  }
+
+  const requiredFieldIds = getRequiredFieldIdsForTracePage(pageId);
+  if (requiredFieldIds.length === 0) {
+    return [];
+  }
+
+  const completedFieldIds = new Set([
+    ...deriveCompletedFieldIdsFromAnswers(answerList, requiredFieldIds),
+    ...deriveCompletedFieldIdsFromOperations(operations, pageId, requiredFieldIds),
+  ]);
+
+  return requiredFieldIds.filter(fieldId => !completedFieldIds.has(fieldId));
+};
+
+const hasL2TimeoutSubmitAttempt = operations =>
+  operations.some(operation => {
+    const value = operation?.value;
+    return (
+      operation?.eventType === 'SUBMIT_ATTEMPT' &&
+      isPlainObject(value) &&
+      value.validation_status === 'timeout'
+    );
+  });
+
+const createL2TimeoutOperation = ({
+  baseOperation,
+  baseValue,
+  eventType,
+  pageNumber,
+  targetId,
+  targetType,
+  patch = {},
+  metadata = {},
+}) => {
+  const prefix = pageNumber ? buildTargetElementPrefix(pageNumber) : '';
+  const baseMetadata = isPlainObject(baseValue.metadata) ? baseValue.metadata : {};
+  return {
+    targetElement: `${prefix}${targetId}`,
+    eventType,
+    value: {
+      trace_id: createL2TraceId(eventType),
+      page_id: baseValue.page_id,
+      page_type: baseValue.page_type,
+      target_id: targetId,
+      target_type: targetType,
+      ...patch,
+      metadata: {
+        ...baseMetadata,
+        ...metadata,
+      },
+    },
+    time: formatTraceTimestamp(new Date()),
+    pageId: baseOperation.pageId,
+  };
+};
+
+const appendL2TimeoutOperations = (operations, { pageNumber, timeoutOptions, answerList }) => {
+  const result = [...operations];
+  const baseOperation = getL2BaseOperation(result);
+  const baseValue = baseOperation?.value;
+  if (!baseOperation || !isPlainObject(baseValue)) {
+    return result;
+  }
+
+  const timeoutSeconds = timeoutOptions.timeoutSeconds ?? timeoutOptions.timeout ?? null;
+  const timeoutMetadata = {
+    trigger: 'timer_timeout',
+    timeout_seconds: timeoutSeconds,
+    auto_submit_reason: timeoutOptions.autoSubmitReason || 'timeout_auto_submit',
+  };
+
+  if (!result.some(operation => operation?.eventType === 'TIMER_COMPLETE')) {
+    result.push(
+      createL2TimeoutOperation({
+        baseOperation,
+        baseValue,
+        eventType: 'TIMER_COMPLETE',
+        pageNumber,
+        targetId: 'timer',
+        targetType: 'timer',
+        metadata: timeoutMetadata,
+      })
+    );
+  }
+
+  if (!hasL2TimeoutSubmitAttempt(result)) {
+    const missingFields = deriveL2TimeoutMissingFields({
+      operations: result,
+      pageId: baseValue.page_id,
+      timeoutOptions,
+      answerList,
+    });
+    result.push(
+      createL2TimeoutOperation({
+        baseOperation,
+        baseValue,
+        eventType: 'SUBMIT_ATTEMPT',
+        pageNumber,
+        targetId: 'timeout_submit',
+        targetType: 'button',
+        patch: {
+          submit_attempt_id: createL2SubmitAttemptId(),
+          validation_status: 'timeout',
+        },
+        metadata: {
+          ...timeoutMetadata,
+          missing_fields: missingFields,
+          submit_trigger: 'timeout',
+        },
+      })
+    );
+  }
+
+  return result;
+};
+
 const filterNonEmptyAnswers = answers =>
   ensureArray(answers)
     .map(answer => ({
@@ -462,6 +739,8 @@ const answerEntriesFromObject = record => {
  * @param {Object|(() => Object)} [options.pageMeta]
  * @param {Array|(() => Array)|Record<string, string>} [options.answers]
  * @param {Array|(() => Array)} [options.operations]
+ * @param {'legacy'|'l2-trace'} [options.lifecycleMode='legacy']
+ * @param {(mark: object) => void} [options.traceValidator]
  */
 export function usePageSubmission(options = {}) {
   const {
@@ -480,6 +759,8 @@ export function usePageSubmission(options = {}) {
     answers,
     operations,
     logOperation: externalLogOperation,
+    lifecycleMode = DEFAULT_LIFECYCLE_MODE,
+    traceValidator,
   } = options;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -694,29 +975,17 @@ export function usePageSubmission(options = {}) {
       }
       markCandidate.pageNumber = resolvedPageNumber;
 
+      const isL2TraceMode = lifecycleMode === L2_TRACE_LIFECYCLE_MODE;
       const baseOperations = ensureArray(markCandidate.operationList);
       const mergedOperations =
         baseOperations.length > 0
           ? cloneOperationList(baseOperations)
           : resolveProvidedOperations();
-
-      let composedOperations = [...mergedOperations];
-      if (mode === 'timeout') {
-        composedOperations = appendTimeoutOperations(composedOperations, {
-          pageNumber: resolvedPageNumber,
-          autoSubmitReason: timeoutOptions.autoSubmitReason,
-          autoSubmitMeta: timeoutOptions.autoSubmitMeta,
-          pageExitReason: timeoutOptions.pageExitReason,
-          timeoutSeconds: timeoutOptions.timeoutSeconds ?? timeoutOptions.timeout,
-        });
-      }
-      markCandidate.operationList = composedOperations;
-
       const baseAnswers = ensureArray(markCandidate.answerList);
       let composedAnswers =
         baseAnswers.length > 0 ? cloneAnswerList(baseAnswers) : resolveProvidedAnswers();
 
-      if (mode === 'timeout') {
+      if (mode === 'timeout' && !isL2TraceMode) {
         composedAnswers = appendTimeoutAnswers(
           composedAnswers,
           timeoutOptions.missingAnswerTargets,
@@ -726,26 +995,44 @@ export function usePageSubmission(options = {}) {
       }
       markCandidate.answerList = filterNonEmptyAnswers(composedAnswers);
 
-      const resolvedFlowContext = injectFlowContextOperation(markCandidate);
+      let composedOperations = [...mergedOperations];
+      if (mode === 'timeout') {
+        composedOperations = isL2TraceMode
+          ? appendL2TimeoutOperations(composedOperations, {
+              pageNumber: resolvedPageNumber,
+              timeoutOptions,
+              answerList: markCandidate.answerList,
+            })
+          : appendTimeoutOperations(composedOperations, {
+              pageNumber: resolvedPageNumber,
+              autoSubmitReason: timeoutOptions.autoSubmitReason,
+              autoSubmitMeta: timeoutOptions.autoSubmitMeta,
+              pageExitReason: timeoutOptions.pageExitReason,
+              timeoutSeconds: timeoutOptions.timeoutSeconds ?? timeoutOptions.timeout,
+            });
+      }
+      markCandidate.operationList = composedOperations;
+
+      const resolvedFlowContext = isL2TraceMode ? null : injectFlowContextOperation(markCandidate);
 
       debugLog('[usePageSubmission] resolvedFlowContext:', resolvedFlowContext);
       const pageDescBefore = derivePageDesc(markCandidate, resolvedPageMeta);
       debugLog('[usePageSubmission] pageDesc before enhancement:', pageDescBefore);
 
-      const pageDescAfter = applyPageDescPrefixWithFlow(
-        pageDescBefore,
-        resolvedFlowContext,
-        resolvedPageMeta
-      );
+      const pageDescAfter = isL2TraceMode
+        ? pageDescBefore
+        : applyPageDescPrefixWithFlow(pageDescBefore, resolvedFlowContext, resolvedPageMeta);
       debugLog('[usePageSubmission] pageDesc after enhancement:', pageDescAfter);
       markCandidate.pageDesc = pageDescAfter;
 
-      markCandidate.operationList = ensureLifecycleOperations(markCandidate.operationList, {
-        pageDesc: pageDescAfter,
-        pageId: resolvedPageMeta.pageId,
-        mode,
-        beginTime: markCandidate.beginTime,
-      });
+      if (!isL2TraceMode) {
+        markCandidate.operationList = ensureLifecycleOperations(markCandidate.operationList, {
+          pageDesc: pageDescAfter,
+          pageId: resolvedPageMeta.pageId,
+          mode,
+          beginTime: markCandidate.beginTime,
+        });
+      }
 
       const prefixedOperations = applyOperationTargetPrefix(
         markCandidate.operationList,
@@ -761,7 +1048,14 @@ export function usePageSubmission(options = {}) {
 
       let normalizedMark = null;
       try {
-        validateMarkObject(markCandidate);
+        if (isL2TraceMode) {
+          if (typeof traceValidator !== 'function') {
+            throw new Error('lifecycleMode="l2-trace" requires traceValidator');
+          }
+          traceValidator(markCandidate);
+        } else {
+          validateMarkObject(markCandidate);
+        }
       } catch (validationError) {
         lastErrorRef.current = validationError;
         setLastError(validationError);
@@ -814,18 +1108,22 @@ export function usePageSubmission(options = {}) {
           }
 
           onAfter?.({ response, payload });
-          emitSubmitEvent(EventTypes.PAGE_SUBMIT_SUCCESS, submissionPageSummary, {
-            isTimeout: mode === 'timeout',
-          });
+          if (!isL2TraceMode) {
+            emitSubmitEvent(EventTypes.PAGE_SUBMIT_SUCCESS, submissionPageSummary, {
+              isTimeout: mode === 'timeout',
+            });
+          }
           setIsSubmitting(false);
           return true;
         } catch (error) {
           if (isSessionExpiredError(error)) {
             logger.error('[usePageSubmission] 会话过期，终止重试');
-            emitSubmitEvent(EventTypes.PAGE_SUBMIT_FAILED, submissionPageSummary, {
-              isTimeout: mode === 'timeout',
-              error,
-            });
+            if (!isL2TraceMode) {
+              emitSubmitEvent(EventTypes.PAGE_SUBMIT_FAILED, submissionPageSummary, {
+                isTimeout: mode === 'timeout',
+                error,
+              });
+            }
             setIsSubmitting(false);
             handleSessionExpired(error);
             lastErrorRef.current = error;
@@ -842,10 +1140,12 @@ export function usePageSubmission(options = {}) {
           });
 
           if (isLastAttempt) {
-            emitSubmitEvent(EventTypes.PAGE_SUBMIT_FAILED, submissionPageSummary, {
-              isTimeout: mode === 'timeout',
-              error,
-            });
+            if (!isL2TraceMode) {
+              emitSubmitEvent(EventTypes.PAGE_SUBMIT_FAILED, submissionPageSummary, {
+                isTimeout: mode === 'timeout',
+                error,
+              });
+            }
             lastErrorRef.current = error;
             setLastError(error);
             setIsSubmitting(false);
@@ -874,6 +1174,7 @@ export function usePageSubmission(options = {}) {
       handleSessionExpired,
       injectFlowContextOperation,
       isSubmitting,
+      lifecycleMode,
       logger,
       onAfter,
       onBefore,
@@ -883,6 +1184,7 @@ export function usePageSubmission(options = {}) {
       resolveUserContext,
       submitImpl,
       emitSubmitEvent,
+      traceValidator,
     ]
   );
 
@@ -892,7 +1194,19 @@ export function usePageSubmission(options = {}) {
   );
 
   const submitOnTimeout = useCallback(
-    (timeoutOptions = {}) => submitInternal({ mode: 'timeout', timeoutOptions }),
+    (timeoutOptions = {}) => {
+      const options =
+        timeoutOptions && typeof timeoutOptions === 'object' && !Array.isArray(timeoutOptions)
+          ? timeoutOptions
+          : {};
+      const { markOverride, userContextOverride, ...restTimeoutOptions } = options;
+      return submitInternal({
+        mode: 'timeout',
+        markOverride,
+        userContextOverride,
+        timeoutOptions: restTimeoutOptions,
+      });
+    },
     [submitInternal]
   );
 

@@ -1,0 +1,114 @@
+{
+  "registry_type": "content_registry",
+  "registry_version": "science-inquiry-content-registry-banana-v2.1",
+  "registry_hash": "795163be74a48b7fba731838e88911379f8781519a9e92e82171f37c836c6cc0",
+  "task_family": "science_inquiry_13page",
+  "task_module": "banana_browning",
+  "scope": "Static semantics for readable content blocks. Events reference content_id only; full text is not repeated in operationList.",
+  "pages": {
+    "page_02_question_generation": {
+      "page_index": 2,
+      "content_blocks": {
+        "chat_bubble_02_01": {
+          "content_type": "chat_bubble",
+          "sequence_index": 1,
+          "speaker_role": "mother",
+          "is_key_evidence": false,
+          "evidence_role": "context_opening",
+          "text_sample": "回来啦？手里拿着香蕉，怎么不吃呀？",
+          "tagging_consumed": true
+        },
+        "chat_bubble_02_02": {
+          "content_type": "chat_bubble",
+          "sequence_index": 2,
+          "speaker_role": "xiaoming",
+          "is_key_evidence": true,
+          "evidence_role": "phenomenon_observation",
+          "text_sample": "香蕉皮上好多黑斑。",
+          "tagging_consumed": true
+        },
+        "chat_bubble_02_03": {
+          "content_type": "chat_bubble",
+          "sequence_index": 3,
+          "speaker_role": "mother",
+          "is_key_evidence": true,
+          "evidence_role": "problem_trigger",
+          "text_sample": "是不是放太久了？还是被什么东西压到了？",
+          "tagging_consumed": true
+        },
+        "chat_bubble_02_04": {
+          "content_type": "chat_bubble",
+          "sequence_index": 4,
+          "speaker_role": "xiaoming",
+          "is_key_evidence": true,
+          "evidence_role": "variable_hint",
+          "text_sample": "买回来时香蕉还正常放在果盘里，时间也不长。",
+          "tagging_consumed": true
+        },
+        "chat_bubble_02_05": {
+          "content_type": "chat_bubble",
+          "sequence_index": 5,
+          "speaker_role": "mother",
+          "is_key_evidence": true,
+          "evidence_role": "investigation_prompt",
+          "text_sample": "果肉没事说明还没坏，不过皮黑得这么快，确实有点奇怪。",
+          "tagging_consumed": true
+        },
+        "instruction_text_02_01": {
+          "content_type": "instruction_text",
+          "sequence_index": 6,
+          "is_key_evidence": true,
+          "evidence_role": "task_instruction",
+          "text_sample": "根据左侧对话，请写出接下来小明要探究的科学问题。",
+          "tagging_consumed": true
+        }
+      },
+      "rules": {
+        "register_all_bubbles": true,
+        "auto_reveal_is_passive": true,
+        "key_evidence_does_not_filter_frontend_collection": true
+      }
+    },
+    "page_03_factor_selection": {
+      "page_index": 3,
+      "content_blocks": {
+        "card_1": {
+          "content_type": "material_card",
+          "sequence_index": 1,
+          "card_type": "factor_evidence",
+          "is_key_evidence": true,
+          "evidence_role": "factor_candidate",
+          "tagging_consumed": true
+        },
+        "card_2": {
+          "content_type": "material_card",
+          "sequence_index": 2,
+          "card_type": "factor_evidence",
+          "is_key_evidence": true,
+          "evidence_role": "factor_candidate",
+          "tagging_consumed": true
+        },
+        "card_3": {
+          "content_type": "material_card",
+          "sequence_index": 3,
+          "card_type": "context_evidence",
+          "is_key_evidence": false,
+          "evidence_role": "background_context",
+          "tagging_consumed": true
+        }
+      }
+    },
+    "page_12_solution_selection": {
+      "page_index": 12,
+      "content_blocks": {
+        "chart_note_12_01": {
+          "content_type": "chart_note",
+          "sequence_index": 1,
+          "is_key_evidence": true,
+          "evidence_role": "chart_interpretation_hint",
+          "tagging_consumed": true
+        }
+      }
+    }
+  }
+}

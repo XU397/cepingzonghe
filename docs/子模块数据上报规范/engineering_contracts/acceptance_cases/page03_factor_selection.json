@@ -1,0 +1,171 @@
+{
+  "case_id": "page03_factor_selection_v2_2",
+  "purpose": "Validate Page03 factor selection scan, option selection, and post-selection review labels.",
+  "input": {
+    "pageNumber": "1.04",
+    "pageDesc": "Factor selection",
+    "beginTime": "2026-06-03T10:03:00.000+08:00",
+    "endTime": "2026-06-03T10:03:22.000+08:00",
+    "answerList": [],
+    "imgList": [],
+    "operationList": [
+      {
+        "code": 1,
+        "targetElement": "P1.04_page",
+        "eventType": "START_PAGE",
+        "time": "2026-06-03T10:03:00.000+08:00",
+        "value": {
+          "trace_id": "p03-e001",
+          "page_id": "page_03_factor_selection",
+          "page_type": "C1_INFO_SELECTION",
+          "target_id": "page",
+          "target_type": "page",
+          "metadata": {
+            "field_registry_version": "science-inquiry-field-registry-v2.2",
+            "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+            "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+            "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+            "schema_version": "science-inquiry-trace-v2.2",
+            "rule_config_version": "rule-config-v2.2",
+            "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83"
+          }
+        }
+      },
+      {
+        "code": 2,
+        "targetElement": "P1.04_factor_card_1",
+        "eventType": "OPEN_MODAL",
+        "time": "2026-06-03T10:03:04.000+08:00",
+        "value": {
+          "trace_id": "p03-e002",
+          "page_id": "page_03_factor_selection",
+          "page_type": "C1_INFO_SELECTION",
+          "target_id": "factor_card_1",
+          "target_type": "modal",
+          "metadata": {
+            "modal_id": "factor_card_1"
+          }
+        }
+      },
+      {
+        "code": 3,
+        "targetElement": "P1.04_factor_card_1",
+        "eventType": "CLOSE_MODAL",
+        "time": "2026-06-03T10:03:07.000+08:00",
+        "value": {
+          "trace_id": "p03-e003",
+          "page_id": "page_03_factor_selection",
+          "page_type": "C1_INFO_SELECTION",
+          "target_id": "factor_card_1",
+          "target_type": "modal",
+          "metadata": {
+            "modal_id": "factor_card_1",
+            "dwell_ms": 3000
+          }
+        }
+      },
+      {
+        "code": 4,
+        "targetElement": "P1.04_factor_option_a",
+        "eventType": "CHECKBOX_TOGGLE",
+        "time": "2026-06-03T10:03:10.000+08:00",
+        "value": {
+          "trace_id": "p03-e004",
+          "page_id": "page_03_factor_selection",
+          "page_type": "C1_INFO_SELECTION",
+          "target_id": "factor_option_a",
+          "target_type": "checkbox",
+          "question_id": "factor_selection",
+          "option_id": "option_a",
+          "value_before": false,
+          "value_after": true,
+          "metadata": {
+            "checked": true
+          }
+        }
+      },
+      {
+        "code": 5,
+        "targetElement": "P1.04_factor_card_2",
+        "eventType": "OPEN_MODAL",
+        "time": "2026-06-03T10:03:14.000+08:00",
+        "value": {
+          "trace_id": "p03-e005",
+          "page_id": "page_03_factor_selection",
+          "page_type": "C1_INFO_SELECTION",
+          "target_id": "factor_card_2",
+          "target_type": "modal",
+          "metadata": {
+            "modal_id": "factor_card_2",
+            "phase": "after_selection"
+          }
+        }
+      },
+      {
+        "code": 6,
+        "targetElement": "P1.04_factor_card_2",
+        "eventType": "CLOSE_MODAL",
+        "time": "2026-06-03T10:03:18.000+08:00",
+        "value": {
+          "trace_id": "p03-e006",
+          "page_id": "page_03_factor_selection",
+          "page_type": "C1_INFO_SELECTION",
+          "target_id": "factor_card_2",
+          "target_type": "modal",
+          "metadata": {
+            "modal_id": "factor_card_2",
+            "dwell_ms": 4000,
+            "phase": "after_selection"
+          }
+        }
+      },
+      {
+        "code": 7,
+        "targetElement": "P1.04_submit",
+        "eventType": "SUBMIT_ATTEMPT",
+        "time": "2026-06-03T10:03:22.000+08:00",
+        "value": {
+          "trace_id": "p03-e007",
+          "page_id": "page_03_factor_selection",
+          "page_type": "C1_INFO_SELECTION",
+          "target_id": "submit",
+          "target_type": "button",
+          "submit_attempt_id": "p03-submit-1",
+          "validation_status": "success",
+          "metadata": {
+            "missing_fields": [],
+            "submit_trigger": "next_button"
+          }
+        }
+      }
+    ]
+  },
+  "expected": {
+    "labels": [
+      "SCAN_INFO",
+      "SELECT_OPTION",
+      "CHECK_REVIEW"
+    ],
+    "forbidden_labels": [
+      "START_PAGE",
+      "SUBMIT_PAGE",
+      "TASK_FINISH",
+      "ARGUMENTATION",
+      "FIELD_COMPLETENESS",
+      "DEEP_READ",
+      "GENERATE_THINK",
+      "GENERATE_FLUID",
+      "REVISE_SELECTION",
+      "PAGE_IDLE"
+    ],
+    "pageMetadata": {
+      "lifecycle": {
+        "startPage": true,
+        "submitSuccess": true,
+        "taskFinish": false
+      }
+    },
+    "dataQualityWarnings": [],
+    "l4Required": false
+  }
+}

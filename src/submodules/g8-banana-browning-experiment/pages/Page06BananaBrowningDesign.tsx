@@ -1,7 +1,14 @@
-import React, { useEffect, useCallback } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import React, { useCallback, useEffect, useRef } from 'react';
+import {
+  TEXT_DEBOUNCE_MS,
+  TEXT_THROTTLE_CHAR_DELTA,
+  createTextEventCollector,
+} from '@shared/services/submission/trace';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import styles from '../styles/Page06BananaBrowningDesign.module.css';
+import { useContentActivationTrace } from '../trace/useContentActivationTrace';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 const MAX_CHAR_COUNT = 300;
 const MIN_CHAR_COUNT = 2;
@@ -12,20 +19,66 @@ const IDEAS_CONFIG = [
   { key: 'Q3c_想法3', label: '想法3', index: 3 } as const,
 ];
 
-const Page06BananaBrowningDesign: React.FC = () => {
-  const { logOperation, collectAnswer, setPageStartTime, answers, getPagePrefix } =
-    useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
+const fieldIdByIdeaKey: Record<string, string> = {
+  Q3a_想法1: 'input_idea_1',
+  Q3b_想法2: 'input_idea_2',
+  Q3c_想法3: 'input_idea_3',
+};
 
-  useEffect(() => {
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '页面加载完成',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, setPageStartTime, targetPrefix]);
+const Page06BananaBrowningDesign: React.FC = () => {
+  const {
+    collectAnswer,
+    answers,
+    getPagePrefix,
+    registerTraceCollectorFlush,
+  } = useG8BananaBrowningContext();
+  const traceLogger = useTracePageStart({
+    pageId: 'banana_browning_design' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {},
+    },
+  });
+  const getContentActivationHandlers = useContentActivationTrace(traceLogger);
+  const textCollectorsRef = useRef<
+    Record<string, ReturnType<typeof createTextEventCollector>>
+  >({});
+
+  const getTextCollector = useCallback(
+    (fieldId: string) => {
+      if (!traceLogger) {
+        return null;
+      }
+      if (!textCollectorsRef.current[fieldId]) {
+        textCollectorsRef.current[fieldId] = createTextEventCollector({
+          fieldId,
+          logger: traceLogger,
+          debounceMs: TEXT_DEBOUNCE_MS,
+          throttleCharDelta: TEXT_THROTTLE_CHAR_DELTA,
+        });
+      }
+      return textCollectorsRef.current[fieldId];
+    },
+    [traceLogger]
+  );
+
+  const flushTextCollectors = useCallback(() => {
+    Object.values(textCollectorsRef.current).forEach(collector => collector.flush('submit'));
+  }, []);
+
+  useEffect(
+    () => registerTraceCollectorFlush(flushTextCollectors),
+    [flushTextCollectors, registerTraceCollectorFlush]
+  );
+
+  useEffect(
+    () => () => {
+      Object.values(textCollectorsRef.current).forEach(collector => collector.dispose());
+      textCollectorsRef.current = {};
+    },
+    [traceLogger]
+  );
 
   const getCharCountClass = (value: string): string => {
     const len = value.length;
@@ -35,16 +88,34 @@ const Page06BananaBrowningDesign: React.FC = () => {
   };
 
   const handleChange = useCallback(
-    (ideaKey: string, label: string, value: string) => {
+    (ideaKey: string, ideaLabel: string, value: string, isComposing?: boolean) => {
       collectAnswer({ targetElement: ideaKey, value });
-      logOperation({
-        targetElement: `${targetPrefix}${label}输入`,
-        eventType: EventTypes.INPUT_CHANGE,
-        value,
-        time: new Date().toISOString(),
+      getTextCollector(fieldIdByIdeaKey[ideaKey])?.onChange(value, {
+        isComposing,
+        metadata: {
+          source_answer_key: ideaKey,
+          field_label: ideaLabel,
+        },
       });
     },
-    [collectAnswer, logOperation, targetPrefix]
+    [collectAnswer, getTextCollector]
+  );
+
+  const handleFocus = useCallback(
+    (ideaKey: string) => {
+      getTextCollector(fieldIdByIdeaKey[ideaKey])?.onFocus(String(answers[ideaKey] || ''));
+    },
+    [answers, getTextCollector]
+  );
+
+  const handleBlur = useCallback(
+    (ideaKey: string, ideaLabel: string, value: string) => {
+      getTextCollector(fieldIdByIdeaKey[ideaKey])?.onBlur(value, {
+        source_answer_key: ideaKey,
+        field_label: ideaLabel,
+      });
+    },
+    [getTextCollector]
   );
 
   return (
@@ -56,7 +127,17 @@ const Page06BananaBrowningDesign: React.FC = () => {
         </div>
       </header>
 
-      <div className={styles.instructionCard}>
+      <div
+        className={styles.instructionCard}
+        data-content-id="plan_generation_instruction"
+        {...getContentActivationHandlers('plan_generation_instruction', {
+          sourceUiId: 'page05_instruction_card',
+          metadata: {
+            phase: 'before_idea_input',
+            content_type: 'instruction_text',
+          },
+        })}
+      >
         <p className={styles.instructionText}>
           为验证小明的猜想，首先需要确定如何判断香蕉变黑的程度。通过查阅资料，小明发现可以用香蕉表皮黑变区域面积占总果皮表面积的百分比（简称"
           <strong>黑变比例</strong>
@@ -89,7 +170,16 @@ const Page06BananaBrowningDesign: React.FC = () => {
                 <textarea
                   className={styles.ideaTextarea}
                   value={currentValue}
-                  onChange={e => handleChange(idea.key, idea.label, e.target.value)}
+                  onFocus={() => handleFocus(idea.key)}
+                  onChange={e =>
+                    handleChange(
+                      idea.key,
+                      idea.label,
+                      e.target.value,
+                      (e.nativeEvent as InputEvent).isComposing
+                    )
+                  }
+                  onBlur={e => handleBlur(idea.key, idea.label, e.target.value)}
                   placeholder="请输入你的想法。"
                   maxLength={MAX_CHAR_COUNT}
                   aria-label={`${idea.label}输入框`}

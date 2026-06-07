@@ -1,0 +1,229 @@
+{
+  "case_id": "page10_experiment_question_v2_2",
+  "purpose": "Validate Experiment question 2 page-specific experiment question labels and answer revision.",
+  "input": {
+    "pageNumber": "1.11",
+    "pageDesc": "Experiment question 2",
+    "beginTime": "2026-06-03T10:12:00.000+08:00",
+    "endTime": "2026-06-03T10:12:40.000+08:00",
+    "answerList": [
+      {
+        "question_id": "question_2",
+        "option_id": "option_b"
+      }
+    ],
+    "imgList": [],
+    "operationList": [
+      {
+        "code": 1,
+        "targetElement": "P1.11_page",
+        "eventType": "START_PAGE",
+        "time": "2026-06-03T10:12:00.000+08:00",
+        "value": {
+          "trace_id": "p10-e001",
+          "page_id": "page_10_experiment_question_2",
+          "page_type": "D2_SIMULATION_QUESTION",
+          "target_id": "page",
+          "target_type": "page",
+          "metadata": {
+            "field_registry_version": "science-inquiry-field-registry-v2.2",
+            "field_registry_hash": "74dd8696b347e8c1f14fb8e8804492f588fa3a6431ad309a6c9563dffdbe64ce",
+            "content_registry_version": "science-inquiry-content-registry-banana-v2.2",
+            "content_registry_hash": "2460fbe2bfea3036543ed10377f795d494797eea0cdcc8f0767843951cc97d35",
+            "schema_version": "science-inquiry-trace-v2.2",
+            "rule_config_version": "rule-config-v2.2",
+            "rule_config_hash": "c29da8988f93be25b69d4b7f82df417fb2f70741c4d0eb923de9e69531fd5d83"
+          }
+        }
+      },
+      {
+        "code": 2,
+        "targetElement": "P1.11_exp_days",
+        "eventType": "SET_EXP_PARAM",
+        "time": "2026-06-03T10:12:05.000+08:00",
+        "value": {
+          "trace_id": "p10-e002",
+          "page_id": "page_10_experiment_question_2",
+          "page_type": "D2_SIMULATION_QUESTION",
+          "target_id": "exp_days",
+          "target_type": "experiment",
+          "param_id": "exp_param_days",
+          "param_name": "days",
+          "value_before": 3,
+          "value_after": 9,
+          "metadata": {
+            "param_snapshot": {
+              "days": 9
+            }
+          }
+        }
+      },
+      {
+        "code": 3,
+        "targetElement": "P1.11_execute_exp",
+        "eventType": "EXECUTE_EXP",
+        "time": "2026-06-03T10:12:07.000+08:00",
+        "value": {
+          "trace_id": "p10-e003",
+          "page_id": "page_10_experiment_question_2",
+          "page_type": "D2_SIMULATION_QUESTION",
+          "target_id": "execute_exp",
+          "target_type": "experiment",
+          "exp_run_id": "p10-run-1",
+          "metadata": {
+            "param_snapshot": {
+              "days": 9
+            },
+            "result_snapshot": {
+              "black_ratio": 0.46
+            },
+            "click_debounce_applied": false
+          }
+        }
+      },
+      {
+        "code": 4,
+        "targetElement": "P1.11_question_2_option_a",
+        "eventType": "SELECT_ANSWER",
+        "time": "2026-06-03T10:12:15.000+08:00",
+        "value": {
+          "trace_id": "p10-e004",
+          "page_id": "page_10_experiment_question_2",
+          "page_type": "D2_SIMULATION_QUESTION",
+          "target_id": "question_2_option_a",
+          "target_type": "radio",
+          "question_id": "question_2",
+          "option_id": "option_a",
+          "value_before": null,
+          "value_after": "option_a",
+          "metadata": {
+            "question_index": 2,
+            "total_question_count": 3
+          }
+        }
+      },
+      {
+        "code": 5,
+        "targetElement": "P1.11_exp_days",
+        "eventType": "SET_EXP_PARAM",
+        "time": "2026-06-03T10:12:22.000+08:00",
+        "value": {
+          "trace_id": "p10-e005",
+          "page_id": "page_10_experiment_question_2",
+          "page_type": "D2_SIMULATION_QUESTION",
+          "target_id": "exp_days",
+          "target_type": "experiment",
+          "param_id": "exp_param_days",
+          "param_name": "days",
+          "value_before": 9,
+          "value_after": 11,
+          "metadata": {
+            "param_snapshot": {
+              "days": 11
+            },
+            "phase": "after_answer"
+          }
+        }
+      },
+      {
+        "code": 6,
+        "targetElement": "P1.11_execute_exp",
+        "eventType": "EXECUTE_EXP",
+        "time": "2026-06-03T10:12:24.000+08:00",
+        "value": {
+          "trace_id": "p10-e006",
+          "page_id": "page_10_experiment_question_2",
+          "page_type": "D2_SIMULATION_QUESTION",
+          "target_id": "execute_exp",
+          "target_type": "experiment",
+          "exp_run_id": "p10-run-2",
+          "metadata": {
+            "param_snapshot": {
+              "days": 11
+            },
+            "result_snapshot": {
+              "black_ratio": 0.66
+            },
+            "click_debounce_applied": false,
+            "phase": "after_answer"
+          }
+        }
+      },
+      {
+        "code": 7,
+        "targetElement": "P1.11_question_2_option_b",
+        "eventType": "SELECT_ANSWER",
+        "time": "2026-06-03T10:12:32.000+08:00",
+        "value": {
+          "trace_id": "p10-e007",
+          "page_id": "page_10_experiment_question_2",
+          "page_type": "D2_SIMULATION_QUESTION",
+          "target_id": "question_2_option_b",
+          "target_type": "radio",
+          "question_id": "question_2",
+          "option_id": "option_b",
+          "value_before": "option_a",
+          "value_after": "option_b",
+          "metadata": {
+            "question_index": 2,
+            "total_question_count": 3
+          }
+        }
+      },
+      {
+        "code": 8,
+        "targetElement": "P1.11_submit",
+        "eventType": "SUBMIT_ATTEMPT",
+        "time": "2026-06-03T10:12:40.000+08:00",
+        "value": {
+          "trace_id": "p10-e008",
+          "page_id": "page_10_experiment_question_2",
+          "page_type": "D2_SIMULATION_QUESTION",
+          "target_id": "submit",
+          "target_type": "button",
+          "question_id": "question_2",
+          "submit_attempt_id": "p10-submit-1",
+          "validation_status": "success",
+          "metadata": {
+            "missing_fields": [],
+            "submit_trigger": "next_button"
+          }
+        }
+      }
+    ]
+  },
+  "expected": {
+    "labels": [
+      "SET_EXP_PARAM",
+      "EXECUTE_EXP",
+      "SELECT_ANSWER",
+      "SET_EXP_PARAM",
+      "EXECUTE_EXP",
+      "CHECK_REVIEW",
+      "SELECT_ANSWER",
+      "REVISE_ANSWER"
+    ],
+    "forbidden_labels": [
+      "START_PAGE",
+      "SUBMIT_PAGE",
+      "TASK_FINISH",
+      "ARGUMENTATION",
+      "FIELD_COMPLETENESS",
+      "PAGE_IDLE"
+    ],
+    "pageMetadata": {
+      "lifecycle": {
+        "startPage": true,
+        "submitSuccess": true,
+        "taskFinish": false
+      }
+    },
+    "dataQualityWarnings": [],
+    "l4Required": false,
+    "strategyFlags": [
+      "ANSWER_THEN_REVIEW_EXP",
+      "ANSWER_REVISED_AFTER_EXP"
+    ],
+    "answerListPolicy": "answerList is present for scoring boundary verification but must not be read by trajectory tagger."
+  }
+}

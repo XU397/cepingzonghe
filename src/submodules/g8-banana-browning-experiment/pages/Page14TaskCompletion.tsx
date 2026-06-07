@@ -1,25 +1,32 @@
 import React, { useEffect, useRef } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import completionImage from '@assets/images/xjbs12.jpg';
 import styles from '../styles/Page14TaskCompletion.module.css';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 const Page14TaskCompletion: React.FC = () => {
-  const { logOperation, setPageStartTime, getPagePrefix } = useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
-  const hasLoggedEnter = useRef(false);
+  const { getPagePrefix } = useG8BananaBrowningContext();
+  const hasLoggedFinishRef = useRef(false);
+  const traceLogger = useTracePageStart({
+    pageId: 'task_completion' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: {},
+    },
+  });
 
   useEffect(() => {
-    if (hasLoggedEnter.current) return;
-    hasLoggedEnter.current = true;
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '任务完成页',
-      time: new Date().toISOString(),
+    if (hasLoggedFinishRef.current || !traceLogger) {
+      return;
+    }
+
+    hasLoggedFinishRef.current = true;
+    traceLogger.taskFinish({
+      completion_source: 'task_completion_page',
     });
-  }, [logOperation, setPageStartTime, targetPrefix]);
+  }, [traceLogger]);
 
   return (
     <div className={styles.page}>

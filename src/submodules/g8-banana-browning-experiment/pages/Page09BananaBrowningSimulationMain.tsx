@@ -1,22 +1,20 @@
-import React, { useEffect } from 'react';
-import EventTypes from '@shared/services/submission/eventTypes.js';
+import React from 'react';
 import { useG8BananaBrowningContext } from '../context/G8BananaBrowningContext';
+import type { PageId } from '../mapping';
 import SimulationPanel from '../components/SimulationPanel';
 import styles from '../styles/Page09BananaBrowningSimulationMain.module.css';
+import { useTracePageStart } from '../trace/useTracePageStart';
 
 const Page09BananaBrowningSimulationMain: React.FC = () => {
-  const { logOperation, setPageStartTime, getPagePrefix } = useG8BananaBrowningContext();
-  const targetPrefix = getPagePrefix();
-
-  useEffect(() => {
-    setPageStartTime(new Date());
-    logOperation({
-      targetElement: `${targetPrefix}页面进入`,
-      eventType: EventTypes.PAGE_ENTER,
-      value: '页面加载完成',
-      time: new Date().toISOString(),
-    });
-  }, [logOperation, setPageStartTime, targetPrefix]);
+  const { getPagePrefix } = useG8BananaBrowningContext();
+  const traceLogger = useTracePageStart({
+    pageId: 'banana_browning_simulation_main' as PageId,
+    pageNumber: getPagePrefix().replace(/^P/, '').replace(/_$/, ''),
+    flowContext: undefined,
+    metadata: {
+      initial_state: { days: 0 },
+    },
+  });
 
   return (
     <div className={styles.container}>
@@ -61,7 +59,7 @@ const Page09BananaBrowningSimulationMain: React.FC = () => {
 
         {/* 右侧：模拟实验面板 */}
         <div className={styles.simulationPanel}>
-          <SimulationPanel logOperation={logOperation} targetPrefix={targetPrefix} />
+          <SimulationPanel traceLogger={traceLogger} />
         </div>
       </div>
     </div>
