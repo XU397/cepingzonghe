@@ -2,6 +2,30 @@
 
 本目录用于把 `01轨迹上报规范.md` 和 `02打标规范.md` 中的人读标准固化为工程合同。
 
+## 本轮 canonical 声明（2026-06-14，跨库需求 `2026-06-14-science-inquiry-trace-contract-v2-1`）
+
+### 版本权威源现状与 cp 立场
+
+> **重要**：KB canonical 标准与 cp runtime 在本轮存在版本/命名差异。cp 文档必须显式说明此差异，避免后续 agent 按 KB 和按 cp 得到不一致结论。
+
+| 维度 | KB canonical（另一个仓库，本轮无权修改） | cp runtime / implementation-local |
+|------|------------------------------------------|-----------------------------------|
+| trace contract 版本 | **v2.1**（`assessment-platform-kb/标准/子模块构建标准/standard-sync-manifest.md:18` `trace_contract_version: v2.1`；标准正文 `science-inquiry-13page-trace-contract-v2.1.md`） | **v2.2**（`src/shared/services/submission/trace/contracts.ts` 只加载 `*.v2.2.json`；本目录与 src 通过 contracts-sync 测试字节级同步） |
+| page_type 命名 | 旧名（如 `B2_TEXT_MULTI`、`B3_METHOD_EVALUATION`、`E1_SOLUTION_SELECTION`，见 KB 标准正文） | 代码 canonical 名（`B2_TEXT_MULTI_PARALLEL`、`B3_TEXT_MATRIX_EVALUATION`、`E1_CHART_PLAN_DECISION`） |
+
+**cp 立场（按跨库需求 `2026-06-14-science-inquiry-trace-contract-v2-1` 用户确认口径）**：
+
+1. **cp 以 v2.2 为 runtime 权威合同**。`contracts.ts` 只加载 v2.2；本目录 v2.2 副本与 src 字节同步（contracts-sync 测试强制）。
+2. **cp page_type/page_id 命名以代码事实为准**。KB 草案 §4 的简写视为待修订笔误。
+3. **KB canonical 同步为 closeout 回传项**，不在 cp 侧强行宣布为标准 canonical。KB 主 session 在 closeout 时负责：将 `trace_contract_version` 升级为 v2.2、修订 page_type/page_id 命名、吸收 page_type_contract 概念。在 KB 同步完成前，cp 文档自称 **"runtime contract / implementation-local draft"**，不自称标准 canonical。
+4. **v2.1 保留为历史兼容补丁镜像**，已包含 `PAGE_IDLE` 回补，但不再作为 cp runtime 入口；不删除，仅供兼容回放 v2.1 系列样本与 KB 迁移对照。
+
+### 其他
+
+- **命名规范**：page_type 与 standardPageId 以 cp 代码事实为准（见 `mapping.ts` 与 `field_registry.v2.2.json`）。KB 草案 §4 简写作为跨库需求回传项（见 OpenSpec change `science-inquiry-trace-contract-v2-1` design.md Conflicts 表 C1/C5）。
+- **page_type_contract 与 page_instance_confirmation**：本轮新增的两层标准契约位于 `docs/子模块数据上报规范/page_type_contracts/` 与 `docs/standard-submodule/page-confirmations/`，以本目录 v2.2 合同为事实源。在 KB canonical 化前为 implementation-local draft。
+- **cp 不直接依赖桌面研究目录** `D:/chenx/Desktop/轨迹上报标准及打标规范研究/engineering_contracts/`；该目录仅作为来源证据。
+
 版本状态（2026-06-06）：
 
 - 当前香蕉变黑前端运行时实施版本为 **v2.2**；`src/shared/services/submission/trace/contracts.ts` 只加载 `*.v2.2.json` 合同。

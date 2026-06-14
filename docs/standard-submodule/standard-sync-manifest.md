@@ -80,6 +80,23 @@ mirrors:
     mirror_policy: checklist-with-version
     last_verified_at: '2026-06-07T12:27:30+08:00'
     verified_by_change_id: 2026-06-07-standard-submodule-construction-v1
+  - section_id: trace_contracts_v2_2_canonical
+    canonical_path: '标准/子模块构建标准/standard-sync-manifest.md'
+    canonical_anchor: trace-contracts-v2-2
+    canonical_commit: pending:kb-canonical-sync-after-closeout
+    canonical_content_hash: pending:kb-canonical-sync-after-closeout
+    local_path: 'docs/子模块数据上报规范/engineering_contracts/README.md'
+    local_anchor: 本轮-canonical-声明2026-06-14跨库需求-2026-06-14-science-inquiry-trace-contract-v2-1
+    local_content_hash: pending:computed-on-archive
+    mirror_policy: implementation-local
+    last_verified_at: '2026-06-14T00:00:00+08:00'
+    verified_by_change_id: 2026-06-14-science-inquiry-trace-contract-v2-1
+    notes: >
+      v2.2 contracts (event_schema/field_registry/content_registry/rule_config) 的 docs↔src
+      字节级同步由 contracts-sync 测试强制，不依赖本 manifest mirror 行。
+      本行登记本轮（science-inquiry-trace-contract-v2-1）的 v2.2 runtime contract 文档化落点与 page_type_contract
+      实现手册引用关系。KB canonical 同步（page_type/page_id 命名修订、page_type_contract 概念吸收）
+      留待 KB 主 session 在 closeout 时决定。
 standard_verification:
   kb_change_id: 2026-06-07-standard-submodule-construction-v1
   golden_reference_commit: 327e164f62d1e1fda76b34ac585e78ecf03f65af
@@ -98,6 +115,7 @@ worktree_status:
   mainline_merge_commit: 7f52bb6
 known_dependency_gates:
   - canonical_commit remains pending until the KB standard package is committed.
+  - trace_contracts_v2_2_canonical row's canonical_commit/hash remain pending until KB 主 session 在跨库需求 2026-06-14-science-inquiry-trace-contract-v2-1 closeout 时决定是否扩展 manifest 到 JSON contracts 登记，并吸收 page_type_contract 概念与 page_type/page_id 命名修订。
 ---
 
 # Standard Sync Manifest
@@ -112,6 +130,7 @@ This manifest is the cp-local machine-readable declaration for the standard subm
 - `sync_policy` separates canonical-only, mirrored-with-version, and implementation-local sections.
 - `hash_algorithm` defines how mirror section content hashes are recomputed.
 - `mirrors[]` records auditable metadata for cp summaries that mirror KB content.
+- `notes`（可选字段，由 `2026-06-14-science-inquiry-trace-contract-v2-1` 引入）：用于 implementation-local mirror 行补充人读说明，不参与 hash 计算；现有 KB-mirrored 行不使用该字段。本仓 manifest 当前无机器解析消费者；若未来引入 KB 同步脚本，需将 `notes` 正式纳入 mirrors[] schema 或迁移至 `known_dependency_gates`。
 - `standard_verification` and `worktree_status` keep golden, design, branch completion, and mainline merge commits separate.
 
 ## Resolved Fields
@@ -124,3 +143,4 @@ The following dependency gates have been resolved:
 ## Remaining Pending Fields
 
 - KB canonical mirror commits remain `pending:kb-standard-package-uncommitted` in mirrors[] until the KB standard package is committed in the KB repository.
+- `trace_contracts_v2_2_canonical` row (added by `2026-06-14-science-inquiry-trace-contract-v2-1`) 的 `canonical_commit` / `canonical_content_hash` / `local_content_hash` 保持 pending，直到 KB 主 session closeout 时决定：是否扩展 manifest 到 JSON contracts 登记、是否吸收 page_type_contract 概念为 canonical、以及 page_type/page_id 命名修订是否落地。v2.2 contracts 的 docs↔src 字节同步本身由 contracts-sync 测试强制，不依赖本行。
